@@ -1,6 +1,3 @@
-/* eslint-disable react/display-name */
-import { NonVisibleIcon, VisibleIcon } from '@/icons/visibility';
-import { InfoIcon } from '@chakra-ui/icons';
 import {
   Flex,
   Input,
@@ -18,7 +15,6 @@ import {
 } from '@chakra-ui/react';
 import React, { forwardRef } from 'react';
 import { FieldError, FieldErrorsImpl, Merge } from 'react-hook-form/dist/types';
-import InputMask from 'react-input-mask';
 
 interface IAppInput {
   label?: any;
@@ -56,7 +52,6 @@ export const AppInput = forwardRef(
         <Input
           ref={ref as React.Ref<HTMLInputElement>}
           type="text"
-          as={mask ? InputMask : undefined}
           borderColor={baseColor}
           color={baseColor}
           isInvalid={error ? true : false}
@@ -75,9 +70,7 @@ export const AppInput = forwardRef(
         {rightElement ? <InputRightElement width="3.5rem">{rightElement}</InputRightElement> : null}
         {help ? (
           <InputRightElement width="3.5rem">
-            <Tooltip label={help}>
-              <InfoIcon />
-            </Tooltip>
+            <Tooltip label={help}>{/* <InfoIcon /> */}</Tooltip>
           </InputRightElement>
         ) : null}
       </InputGroup>
@@ -106,7 +99,6 @@ export const AppTextArea = forwardRef(
       <Textarea
         ref={ref as React.Ref<HTMLTextAreaElement>}
         type="text"
-        as={mask ? InputMask : undefined}
         borderColor={baseColor}
         resize="vertical"
         color={baseColor}
@@ -152,7 +144,6 @@ export const AppPassword = forwardRef(({ label, error, mask, w, description, ...
         <Input
           ref={ref as React.Ref<HTMLInputElement>}
           type={show ? 'text' : 'password'}
-          as={mask ? InputMask : undefined}
           borderColor={baseColor}
           color={baseColor}
           isInvalid={error ? true : false}
@@ -165,11 +156,11 @@ export const AppPassword = forwardRef(({ label, error, mask, w, description, ...
           {...Object.assign(otherProps, { mask })}
         />
         <InputRightElement width="3.5rem" h="100%" margin="auto">
-          {show ? (
+          {/* {show ? (
             <VisibleIcon _hover={{ cursor: 'pointer' }} onClick={handleClick} />
           ) : (
             <NonVisibleIcon _hover={{ cursor: 'pointer' }} onClick={handleClick} />
-          )}
+          )} */}
         </InputRightElement>
       </InputGroup>
       {error ? (

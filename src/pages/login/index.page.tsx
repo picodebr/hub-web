@@ -11,8 +11,7 @@ import { login, validateSession } from '@/_base/services/auth';
 import { IAuthLoginInput, authSchema } from '@/_base/services/auth/interface';
 import { forceTokenExpiration, logError, tokenManager, updateApiToken } from '@/_base/utils';
 import { AppButton } from '@/components/Forms/Button';
-import { AppInput, AppPassword } from '@/components/Forms/Input';
-import { Flex, Heading, Image, Text } from '@chakra-ui/react';
+import { Flex, Heading, Image, Input, Text } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import adhowLogo from '/public/adhow-logo-white.png';
 import loginImage from '/public/images/login/background-login.png';
@@ -90,18 +89,16 @@ const LoginPage: React.FC = () => {
           <Flex borderTop="1px solid" borderColor="gray.100" />
 
           <Flex direction="column" gap={4} maxW="19rem" alignSelf="center" w="100%">
-            <AppInput
-              label="Email"
-              error={errors.email}
+            <Input
+              type="text"
               border={'none'}
               bg={'#f7f7f7'}
               borderLeft={'3px solid #81BE73'}
               borderRadius={'0'}
               {...register('email', { required: true })}
             />
-            <AppPassword
-              label="Senha"
-              error={errors.password}
+            <Input
+              type="password"
               border={'none'}
               bg={'#f7f7f7'}
               borderLeft={'3px solid #81BE73'}
