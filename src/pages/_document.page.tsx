@@ -11,7 +11,6 @@ export default function Document() {
         {/* Dont Edit the rest of this file */}
         <Main />
         <NextScript />
-        <script>0</script>
       </body>
     </Html>
   );

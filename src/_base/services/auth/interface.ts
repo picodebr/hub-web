@@ -1,12 +1,13 @@
 import * as z from 'zod';
 
+import { zodSchemaErrors } from '@/_base/errors/zodSchemaErrors';
 import { IAdmin } from '@/_base/interfaces/admin';
 import { ZodCustomSchema } from '../@types';
 
 /** Interfaces and Types */
 
 export interface IAuthLoginInput {
-  email: string;
+  identifier: string;
   password: string;
 }
 
@@ -18,6 +19,6 @@ export interface IAuthLoginOutput {
 /** Zod schemas */
 
 export const authSchema: ZodCustomSchema<IAuthLoginInput> = z.object({
-  email: z.string().email().nonempty('Enter an email'),
-  password: z.string().min(6, 'Password has at least 6 characters').nonempty('Enter a password'),
+  identifier: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim().min(6, { message: zodSchemaErrors.IDENTIFIER_LENGTH }),
+  password: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(6, { message: zodSchemaErrors.PASS_LENGTH }),
 });

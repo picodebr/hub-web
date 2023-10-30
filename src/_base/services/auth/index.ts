@@ -4,7 +4,7 @@ import { IAdmin } from '@/_base/interfaces/admin';
 import { ServiceResponse } from '../@types';
 import { IAuthLoginInput, IAuthLoginOutput } from './interface';
 
-export const login = async (credentials: IAuthLoginInput): ServiceResponse<IAuthLoginOutput> => {
+export const signin = async (credentials: IAuthLoginInput): ServiceResponse<IAuthLoginOutput> => {
   const { data } = await api.post<IAuthLoginOutput>('/auth/admin', credentials);
   return data;
 };

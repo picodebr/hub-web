@@ -17,15 +17,15 @@ export function useAsyncCallback<T extends (...args: any[]) => any>(callback: T,
   const toast = useCustomToast();
 
   return useCallback(
-    // @ts-ignore
-    (...args) => {
+    (...args: any[]) => {
       const load = async () => {
         try {
           setLoadingConfig((e) => ({ ...e, isLoading: true }));
 
           await callback(...args);
-        } catch (err) {
-          showErrorToClient(err, toast);
+        } catch (err: any) {
+          const error = err?.message || err;
+          showErrorToClient(error, toast);
         } finally {
           setLoadingConfig((e) => ({ ...e, isLoading: false }));
         }
@@ -33,8 +33,6 @@ export function useAsyncCallback<T extends (...args: any[]) => any>(callback: T,
 
       load();
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [toast, ...deps],
-    // [toast, setLoadingConfig, ...deps],
-  );
+  ) as T;
 }

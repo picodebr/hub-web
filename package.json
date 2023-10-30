@@ -28,6 +28,8 @@
     "react-google-recaptcha": "^3.1.0",
     "react-hook-form": "^7.47.0",
     "react-icons": "^4.10.1",
+    "recharts": "^2.9.0",
+    "rsuite": "^5.41.0",
     "zod": "^3.21.4",
     "zxcvbn": "^4.4.2"
   },

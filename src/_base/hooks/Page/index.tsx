@@ -4,7 +4,6 @@ import { PropsWithChildren, createContext, useCallback, useContext, useEffect, u
 
 import { EMPTY_ADMIN_DATA, IAdmin } from '@/_base/interfaces/admin';
 import { validateSession } from '@/_base/services/auth';
-import { FirstAccess } from './components/FirstAccess';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 import { IPageContext, IPageProps } from './interfaces';
@@ -17,7 +16,7 @@ const PageContext = createContext<IPageContext>({
 
 const NAKED_PAGES = ['login', 'recover_password'];
 
-export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ admin: _admin, children, pageTitle = 'AD client', selectedPage }) => {
+export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ admin: _admin, children, pageTitle, selectedPage }) => {
   const [admin, setAdmin] = useState<IAdmin>(_admin || EMPTY_ADMIN_DATA);
 
   const syncProfile = useCallback(async () => {
@@ -32,7 +31,6 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ admin: _admin, c
   useEffect(() => {
     if (_admin) setAdmin(_admin);
     else syncProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_admin]);
 
   return (
@@ -52,7 +50,6 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ admin: _admin, c
                 {children}
               </Flex>
             </Flex>
-            <FirstAccess admin={admin} setAdmin={setAdmin} />
           </>
         )}
       </Flex>

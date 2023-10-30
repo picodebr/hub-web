@@ -1,5 +1,5 @@
-import { AppButton } from '@/components/Forms/Button';
-import { AppInput } from '@/components/Forms/Input';
+import { GenericButton } from '@/components/Buttons/Generic';
+import { TextInput } from '@/components/Inputs/Text';
 import {
   ButtonGroup,
   Flex,
@@ -74,9 +74,9 @@ export const SecureDeletePopover: React.FC<IProps> = ({
           <Text align="left" overflow="hidden" whiteSpace="normal">
             To confirm deletion, type <i style={{ color: '#808080' }}>{secureText}</i> in the text input field.
           </Text>
-          <AppInput value={deleteTextConfirm} onChange={(e) => setDeleteTextConfirm(e.target.value)} size="xs" />{' '}
+          <TextInput value={deleteTextConfirm} onInputChange={(e) => setDeleteTextConfirm(e)} size="xs" />
           <ButtonGroup display="flex" justifyContent="flex-end">
-            <AppButton isDisabled={deleteTextConfirm !== secureText} label="Delete" btntype="outline-warning" size="sm" onClick={handleDelete} />
+            <GenericButton isDisabled={deleteTextConfirm !== secureText} label="Delete" btntype="outline-warning" size="sm" onClick={handleDelete} />
           </ButtonGroup>
         </PopoverBody>
       </PopoverContent>

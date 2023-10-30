@@ -1,20 +1,18 @@
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
-import ReCAPTCHA from 'react-google-recaptcha';
-import { useForm } from 'react-hook-form';
-import { PiWarningCircleBold } from 'react-icons/pi';
 
+import { zodErrorHandler } from '@/_base/errors/zodErrorHandler';
 import { useAsyncCallback } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { usePageContext } from '@/_base/hooks/Page';
-import { login, validateSession } from '@/_base/services/auth';
+import { validateSession } from '@/_base/services/auth';
 import { IAuthLoginInput, authSchema } from '@/_base/services/auth/interface';
-import { forceTokenExpiration, logError, tokenManager, updateApiToken } from '@/_base/utils';
-import { AppButton } from '@/components/Forms/Button';
-import { Flex, Heading, Image, Input, Text } from '@chakra-ui/react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import adhowLogo from '/public/adhow-logo-white.png';
-import loginImage from '/public/images/login/background-login.png';
+import { forceTokenExpiration, logError, updateApiToken } from '@/_base/utils';
+import { GenericButton } from '@/components/Buttons/Generic';
+import { PasswordInput } from '@/components/Inputs/Password';
+import { TextInput } from '@/components/Inputs/Text';
+import { AppReCaptcha } from '@/components/ReCaptcha';
+import { Flex, Heading, Text } from '@chakra-ui/react';
 
 interface IReCAPTCHAData {
   token: string | null;
@@ -23,126 +21,100 @@ interface IReCAPTCHAData {
 
 const LoginPage: React.FC = () => {
   const router = useCustomRouter();
-  const [submitLoading, setSubmitLoading] = useState<boolean>(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
+  const [credentials, setCredentials] = useState<IAuthLoginInput>({} as any);
+  const [errors, setErrors] = useState<Record<keyof IAuthLoginInput, string | undefined>>({} as any);
 
   const { setAdmin } = usePageContext();
 
-  const {
-    handleSubmit,
-    register,
-    formState: { errors },
-  } = useForm<IAuthLoginInput>({ resolver: zodResolver(authSchema) });
+  const handleSubmit = useAsyncCallback(async () => {
+    if (!credentials) return;
+    // Prevent the user to click on the button more than one time
+    setSubmitLoading(true);
 
-  const handleFormInfo = useAsyncCallback(
-    async (data: IAuthLoginInput) => {
-      try {
-        //Prevent the user to click on the button more than one time
-        setSubmitLoading(true);
+    try {
+      const invalidData = zodErrorHandler(authSchema, credentials);
 
-        if (!captcha.token) {
-          setCaptcha((e) => ({ ...e, error: 'Required field' }));
-          return;
-        } else setCaptcha((e) => ({ ...e, error: undefined }));
-
-        const { response } = await login({
-          email: data.email,
-          password: data.password,
-        });
-
-        tokenManager.setToken(response.token);
-
-        setAdmin(response.user);
-
-        router.push('/home');
-      } finally {
-        setSubmitLoading(false);
+      if (invalidData) {
+        setErrors(invalidData);
+        return;
       }
-    },
-    [router, captcha],
-  );
+
+      if (!captcha.token) {
+        setCaptcha((e) => ({ ...e, error: 'Captcha obrigatório' }));
+        return;
+      } else setCaptcha((e) => ({ ...e, error: undefined }));
+
+      // const { response } = await signin({
+      //   identifier: credentials.identifier,
+      //   password: credentials.password,
+      // });
+
+      // tokenManager.setToken(response.token);
+
+      // setAdmin(response.user);
+
+      router.push('/home');
+    } finally {
+      setSubmitLoading(false);
+    }
+  }, [router, captcha]);
+
+  const handleInputChange = (field: keyof IAuthLoginInput, value: any) => {
+    setErrors((e) => ({ ...e, [field]: undefined }));
+    setCredentials((e) => ({ ...e, [field]: value }));
+  };
 
   return (
-    <Flex height={'100vh'}>
-      <Flex
-        justifyContent="center"
-        alignItems="center"
-        width={'50%'}
-        style={{
-          backgroundImage: 'url(' + loginImage.src + ')',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        <Image src={adhowLogo.src} maxW={'250px'} alt="logo" />
-      </Flex>
-      <Flex bg={'#fcfcfc'} width={'50%'} justifyContent="center" alignItems="center">
-        <Flex flexDir="column" role="presentation" px={8} py={8} gap={4}>
-          <Flex flexDir="column" textAlign="center" alignItems={'center'} gap={4}>
-            <Heading fontSize="32px" maxW={'350px'} color={'#2a075d'}>
-              Plataforma de gestão de campanhas
-            </Heading>
-            <Text>Faça login com o usuário de administração</Text>
-          </Flex>
+    <Flex h="100%" width="100%" bg="bg.gray" justifyContent="center" alignItems="center">
+      <Flex direction="column" bg="bg.offWhite" padding="1rem" border="1px" borderColor="border.light" borderRadius="md" gap="1rem">
+        <Flex direction="column" gap="1rem" maxW="19rem" alignSelf="center" w="100%">
+          <Heading fontSize="32px" maxW="350px" color="primary" textAlign="center">
+            Hub PiCode
+          </Heading>
 
-          <Flex borderTop="1px solid" borderColor="gray.100" />
-
-          <Flex direction="column" gap={4} maxW="19rem" alignSelf="center" w="100%">
-            <Input
-              type="text"
-              border={'none'}
-              bg={'#f7f7f7'}
-              borderLeft={'3px solid #81BE73'}
-              borderRadius={'0'}
-              {...register('email', { required: true })}
-            />
-            <Input
-              type="password"
-              border={'none'}
-              bg={'#f7f7f7'}
-              borderLeft={'3px solid #81BE73'}
-              borderRadius={'0'}
-              {...register('password', { required: true })}
-            />
-            <Text
-              margin="-0.5rem 0 0"
-              color="primary"
-              cursor="pointer"
-              _hover={{ filter: 'brightness(2)' }}
-              onClick={() => router.push('/recover_password')}
-            >
-              Forgot password?
-            </Text>
-          </Flex>
-          <Flex align="center" direction="column" mt={2}>
-            <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_KEY || ''} onChange={(e) => setCaptcha({ token: e })} onError={console.error} />
-            <Flex
-              color="red.500"
-              gap="0.3rem"
-              align="center"
-              w="100%"
-              padding="0.25rem 1rem"
-              fontSize="1.05rem"
-              display={captcha.error ? 'flex' : 'none'}
-            >
-              <PiWarningCircleBold fontSize="1.15rem" />
-              <Text letterSpacing={0.35}>{captcha.error}</Text>
-            </Flex>
-          </Flex>
-          <AppButton
-            label="Entrar"
-            bg={'#2a075d'}
-            letterSpacing={'1.5px'}
-            fontWeight={'100'}
-            onClick={handleSubmit(handleFormInfo)}
-            isLoading={submitLoading}
-            marginTop={'8px'}
-            maxW="19rem"
-            w="100%"
-            alignSelf="center"
+          <TextInput
+            placeholder="Email"
+            error={errors.identifier}
+            value={credentials?.identifier}
+            onInputChange={(v) => handleInputChange('identifier', v)}
           />
+
+          <PasswordInput
+            placeholder="Senha"
+            error={errors.password}
+            value={credentials?.password}
+            onInputChange={(v) => handleInputChange('password', v)}
+          />
+
+          <Text
+            mt="-0.8rem"
+            mb="0.8rem"
+            textAlign="right"
+            color="primary"
+            cursor="pointer"
+            _hover={{ filter: 'brightness(2)' }}
+            onClick={() => router.push('/recover_password')}
+          >
+            Esqueceu a senha?
+          </Text>
         </Flex>
+
+        <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
+
+        <GenericButton
+          label="Entrar"
+          bg="primary"
+          letterSpacing="1.5px"
+          fontWeight="100"
+          onClick={() => handleSubmit()}
+          isLoading={submitLoading}
+          marginTop="8px"
+          maxW="19rem"
+          w="100%"
+          alignSelf="center"
+        />
       </Flex>
     </Flex>
   );

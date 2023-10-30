@@ -28,7 +28,7 @@ export const globalTheme = extendTheme({
     secondaryLight: '#81BE73',
     text: {
       black: '#3f3f3f',
-      gray: '#7f7f7f',
+      gray: '#6f6f6f',
       light: '#cfcfcf',
       white: '#ffffff',
     },
@@ -45,7 +45,7 @@ export const globalTheme = extendTheme({
     notification: {
       unread: '#f18459',
     },
-    statuses: {
+    status: {
       error: '#ca3939',
     },
   },

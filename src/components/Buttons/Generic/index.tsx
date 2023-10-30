@@ -1,11 +1,8 @@
+import { IGenericButton } from './interfaces';
+
 import { Button, ButtonProps } from '@chakra-ui/react';
 
-interface IAppButton {
-  label: any;
-  btntype?: 'primary' | 'outline' | 'outline-white' | 'warning' | 'outline-warning';
-}
-
-export const AppButton = ({ label, btntype, ...otherProps }: IAppButton & ButtonProps) => {
+export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton & ButtonProps) => {
   const getBtnColor = () => {
     switch (btntype) {
       case 'primary':

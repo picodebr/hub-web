@@ -1,4 +1,3 @@
-export * from './buildStaticCreative';
 export * from './copyToClipboard';
 export * from './currencyFormatter';
 export * from './documentFormatter';
