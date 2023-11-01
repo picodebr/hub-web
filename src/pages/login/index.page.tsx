@@ -1,3 +1,4 @@
+import { TokenResponse, useGoogleLogin } from '@react-oauth/google';
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
 
@@ -12,7 +13,7 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
 import { AppReCaptcha } from '@/components/ReCaptcha';
-import { Flex, Heading, Text } from '@chakra-ui/react';
+import { Flex, Heading, Image, Text } from '@chakra-ui/react';
 
 interface IReCAPTCHAData {
   token: string | null;
@@ -25,6 +26,8 @@ const LoginPage: React.FC = () => {
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
   const [credentials, setCredentials] = useState<IAuthLoginInput>({} as any);
   const [errors, setErrors] = useState<Record<keyof IAuthLoginInput, string | undefined>>({} as any);
+
+  const [user, setUser] = useState<TokenResponse | null>(null);
 
   const { setAdmin } = usePageContext();
 
@@ -66,9 +69,17 @@ const LoginPage: React.FC = () => {
     setCredentials((e) => ({ ...e, [field]: value }));
   };
 
+  const login = useGoogleLogin({
+    onSuccess: (codeResponse) => {
+      console.log('onSuccess :', codeResponse);
+      setUser(codeResponse);
+    },
+    onError: (error) => console.log('Login Failed:', error),
+  });
+
   return (
     <Flex h="100%" width="100%" bg="bg.gray" justifyContent="center" alignItems="center">
-      <Flex direction="column" bg="bg.offWhite" padding="1rem" border="1px" borderColor="border.light" borderRadius="md" gap="1rem">
+      <Flex direction="column" bg="bg.offWhite" padding="1rem" border="1px" borderColor="border.light" borderRadius="md" gap="1rem" align="center">
         <Flex direction="column" gap="1rem" maxW="19rem" alignSelf="center" w="100%">
           <Heading fontSize="32px" maxW="350px" color="primary" textAlign="center">
             Hub PiCode
@@ -103,6 +114,13 @@ const LoginPage: React.FC = () => {
 
         <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
 
+        {/* <GoogleLogin onSuccess={responseMessage} onError={errorMessage} /> */}
+
+        {/* <Flex gap="0.65rem">
+          Fazer login com o google
+          <Image src="/brands/google_logo_G.png" />
+        </Flex> */}
+
         <GenericButton
           label="Entrar"
           bg="primary"
@@ -111,9 +129,17 @@ const LoginPage: React.FC = () => {
           onClick={() => handleSubmit()}
           isLoading={submitLoading}
           marginTop="8px"
-          maxW="19rem"
           w="100%"
-          alignSelf="center"
+        />
+        <GenericButton
+          label="Fazer login com o google"
+          btntype="outline"
+          color="text.black"
+          borderColor="blue.500"
+          fontWeight="100"
+          onClick={() => login()}
+          isLoading={submitLoading}
+          leftIcon={<Image src="/brands/google_logo_G.png" />}
         />
       </Flex>
     </Flex>
