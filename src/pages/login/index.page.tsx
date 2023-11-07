@@ -1,19 +1,20 @@
+import { Checkbox, Flex, Image, Link, Text } from '@chakra-ui/react';
 import { TokenResponse, useGoogleLogin } from '@react-oauth/google';
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
+import { FiUser } from 'react-icons/fi';
 
 import { zodErrorHandler } from '@/_base/errors/zodErrorHandler';
 import { useAsyncCallback } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
-import { usePageContext } from '@/_base/hooks/Page';
 import { validateSession } from '@/_base/services/auth';
 import { IAuthLoginInput, authSchema } from '@/_base/services/auth/interface';
 import { forceTokenExpiration, logError, updateApiToken } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
+import { Logo } from '@/components/Logo';
 import { AppReCaptcha } from '@/components/ReCaptcha';
-import { Flex, Heading, Image, Text } from '@chakra-ui/react';
 
 interface IReCAPTCHAData {
   token: string | null;
@@ -28,8 +29,6 @@ const LoginPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<keyof IAuthLoginInput, string | undefined>>({} as any);
 
   const [user, setUser] = useState<TokenResponse | null>(null);
-
-  const { setAdmin } = usePageContext();
 
   const handleSubmit = useAsyncCallback(async () => {
     if (!credentials) return;
@@ -78,69 +77,77 @@ const LoginPage: React.FC = () => {
   });
 
   return (
-    <Flex h="100%" width="100%" bg="bg.gray" justifyContent="center" alignItems="center">
-      <Flex direction="column" bg="bg.offWhite" padding="1rem" border="1px" borderColor="border.light" borderRadius="md" gap="1rem" align="center">
-        <Flex direction="column" gap="1rem" maxW="19rem" alignSelf="center" w="100%">
-          <Heading fontSize="32px" maxW="350px" color="primary" textAlign="center">
-            Hub PiCode
-          </Heading>
+    <Flex h="100%" width="100%" justifyContent="center" alignItems="center">
+      <Flex direction="column" bg="bg.offWhite" padding="1rem" border="1px" borderColor="border.light" borderRadius="md" gap="1.15rem" align="center">
+        <Flex direction="column" gap="1rem" alignSelf="center" w="100%">
+          <Logo />
+
+          <Text fontSize="13px" textAlign="center">
+            Ainda não tem uma conta?{' '}
+            <Link href="/signup" color="blue.400" textDecoration="underline" _hover={{ color: 'blue.600' }}>
+              Cadastre-se
+            </Link>
+          </Text>
 
           <TextInput
-            placeholder="Email"
+            label="Nome de Usuário ou E-mail"
             error={errors.identifier}
             value={credentials?.identifier}
             onInputChange={(v) => handleInputChange('identifier', v)}
+            leftElement={<FiUser />}
           />
 
           <PasswordInput
-            placeholder="Senha"
+            label="Senha"
             error={errors.password}
             value={credentials?.password}
             onInputChange={(v) => handleInputChange('password', v)}
           />
 
-          <Text
-            mt="-0.8rem"
-            mb="0.8rem"
-            textAlign="right"
-            color="primary"
-            cursor="pointer"
-            _hover={{ filter: 'brightness(2)' }}
-            onClick={() => router.push('/recover_password')}
-          >
-            Esqueceu a senha?
-          </Text>
+          <Link href="/recover_password">
+            <Text
+              textAlign="right"
+              color="red.200"
+              fontSize="12.5px"
+              cursor="pointer"
+              textDecoration="underline"
+              _hover={{ filter: 'brightness(0.8)' }}
+            >
+              Não estou conseguindo acessar
+            </Text>
+          </Link>
+        </Flex>
+
+        <Flex fontSize="13px" gap="0.5rem" align="center" w="100%">
+          <Checkbox />
+          <Text fontWeight="medium">Mantenha-me contectado</Text>
+        </Flex>
+
+        <Flex direction="column" w="100%" gap="0.5rem">
+          <Flex position="relative" w="100%" align="center" justify="center">
+            <Flex border="1px solid #F2F4F4" w="100%" position="absolute" zIndex="1" />
+            <Text zIndex="2" px="1rem" textAlign="center" bg="bg.offWhite" fontSize="12.5px" color="text.lightGray">
+              Ou faça login com
+            </Text>
+          </Flex>
+
+          <GenericButton
+            label="Entrar com Google"
+            btntype="outline"
+            color="text.black"
+            border="2px"
+            fontSize="15px"
+            fontWeight="medium"
+            borderColor="text.lightGray"
+            onClick={() => login()}
+            isLoading={submitLoading}
+            leftIcon={<Image src="/brands/google_logo_G.png" />}
+          />
         </Flex>
 
         <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
 
-        {/* <GoogleLogin onSuccess={responseMessage} onError={errorMessage} /> */}
-
-        {/* <Flex gap="0.65rem">
-          Fazer login com o google
-          <Image src="/brands/google_logo_G.png" />
-        </Flex> */}
-
-        <GenericButton
-          label="Entrar"
-          bg="primary"
-          letterSpacing="1.5px"
-          fontWeight="100"
-          onClick={() => handleSubmit()}
-          isLoading={submitLoading}
-          marginTop="8px"
-          w="100%"
-        />
-        <GenericButton
-          label="Fazer login com o google"
-          btntype="outline"
-          color="text.black"
-          borderColor="blue.500"
-          fontWeight="100"
-          onClick={() => login()}
-          isLoading={submitLoading}
-          leftIcon={<Image src="/brands/google_logo_G.png" />}
-        />
+        <GenericButton label="Entrar" onClick={() => handleSubmit()} isLoading={submitLoading} marginTop="8px" w="100%" />
       </Flex>
     </Flex>
   );

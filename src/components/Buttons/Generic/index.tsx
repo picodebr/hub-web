@@ -6,7 +6,7 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
   const getBtnColor = () => {
     switch (btntype) {
       case 'primary':
-        return '#2a075d';
+        return '#6699FF';
       case 'outline':
         return 'transparent';
       case 'outline-white':
@@ -16,7 +16,7 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
       case 'outline-warning':
         return 'transparent';
       default:
-        return '#2a075d';
+        return '#6699FF';
     }
   };
 
@@ -27,11 +27,11 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
       case 'warning':
         return 'white';
       case 'outline':
-        return '#6D23F8';
+        return '#6699FF';
       case 'outline-warning':
         return '#BA1B1B';
       default:
-        return '#6D23F8';
+        return '#6699FF';
     }
   };
 
@@ -40,9 +40,9 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
       case 'primary':
         return undefined;
       case 'outline':
-        return '1px solid #6D23F8';
+        return '1px solid #6699FF';
       case 'outline-white':
-        return '1px solid #6D23F8';
+        return '1px solid #6699FF';
       case 'warning':
         return '1px solid #BA1B1B';
       case 'outline-warning':
@@ -55,7 +55,7 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
   const getBtnColorHover = () => {
     switch (btntype) {
       case 'primary':
-        return '#6D23F8';
+        return '#6699FF';
       case 'warning':
         return '#991919';
       default:
@@ -72,27 +72,27 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
       case 'outline-warning':
         return '#99191999';
       case 'outline':
-        return '#6f25f799';
+        return '#6699FF99';
       default:
-        return '#6D23F8';
+        return '#6699FF';
     }
   };
 
   return (
     <Button
-      bg={btntype ? getBtnColor() : '#6D23F8'}
+      bg={btntype ? getBtnColor() : '#6699FF'}
       color={btntype ? getBtnTextColor() : 'white'}
       loadingText={label}
-      fontWeight="600"
+      fontWeight="500"
       borderRadius="8px"
       border={getBtnBorder()}
-      letterSpacing={0.65}
+      letterSpacing={0.5}
       _loading={{
         background: '#4A181E !important',
         color: 'white !important',
         opacity: 0.5,
       }}
-      _hover={btntype ? { background: getBtnColorHover(), color: getBtnTextColorHover() } : { background: '#8a56ea', color: 'white' }}
+      _hover={btntype ? { background: getBtnColorHover(), color: getBtnTextColorHover() } : { background: '#6699FF', color: 'white' }}
       {...otherProps}
     >
       {label}

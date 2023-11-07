@@ -1,8 +1,17 @@
 import { extendTheme } from '@chakra-ui/react';
+const breakpoints = {
+  base: '0px',
+  sm: '320px',
+  md: '768px',
+  lg: '960px',
+  xl: '1200px',
+  '2xl': '1536px',
+};
 
 export const globalTheme = extendTheme({
+  breakpoints,
   fonts: {
-    body: `Source Sans Pro`,
+    body: `'Inter' - sans-serif`,
   },
   styles: {
     global: (props: any) => ({
@@ -29,12 +38,14 @@ export const globalTheme = extendTheme({
     text: {
       black: '#3f3f3f',
       gray: '#6f6f6f',
-      light: '#cfcfcf',
+      lightGray: '#D0D4DD',
+      light: '#10182899',
       white: '#ffffff',
     },
     bg: {
+      primary: '#6699FF1A',
       grayDark: '#e0e0e0',
-      gray: '#f1f1f1',
+      gray: '#F9FAFB',
       white: '#ffffff',
       offWhite: '#fafafa',
     },
