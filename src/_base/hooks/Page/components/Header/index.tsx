@@ -11,9 +11,9 @@ interface IProps {
 export const Header: React.FC<IProps> = ({ admin }) => {
   const router = useCustomRouter();
 
-  const handleMenuOptions = {
-    logout: () => router.push('/logout'),
-  };
+  // const handleMenuOptions = {
+  //   logout: () => router.push('/logout'),
+  // };
 
   return (
     <Flex

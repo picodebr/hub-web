@@ -31,12 +31,13 @@ export const globalTheme = extendTheme({
     }),
   },
   colors: {
-    primary: '#2a075d',
-    primaryLight: '#6D23F8',
+    primary: '#94B8FF',
+    primaryLight: '#E4E9F5',
     secondary: '#81BE73',
     secondaryLight: '#81BE73',
     text: {
-      black: '#3f3f3f',
+      primary: '#85ADFF',
+      black: '#101828',
       gray: '#6f6f6f',
       lightGray: '#D0D4DD',
       light: '#10182899',

@@ -28,7 +28,8 @@ const LoginPage: React.FC = () => {
   const [credentials, setCredentials] = useState<IAuthLoginInput>({} as any);
   const [errors, setErrors] = useState<Record<keyof IAuthLoginInput, string | undefined>>({} as any);
 
-  const [user, setUser] = useState<TokenResponse | null>(null);
+  const [user, setUser] = useState<TokenResponse | null>(null)
+    console.log(user);
 
   const handleSubmit = useAsyncCallback(async () => {
     if (!credentials) return;

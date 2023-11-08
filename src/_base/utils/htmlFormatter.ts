@@ -1,4 +1,4 @@
-/**
+/*
  * Format html code to avoid character conflict
  * @param html Html source code minified
  * @returns Html formatted
@@ -29,5 +29,5 @@ export function unEscape(htmlStr: string) {
  * @returns Html formatted ready to display
  */
 export function removeBackslash(htmlStr: string) {
-  return htmlStr.replace(/\"/g, '"');
+  return htmlStr.replace(/"/g, '"');
 }
