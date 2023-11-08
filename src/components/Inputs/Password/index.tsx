@@ -1,6 +1,5 @@
 import { Flex, Input, Text } from '@chakra-ui/react';
 import { useState } from 'react';
-import { BiErrorCircle } from 'react-icons/bi';
 import { BsEye, BsEyeSlash } from 'react-icons/bs';
 import { IInputProps } from '../interfaces';
 
@@ -32,8 +31,6 @@ export const PasswordInput: React.FC<IInputProps> = ({ value = '', placeholder, 
       </Flex>
       {!!error && (
         <Flex align="center" gap="0.25rem" color="status.error">
-          <BiErrorCircle />
-          <Text fontSize="14px">{error}</Text>
         </Flex>
       )}
     </Flex>

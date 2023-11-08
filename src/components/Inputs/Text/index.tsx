@@ -1,5 +1,4 @@
 import { Flex, Input, Text } from '@chakra-ui/react';
-import { BiErrorCircle } from 'react-icons/bi';
 import { IInputProps } from '../interfaces';
 
 export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', placeholder, label, error, rightElement, leftElement, ...rest }) => {
@@ -36,8 +35,7 @@ export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', pl
       </Flex>
       {!!error && (
         <Flex align="center" gap="0.25rem" color="status.error">
-          <BiErrorCircle />
-          <Text fontSize="14px">{error}</Text>
+          <Text fontSize="12.5px">{error}</Text>
         </Flex>
       )}
     </Flex>
