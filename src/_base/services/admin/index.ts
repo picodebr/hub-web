@@ -23,7 +23,7 @@ export const deleteAdmin = async (id: string): ServiceResponse<void> => {
   return data;
 };
 
-export const updateProfile = async ({ confirm_password, ...params }: IUpdateProfileDTO): ServiceResponse<IAdmin> => {
+export const updateProfile = async ({ ...params }: IUpdateProfileDTO): ServiceResponse<IAdmin> => {
   const { data } = await api.patch(`/admin`, params);
   return data;
 };
