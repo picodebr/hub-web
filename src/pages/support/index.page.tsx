@@ -1,7 +1,7 @@
 import { TextInput } from '@/components/Inputs/Text';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { Logo } from '@/components/Logo';
-import { Flex, Link, Text, Textarea } from '@chakra-ui/react';
+import { Flex, Link, Text } from '@chakra-ui/react';
 import { SetStateAction, useState } from 'react';
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
 // import { AiFillCheckCircle } from 'react-icons/ai';
@@ -44,7 +44,7 @@ const Support: React.FC = () => {
         />
       </Flex>
       <Link //Button "send" on support page
-        href="/message_delivered"
+        href="/support_sent"
         width="100%"
       >
         <Flex color="text.white" align="center" justify="center" borderRadius="8px" padding="10px 18px" bg="secondary">
@@ -57,7 +57,7 @@ const Support: React.FC = () => {
 
 export default Support;
 
-//Message SENT
+//Support message SENT
 
 // const supportSent: React.FC = () => {
 //   return (

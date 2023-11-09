@@ -42,6 +42,7 @@ export const globalTheme = extendTheme({
       lightGray: '#D0D4DD',
       light: '#10182899',
       white: '#ffffff',
+      gray700: '#344054',
     },
     bg: {
       primary: '#6699FF1A',
