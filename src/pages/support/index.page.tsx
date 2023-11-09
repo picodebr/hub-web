@@ -24,10 +24,14 @@ const Support: React.FC = () => {
       gap="20px"
     >
       <Logo />
-      <Flex padding="12px 0" width="100%" color="text.lightGray" align="center" gap="8px">
+      <Link 
+        href='/login'
+        width='100%'>
+        <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px" >
         <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-        Voltar
-      </Flex>
+        <Text textAlign='left'>Voltar</Text>
+        </Flex>{' '}
+      </Link>
       <Flex //Inputs
         direction="column"
         width="100%"
@@ -73,9 +77,14 @@ export default Support;
 //       direction="column"
 //     >
 //       <Logo />
-//       <Flex width="100%" color="primary" align="center" >
-//         <AiFillCheckCircle fontSize="45px" style={{ marginTop: '2px' }} />
-//       </Flex>
+        // <Link 
+        // href='/help'
+        // width='100%'>
+        // <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px" >
+        // <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+        // <Text textAlign='left'>Voltar</Text>
+        // </Flex>{' '}
+        // </Link>
 //       <Flex padding="20px 0" width="100%" color="text.lightGray" align="center" gap="8px">
 //         <Flex direction="column" gap="8px">
 //           <Text fontWeight="600" fontSize="20px" color="text.black">

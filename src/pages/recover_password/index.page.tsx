@@ -21,10 +21,14 @@ const Recover: React.FC = () => {
       gap="20px"
     >
       <Logo />
-      <Flex padding="12px 0" width="100%" color="text.lightGray" align="center" gap="8px">
+      <Link 
+        href='/help'
+        width='100%'>
+        <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px" >
         <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-        Voltar
-      </Flex>{' '}
+        <Text textAlign='left'>Voltar</Text>
+        </Flex>{' '}
+      </Link>
       {/*Botão de voltar */}
       <Flex direction="column" gap="8px">
         <Text fontWeight="600" fontSize="20px" color="text.black">
@@ -46,7 +50,17 @@ const Recover: React.FC = () => {
           padding='10px 14px 10px 8px'
           placeholder="Informe seu e-mail"
         />
+        {/* <Text
+            padding='6px 0 0 0'
+            textAlign="left"
+            color="status.error"
+            fontSize="14px"
+            textDecoration="none"
+          >
+            Esse e-mail não possui cadastro
+          </Text> */}
       </Flex>
+
       <Flex
       width='100%'
       textAlign='right'
@@ -64,6 +78,7 @@ const Recover: React.FC = () => {
           </Text>
         </Link>
       </Flex>
+      
       <Link //Enviar código
         href="/support"
         width="100%"
@@ -77,7 +92,3 @@ const Recover: React.FC = () => {
 };
 
 export default Recover;
-
-//If the email is invalid:
-
-
