@@ -105,7 +105,7 @@ const LoginPage: React.FC = () => {
             onInputChange={(v) => handleInputChange('password', v)}
           />
 
-          <Link href="/recover_password">
+          <Link href="/help">
             <Text
               textAlign="right"
               color="red.200"
