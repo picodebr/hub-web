@@ -1,7 +1,7 @@
 import { api } from '@/_base/classes/api';
 
 import { IAdmin } from '@/_base/interfaces/admin';
-import { ServiceResponse } from '../@types';
+import { ServiceResponse } from '../../interfaces/zod';
 import { IAuthLoginInput, IAuthLoginOutput } from './interface';
 
 export const signin = async (credentials: IAuthLoginInput): ServiceResponse<IAuthLoginOutput> => {

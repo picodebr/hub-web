@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { api } from '@/_base/classes/api';
-import { ServiceResponse } from '../@types';
+import { ServiceResponse } from '../../interfaces/zod';
 import { BucketFolders, IPreSignedUploadResponse } from './interface';
 
 export const getPresignedUrl = async (mimetype: string, folder?: BucketFolders): ServiceResponse<IPreSignedUploadResponse> => {

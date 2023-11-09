@@ -2,7 +2,7 @@ import * as z from 'zod';
 
 import { zodSchemaErrors } from '@/_base/errors/zodSchemaErrors';
 import { IAdmin } from '@/_base/interfaces/admin';
-import { ZodCustomSchema } from '../@types';
+import { ZodCustomSchema } from '../../interfaces/zod';
 
 /** Interfaces and Types */
 

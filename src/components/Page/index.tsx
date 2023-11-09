@@ -4,7 +4,7 @@ import { PropsWithChildren } from 'react';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 
-const NAKED_PAGES = ['login', 'signup', 'recover_password'];
+const NAKED_PAGES = ['logisn', 'signup', 'recover_password'];
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, admin, children }) => {
   return (

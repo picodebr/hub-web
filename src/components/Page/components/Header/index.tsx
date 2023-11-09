@@ -1,6 +1,7 @@
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { IAdmin } from '@/_base/interfaces/admin';
 import { getUserInitials } from '@/_base/utils';
+import { Logo } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
 import { Flex, Image, Text } from '@chakra-ui/react';
 
@@ -27,7 +28,7 @@ export const Header: React.FC<IProps> = ({ admin }) => {
       borderBottom="2px solid"
       borderColor="#5924a8"
     >
-      <Image src="/adhow-logo.svg" alt="logo" h="25px" />
+      <Logo size='sm'/>
       <Flex
         border="2px solid"
         bg="bg.white"
