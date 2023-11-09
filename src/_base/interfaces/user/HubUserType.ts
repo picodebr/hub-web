@@ -1,3 +1,3 @@
-export const hubUserRoles = <const>['student', 'parent', 'teacher', 'principal', 'mayor'];
+export const hubUserTypes = <const>['student', 'teacher'];
 
-export type HubUserRole = (typeof hubUserRoles)[number];
+export type HubUserType = (typeof hubUserTypes)[number];

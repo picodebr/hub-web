@@ -1,5 +1,6 @@
 import { HubPermissions } from "../permissions";
 import { HubUserRole } from "./HubUserRole";
+import { HubUserType } from "./HubUserType";
 
 export default interface IRegisterUser {
   hub_class_id?: string | null;
@@ -9,4 +10,5 @@ export default interface IRegisterUser {
   password: string;
   role: HubUserRole;
   permissions?: HubPermissions;
+  user_type: HubUserType;
 }
