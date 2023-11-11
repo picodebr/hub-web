@@ -1,5 +1,6 @@
-import { ZodCustomSchema } from '@/_base/services/@types';
 import * as z from 'zod';
+
+import { ZodCustomSchema } from '../zod';
 
 export interface IContact {
   email?: string;

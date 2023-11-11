@@ -1,14 +1,14 @@
-import { IAdmin } from '@/_base/interfaces/admin';
-import { IPermissionsPerModule } from '@/_base/interfaces/permissions';
+import { HubPermissions } from "@/_base/interfaces/permissions";
+import { IHubUser } from "@/_base/interfaces/user";
 
 export interface IPageProps {
-  admin?: IAdmin;
+  user?: IHubUser;
   selectedPage?: string;
   pageTitle?: string;
 }
 
 export interface IPageContext {
-  admin: IAdmin;
-  setAdmin: React.Dispatch<React.SetStateAction<IAdmin>>;
-  permissions: IPermissionsPerModule;
+  user: IHubUser;
+  setUser: React.Dispatch<React.SetStateAction<IHubUser>>;
+  permissions: HubPermissions;
 }

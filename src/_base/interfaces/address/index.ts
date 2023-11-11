@@ -1,6 +1,5 @@
 import * as z from 'zod';
-
-import { ZodCustomSchema } from '@/_base/services/@types';
+import { ZodCustomSchema } from '../zod';
 
 export interface IAddress {
   address?: string;

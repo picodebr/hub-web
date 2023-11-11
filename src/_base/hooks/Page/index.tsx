@@ -1,40 +1,40 @@
 import Head from 'next/head';
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-import { EMPTY_ADMIN_DATA, IAdmin } from '@/_base/interfaces/admin';
 import { validateSession } from '@/_base/services/auth';
 import { PageWrapper } from '@/components/Page';
 import { IPageContext, IPageProps } from './interfaces';
+import { EMPTY_HUB_USER, IHubUser } from '@/_base/interfaces/user';
 
 const PageContext = createContext<IPageContext>({
-  admin: EMPTY_ADMIN_DATA,
-  setAdmin: () => ({}),
-  permissions: EMPTY_ADMIN_DATA.permissions,
+  user: EMPTY_HUB_USER,
+  setUser: (e) => ({...(e || {} as any)}),
+  permissions: EMPTY_HUB_USER.permissions,
 });
 
-export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ admin: _admin, children, pageTitle, selectedPage }) => {
-  const [admin, setAdmin] = useState<IAdmin>(_admin || EMPTY_ADMIN_DATA);
+export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ user: _admin, children, pageTitle, selectedPage }) => {
+  const [user, setUser] = useState<IHubUser>(_admin || EMPTY_HUB_USER);
 
   const syncProfile = useCallback(async () => {
     try {
       const { response } = await validateSession();
-      setAdmin(response);
+      setUser(response);
     } catch (err) {
       console.error(err);
     }
   }, []);
 
   useEffect(() => {
-    if (_admin) setAdmin(_admin);
+    if (_admin) setUser(_admin);
     else syncProfile();
   }, [_admin]);
 
   return (
-    <PageContext.Provider value={{ admin, setAdmin, permissions: admin.permission_group?.permissions || admin.permissions }}>
+    <PageContext.Provider value={{ user: user, setUser: setUser, permissions: user.permissions }}>
       <Head>
         <title>{pageTitle}</title>
       </Head>
-      <PageWrapper admin={admin} selectedPage={selectedPage}>
+      <PageWrapper user={user} selectedPage={selectedPage}>
         {children}
       </PageWrapper>
     </PageContext.Provider>

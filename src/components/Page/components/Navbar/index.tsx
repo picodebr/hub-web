@@ -1,41 +1,37 @@
 import { Flex, Icon } from '@chakra-ui/react';
 import { IconType } from 'react-icons';
-import { FaChartLine, FaHome, FaSignOutAlt, FaUsers } from 'react-icons/fa';
-import { FaImages, FaUserLock } from 'react-icons/fa6';
+import { FaChartLine, FaHome, FaUsers } from 'react-icons/fa';
+import { FaImages } from 'react-icons/fa6';
 import { IoMegaphone } from 'react-icons/io5';
 import { MdHomeWork } from 'react-icons/md';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
-import { IAdmin } from '@/_base/interfaces/admin';
 import { dimensions } from '@/styles/global';
-import { BiSolidReport } from 'react-icons/bi';
+import { IHubUser } from '@/_base/interfaces/user';
 
 type MenuItemType = { name: string; page: string; icon: IconType; permission?: { scope: string; action: string } };
 
 const menuItems: Array<MenuItemType> = [
-  { name: 'Home', page: 'home', icon: FaHome },
-  { name: 'Campaigns', page: 'campaigns', icon: FaChartLine, permission: { scope: 'campaign', action: 'read' } },
-  { name: 'Publishers', page: 'publishers', icon: FaImages, permission: { scope: 'publisher', action: 'read' } },
-  { name: 'Agencies', page: 'agencies', icon: MdHomeWork, permission: { scope: 'agency', action: 'read' } },
-  { name: 'Advertisers', page: 'advertisers', icon: IoMegaphone, permission: { scope: 'advertiser', action: 'read' } },
-  { name: 'Users', page: 'users', icon: FaUsers, permission: { scope: 'admin', action: 'read' } },
-  { name: 'Permission Groups', page: 'permission_groups', icon: FaUserLock, permission: { scope: 'permission_group', action: 'read' } },
-  { name: 'Reports', page: 'reports', icon: BiSolidReport },
-  { name: 'Logout', page: 'logout', icon: FaSignOutAlt },
+  { name: 'Cursos', page: 'home', icon: FaHome },
+  { name: 'Loja', page: 'campaigns', icon: FaChartLine, permission: { scope: 'campaign', action: 'read' } },
+  { name: 'Meus Planejamentos', page: 'publishers', icon: FaImages, permission: { scope: 'publisher', action: 'read' } },
+  { name: 'Meus Projetos (CODE)', page: 'agencies', icon: MdHomeWork, permission: { scope: 'agency', action: 'read' } },
+  { name: 'Meus Grupos', page: 'advertisers', icon: IoMegaphone, permission: { scope: 'advertiser', action: 'read' } },
+  { name: 'Desafio Bônus', page: 'users', icon: FaUsers, permission: { scope: 'admin', action: 'read' } },
 ];
 
 interface IProps {
   page: string;
-  admin?: IAdmin;
+  user?: IHubUser;
 }
 
-export const Navbar: React.FC<IProps> = ({ page, admin }) => {
-  const adminPermissions = admin?.permission_group?.permissions || admin?.permissions || {};
+export const Navbar: React.FC<IProps> = ({ page }) => {
   const router = useCustomRouter();
+
   return (
     <Flex
       direction="column"
-      bg="#2a075d"
+      bg="primary"
       borderRadius="md"
       minW={dimensions.navbar.width}
       padding="0.5rem"
@@ -46,11 +42,8 @@ export const Navbar: React.FC<IProps> = ({ page, admin }) => {
       userSelect="none"
     >
       {menuItems
-        .filter(({ permission }) =>
-          admin?.id ? !permission?.scope || (adminPermissions as any)[permission.scope || '']?.includes(permission.action) : true,
-        )
         .map((item) => (
-          <Flex key={item.name} w="100%" direction="column" _last={{ flex: '1', justifyContent: 'flex-end' }}>
+          <Flex key={item.name} w="100%" direction="column" >
             <Flex
               align="center"
               padding="4"
@@ -58,8 +51,8 @@ export const Navbar: React.FC<IProps> = ({ page, admin }) => {
               borderRadius="lg"
               cursor="pointer"
               _hover={{ outline: '1px solid white' }}
-              bg={page === item.page ? 'white' : '#2a075d'}
-              color={page === item.page ? '#2a075d' : 'white'}
+              bg={page === item.page ? 'white' : 'primary'}
+              color={page === item.page ? 'primary' : 'white'}
               fontSize="1rem"
               onClick={() => router.push(`/${item.page}`)}
             >

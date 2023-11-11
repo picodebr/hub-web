@@ -9,7 +9,7 @@ import { useAsyncCallback } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { validateSession } from '@/_base/services/auth';
 import { IAuthLoginInput, authSchema } from '@/_base/services/auth/interface';
-import { forceTokenExpiration, logError, updateApiToken } from '@/_base/utils';
+import { logError, tokenManager } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
@@ -160,13 +160,13 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const selectedPage = 'login';
 
   try {
-    updateApiToken(req);
+    tokenManager.updateToken(req);
 
     await validateSession();
 
     return { redirect: { destination: '/home', permanent: false } };
   } catch (err: any) {
-    forceTokenExpiration(res);
+    tokenManager.forceExpires(res);
     logError(selectedPage, err);
 
     return { props: { selectedPage, pageTitle: 'Login' } };

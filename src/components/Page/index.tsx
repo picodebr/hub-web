@@ -4,18 +4,18 @@ import { PropsWithChildren } from 'react';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 
-const NAKED_PAGES = ['logisn', 'signup', 'recover_password'];
+const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
 
-export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, admin, children }) => {
+export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, user: admin, children }) => {
   return (
     <Flex h="100vh" w="100vw" flexDirection="column" bg="bg.primary" position="relative" overflow="hidden">
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
       ) : (
         <>
-          <Header admin={admin} />
+          <Header user={admin} />
           <Flex flex="1" padding="10px" gap="10px" overflow="hidden">
-            <Navbar page={selectedPage} admin={admin} />
+            <Navbar page={selectedPage} user={admin} />
             <Flex flex="1" height="100%" overflow="hidden">
               {children}
             </Flex>

@@ -1,20 +1,15 @@
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
-import { IAdmin } from '@/_base/interfaces/admin';
-import { getUserInitials } from '@/_base/utils';
+import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
-import { Flex, Image, Text } from '@chakra-ui/react';
+import { Flex, Text } from '@chakra-ui/react';
 
 interface IProps {
-  admin?: IAdmin;
+  user?: IHubUser;
 }
 
-export const Header: React.FC<IProps> = ({ admin }) => {
+export const Header: React.FC<IProps> = () => {
   const router = useCustomRouter();
-
-  // const handleMenuOptions = {
-  //   logout: () => router.push('/logout'),
-  // };
 
   return (
     <Flex
@@ -26,7 +21,7 @@ export const Header: React.FC<IProps> = ({ admin }) => {
       padding="0 1rem"
       borderRadius="0 0 0.4rem 0.4rem"
       borderBottom="2px solid"
-      borderColor="#5924a8"
+      borderColor="primary"
     >
       <Logo size='sm'/>
       <Flex
@@ -46,7 +41,7 @@ export const Header: React.FC<IProps> = ({ admin }) => {
         onClick={() => router.push(`/profile`)}
       >
         <Text color="primary" fontWeight="extrabold" fontSize="1.5rem" letterSpacing={1}>
-          {getUserInitials(admin?.name || '')}
+          PI
         </Text>
       </Flex>
     </Flex>
