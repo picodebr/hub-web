@@ -31,7 +31,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
           zIndex="100"
           transform="scale(1.2)"
         >
-          <Spinner size="xl" emptyColor="gray.200" thickness="6px" color="primaryLight" speed="0.75s" />
+          <Spinner size="xl" emptyColor="gray.200" thickness="6px" color="primary" speed="0.75s" />
         </Flex>
       ) : null}
     </LoadingContext.Provider>

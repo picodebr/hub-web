@@ -1,4 +1,4 @@
-import { useInputHandler } from '@/_base/hooks';
+import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { EMPTY_SUPPORT_DATA, ISupportData, supportSchema } from '@/_base/interfaces/help';
 import { TextInput } from '@/components/Inputs/Text';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
@@ -14,10 +14,10 @@ const Support: React.FC = () => {
 
   const { errors, onInputChange, data, submit } = useInputHandler<ISupportData>({ data: EMPTY_SUPPORT_DATA, schema: supportSchema });
 
-  const handleSentTrouble = () => {
+  const handleSentTrouble = useAsyncCallback(() => {
     // TODO: send request to backend
     setStep('SENT');
-  };
+  }, []);
 
   const PageStepElement: Record<PageStepsType, ReactNode> = {
     FORM: (
