@@ -5,12 +5,12 @@ import { ILoadingConfig, ILoadingContext, ILoadingProviderProps } from './interf
 
 const defaultConfig: ILoadingConfig = {
   isLoading: false,
-  placement: 'default',
 };
 
 const LoadingContext = React.createContext<ILoadingContext>({
   loadingConfig: { ...defaultConfig },
   setLoadingConfig: () => ({}),
+  runTransition: () => ({}),
 });
 
 export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>> = ({ children, changeSignal }) => {
@@ -20,20 +20,29 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
     setLoadingConfig({ ...defaultConfig });
   }, [changeSignal]);
 
+  const runTransition = (time = 500) => {
+    setLoadingConfig({ isLoading: true });
+    setTimeout(() => setLoadingConfig({ isLoading: false }), time);
+  };
+
   return (
-    <LoadingContext.Provider value={{ loadingConfig, setLoadingConfig }}>
-      {children}
-      {loadingConfig.isLoading ? (
-        <Flex
-          position="fixed"
-          bottom={loadingConfig.placement === 'center' ? '50%' : '3rem'}
-          right={loadingConfig.placement === 'center' ? '50%' : '4rem'}
-          zIndex="100"
-          transform="scale(1.2)"
-        >
-          <Spinner size="xl" emptyColor="gray.200" thickness="6px" color="primary" speed="0.75s" />
+    <LoadingContext.Provider value={{ loadingConfig, setLoadingConfig, runTransition }}>
+      <Flex
+        position="fixed"
+        overflow="hidden"
+        width="100vw"
+        height="100vh"
+        zIndex="9999"
+        bgGradient="linear(to-b, primary, gray.300)"
+        transition="all 0.35s"
+        opacity={loadingConfig.isLoading ? '1' : '0'}
+        pointerEvents={loadingConfig.isLoading ? 'auto' : 'none'}
+      >
+        <Flex margin="auto" transition="all 0.65s" transform={loadingConfig.isLoading ? 'translateY(0) scale(1.5)' : 'translateY(80%) scale(0.5)'}>
+          <Spinner size="xl" emptyColor="gray.900" thickness="6px" color="primary" speed="0.75s" />
         </Flex>
-      ) : null}
+      </Flex>
+      {children}
     </LoadingContext.Provider>
   );
 };

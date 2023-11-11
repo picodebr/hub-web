@@ -1,10 +1,10 @@
-import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
+import { useAsyncCallback, useInputHandler, useLoading } from '@/_base/hooks';
 import { EMPTY_SUPPORT_DATA, ISupportData, supportSchema } from '@/_base/interfaces/help';
 import { TextInput } from '@/components/Inputs/Text';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { Logo } from '@/components/Logo';
 import { Flex, Link, Text } from '@chakra-ui/react';
-import { ReactNode, SetStateAction, useState } from 'react';
+import { ReactNode, SetStateAction, useCallback, useState } from 'react';
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
 
 type PageStepsType = 'FORM' | 'SENT';
@@ -14,9 +14,14 @@ const Support: React.FC = () => {
 
   const { errors, onInputChange, data, submit } = useInputHandler<ISupportData>({ data: EMPTY_SUPPORT_DATA, schema: supportSchema });
 
-  const handleSentTrouble = useAsyncCallback(() => {
+  const handleSentTrouble = useAsyncCallback(async () => {
     // TODO: send request to backend
-    setStep('SENT');
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        setStep('SENT');
+        resolve(true);
+      }, 5000);
+    });
   }, []);
 
   const PageStepElement: Record<PageStepsType, ReactNode> = {
