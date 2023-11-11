@@ -33,7 +33,7 @@ export const globalTheme = extendTheme({
   colors: {
     primary: '#94B8FF',
     primaryLight: '#E4E9F5',
-    secondary: '#81BE73',
+    secondary: '#6699FF',
     secondaryLight: '#81BE73',
     text: {
       primary: '#85ADFF',
@@ -42,6 +42,7 @@ export const globalTheme = extendTheme({
       lightGray: '#D0D4DD',
       light: '#10182899',
       white: '#ffffff',
+      gray700: '#344054',
     },
     bg: {
       primary: '#6699FF1A',
