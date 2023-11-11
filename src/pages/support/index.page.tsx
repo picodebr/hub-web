@@ -12,7 +12,7 @@ type PageStepsType = 'FORM' | 'SENT';
 const Support: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('FORM');
 
-  const { errors, onInputChange, data, submit } = useInputHandler<ISupportData>({ data: EMPTY_SUPPORT_DATA, schema: supportSchema });
+  const { errors, onInputChange, data, submit } = useInputHandler<ISupportData>();
 
   const handleSentTrouble = useAsyncCallback(async () => {
     // TODO: send request to backend
