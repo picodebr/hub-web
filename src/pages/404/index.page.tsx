@@ -21,7 +21,7 @@ const NotFound: React.FC = () => {
             _hover={{
               bg: 'blue.500',
             }}
-            onClick={() => router.push('/home')}
+            onClick={() => router.push('/')}
           >
             Back to home
           </Button>

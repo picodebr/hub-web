@@ -6,5 +6,6 @@ export * from './getFilenameFromUrl';
 export * from './logError';
 export * from './nFormatter';
 export * from './refinePasswordSchema';
+export * from './removeDuplicateItems';
 export * from './showErrorToClient';
 export * from './tokenManager';

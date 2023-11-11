@@ -6,7 +6,7 @@ export const TextAreaInput: React.FC<IInputProps & any> = ({ onInputChange, valu
   return (
     <Flex direction="column" color="text.light">
       {!!label && (
-        <Text color="text.black" fontSize="13.5px" fontWeight="500" pb="0.25rem">
+        <Text color="text.gray700" fontSize="13.5px" fontWeight="500" pb="0.25rem">
           {label}
         </Text>
       )}
@@ -21,11 +21,11 @@ export const TextAreaInput: React.FC<IInputProps & any> = ({ onInputChange, valu
           value={value}
           onChange={(e) => onInputChange(e.target.value)}
           border="none"
+          padding="10px 10px 10px 6px"
           borderRadius="6px"
           isInvalid={!!error}
           variant="unstyled"
-          padding="0.35rem 0.5rem"
-          fontSize="15px"
+          fontSize="16px"
           {...rest}
         />
         {!!rightElement && (

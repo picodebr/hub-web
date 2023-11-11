@@ -8,7 +8,7 @@ export const PasswordInput: React.FC<IInputProps> = ({ value = '', placeholder, 
   return (
     <Flex direction="column" color="text.light">
       {!!label && (
-        <Text color="text.black" fontSize="13.5px" pb="0.25rem" fontWeight="500">
+        <Text color="text.gray700" fontSize="13.5px" pb="0.25rem" fontWeight="500">
           {label}
         </Text>
       )}
@@ -19,11 +19,11 @@ export const PasswordInput: React.FC<IInputProps> = ({ value = '', placeholder, 
           value={value}
           onChange={(e) => onChange(e.target.value)}
           border="none"
+          padding="10px 10px 10px 6px"
           borderRadius="6px"
           isInvalid={!!error}
           variant="unstyled"
-          fontSize="15px"
-          padding="0.35rem 0.5rem"
+          fontSize="16px"
         />
         <Flex align="center" fontSize="1.2rem" p="0 6px 0 2px" cursor="pointer" onClick={() => setShowPass((e) => !e)}>
           {showPass ? <BsEyeSlash /> : <BsEye />}
@@ -31,6 +31,7 @@ export const PasswordInput: React.FC<IInputProps> = ({ value = '', placeholder, 
       </Flex>
       {!!error && (
         <Flex align="center" gap="0.25rem" color="status.error">
+          <Text fontSize="12.5px">{error}</Text>
         </Flex>
       )}
     </Flex>
