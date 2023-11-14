@@ -57,13 +57,13 @@ const LoginPage: React.FC = () => {
 
   return (
     <Flex h="100%" width="100%" justifyContent="center" alignItems="center">
-      <Flex direction="column" bg="bg.offWhite" padding="1rem" border="1px" borderColor="border.light" borderRadius="md" gap="1.15rem" align="center">
+      <Flex direction="column" bg="white" padding="1rem" border="1px" borderColor="gray300" borderRadius="md" gap="1.15rem" align="center">
         <Flex direction="column" gap="1rem" alignSelf="center" w="100%">
           <Logo size='sm'/>
 
-          <Text fontSize="13px" textAlign="center">
+          <Text fontSize="13px" textAlign="center" color='gray400'>
             Ainda não tem uma conta?{' '}
-            <Link href="/signup" color="blue.400" textDecoration="underline" _hover={{ color: 'blue.600' }}>
+            <Link href="/signup" color="primary900" textDecoration="underline" _hover={{ color: 'blue600' }} >
               Cadastre-se
             </Link>
           </Text>
@@ -88,7 +88,7 @@ const LoginPage: React.FC = () => {
           <Link href="/help">
             <Text
               textAlign="right"
-              color="red.200"
+              color="error300"
               fontSize="12.5px"
               cursor="pointer"
               textDecoration="underline"

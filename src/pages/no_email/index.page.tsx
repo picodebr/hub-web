@@ -3,7 +3,6 @@ import { Logo } from '@/components/Logo';
 import { Flex, Link, Text } from '@chakra-ui/react';
 import { useState } from 'react';
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
-import { AiOutlineMail } from 'react-icons/ai';
 
 const RecoverWithoutEmail: React.FC = () => {
   const [username, setUsername] = useState('');
