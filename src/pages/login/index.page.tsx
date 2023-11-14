@@ -74,6 +74,7 @@ const LoginPage: React.FC = () => {
             value={data?.identifier}
             onInputChange={(v) => onInputChange('identifier', v)}
             leftElement={<FiUser />}
+            placeholder='Nome de Usuário'
           />
 
           <PasswordInput
@@ -81,6 +82,7 @@ const LoginPage: React.FC = () => {
             error={errors.password}
             value={data?.password}
             onInputChange={(v) => onInputChange('password', v)}
+            placeholder='Sua senha'
           />
 
           <Link href="/help">

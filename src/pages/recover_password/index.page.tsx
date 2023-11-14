@@ -4,9 +4,19 @@ import { Flex, Link, Text } from '@chakra-ui/react';
 import { useState } from 'react';
 import { FiChevronLeft } from 'react-icons/fi';
 import { AiOutlineMail } from 'react-icons/ai';
+import { useAsyncCallback } from '@/_base/hooks';
 
 const Recover: React.FC = () => {
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+
+  const handleSubmit = useAsyncCallback(async () => {
+    if (!email) {
+      setEmailError('Esse campo é obrigatório');
+      return;
+    }
+    setEmailError('');
+}, []);
   return (
     <Flex
       backgroundColor="bg.white"
@@ -49,6 +59,7 @@ const Recover: React.FC = () => {
           color='text.gray700'
           padding='10px 14px 10px 8px'
           placeholder="Informe seu e-mail"
+          error={emailError}
         />
         {/* <Text
             padding='6px 0 0 0'

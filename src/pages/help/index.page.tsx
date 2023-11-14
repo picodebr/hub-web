@@ -40,7 +40,7 @@ const Help: React.FC = () => {
         href="/support"
         width="100%"
       >
-        <Flex color="text.primary" align="center" justify="space-between" borderRadius="8px" padding="10px 18px" bg="primaryLight">
+        <Flex color="text.primary" align="center" justify="space-between" borderRadius="8px" padding="10px 18px" bg="primary25">
           <Text fontWeight="600">Suporte PiCode</Text>
           <FiChevronRight />
         </Flex>
