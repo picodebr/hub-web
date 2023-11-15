@@ -1,5 +1,5 @@
-import { useAsyncCallback } from '@/_base/hooks';
-import { useCustomRouter } from '@/_base/hooks/CustomRouter';
+import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
+import { EMPTY_SUPPORT_DATA, ISupportData, supportSchema } from '@/_base/interfaces/help';
 import { TextInput } from '@/components/Inputs/Text';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { Logo } from '@/components/Logo';
@@ -7,54 +7,24 @@ import { Flex, Link, Text } from '@chakra-ui/react';
 import { ReactNode, SetStateAction, useState } from 'react';
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
 
-type PageStepType = 'FORM' | 'MESSAGE_SENT';
+type PageStepsType = 'FORM' | 'SENT';
 
 const Support: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [description, setDescription] = useState('');
+  const [step, setStep] = useState<PageStepsType>('FORM');
 
-  const [usernameError, setUsernameError] = useState('');
-  const [descriptionError, setDescriptionError] = useState('');
+  const { errors, onInputChange, data, submit } = useInputHandler<ISupportData>({ data: EMPTY_SUPPORT_DATA, schema: supportSchema });
 
-  const funcaozinhaquedemora = async () => {
-    await new Promise((res) => {
+  const handleSentTrouble = useAsyncCallback(async () => {
+    // TODO: send request to backend
+    await new Promise((resolve) => {
       setTimeout(() => {
-        setPageStep('MESSAGE_SENT');
-        res(true);
+        setStep('SENT');
+        resolve(true);
       }, 5000);
     });
-  };
-
-  const router = useCustomRouter();
- 
-  const [pageStep, setPageStep] = useState<PageStepType>('FORM');
-
-  const handleSubmit = useAsyncCallback(async () => {
-    if (!description) {
-      setDescriptionError('Esse campo é obrigatório');
-      return;
-    }
-    if (description.length < 15) {
-      setDescriptionError('Mínimo de 15 caracteres');
-      return;
-    }
-    setDescriptionError('');
-
-    if (!username) {
-      setUsernameError('Esse campo é obrigatório');
-      return;
-    }
-    if (username.length < 6) {
-      setUsernameError('Nome de usuário inválido');
-      return;
-    }
-    setUsernameError('');
-
-    await funcaozinhaquedemora();
   }, []);
 
-  const PageStepElement: Record<PageStepType, ReactNode> = {
+  const PageStepElement: Record<PageStepsType, ReactNode> = {
     FORM: (
       <Flex
         backgroundColor="bg.white"
@@ -69,30 +39,32 @@ const Support: React.FC = () => {
         gap="20px"
       >
         <Logo />
-        <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px" cursor="pointer" onClick={() => router.push('/login')}>
-          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-          <Text textAlign="left">Voltar</Text>
-        </Flex>
+        <Link href="/login" width="100%">
+          <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px">
+            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+            <Text textAlign="left">Voltar</Text>
+          </Flex>{' '}
+        </Link>
         <Flex //Inputs
           direction="column"
           width="100%"
           gap="12px"
         >
           <TextInput
-            value={username}
-            onInputChange={(value) => setUsername(value)}
+            value={data.username}
+            error={errors.username}
+            onInputChange={(value) => onInputChange('username', value)}
             label="Nome de Usuário"
             leftElement={<FiUser />}
-            error={usernameError}
           />
-          <TextInput value={email} onInputChange={(value) => setEmail(value)} label="E-mail" />
+          <TextInput value={data.email} error={errors.email} onInputChange={(value) => onInputChange('email', value)} label="E-mail" />
           <TextAreaInput
-            value={description}
-            onInputChange={(value: SetStateAction<string>) => setDescription(value)}
+            value={data.description}
+            error={errors.description}
+            onInputChange={(value: SetStateAction<string>) => onInputChange('description', value)}
             placeholder="Fale sobre o problema..."
             label="Descrição"
             resize="none"
-            error={descriptionError}
           />
         </Flex>
         <Flex
@@ -103,13 +75,13 @@ const Support: React.FC = () => {
           padding="10px 18px"
           bg="secondary"
           cursor="pointer"
-          onClick={() => handleSubmit()}
+          onClick={() => submit(handleSentTrouble)}
         >
           <Text fontWeight="600">Enviar</Text>
         </Flex>
       </Flex>
     ),
-    MESSAGE_SENT: (
+    SENT: (
       <Flex
         backgroundColor="bg.white"
         width="400px"
@@ -150,7 +122,7 @@ const Support: React.FC = () => {
     ),
   };
 
-  return PageStepElement[pageStep];
+  return PageStepElement[step];
 };
 
 export default Support;
