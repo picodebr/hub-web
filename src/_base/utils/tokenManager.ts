@@ -12,17 +12,17 @@ export const tokenManager: ITokenManager = {
     if (encodedToken) return atob(encodedToken);
     return null;
   },
-  forceExpires: (res: ServerResponse) => res.setHeader('Set-Cookie', 'adhow_access=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'),
+  forceExpires: (res: ServerResponse) =>
+    res.setHeader('Set-Cookie', `${btoa(COOKIE_TOKEN_LABEL)}=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`),
   updateToken: (req: NextAppRequest) => {
-    const access_token  = req.cookies.access_token;
-  
-    api.defaults.headers.authorization = `Bearer ${access_token}`;
-  }
+    const access_token = req.cookies[btoa(COOKIE_TOKEN_LABEL)];
+
+    api.defaults.headers.authorization = `Bearer ${atob(access_token || '')}`;
+  },
 };
 
-
-type NextAppRequest = IncomingMessage & { cookies: Partial<{[key: string]: string;}>} 
-interface ITokenManager { 
+type NextAppRequest = IncomingMessage & { cookies: Partial<{ [key: string]: string }> };
+interface ITokenManager {
   setToken: (token: string, expires?: number) => void;
   getToken: () => string | null;
   forceExpires: (res: ServerResponse) => void;

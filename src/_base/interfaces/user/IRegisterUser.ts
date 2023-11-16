@@ -1,14 +1,12 @@
-import { HubPermissions } from "../permissions";
-import { HubUserRole } from "./HubUserRole";
-import { HubUserType } from "./HubUserType";
+import { HubUserType } from './HubUserType';
 
 export default interface IRegisterUser {
-  hub_class_id?: string | null;
+  primary_code: string;
   name: string;
   email: string;
   username: string;
   password: string;
-  role: HubUserRole;
-  permissions?: HubPermissions;
+  password_confirmation: string;
+  birthdate: Date;
   user_type: HubUserType;
 }

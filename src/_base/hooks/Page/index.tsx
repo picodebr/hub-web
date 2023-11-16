@@ -8,7 +8,7 @@ import { EMPTY_HUB_USER, IHubUser } from '@/_base/interfaces/user';
 
 const PageContext = createContext<IPageContext>({
   user: EMPTY_HUB_USER,
-  setUser: (e) => ({...(e || {} as any)}),
+  setUser: (e) => ({ ...(e || ({} as any)) }),
   permissions: EMPTY_HUB_USER.permissions,
 });
 
@@ -17,8 +17,8 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ user: _admin, ch
 
   const syncProfile = useCallback(async () => {
     try {
-      const { response } = await validateSession();
-      setUser(response);
+      const user = await validateSession();
+      setUser(user);
     } catch (err) {
       console.error(err);
     }

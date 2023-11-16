@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Checkbox, Flex, Image, Link, Text } from '@chakra-ui/react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { GetServerSideProps } from 'next';
@@ -6,7 +7,7 @@ import { FiUser } from 'react-icons/fi';
 
 import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
-import { validateSession } from '@/_base/services/auth';
+import { login, validateSession } from '@/_base/services/auth';
 import { logError, tokenManager } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
@@ -14,41 +15,38 @@ import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { IAuthRequest, authSchema } from '@/_base/interfaces/auth';
-
-interface IReCAPTCHAData {
-  token: string | null;
-  error?: string;
-}
+import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 
 const LoginPage: React.FC = () => {
   const router = useCustomRouter();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
-  const { errors, onInputChange, data, submit } = useInputHandler<IAuthRequest>({ schema: authSchema })
+  const { errors, onInputChange, data, submit } = useInputHandler<IAuthRequest>({ schema: authSchema });
 
-
-  const handleLogin = useAsyncCallback(async () => {
-    // Prevent the user to click on the button more than one time
-    setSubmitLoading(true);
+  const handleLogin = useAsyncCallback(
+    async () => {
+      // Prevent the user to click on the button more than one time
+      setSubmitLoading(true);
 
       if (!captcha.token) {
         setCaptcha((e) => ({ ...e, error: 'Captcha obrigatório' }));
-        setSubmitLoading(false);
         return;
       } else setCaptcha((e) => ({ ...e, error: undefined }));
 
-      // const { response } = await signin({
-      //   identifier: credentials.identifier,
-      //   password: credentials.password,
-      // });
+      const { access_token } = await login({
+        identifier: data.identifier,
+        password: data.password,
+      });
 
-      // tokenManager.setToken(response.token);
+      tokenManager.setToken(access_token);
 
-      router.push('/home');
-      setSubmitLoading(false);
-  }, [router, captcha]);
+      // router.push('/home');
+    },
+    [router, captcha],
+    () => setSubmitLoading(false),
+  );
 
-  const login = useGoogleLogin({
+  const handleGoogleLogin = useGoogleLogin({
     onSuccess: (codeResponse) => {
       console.log('onSuccess :', codeResponse);
     },
@@ -59,7 +57,7 @@ const LoginPage: React.FC = () => {
     <Flex h="100%" width="100%" justifyContent="center" alignItems="center">
       <Flex direction="column" bg="bg.offWhite" padding="1rem" border="1px" borderColor="border.light" borderRadius="md" gap="1.15rem" align="center">
         <Flex direction="column" gap="1rem" alignSelf="center" w="100%">
-          <Logo size='sm'/>
+          <Logo size="sm" />
 
           <Text fontSize="13px" textAlign="center">
             Ainda não tem uma conta?{' '}
@@ -74,7 +72,7 @@ const LoginPage: React.FC = () => {
             value={data?.identifier}
             onInputChange={(v) => onInputChange('identifier', v)}
             leftElement={<FiUser />}
-            placeholder='Nome de Usuário'
+            placeholder="Nome de Usuário"
           />
 
           <PasswordInput
@@ -82,7 +80,7 @@ const LoginPage: React.FC = () => {
             error={errors.password}
             value={data?.password}
             onInputChange={(v) => onInputChange('password', v)}
-            placeholder='Sua senha'
+            placeholder="Sua senha"
           />
 
           <Link href="/help">
@@ -120,7 +118,7 @@ const LoginPage: React.FC = () => {
             fontSize="15px"
             fontWeight="medium"
             borderColor="text.lightGray"
-            onClick={() => login()}
+            onClick={() => handleGoogleLogin()}
             isLoading={submitLoading}
             leftIcon={<Image src="/brands/google_logo_G.png" />}
           />
