@@ -1,11 +1,13 @@
 import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { EMPTY_SUPPORT_DATA, ISupportData, supportSchema } from '@/_base/interfaces/help';
+import { ReactNode, SetStateAction, useState } from 'react';
+import { FiChevronLeft, FiUser } from 'react-icons/fi';
+
+import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { TextInput } from '@/components/Inputs/Text';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { Logo } from '@/components/Logo';
 import { Flex, Link, Text } from '@chakra-ui/react';
-import { ReactNode, SetStateAction, useState } from 'react';
-import { FiChevronLeft, FiUser } from 'react-icons/fi';
 
 type PageStepsType = 'FORM' | 'SENT';
 
@@ -27,7 +29,7 @@ const Support: React.FC = () => {
   const PageStepElement: Record<PageStepsType, ReactNode> = {
     FORM: (
       <Flex
-        backgroundColor="bg.white"
+        backgroundColor="white"
         width="400px"
         height="fit-content"
         margin="auto"
@@ -61,7 +63,7 @@ const Support: React.FC = () => {
           <TextAreaInput
             value={data.description}
             error={errors.description}
-            onInputChange={(value: SetStateAction<string>) => onInputChange('description', value)}
+            onInputChange={(value) => onInputChange('description', value)}
             placeholder="Fale sobre o problema..."
             label="Descrição"
             resize="none"

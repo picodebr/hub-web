@@ -2,7 +2,16 @@ import { Flex, Text, Textarea } from '@chakra-ui/react';
 import { BiErrorCircle } from 'react-icons/bi';
 import { IInputProps } from '../interfaces';
 
-export const TextAreaInput: React.FC<IInputProps & any> = ({ onInputChange, value = '', placeholder, label, error, rightElement, leftElement, ...rest }) => {
+export const TextAreaInput: React.FC<IInputProps> = ({
+  onInputChange,
+  value = '',
+  placeholder,
+  label,
+  error,
+  rightElement,
+  leftElement,
+  ...rest
+}) => {
   return (
     <Flex direction="column" color="text.light">
       {!!label && (
@@ -26,7 +35,7 @@ export const TextAreaInput: React.FC<IInputProps & any> = ({ onInputChange, valu
           isInvalid={!!error}
           variant="unstyled"
           fontSize="16px"
-          {...rest}
+          {...(rest as any)}
         />
         {!!rightElement && (
           <Flex align="center" fontSize="1.2rem" p="0 6px 0 2px">

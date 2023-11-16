@@ -1,8 +1,11 @@
+//Passar pros pagesteps
+import { useState } from 'react';
+import { FiChevronLeft, FiUser } from 'react-icons/fi';
+
 import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { Flex, Link, Text } from '@chakra-ui/react';
-import { useState } from 'react';
-import { FiChevronLeft, FiUser } from 'react-icons/fi';
+
 
 const RecoverWithoutEmail: React.FC = () => {
   const [username, setUsername] = useState('');

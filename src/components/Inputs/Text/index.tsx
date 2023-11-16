@@ -21,7 +21,7 @@ export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', pl
           onChange={(e) => onInputChange(e.target.value)}
           border="none"
           padding="10px 10px 10px 6px"
-          borderRadius="6px"
+          borderRadius="8px"
           isInvalid={!!error}
           variant="unstyled"
           fontSize="16px"

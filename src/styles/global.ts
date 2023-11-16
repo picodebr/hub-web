@@ -20,7 +20,7 @@ export const globalTheme = extendTheme({
         width: '100%',
       },
       body: {
-        background: '#FFFFFF',
+        background: 'white',
         fontSize: '16px',
         color: '#3f3f3f',
         opacity: props.disabled ? '0.3' : '1',
@@ -31,7 +31,6 @@ export const globalTheme = extendTheme({
     }),
   },
   colors: {
-    white: '#ffff',
     primary25: '#FCFAFF',
     primary50: '#F9F5FF',
     primary100: '#E0EEFF',
