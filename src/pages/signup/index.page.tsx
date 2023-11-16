@@ -19,6 +19,13 @@ import { MdMailOutline } from 'react-icons/md';
 
 type PageStepsType = 'USER_TYPE' | 'PRIMARY_CODE' | 'FORM' | 'FINISH';
 
+const SizeMapper: Record<PageStepsType, string> = {
+  USER_TYPE: '28.5rem',
+  PRIMARY_CODE: '34.25rem',
+  FORM: '47rem',
+  FINISH: '28.5rem',
+};
+
 const SignUp: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('USER_TYPE');
   const [userType, setUserType] = useState<HubUserType>();
@@ -115,14 +122,14 @@ const SignUp: React.FC = () => {
       </Flex>
     ),
     PRIMARY_CODE: (
-      <Flex direction="column" h="100%" justify="space-between" align="center">
+      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem">
         <Link href="/help" width="100%">
-          <Flex padding="12px 0 0 0" width="100%" color="gray300" align="left" gap="8px">
+          <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px">
             <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
             <Text textAlign="left">Voltar</Text>
           </Flex>
         </Link>
-        <Flex direction="column" padding="20px 0" width="100%" color="text.lightGray" align="center" gap="8px">
+        <Flex direction="column" width="100%" color="text.lightGray" align="center" gap="16px">
           <Flex direction="column" gap="8px">
             <Text fontWeight="600" fontSize="20px" color="gray900">
               Informe o código de acesso
@@ -190,23 +197,11 @@ const SignUp: React.FC = () => {
         </Flex>
         <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
 
-        <GenericButton label="Avançar" onClick={console.log} isLoading={submitLoading} marginTop="8px" w="100%" />
+        <GenericButton label="Avançar" onClick={() => setStep('FORM')} isLoading={submitLoading} marginTop="8px" w="100%" />
       </Flex>
     ),
     FORM: (
-      <Flex
-        backgroundColor="bg.white"
-        width="400px"
-        height="fit-content"
-        margin="auto"
-        borderRadius="12px"
-        boxShadow="md"
-        align="center"
-        padding="24px"
-        direction="column"
-        gap="20px"
-      >
-        <Logo />
+      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem" overflow="hidden">
         <Link href="/login" width="100%">
           <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px">
             <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
@@ -247,35 +242,12 @@ const SignUp: React.FC = () => {
             onInputChange={(v) => onInputChange('password_confirmation', v)}
           />
         </Flex>
-        <Flex
-          color="text.white"
-          align="center"
-          justify="center"
-          borderRadius="8px"
-          padding="10px 18px"
-          bg="secondary"
-          cursor="pointer"
-          onClick={() => submit(handleCheckCode)}
-        >
-          <Text fontWeight="600">Enviar</Text>
-        </Flex>
 
-        <GenericButton label="Cadastrar" onClick={console.log} isLoading={submitLoading} marginTop="8px" w="100%" />
+        <GenericButton label="Cadastrar" onClick={() => setStep('FINISH')} isLoading={submitLoading} marginTop="8px" w="100%" />
       </Flex>
     ),
     FINISH: (
-      <Flex
-        backgroundColor="bg.white"
-        width="400px"
-        height="fit-content"
-        margin="auto"
-        borderRadius="12px"
-        boxShadow="md"
-        align="center"
-        padding="24px"
-        direction="column"
-      >
-        <Logo />
+      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem">
         <Link href="/help" width="100%">
           <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px">
             <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
@@ -305,7 +277,7 @@ const SignUp: React.FC = () => {
   return (
     <Flex
       direction="column"
-      backgroundColor="bg.white"
+      backgroundColor="white"
       height="fit-content"
       maxW="420px"
       margin="auto"
@@ -314,7 +286,7 @@ const SignUp: React.FC = () => {
       align="center"
       padding="24px"
       transition="all 0.2s"
-      h={step === 'USER_TYPE' ? '28.5rem' : '38rem'}
+      h={SizeMapper[step]}
       // h="fit-content"
     >
       <Logo />

@@ -1,9 +1,8 @@
 import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { EMPTY_SUPPORT_DATA, ISupportData, supportSchema } from '@/_base/interfaces/help';
-import { ReactNode, SetStateAction, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
 
-import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { TextInput } from '@/components/Inputs/Text';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { Logo } from '@/components/Logo';
@@ -16,7 +15,7 @@ const Support: React.FC = () => {
 
   const { errors, onInputChange, data, submit } = useInputHandler<ISupportData>({ data: EMPTY_SUPPORT_DATA, schema: supportSchema });
 
-  const handleSentTrouble = useAsyncCallback(async () => {
+  const sendSupportMessage = useAsyncCallback(async () => {
     // TODO: send request to backend
     await new Promise((resolve) => {
       setTimeout(() => {
@@ -77,7 +76,7 @@ const Support: React.FC = () => {
           padding="10px 18px"
           bg="secondary"
           cursor="pointer"
-          onClick={() => submit(handleSentTrouble)}
+          onClick={() => submit(sendSupportMessage)}
         >
           <Text fontWeight="600">Enviar</Text>
         </Flex>
