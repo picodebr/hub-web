@@ -1,10 +1,13 @@
+import { FiChevronLeft } from 'react-icons/fi';
+import { AiOutlineMail } from 'react-icons/ai';
+import { useState } from 'react';
+import { GetServerSideProps } from 'next';
+
 import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { Flex, Link, Text } from '@chakra-ui/react';
-import { useState } from 'react';
-import { FiChevronLeft } from 'react-icons/fi';
-import { AiOutlineMail } from 'react-icons/ai';
 import { useAsyncCallback } from '@/_base/hooks';
+import { tokenManager } from '@/_base/utils';
 
 const Recover: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -16,7 +19,7 @@ const Recover: React.FC = () => {
       return;
     }
     setEmailError('');
-}, []);
+  }, []);
   return (
     <Flex
       backgroundColor="bg.white"
@@ -31,12 +34,10 @@ const Recover: React.FC = () => {
       gap="20px"
     >
       <Logo />
-      <Link 
-        href='/help'
-        width='100%'>
-        <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px" >
-        <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-        <Text textAlign='left'>Voltar</Text>
+      <Link href="/help" w="100%">
+        <Flex padding="12px 0 0 0" w="100%" color="text.lightGray" align="left" gap="8px">
+          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+          <Text textAlign="left">Voltar</Text>
         </Flex>{' '}
       </Link>
       {/*Botão de voltar */}
@@ -49,15 +50,15 @@ const Recover: React.FC = () => {
       <Flex //Inputs
         direction="column"
         width="100%"
-        gap='6px'
+        gap="6px"
       >
         <TextInput
-          leftElement={<AiOutlineMail style={{ margin: '10px 8px 10px 14px'}}/>}
+          leftElement={<AiOutlineMail style={{ margin: '10px 8px 10px 14px' }} />}
           value={email}
           onInputChange={(value) => setEmail(value)}
           label="E-mail"
-          color='text.gray700'
-          padding='10px 14px 10px 8px'
+          color="text.gray700"
+          padding="10px 14px 10px 8px"
           placeholder="Informe seu e-mail"
           error={emailError}
         />
@@ -72,14 +73,11 @@ const Recover: React.FC = () => {
           </Text> */}
       </Flex>
 
-      <Flex
-      width='100%'
-      textAlign='right'
-      display='column'>
+      <Flex width="100%" textAlign="right" display="column">
         <Link href="/no_email">
           <Text
             textAlign="right"
-            color="red.200"
+            color="error200"
             fontSize="12.5px"
             cursor="pointer"
             textDecoration="underline"
@@ -89,7 +87,7 @@ const Recover: React.FC = () => {
           </Text>
         </Link>
       </Flex>
-      
+
       <Link //Enviar código
         href="/support"
         width="100%"
@@ -103,3 +101,20 @@ const Recover: React.FC = () => {
 };
 
 export default Recover;
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const selectedPage = 'recover_password';
+
+  try {
+    //redireciona
+    tokenManager.updateToken(req);
+
+    // await validateSession();
+    return { redirect: { destination: '/home', permanent: false } };
+  } catch (err: any) {
+    //Retorna as props para a página
+    tokenManager.forceExpires(res);
+
+    return { props: { selectedPage, pageTitle: 'Recuperar senha' } };
+  }
+};

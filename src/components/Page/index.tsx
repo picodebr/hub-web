@@ -8,7 +8,7 @@ const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, user: admin, children }) => {
   return (
-    <Flex h="100vh" w="100vw" flexDirection="column" bg="bg.primary" position="relative" overflow="hidden">
+    <Flex h="100vh" w="100vw" flexDirection="column" bg="primary100" position="relative" overflow="hidden">
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
       ) : (

@@ -56,8 +56,8 @@ const LoginPage: React.FC = () => {
   });
 
   return (
-    <Flex h="100%" width="100%" justifyContent="center" alignItems="center">
-      <Flex direction="column" bg="white" padding="1rem" border="1px" borderColor="gray300" borderRadius="md" gap="1.15rem" align="center">
+    <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md">
+      <Flex direction="column" bg="white" padding="1rem" boxShadow="md" borderColor="gray300" borderRadius="md" gap="1.15rem" align="center">
         <Flex direction="column" gap="1rem" alignSelf="center" w="100%">
           <Logo size='sm'/>
 
@@ -73,7 +73,7 @@ const LoginPage: React.FC = () => {
             error={errors.identifier}
             value={data?.identifier}
             onInputChange={(v) => onInputChange('identifier', v)}
-            leftElement={<FiUser />}
+            leftElement={<FiUser style={{ color: 'gray300' }}/>}
             placeholder='Nome de Usuário'
           />
 
@@ -99,15 +99,15 @@ const LoginPage: React.FC = () => {
           </Link>
         </Flex>
 
-        <Flex fontSize="13px" gap="0.5rem" align="center" w="100%">
+        <Flex fontSize="13px" gap="0.5rem" align="center" w="100%" >
           <Checkbox />
-          <Text fontWeight="medium">Mantenha-me contectado</Text>
+          <Text fontWeight="medium" _hover={{ filter: 'brightness(1.5)' }} userSelect='none' >Mantenha-me contectado</Text>
         </Flex>
 
         <Flex direction="column" w="100%" gap="0.5rem">
-          <Flex position="relative" w="100%" align="center" justify="center">
+          <Flex position="relative" w="100%" align="center" justify="center" >
             <Flex border="1px solid #F2F4F4" w="100%" position="absolute" zIndex="1" />
-            <Text zIndex="2" px="1rem" textAlign="center" bg="bg.offWhite" fontSize="12.5px" color="text.lightGray">
+            <Text zIndex="2" px="1rem" textAlign="center" bg="white" fontSize="12.5px" color="gray300">
               Ou faça login com
             </Text>
           </Flex>
@@ -115,11 +115,11 @@ const LoginPage: React.FC = () => {
           <GenericButton
             label="Entrar com Google"
             btntype="outline"
-            color="text.black"
-            border="2px"
+            color="gray700"
+            border="1px"
             fontSize="15px"
             fontWeight="medium"
-            borderColor="text.lightGray"
+            borderColor="gray300"
             onClick={() => login()}
             isLoading={submitLoading}
             leftIcon={<Image src="/brands/google_logo_G.png" />}
@@ -128,7 +128,7 @@ const LoginPage: React.FC = () => {
 
         <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
 
-        <GenericButton label="Entrar" onClick={() => submit(handleLogin)} isLoading={submitLoading} marginTop="8px" w="100%" />
+        <GenericButton btntype='primary' label="Entrar" onClick={() => submit(handleLogin)} isLoading={submitLoading} marginTop="8px" w="100%" />
       </Flex>
     </Flex>
   );

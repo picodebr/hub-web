@@ -1,11 +1,13 @@
+import { ReactNode, SetStateAction, useState } from 'react';
+import { FiChevronLeft, FiUser } from 'react-icons/fi';
+
 import { useAsyncCallback } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { TextInput } from '@/components/Inputs/Text';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { Logo } from '@/components/Logo';
 import { Flex, Link, Text } from '@chakra-ui/react';
-import { ReactNode, SetStateAction, useState } from 'react';
-import { FiChevronLeft, FiUser } from 'react-icons/fi';
+
 
 type PageStepType = 'FORM' | 'MESSAGE_SENT';
 
@@ -17,12 +19,12 @@ const Support: React.FC = () => {
   const [usernameError, setUsernameError] = useState('');
   const [descriptionError, setDescriptionError] = useState('');
 
-  const funcaozinhaquedemora = async () => {
+  const sendSupportMessage = async () => {
     await new Promise((res) => {
       setTimeout(() => {
         setPageStep('MESSAGE_SENT');
         res(true);
-      }, 5000);
+      }, 2000);
     });
   };
 
@@ -51,13 +53,13 @@ const Support: React.FC = () => {
     }
     setUsernameError('');
 
-    await funcaozinhaquedemora();
+    await sendSupportMessage();
   }, []);
 
   const PageStepElement: Record<PageStepType, ReactNode> = {
     FORM: (
       <Flex
-        backgroundColor="bg.white"
+        backgroundColor="white"
         width="400px"
         height="fit-content"
         margin="auto"
@@ -153,4 +155,3 @@ const Support: React.FC = () => {
   return PageStepElement[pageStep];
 };
 
-export default Support;
