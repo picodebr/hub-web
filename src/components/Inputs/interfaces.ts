@@ -10,3 +10,10 @@ export interface IInputProps extends InputProps {
   leftElement?: ReactNode;
   rightElement?: ReactNode;
 }
+
+export interface ICodeInputProps {
+  onFill?: (value: string) => void;
+  onChange?: (value: string) => void;
+  codeLength?: number;
+  error?: string;
+}

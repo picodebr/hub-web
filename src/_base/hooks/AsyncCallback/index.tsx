@@ -12,7 +12,7 @@ import { useLoading } from '../Loading';
  * @param deps List of dependencies used by the callback function.
  */
 
-export function useAsyncCallback<T extends (...args: any[]) => any>(callback: T, deps: DependencyList, onEnd?: () => any): T {
+export function useAsyncCallback<T extends (...args: any[]) => any>(callback: T, deps: DependencyList, runLoading = true, onEnd?: () => any): T {
   const { setLoadingConfig } = useLoading();
   const toast = useCustomToast();
 
@@ -20,7 +20,7 @@ export function useAsyncCallback<T extends (...args: any[]) => any>(callback: T,
     (...args: any[]) => {
       const load = async () => {
         try {
-          setLoadingConfig((e) => ({ ...e, isLoading: true }));
+          if (runLoading) setLoadingConfig((e) => ({ ...e, isLoading: true }));
 
           await callback(...args);
         } catch (err: any) {

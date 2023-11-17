@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { BsEye, BsEyeSlash } from 'react-icons/bs';
 import { IInputProps } from '../interfaces';
 
-export const PasswordInput: React.FC<IInputProps> = ({ value = '', placeholder, label, error, onInputChange: onChange }) => {
+export const PasswordInput: React.FC<IInputProps> = ({ value = '', placeholder, label, error, onInputChange }) => {
   const [showPass, setShowPass] = useState(false);
   return (
     <Flex direction="column" color="text.light">
@@ -17,7 +17,7 @@ export const PasswordInput: React.FC<IInputProps> = ({ value = '', placeholder, 
           type={showPass ? 'text' : 'password'}
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onInputChange && onInputChange(e.target.value)}
           border="none"
           padding="10px 14px 10px 14px"
           borderRadius="8px"
@@ -25,7 +25,7 @@ export const PasswordInput: React.FC<IInputProps> = ({ value = '', placeholder, 
           variant="unstyled"
           fontSize="16px"
         />
-        <Flex color='gray300' align="center" fontSize="1.2rem" p="0 6px 0 2px" cursor="pointer" onClick={() => setShowPass((e) => !e)}>
+        <Flex color="gray300" align="center" fontSize="1.2rem" p="0 6px 0 2px" cursor="pointer" onClick={() => setShowPass((e) => !e)}>
           {showPass ? <BsEyeSlash /> : <BsEye />}
         </Flex>
       </Flex>
