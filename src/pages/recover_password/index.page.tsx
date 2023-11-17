@@ -1,4 +1,4 @@
-import { FiChevronLeft, FiUser } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiUser } from 'react-icons/fi';
 import { AiOutlineMail } from 'react-icons/ai';
 import { ReactNode, useState } from 'react';
 import { GetServerSideProps } from 'next';
@@ -12,15 +12,17 @@ import { EMPTY_SUPPORT_DATA, ISupportData, supportSchema } from '@/_base/interfa
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
+import { PasswordInput } from '@/components/Inputs/Password';
+import { GiCheckMark } from 'react-icons/gi';
 
 type PageStepsType = 'RECOVER_BY_EMAIL' | 'RECOVER_BY_USERNAME' | 'TEACHER_SENT' | 'RECOVER_CODE' | 'NEW_PASSWORD' | 'PASSWORD_CHANGED';
 
 const SizeMapper: Record<PageStepsType, string> = {
-  RECOVER_BY_EMAIL: '28.5rem',
-  RECOVER_BY_USERNAME: '34.25rem',
-  TEACHER_SENT: '47rem',
-  RECOVER_CODE: '40rem',
-  PASSWORD_CHANGED: '28.5rem',
+  RECOVER_BY_EMAIL: '27rem',
+  RECOVER_BY_USERNAME: '28rem',
+  TEACHER_SENT: '21rem',
+  RECOVER_CODE: '34.5rem',
+  PASSWORD_CHANGED: '21rem',
   NEW_PASSWORD: '28.5rem',
 };
 
@@ -43,7 +45,7 @@ const Recover: React.FC = () => {
           <Text fontWeight="600" fontSize="20px" color="gray900">
             Recupere a sua senha
           </Text>
-          <Text color="text.gray">Um código de verificação será enviado para o seu e-mail e você poderá recuperar a sua senha</Text>
+          <Text color="gray500">Um código de verificação será enviado para o seu e-mail e você poderá recuperar a sua senha</Text>
         </Flex>
         <Flex //Inputs
           direction="column"
@@ -72,6 +74,7 @@ const Recover: React.FC = () => {
         </Flex>
           <Flex width="100%" textAlign="right" display="column" onClick={() => setStep('RECOVER_BY_USERNAME')}>
             <Text
+              marginTop='2px'
               textAlign="right"
               color="error300"
               fontSize="12.5px"
@@ -91,25 +94,24 @@ const Recover: React.FC = () => {
           padding="10px 18px"
           bg="primary900"
           onClick={() => setStep('RECOVER_CODE')}
+          cursor='pointer'
         >
           <Text fontWeight="600">Enviar código</Text>
         </Flex>
       </Flex>
     ),
     RECOVER_CODE: (
-      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem">
-        <Link href="/help" width="100%">
-          <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px">
+      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem" >
+          <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px" onClick={() => setStep('RECOVER_BY_EMAIL')} cursor='pointer'>
             <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
             <Text textAlign="left">Voltar</Text>
           </Flex>
-        </Link>
-        <Flex direction="column" width="100%" color="text.lightGray" align="center" gap="16px">
+        <Flex direction="column" width="100%" color="gray500" align="center" gap="16px">
           <Flex direction="column" gap="8px">
             <Text fontWeight="600" fontSize="20px" color="gray900">
-              Informe o código de acesso
+              Informe o código de verificação
             </Text>
-            <Text color="gray500">Esse código estará nos seus livros. Informe ao campo abaixo e você será vinculado a sua turma.</Text>
+            <Text color="gray500">Foi enviado um código para o e-mail, verifique e informe o código nos campos abaixo</Text>
           </Flex>
           <Flex gap="10px">
             <Flex
@@ -170,24 +172,29 @@ const Recover: React.FC = () => {
             </Flex>
           </Flex>
         </Flex>
-        <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
+        <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error}/>
 
-        <GenericButton label="Avançar" onClick={() => setStep('NEW_PASSWORD')} marginTop="8px" w="100%" />
+        <GenericButton label="Confirmar" onClick={() => setStep('NEW_PASSWORD')} marginTop="8px" w="100%" marginBottom='2rem' />
       </Flex>
     ),
     NEW_PASSWORD: (
       <Flex direction="column" justify="space-between" h="100%">
-        <Flex width="100%" marginTop="32px" gap="20px">
-          <IoCheckmarkCircle fontSize="40px" style={{ color: '#E0EEFF' }} />
-        </Flex>
-        <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
+        <Flex padding="32px 0 5px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
             <Text fontWeight="600" fontSize="20px" color="gray900">
-              Enviado com sucesso!
+              Informe a sua nova senha
             </Text>
-            <Text color="gray500">Enviamos para o seu professor a solicitação de redefinição de senha</Text>
+            <Text color="gray500">Redefina a sua segurança escolhendo uma senha forte</Text>
           </Flex>
         </Flex>
+        <PasswordInput
+            label="Senha"
+            placeholder="Sua senha"
+          />
+          <PasswordInput
+            label="Confirmar senha"
+            placeholder="Sua senha"
+          />
         <Flex
           color="white"
           align="center"
@@ -196,25 +203,29 @@ const Recover: React.FC = () => {
           padding="10px 18px"
           bg="primary900"
           onClick={() => setStep('PASSWORD_CHANGED')}
+          cursor='pointer'
         >
-          <Text fontWeight="600">Voltar</Text>
+          <Text fontWeight="600">Redefinir senha</Text>
         </Flex>
       </Flex>
     ),
     PASSWORD_CHANGED: (
       <Flex direction="column" justify="space-between" h="100%">
         <Flex width="100%" marginTop="32px" gap="20px">
-          <IoCheckmarkCircle fontSize="40px" style={{ color: '#E0EEFF' }} />
+        <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
             <Text fontWeight="600" fontSize="20px" color="gray900">
-              Enviado com sucesso!
+              Senha redefinida com sucesso!
             </Text>
-            <Text color="gray500">Enviamos para o seu professor a solicitação de redefinição de senha</Text>
+            <Text color="gray500">Volte a tela inicial e informe os dados de acesso atualizados</Text>
           </Flex>
         </Flex>
-        <Link href="/login">
+        <Link //Button "voltar" on message sent
+          href="/login"
+          width="100%"
+        >
           <Flex color="white" align="center" justify="center" borderRadius="8px" padding="10px 18px" bg="primary900">
             <Text fontWeight="600">Voltar</Text>
           </Flex>
@@ -223,12 +234,10 @@ const Recover: React.FC = () => {
     ),
     RECOVER_BY_USERNAME: (
       <Flex direction="column" justify="space-between" h="100%">
-        <Link href="/help" w="100%">
-          <Flex padding="12px 0 0 0" w="100%" color="gray300" align="left" gap="8px">
+         <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px" onClick={() => setStep('RECOVER_BY_EMAIL')} cursor='pointer'>
             <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
             <Text textAlign="left">Voltar</Text>
-          </Flex>{' '}
-        </Link>
+          </Flex>
         {/*Botão de voltar */}
         <Flex direction="column" gap="8px">
           <Text fontWeight="600" fontSize="20px" color="gray900">
@@ -267,11 +276,12 @@ const Recover: React.FC = () => {
             marginTop="-12px"
             marginBottom="8px"
             textAlign="right"
-            color="red.200"
+            color="error500"
             fontSize="12.5px"
             cursor="pointer"
             textDecoration="underline"
             _hover={{ filter: 'brightness(0.8)' }}
+            onClick={() => setStep('RECOVER_BY_EMAIL')}
           >
             Vou informar um e-mail
           </Text>
@@ -295,7 +305,7 @@ const Recover: React.FC = () => {
     TEACHER_SENT: (
       <Flex direction="column" justify="space-between" h="100%">
         <Flex width="100%" marginTop="32px" gap="20px">
-          <IoCheckmarkCircle fontSize="40px" style={{ color: '#E0EEFF' }} />
+        <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">

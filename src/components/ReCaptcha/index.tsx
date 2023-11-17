@@ -11,7 +11,7 @@ export const AppReCaptcha: React.FC<IAppReCaptchaProps> = ({ onChange, error }) 
       <Flex align="center" border={error ? '2px solid #ca3939' : ''} borderRadius="4px">
         <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_KEY || ''} onChange={onChange} onError={console.error} hl="pt" />
       </Flex>
-      <Flex color="red.500" gap="0.3rem" align="center" w="100%" pb="0.25rem" fontSize="1.05rem" display={error ? 'flex' : 'none'}>
+      <Flex color="error500" gap="0.3rem" align="center" w="100%" pb="0.25rem" fontSize="1.05rem" display={error ? 'flex' : 'none'}>
         <PiWarningCircleBold fontSize="1rem" />
         <Text letterSpacing={0.35} fontSize="13px">
           {error}
