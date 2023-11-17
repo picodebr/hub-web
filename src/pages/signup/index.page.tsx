@@ -1,8 +1,8 @@
 import { ReactNode, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { Flex, Link, Text } from '@chakra-ui/react';
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
 import { MdMailOutline } from 'react-icons/md';
+import { GiCheckMark } from 'react-icons/gi';
 
 import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
@@ -16,14 +16,16 @@ import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { CodeInput } from '@/components/Inputs/Code';
+import { Flex, Link, Text } from '@chakra-ui/react';
+
 
 type PageStepsType = 'USER_TYPE' | 'PRIMARY_CODE' | 'FORM' | 'FINISH';
 
 const SizeMapper: Record<PageStepsType, string> = {
   USER_TYPE: '28.5rem',
   PRIMARY_CODE: '35.25rem',
-  FORM: '47rem',
-  FINISH: '28.5rem',
+  FORM: '49rem',
+  FINISH: '22rem',
 };
 
 const SignUp: React.FC = () => {
@@ -80,9 +82,9 @@ const SignUp: React.FC = () => {
             Faça o Login
           </Link>
         </Flex>
-        <Flex padding="20px 0" width="100%" color="text.lightGray" align="center" gap="8px">
+        <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
-            <Text fontWeight="600" fontSize="20px" color="text.black">
+            <Text fontWeight="600" fontSize="20px" color="gray900">
               Eu sou...
             </Text>
             <Text color="gray500" fontSize="15px">
@@ -148,7 +150,7 @@ const SignUp: React.FC = () => {
           <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
           <Text textAlign="left">Voltar</Text>
         </Flex>
-        <Flex direction="column" width="100%" color="text.lightGray" align="center" gap="16px">
+        <Flex direction="column" width="100%" align="center" gap="16px">
           <Flex direction="column" gap="8px">
             <Text fontWeight="600" fontSize="20px" color="gray900">
               Informe o código de acesso
@@ -170,11 +172,13 @@ const SignUp: React.FC = () => {
       </Flex>
     ),
     FORM: (
-      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem" overflow="hidden">
-        <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px" cursor="pointer" onClick={() => setStep('USER_TYPE')}>
-          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-          <Text textAlign="left">Voltar</Text>
-        </Flex>
+      <Flex direction="column" h="100%" justify="space-between" align="center" gap="1.25rem" overflow="hidden" >
+        <Flex direction="column" gap="8px" marginTop='2rem'>
+            <Text fontWeight="600" fontSize="20px" color="gray900">
+              Informe os seus dados
+            </Text>
+            <Text color="gray500">Faça o cadastro e desfrute de uma experiência completa</Text>
+          </Flex>
         <Flex //Inputs
           direction="column"
           width="100%"
@@ -208,7 +212,7 @@ const SignUp: React.FC = () => {
             label="Data de Nascimento"
             value={data.birthdate?.toString()}
             error={errors.birthdate}
-            placeholder="01/01/2000"
+            placeholder="__/__/____"
             onInputChange={(value) =>
               onInputChange(
                 'birthdate',
@@ -232,17 +236,16 @@ const SignUp: React.FC = () => {
       </Flex>
     ),
     FINISH: (
-      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem">
-        <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px">
-          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-          <Text textAlign="left">Voltar</Text>
+      <Flex direction="column" justify="space-between" h="100%">
+        <Flex width="100%" marginTop="32px" gap="20px">
+        <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
-        <Flex padding="20px 0" width="100%" color="text.lightGray" align="center" gap="8px">
+        <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
-            <Text fontWeight="600" fontSize="20px" color="text.black">
-              Cadastro Realizado com sucesso
+            <Text fontWeight="600" fontSize="20px" color="gray900">
+              Cadastro realizado com sucesso
             </Text>
-            <Text color="text.gray">Parabéns! Seu cadastro foi realizado com sucesso. Agora você pode fazer o login para acessar sua conta.</Text>
+            <Text color="gray500">Parabéns! Seu cadastro foi realizado com sucesso. Agora você pode fazer o login para acessar sua conta.</Text>
           </Flex>
         </Flex>
         <Link //Button "voltar" on message sent
