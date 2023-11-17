@@ -1,27 +1,27 @@
+import { ReactNode, useState } from 'react';
+import { GetServerSideProps } from 'next';
+import { Flex, Link, Text } from '@chakra-ui/react';
+import { FiChevronLeft, FiUser } from 'react-icons/fi';
+import { MdMailOutline } from 'react-icons/md';
+
 import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
-import { ISupportData } from '@/_base/interfaces/help';
 import { HubUserType } from '@/_base/interfaces/user/HubUserType';
-import IRegisterUser from '@/_base/interfaces/user/IRegisterUser';
+import IRegisterUser, { EMPTY_REGISTER_USER_DATA } from '@/_base/interfaces/user/IRegisterUser';
 import { validateSession } from '@/_base/services/auth';
 import { logError, tokenManager } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
-import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { Logo } from '@/components/Logo';
 import { AppReCaptcha } from '@/components/ReCaptcha';
-import { Box, Flex, Link, Text } from '@chakra-ui/react';
-import { GetServerSideProps } from 'next';
-import { ReactNode, SetStateAction, useMemo, useState } from 'react';
-import { FiChevronLeft, FiUser } from 'react-icons/fi';
-import { MdMailOutline } from 'react-icons/md';
+import { CodeInput } from '@/components/Inputs/Code';
 
 type PageStepsType = 'USER_TYPE' | 'PRIMARY_CODE' | 'FORM' | 'FINISH';
 
 const SizeMapper: Record<PageStepsType, string> = {
   USER_TYPE: '28.5rem',
-  PRIMARY_CODE: '34.25rem',
+  PRIMARY_CODE: '35.25rem',
   FORM: '47rem',
   FINISH: '28.5rem',
 };
@@ -31,22 +31,43 @@ const SignUp: React.FC = () => {
   const [userType, setUserType] = useState<HubUserType>();
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
   const [primaryCode, setPrimaryCode] = useState('');
+  const [codeError, setCodeError] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const { errors, onInputChange, data, submit } = useInputHandler<IRegisterUser>();
+  const { errors, onInputChange, data } = useInputHandler<IRegisterUser>({ data: EMPTY_REGISTER_USER_DATA });
 
-  const handleCheckCode = useAsyncCallback(async () => {
-    // TODO: send request to backend
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true);
-        setStep('FORM');
-      }, 2000);
-    });
-  }, []);
+  const handleCheckCode = useAsyncCallback(
+    async (code: string) => {
+      try {
+        setSubmitLoading(true);
+        // TODO: send request to backend
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(userType);
+          }, 2000);
+        });
+
+        setPrimaryCode(code);
+
+        if (captcha.token) {
+          setStep('FORM');
+
+          return;
+        }
+      } catch {
+        setCodeError('Código inválido');
+      }
+    },
+    [],
+    false,
+    () => setSubmitLoading(false),
+  );
 
   const handleUserTypeChange = (type: HubUserType) => {
     setUserType(type);
+    setCaptcha({ token: null });
+    setPrimaryCode('');
+    setCodeError('');
     setStep('PRIMARY_CODE');
   };
 
@@ -123,12 +144,10 @@ const SignUp: React.FC = () => {
     ),
     PRIMARY_CODE: (
       <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem">
-        <Link href="/help" width="100%">
-          <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px">
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-            <Text textAlign="left">Voltar</Text>
-          </Flex>
-        </Link>
+        <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px" cursor="pointer" onClick={() => setStep('USER_TYPE')}>
+          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+          <Text textAlign="left">Voltar</Text>
+        </Flex>
         <Flex direction="column" width="100%" color="text.lightGray" align="center" gap="16px">
           <Flex direction="column" gap="8px">
             <Text fontWeight="600" fontSize="20px" color="gray900">
@@ -136,87 +155,44 @@ const SignUp: React.FC = () => {
             </Text>
             <Text color="gray500">Esse código estará nos seus livros. Informe ao campo abaixo e você será vinculado a sua turma.</Text>
           </Flex>
-          <Flex gap="10px">
-            <Flex
-              h="80px"
-              w="80px"
-              borderRadius="8px"
-              align="center"
-              justify="center"
-              color="gray300"
-              border="1px"
-              borderColor="gray300"
-              fontSize="48px"
-              fontWeight="500"
-            >
-              0
-            </Flex>
-            <Flex
-              h="80px"
-              w="80px"
-              borderRadius="8px"
-              align="center"
-              justify="center"
-              color="gray300"
-              border="1px"
-              borderColor="gray300"
-              fontSize="48px"
-              fontWeight="500"
-            >
-              0
-            </Flex>
-            <Flex
-              h="80px"
-              w="80px"
-              borderRadius="8px"
-              align="center"
-              justify="center"
-              color="gray300"
-              border="1px"
-              borderColor="gray300"
-              fontSize="48px"
-              fontWeight="500"
-            >
-              0
-            </Flex>
-            <Flex
-              h="80px"
-              w="80px"
-              borderRadius="8px"
-              align="center"
-              justify="center"
-              color="gray300"
-              border="1px"
-              borderColor="gray300"
-              fontSize="48px"
-              fontWeight="500"
-            >
-              0
-            </Flex>
-          </Flex>
+          <CodeInput onFill={handleCheckCode} error={codeError} onChange={() => setCodeError('')} />
         </Flex>
         <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
 
-        <GenericButton label="Avançar" onClick={() => setStep('FORM')} isLoading={submitLoading} marginTop="8px" w="100%" />
+        <GenericButton
+          label="Avançar"
+          onClick={() => setStep('FORM')}
+          isLoading={submitLoading}
+          marginTop="8px"
+          w="100%"
+          isDisabled={!primaryCode || !captcha.token}
+        />
       </Flex>
     ),
     FORM: (
       <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem" overflow="hidden">
-        <Link href="/login" width="100%">
-          <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px">
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-            <Text textAlign="left">Voltar</Text>
-          </Flex>
-        </Link>
+        <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px" cursor="pointer" onClick={() => setStep('USER_TYPE')}>
+          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+          <Text textAlign="left">Voltar</Text>
+        </Flex>
         <Flex //Inputs
           direction="column"
           width="100%"
           gap="12px"
         >
-          <TextInput label="Nome Completo" value={data.name} error={errors.name} onInputChange={(value) => onInputChange('name', value)} />
+          <TextInput
+            label="Nome Completo"
+            value={data.name}
+            error={errors.name}
+            onInputChange={(value) => {
+              onInputChange('name', value);
+              onInputChange('username', value.split(' ').slice(0, 2).join(' ').toLocaleLowerCase().replaceAll(' ', '-'));
+            }}
+          />
           <TextInput
             label="Nome de Usuário"
             value={data.username}
+            placeholder=""
             error={errors.username}
             onInputChange={(value) => onInputChange('username', value)}
             leftElement={<FiUser />}
@@ -232,7 +208,16 @@ const SignUp: React.FC = () => {
             label="Data de Nascimento"
             value={data.birthdate?.toString()}
             error={errors.birthdate}
-            onInputChange={(value) => onInputChange('birthdate', value)}
+            placeholder="01/01/2000"
+            onInputChange={(value) =>
+              onInputChange(
+                'birthdate',
+                value
+                  .slice(0, 10)
+                  .replace(/\D/g, '')
+                  .replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3'),
+              )
+            }
           />
           <PasswordInput label="Senha" error={errors.password} value={data?.password} onInputChange={(value) => onInputChange('password', value)} />
           <PasswordInput
@@ -248,12 +233,10 @@ const SignUp: React.FC = () => {
     ),
     FINISH: (
       <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem">
-        <Link href="/help" width="100%">
-          <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px">
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-            <Text textAlign="left">Voltar</Text>
-          </Flex>
-        </Link>
+        <Flex padding="12px 0 0 0" width="100%" color="text.lightGray" align="left" gap="8px">
+          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+          <Text textAlign="left">Voltar</Text>
+        </Flex>
         <Flex padding="20px 0" width="100%" color="text.lightGray" align="center" gap="8px">
           <Flex direction="column" gap="8px">
             <Text fontWeight="600" fontSize="20px" color="text.black">

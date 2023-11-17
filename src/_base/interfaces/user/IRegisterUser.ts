@@ -7,6 +7,17 @@ export default interface IRegisterUser {
   username: string;
   password: string;
   password_confirmation: string;
-  birthdate: Date;
+  birthdate: string;
   user_type: HubUserType;
 }
+
+export const EMPTY_REGISTER_USER_DATA: IRegisterUser = {
+  primary_code: '',
+  name: '',
+  email: '',
+  username: '',
+  password: '',
+  password_confirmation: '',
+  birthdate: '',
+  user_type: '' as any,
+};

@@ -19,6 +19,7 @@ import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 
 const LoginPage: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [keepLogged, setKeepLogged] = useState(false);
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
 
   const { errors, onInputChange, data, submit } = useInputHandler<IAuthRequest>({ schema: authSchema });
@@ -42,11 +43,13 @@ const LoginPage: React.FC = () => {
             password: data.password,
           });
 
-      tokenManager.setToken(access_token);
+      // If keep logged in is checked, the token will be expires in 15 days
+      tokenManager.setToken(access_token, keepLogged ? 15 : 1);
 
       router.push('/home');
     },
     [router, captcha],
+    false,
     () => setSubmitLoading(false),
   );
 
@@ -103,7 +106,7 @@ const LoginPage: React.FC = () => {
         </Flex>
 
         <Flex fontSize="13px" gap="0.5rem" align="center" w="100%">
-          <Checkbox />
+          <Checkbox onChange={(e) => setKeepLogged(e.target.checked)} />
           <Text fontWeight="medium" _hover={{ filter: 'brightness(1.5)' }} userSelect="none">
             Mantenha-me contectado
           </Text>
