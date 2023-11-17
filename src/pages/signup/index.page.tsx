@@ -41,7 +41,7 @@ const SignUp: React.FC = () => {
       setTimeout(() => {
         resolve(true);
         setStep('FORM');
-      }, 5000);
+      }, 2000);
     });
   }, []);
 
@@ -266,7 +266,7 @@ const SignUp: React.FC = () => {
           href="/login"
           width="100%"
         >
-          <Flex color="text.white" align="center" justify="center" borderRadius="8px" padding="10px 18px" bg="secondary">
+          <Flex color="white" align="center" justify="center" borderRadius="8px" padding="10px 18px" bg="primary900">
             <Text fontWeight="600">Voltar</Text>
           </Flex>
         </Link>
