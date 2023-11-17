@@ -20,6 +20,7 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ user: _admin, ch
       const user = await validateSession();
       setUser(user);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error(err);
     }
   }, []);
