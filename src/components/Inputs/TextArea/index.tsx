@@ -15,11 +15,11 @@ export const TextAreaInput: React.FC<IInputProps> = ({
   return (
     <Flex direction="column" color="text.light">
       {!!label && (
-        <Text color="text.gray700" fontSize="13.5px" fontWeight="500" pb="0.25rem">
+        <Text color="gray700" fontSize="13.5px" fontWeight="500" pb="0.25rem">
           {label}
         </Text>
       )}
-      <Flex border="1px" borderColor="border.light" borderRadius="6px">
+      <Flex border="1px" borderColor="gray300" borderRadius="6px">
         {!!leftElement && (
           <Flex align="center" fontSize="1.2rem" p="0 2px 0 6px">
             {leftElement}
@@ -44,7 +44,7 @@ export const TextAreaInput: React.FC<IInputProps> = ({
         )}
       </Flex>
       {!!error && (
-        <Flex align="center" gap="0.25rem" color="status.error">
+        <Flex align="center" gap="0.25rem" color="error500">
           <BiErrorCircle />
           <Text fontSize="14px">{error}</Text>
         </Flex>

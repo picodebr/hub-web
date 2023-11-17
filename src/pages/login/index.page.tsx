@@ -124,7 +124,7 @@ const LoginPage: React.FC = () => {
             border="1px"
             fontSize="15px"
             fontWeight="medium"
-            borderColor="text.lightGray"
+            borderColor="gray300"
             onClick={() => handleGoogleLogin()}
             isLoading={submitLoading}
             leftIcon={<Image src="/brands/google_logo_G.png" />}

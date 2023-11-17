@@ -18,7 +18,7 @@ export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', pl
         <Input
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onInputChange(e.target.value)}
+          onChange={(e) => onInputChange && onInputChange(e.target.value)}
           border="none"
           padding="10px 10px 10px 6px"
           borderRadius="8px"

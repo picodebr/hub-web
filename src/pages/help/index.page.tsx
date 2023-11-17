@@ -18,10 +18,13 @@ const Help: React.FC = () => {
       gap="20px"
     >
       <Logo />
-      <Flex padding="12px 0" width="100%" color="text.lightGray" align="center" gap="8px" cursor='pointer'>
-        <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-        Voltar
-      </Flex>
+      <Link href="/login" width="100%">
+        <Flex padding="12px 0" width="100%" color="gray300" align="center" gap="8px" cursor="pointer">
+          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+          <Text textAlign="left">Voltar</Text>
+        </Flex>{' '}
+      </Link>
+
       <Flex direction="column" gap="8px">
         <Text fontWeight="600" fontSize="20px" color="gray900">
           Como nós podemos te ajudar?
