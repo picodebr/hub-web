@@ -5,10 +5,10 @@ import { GetServerSideProps } from 'next';
 import { useState } from 'react';
 import { FiUser } from 'react-icons/fi';
 
-import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
+import { useAsyncCallback, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
-import { login, validateSession } from '@/_base/services/auth';
-import { logError, tokenManager } from '@/_base/utils';
+import { googleLogin, hubLogin, validateSession } from '@/_base/services/auth';
+import { logError, showErrorToClient, tokenManager } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
@@ -18,13 +18,15 @@ import { IAuthRequest, authSchema } from '@/_base/interfaces/auth';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 
 const LoginPage: React.FC = () => {
-  const router = useCustomRouter();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
+
   const { errors, onInputChange, data, submit } = useInputHandler<IAuthRequest>({ schema: authSchema });
+  const router = useCustomRouter();
+  const toast = useCustomToast();
 
   const handleLogin = useAsyncCallback(
-    async () => {
+    async (googleAccessToken?: string) => {
       // Prevent the user to click on the button more than one time
       setSubmitLoading(true);
 
@@ -33,24 +35,27 @@ const LoginPage: React.FC = () => {
         return;
       } else setCaptcha((e) => ({ ...e, error: undefined }));
 
-      const { access_token } = await login({
-        identifier: data.identifier,
-        password: data.password,
-      });
+      const { access_token } = googleAccessToken
+        ? await googleLogin(googleAccessToken)
+        : await hubLogin({
+            identifier: data.identifier,
+            password: data.password,
+          });
 
       tokenManager.setToken(access_token);
 
-      // router.push('/home');
+      router.push('/home');
     },
     [router, captcha],
     () => setSubmitLoading(false),
   );
 
   const handleGoogleLogin = useGoogleLogin({
-    onSuccess: (codeResponse) => {
-      console.log('onSuccess :', codeResponse);
+    onSuccess: async (codeResponse) => await handleLogin(codeResponse.access_token),
+    onError: (error) => {
+      showErrorToClient(error, toast);
+      console.error('Google Login Failed:', error);
     },
-    onError: (error) => console.log('Login Failed:', error),
   });
 
   return (
