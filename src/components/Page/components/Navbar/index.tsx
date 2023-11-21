@@ -27,11 +27,10 @@ interface IProps {
 
 export const Navbar: React.FC<IProps> = ({ page }) => {
   const router = useCustomRouter();
-
   return (
     <Flex
       direction="column"
-      bg="primary"
+      bg="white"
       borderRadius="md"
       minW={dimensions.navbar.width}
       padding="0.5rem"
@@ -41,26 +40,25 @@ export const Navbar: React.FC<IProps> = ({ page }) => {
       h="100%"
       userSelect="none"
     >
-      {menuItems
-        .map((item) => (
-          <Flex key={item.name} w="100%" direction="column" >
-            <Flex
-              align="center"
-              padding="4"
-              transition="all 0.15s"
-              borderRadius="lg"
-              cursor="pointer"
-              _hover={{ outline: '1px solid white' }}
-              bg={page === item.page ? 'white' : 'primary'}
-              color={page === item.page ? 'primary' : 'white'}
-              fontSize="1rem"
-              onClick={() => router.push(`/${item.page}`)}
-            >
-              {item.icon && <Icon mr="3" fontSize="16" as={item.icon} />}
-              {item.name}
-            </Flex>
+      {menuItems.map((item) => (
+        <Flex key={item.name} w="100%" direction="column">
+          <Flex
+            align="center"
+            padding="4"
+            transition="all 0.15s"
+            borderRadius="lg"
+            cursor="pointer"
+            _hover={{ outline: '1px solid white' }}
+            bg={page === item.page ? 'white' : 'primary900'}
+            color={page === item.page ? 'primary900' : 'white'}
+            fontSize="1rem"
+            onClick={() => router.push(`/${item.page}`)}
+          >
+            {item.icon && <Icon mr="3" fontSize="16" as={item.icon} />}
+            {item.name}
           </Flex>
-        ))}
+        </Flex>
+      ))}
     </Flex>
   );
 };

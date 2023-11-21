@@ -1,12 +1,15 @@
 import { IPageProps } from '@/_base/hooks/Page/interfaces';
-import { Flex, Image } from '@chakra-ui/react';
+import { Flex, Image, useColorMode } from '@chakra-ui/react';
 import { PropsWithChildren } from 'react';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
+import { GenericButton } from '../Buttons/Generic';
 
 const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, user: admin, children }) => {
+  const { colorMode, toggleColorMode } = useColorMode();
+
   return (
     <Flex h="100vh" w="100vw" flexDirection="column" bg="primary100" position="relative" overflow="hidden">
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
@@ -22,8 +25,18 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedP
           </Flex>
         </>
       )}
-      <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
-      <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" />
+      {/* Temporary Button */}
+      <GenericButton
+        position="absolute"
+        left="50%"
+        top="1rem"
+        transform="translate(-50%, 0)"
+        zIndex="10000"
+        label={`Toggle ${colorMode === 'light' ? 'Dark' : 'Light'}`}
+        onClick={toggleColorMode}
+      />
+      <Image position="absolute" left="0" top="11.5rem" src="/patterns/line-pattern.svg" zIndex="0" h={{ base: '0', lg: '445px' }} />
+      <Image position="absolute" bottom="0" right="-5rem" src="/patterns/line-pattern.svg" zIndex="0" h={{ base: '0', lg: '445px' }} />
     </Flex>
   );
 };

@@ -1,5 +1,5 @@
 import { validateSession } from '@/_base/services/auth';
-import { logError, tokenManager } from '@/_base/utils';
+import { logError, cookieManager } from '@/_base/utils';
 import { Logo } from '@/components/Logo';
 import { Flex, Link, Text } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
@@ -30,15 +30,15 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const selectedPage = 'home';
 
   try {
-    tokenManager.updateToken(req);
+    cookieManager.updateToken(req);
 
     // await validateSession();
-    
+
     return { props: { selectedPage, pageTitle: 'Home' } };
   } catch (err: any) {
-    tokenManager.forceExpires(res);
+    cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
-    
+
     return { redirect: { destination: '/login', permanent: false } };
   }
 };

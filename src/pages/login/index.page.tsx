@@ -8,7 +8,7 @@ import { FiUser } from 'react-icons/fi';
 import { useAsyncCallback, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { googleLogin, hubLogin, validateSession } from '@/_base/services/auth';
-import { logError, showErrorToClient, tokenManager } from '@/_base/utils';
+import { logError, showErrorToClient, cookieManager } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
@@ -44,7 +44,7 @@ const LoginPage: React.FC = () => {
           });
 
       // If keep logged in is checked, the token will be expires in 15 days
-      tokenManager.setToken(access_token, keepLogged ? 15 : 1);
+      cookieManager.setToken(access_token, keepLogged ? 15 : 1);
 
       router.push('/home');
     },
@@ -148,13 +148,13 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const selectedPage = 'login';
 
   try {
-    tokenManager.updateToken(req);
+    cookieManager.updateToken(req);
 
     await validateSession();
 
     return { redirect: { destination: '/home', permanent: false } };
   } catch (err: any) {
-    tokenManager.forceExpires(res);
+    cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
 
     return { props: { selectedPage, pageTitle: 'Login' } };

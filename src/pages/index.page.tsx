@@ -1,5 +1,5 @@
 import { validateSession } from '@/_base/services/auth';
-import { logError, tokenManager } from '@/_base/utils';
+import { logError, cookieManager } from '@/_base/utils';
 import { GetServerSideProps } from 'next';
 
 export default function Home() {
@@ -8,7 +8,7 @@ export default function Home() {
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
-    tokenManager.updateToken(req);
+    cookieManager.updateToken(req);
 
     await validateSession();
 
@@ -16,7 +16,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
       redirect: { destination: '/home', permanent: false },
     };
   } catch (err: any) {
-    tokenManager.forceExpires(res);
+    cookieManager.forceTokenExpires(res);
     logError('root', err);
 
     return {

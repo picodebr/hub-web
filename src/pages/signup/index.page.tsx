@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
 import { MdMailOutline } from 'react-icons/md';
@@ -9,15 +9,17 @@ import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 import { HubUserType } from '@/_base/interfaces/user/HubUserType';
 import IRegisterUser, { EMPTY_REGISTER_USER_DATA } from '@/_base/interfaces/user/IRegisterUser';
 import { validateSession } from '@/_base/services/auth';
-import { logError, tokenManager } from '@/_base/utils';
+import { logError, cookieManager } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { CodeInput } from '@/components/Inputs/Code';
-import { Flex, Link, Text } from '@chakra-ui/react';
-
+import { Flex, Link, Text, useUpdateEffect } from '@chakra-ui/react';
+import { IGoogleUserData } from '@/_base/interfaces/auth/IGoogleUserData';
+import { checkEmail, checkPrimaryCode, checkUsername, signup } from '@/_base/services/user';
+import { DateInput } from '@/components/Inputs/Date';
 
 type PageStepsType = 'USER_TYPE' | 'PRIMARY_CODE' | 'FORM' | 'FINISH';
 
@@ -32,35 +34,70 @@ const SignUp: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('USER_TYPE');
   const [userType, setUserType] = useState<HubUserType>();
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
-  const [primaryCode, setPrimaryCode] = useState('');
-  const [codeError, setCodeError] = useState('');
+  const [primaryCode, setPrimaryCode] = useState<{ value?: string; valid?: boolean; error?: string }>({});
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [isGoogleSignin, setIsGoogleSignin] = useState(false);
 
-  const { errors, onInputChange, data } = useInputHandler<IRegisterUser>({ data: EMPTY_REGISTER_USER_DATA });
+  const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<IRegisterUser>({ data: EMPTY_REGISTER_USER_DATA });
+
+  useEffect(() => {
+    const data = cookieManager.getCookie<IGoogleUserData>('google_data', true);
+
+    if (data) {
+      setIsGoogleSignin(true);
+      setData((e) => ({ ...e, email: data.email, name: data.name }));
+      //TODO: save the picture from google
+    }
+  }, []);
+
+  useEffect(() => {
+    if (captcha.token && primaryCode.value) (async () => await handleCheckCode(primaryCode.value || ''))();
+  }, [captcha.token, primaryCode.value]);
 
   const handleCheckCode = useAsyncCallback(
     async (code: string) => {
+      if (!userType) return;
+
       try {
-        setSubmitLoading(true);
         // TODO: send request to backend
-        await new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(userType);
-          }, 2000);
-        });
+        const { is_valid } = await checkPrimaryCode(userType, code);
 
-        setPrimaryCode(code);
-
-        if (captcha.token) {
-          setStep('FORM');
-
+        if (!is_valid) {
+          setPrimaryCode({ error: 'Código inválido' });
           return;
         }
+
+        setData((e) => ({ ...e, primary_code: code }));
+        setPrimaryCode((e) => ({ ...e, valid: true }));
       } catch {
-        setCodeError('Código inválido');
+        setPrimaryCode({ error: 'Código inválido' });
       }
     },
-    [],
+    [userType],
+    false,
+  );
+
+  const handleRegisterUser = useAsyncCallback(
+    async () => {
+      setSubmitLoading(true);
+      const [emailResponse, usernameResponse] = await Promise.all([checkEmail(data.email), checkUsername(data.username)]);
+
+      if (!emailResponse.is_valid) {
+        setErrors((e) => ({ ...e, email: 'E-mail já cadastrado' }));
+        return;
+      }
+
+      if (!usernameResponse.is_valid) {
+        setErrors((e) => ({ ...e, username: 'Nome de usuário já cadastrado' }));
+        return;
+      }
+
+      alert('user registered');
+
+      // await signup(data)
+      // setStep('FINISH')
+    },
+    [data],
     false,
     () => setSubmitLoading(false),
   );
@@ -68,8 +105,8 @@ const SignUp: React.FC = () => {
   const handleUserTypeChange = (type: HubUserType) => {
     setUserType(type);
     setCaptcha({ token: null });
-    setPrimaryCode('');
-    setCodeError('');
+    setPrimaryCode({});
+    setData((e) => ({ ...e, user_type: type }));
     setStep('PRIMARY_CODE');
   };
 
@@ -105,15 +142,7 @@ const SignUp: React.FC = () => {
             onClick={() => handleUserTypeChange('student')}
           >
             <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
-            <Flex
-              h="28px"
-              // bg={userType === 'student' ? 'primary900' : 'primary200'}
-              // color={userType === 'student' ? 'gray25' : 'gray800'}
-              bg="primary900"
-              color="gray25"
-              align="center"
-              justify="center"
-            >
+            <Flex h="28px" bg="primary900" color="gray25" align="center" justify="center">
               Aluno
             </Flex>
           </Flex>
@@ -129,15 +158,7 @@ const SignUp: React.FC = () => {
             onClick={() => handleUserTypeChange('teacher')}
           >
             <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
-            <Flex
-              h="28px"
-              // bg={userType === 'teacher' ? 'primary900' : 'primary200'}
-              // color={userType === 'teacher' ? 'gray25' : 'gray800'}
-              bg="primary200"
-              color="gray800"
-              align="center"
-              justify="center"
-            >
+            <Flex h="28px" bg="primary200" color="gray800" align="center" justify="center">
               Professor
             </Flex>
           </Flex>
@@ -157,28 +178,25 @@ const SignUp: React.FC = () => {
             </Text>
             <Text color="gray500">Esse código estará nos seus livros. Informe ao campo abaixo e você será vinculado a sua turma.</Text>
           </Flex>
-          <CodeInput onFill={handleCheckCode} error={codeError} onChange={() => setCodeError('')} />
+          <CodeInput
+            onFill={(value) => setPrimaryCode((e) => ({ ...e, value }))}
+            error={primaryCode.error}
+            onChange={() => setPrimaryCode((e) => ({ ...e, error: '' }))}
+          />
         </Flex>
         <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
 
-        <GenericButton
-          label="Avançar"
-          onClick={() => setStep('FORM')}
-          isLoading={submitLoading}
-          marginTop="8px"
-          w="100%"
-          isDisabled={!primaryCode || !captcha.token}
-        />
+        <GenericButton label="Avançar" onClick={() => setStep('FORM')} marginTop="8px" w="100%" isDisabled={!primaryCode.valid} />
       </Flex>
     ),
     FORM: (
-      <Flex direction="column" h="100%" justify="space-between" align="center" gap="1.25rem" overflow="hidden" >
-        <Flex direction="column" gap="8px" marginTop='2rem'>
-            <Text fontWeight="600" fontSize="20px" color="gray900">
-              Informe os seus dados
-            </Text>
-            <Text color="gray500">Faça o cadastro e desfrute de uma experiência completa</Text>
-          </Flex>
+      <Flex direction="column" h="100%" justify="space-between" align="center" gap="1.25rem" overflow="hidden">
+        <Flex direction="column" gap="8px" marginTop="2rem">
+          <Text fontWeight="600" fontSize="20px" color="gray900">
+            Informe os seus dados
+          </Text>
+          <Text color="gray500">Faça o cadastro e desfrute de uma experiência completa</Text>
+        </Flex>
         <Flex //Inputs
           direction="column"
           width="100%"
@@ -188,6 +206,7 @@ const SignUp: React.FC = () => {
             label="Nome Completo"
             value={data.name}
             error={errors.name}
+            isDisabled={isGoogleSignin}
             onInputChange={(value) => {
               onInputChange('name', value);
               onInputChange('username', value.split(' ').slice(0, 2).join(' ').toLocaleLowerCase().replaceAll(' ', '-'));
@@ -204,24 +223,17 @@ const SignUp: React.FC = () => {
           <TextInput
             label="E-mail (opcional)"
             value={data.email}
+            isDisabled={isGoogleSignin}
             error={errors.email}
             onInputChange={(value) => onInputChange('email', value)}
             leftElement={<MdMailOutline />}
           />
-          <TextInput
+
+          <DateInput
             label="Data de Nascimento"
-            value={data.birthdate?.toString()}
+            value={data.birthdate}
             error={errors.birthdate}
-            placeholder="__/__/____"
-            onInputChange={(value) =>
-              onInputChange(
-                'birthdate',
-                value
-                  .slice(0, 10)
-                  .replace(/\D/g, '')
-                  .replace(/^(\d{2})(\d{2})(\d{4})$/, '$1/$2/$3'),
-              )
-            }
+            onChangeCalendarDate={(value) => onInputChange('birthdate', value)}
           />
           <PasswordInput label="Senha" error={errors.password} value={data?.password} onInputChange={(value) => onInputChange('password', value)} />
           <PasswordInput
@@ -232,13 +244,13 @@ const SignUp: React.FC = () => {
           />
         </Flex>
 
-        <GenericButton label="Cadastrar" onClick={() => setStep('FINISH')} isLoading={submitLoading} marginTop="8px" w="100%" />
+        <GenericButton label="Cadastrar" onClick={() => submit(handleRegisterUser)} isLoading={submitLoading} marginTop="8px" w="100%" />
       </Flex>
     ),
     FINISH: (
       <Flex direction="column" justify="space-between" h="100%">
         <Flex width="100%" marginTop="32px" gap="20px">
-        <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
+          <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
@@ -273,7 +285,6 @@ const SignUp: React.FC = () => {
       padding="24px"
       transition="all 0.2s"
       h={SizeMapper[step]}
-      // h="fit-content"
     >
       <Logo />
 
@@ -288,13 +299,13 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const selectedPage = 'signup';
 
   try {
-    tokenManager.updateToken(req);
+    cookieManager.updateToken(req);
 
     await validateSession();
 
     return { redirect: { destination: '/home', permanent: false } };
   } catch (err: any) {
-    tokenManager.forceExpires(res);
+    cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
 
     return { props: { selectedPage, pageTitle: 'Cadastro' } };

@@ -1,4 +1,4 @@
-import { ChakraProvider, CSSReset } from '@chakra-ui/react';
+import { ChakraProvider, ColorModeScript, CSSReset } from '@chakra-ui/react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import type { AppProps } from 'next/app';
 
@@ -6,11 +6,11 @@ import { api } from '@/_base/classes/api';
 import { CustomRouterProvider } from '@/_base/hooks/CustomRouter';
 import { LoadingProvider } from '@/_base/hooks/Loading';
 import { Page } from '@/_base/hooks/Page';
-import { tokenManager } from '@/_base/utils';
+import { cookieManager } from '@/_base/utils';
 import { globalTheme } from '@/styles/global';
 
 export default function App({ Component, pageProps }: AppProps) {
-  const token = tokenManager.getToken();
+  const token = cookieManager.getToken();
   api.defaults.headers.authorization = `Bearer ${token}`;
 
   return (
@@ -19,6 +19,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <LoadingProvider changeSignal={{}}>
           <CustomRouterProvider>
             <Page {...pageProps}>
+              <ColorModeScript initialColorMode="light" />
               <Component {...pageProps} />
               <CSSReset />
             </Page>
