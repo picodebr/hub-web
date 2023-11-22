@@ -3,11 +3,12 @@ import { GetServerSideProps } from 'next';
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
 import { MdMailOutline } from 'react-icons/md';
 import { GiCheckMark } from 'react-icons/gi';
+import { DatePicker } from '@orange_digital/chakra-datepicker';
 
 import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 import { HubUserType } from '@/_base/interfaces/user/HubUserType';
-import IRegisterUser, { EMPTY_REGISTER_USER_DATA } from '@/_base/interfaces/user/IRegisterUser';
+import IRegisterUser, { EMPTY_REGISTER_USER_DATA, registerUserSchema } from '@/_base/interfaces/user/IRegisterUser';
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
@@ -16,7 +17,7 @@ import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { CodeInput } from '@/components/Inputs/Code';
-import { Flex, Link, Text, useUpdateEffect } from '@chakra-ui/react';
+import { Flex, Input, Link, Text, useUpdateEffect } from '@chakra-ui/react';
 import { IGoogleUserData } from '@/_base/interfaces/auth/IGoogleUserData';
 import { checkEmail, checkPrimaryCode, checkUsername, signup } from '@/_base/services/user';
 import { DateInput } from '@/components/Inputs/Date';
@@ -26,9 +27,12 @@ type PageStepsType = 'USER_TYPE' | 'PRIMARY_CODE' | 'FORM' | 'FINISH';
 const SizeMapper: Record<PageStepsType, string> = {
   USER_TYPE: '28.5rem',
   PRIMARY_CODE: '35.25rem',
-  FORM: '49rem',
+  FORM: 'fit-content',
   FINISH: '22rem',
 };
+
+export const formatDateInput = (value?: string | number | Date) =>
+  value ? new Date(new Date(value).getTime() + 600000).toISOString().split('T')[0] : '';
 
 const SignUp: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('USER_TYPE');
@@ -38,7 +42,10 @@ const SignUp: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isGoogleSignin, setIsGoogleSignin] = useState(false);
 
-  const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<IRegisterUser>({ data: EMPTY_REGISTER_USER_DATA });
+  const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<IRegisterUser>({
+    data: EMPTY_REGISTER_USER_DATA,
+    schema: registerUserSchema,
+  });
 
   useEffect(() => {
     const data = cookieManager.getCookie<IGoogleUserData>('google_data', true);
@@ -80,7 +87,7 @@ const SignUp: React.FC = () => {
   const handleRegisterUser = useAsyncCallback(
     async () => {
       setSubmitLoading(true);
-      const [emailResponse, usernameResponse] = await Promise.all([checkEmail(data.email), checkUsername(data.username)]);
+      const [emailResponse, usernameResponse] = await Promise.all([checkEmail(data.email || ''), checkUsername(data.username)]);
 
       if (!emailResponse.is_valid) {
         setErrors((e) => ({ ...e, email: 'E-mail já cadastrado' }));
@@ -230,10 +237,11 @@ const SignUp: React.FC = () => {
           />
 
           <DateInput
+            placeholder="asdas"
             label="Data de Nascimento"
-            value={data.birthdate}
+            value={formatDateInput(data.birthdate)}
             error={errors.birthdate}
-            onChangeCalendarDate={(value) => onInputChange('birthdate', value)}
+            onInputChange={(value) => onInputChange('birthdate', new Date(value))}
           />
           <PasswordInput label="Senha" error={errors.password} value={data?.password} onInputChange={(value) => onInputChange('password', value)} />
           <PasswordInput
@@ -310,4 +318,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     return { props: { selectedPage, pageTitle: 'Cadastro' } };
   }
+};
+
+export const CustomDatePicker: React.FC = () => {
+  return <DatePicker initialValue={new Date()} />;
 };
