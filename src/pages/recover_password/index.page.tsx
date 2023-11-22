@@ -1,14 +1,14 @@
-import { FiChevronLeft, FiChevronRight, FiUser } from 'react-icons/fi';
+import { FiChevronLeft, FiUser } from 'react-icons/fi';
 import { AiOutlineMail } from 'react-icons/ai';
 import { ReactNode, useState } from 'react';
-import { GetServerSideProps } from 'next';
-import { IoCheckmarkCircle } from 'react-icons/io5';
+// import { GetServerSideProps } from 'next';
+// import { IoCheckmarkCircle } from 'react-icons/io5';
 
 import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { Flex, Link, Text } from '@chakra-ui/react';
-import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
-import { EMPTY_SUPPORT_DATA, IRecoverPassword, ISupportData, recoverPasswordSchema, supportSchema } from '@/_base/interfaces/help';
+import { useInputHandler } from '@/_base/hooks';
+import { IRecoverPassword, recoverPasswordSchema } from '@/_base/interfaces/help';
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
@@ -47,7 +47,7 @@ const Recover: React.FC = () => {
       <Flex direction="column" justify="space-between" h="100%">
         <Link href="/help" w="100%">
           <Flex padding="12px 0 0 0" w="100%" color="gray300" align="left" gap="8px">
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px', color: 'primary900' }} />
             <Text textAlign="left">Voltar</Text>
           </Flex>{' '}
         </Link>
