@@ -107,7 +107,7 @@ const LoginPage: React.FC = () => {
 
         <Flex fontSize="13px" gap="0.5rem" align="center" w="100%">
           <Checkbox onChange={(e) => setKeepLogged(e.target.checked)} />
-          <Text fontWeight="medium" _hover={{ filter: 'brightness(1.5)' }} userSelect="none">
+          <Text fontWeight="medium" _hover={{ filter: 'brightness(1.5)' }} userSelect="none" color="gray700">
             Mantenha-me contectado
           </Text>
         </Flex>

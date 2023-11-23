@@ -1,19 +1,20 @@
-import { FiChevronLeft, FiChevronRight, FiUser } from 'react-icons/fi';
+import { FiChevronLeft, FiUser } from 'react-icons/fi';
 import { AiOutlineMail } from 'react-icons/ai';
 import { ReactNode, useState } from 'react';
-import { GetServerSideProps } from 'next';
-import { IoCheckmarkCircle } from 'react-icons/io5';
+// import { GetServerSideProps } from 'next';
+// import { IoCheckmarkCircle } from 'react-icons/io5';
 
 import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { Flex, Link, Text } from '@chakra-ui/react';
-import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
-import { EMPTY_SUPPORT_DATA, ISupportData, supportSchema } from '@/_base/interfaces/help';
+import { useInputHandler } from '@/_base/hooks';
+import { IRecoverPassword, recoverPasswordSchema } from '@/_base/interfaces/help';
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { GiCheckMark } from 'react-icons/gi';
+import { CodeInput } from '@/components/Inputs/Code';
 
 type PageStepsType = 'RECOVER_BY_EMAIL' | 'RECOVER_BY_USERNAME' | 'TEACHER_SENT' | 'RECOVER_CODE' | 'NEW_PASSWORD' | 'PASSWORD_CHANGED';
 
@@ -29,14 +30,24 @@ const SizeMapper: Record<PageStepsType, string> = {
 const Recover: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('RECOVER_BY_EMAIL');
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
+  const [recoverCode, setRecoverCode] = useState<{ value?: string; valid?: boolean; error?: string }>({});
+  const [identifier, setIdentifier] = useState<{ value?: string; error?: string }>({});
 
+  const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<IRecoverPassword>({ schema: recoverPasswordSchema });
+  const handleRecoverPassword = () => {
+    if (data.new_password !== data.password_confirmation) {
+      setErrors((e) => ({ ...e, new_password: 'As senhas não correspondem', password_confirmation: 'As senhas não correspondem' }));
+      return;
+    }
+    setStep('PASSWORD_CHANGED');
+  };
 
   const PageStepElement: Record<PageStepsType, ReactNode> = {
     RECOVER_BY_EMAIL: (
       <Flex direction="column" justify="space-between" h="100%">
         <Link href="/help" w="100%">
           <Flex padding="12px 0 0 0" w="100%" color="gray300" align="left" gap="8px">
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px', color: 'primary900' }} />
             <Text textAlign="left">Voltar</Text>
           </Flex>{' '}
         </Link>
@@ -54,9 +65,12 @@ const Recover: React.FC = () => {
         >
           <TextInput
             leftElement={<AiOutlineMail style={{ margin: '10px 8px 10px 14px' }} />}
-            // value={data.email}
-            // error={errors.email}
-            // onInputChange={(value) => setEmail(value)}
+            value={identifier.value}
+            error={identifier.error}
+            onInputChange={(value) => {
+              setIdentifier((e) => ({ ...e, value }));
+              setData((e) => ({ ...e, identifier: value }));
+            }}
             label="E-mail"
             color="gray700"
             padding="10px 14px 10px 8px"
@@ -72,19 +86,19 @@ const Recover: React.FC = () => {
             Esse e-mail não possui cadastro
           </Text> */}
         </Flex>
-          <Flex width="100%" textAlign="right" display="column" onClick={() => setStep('RECOVER_BY_USERNAME')}>
-            <Text
-              marginTop='2px'
-              textAlign="right"
-              color="error300"
-              fontSize="12.5px"
-              cursor="pointer"
-              textDecoration="underline"
-              _hover={{ filter: 'brightness(0.8)' }}
-            >
-              Não tenho um e-mail
-            </Text>
-          </Flex>
+        <Flex width="100%" textAlign="right" display="column" onClick={() => setStep('RECOVER_BY_USERNAME')}>
+          <Text
+            marginTop="2px"
+            textAlign="right"
+            color="error300"
+            fontSize="12.5px"
+            cursor="pointer"
+            textDecoration="underline"
+            _hover={{ filter: 'brightness(0.8)' }}
+          >
+            Não tenho um e-mail
+          </Text>
+        </Flex>
 
         <Flex
           color="white"
@@ -94,18 +108,18 @@ const Recover: React.FC = () => {
           padding="10px 18px"
           bg="primary900"
           onClick={() => setStep('RECOVER_CODE')}
-          cursor='pointer'
+          cursor="pointer"
         >
           <Text fontWeight="600">Enviar código</Text>
         </Flex>
       </Flex>
     ),
     RECOVER_CODE: (
-      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem" >
-          <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px" onClick={() => setStep('RECOVER_BY_EMAIL')} cursor='pointer'>
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-            <Text textAlign="left">Voltar</Text>
-          </Flex>
+      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem">
+        <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px" onClick={() => setStep('RECOVER_BY_EMAIL')} cursor="pointer">
+          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+          <Text textAlign="left">Voltar</Text>
+        </Flex>
         <Flex direction="column" width="100%" color="gray500" align="center" gap="16px">
           <Flex direction="column" gap="8px">
             <Text fontWeight="600" fontSize="20px" color="gray900">
@@ -113,68 +127,15 @@ const Recover: React.FC = () => {
             </Text>
             <Text color="gray500">Foi enviado um código para o e-mail, verifique e informe o código nos campos abaixo</Text>
           </Flex>
-          <Flex gap="10px">
-            <Flex
-              h="80px"
-              w="80px"
-              borderRadius="8px"
-              align="center"
-              justify="center"
-              color="gray300"
-              border="1px"
-              borderColor="gray300"
-              fontSize="48px"
-              fontWeight="500"
-            >
-              0
-            </Flex>
-            <Flex
-              h="80px"
-              w="80px"
-              borderRadius="8px"
-              align="center"
-              justify="center"
-              color="gray300"
-              border="1px"
-              borderColor="gray300"
-              fontSize="48px"
-              fontWeight="500"
-            >
-              0
-            </Flex>
-            <Flex
-              h="80px"
-              w="80px"
-              borderRadius="8px"
-              align="center"
-              justify="center"
-              color="gray300"
-              border="1px"
-              borderColor="gray300"
-              fontSize="48px"
-              fontWeight="500"
-            >
-              0
-            </Flex>
-            <Flex
-              h="80px"
-              w="80px"
-              borderRadius="8px"
-              align="center"
-              justify="center"
-              color="gray300"
-              border="1px"
-              borderColor="gray300"
-              fontSize="48px"
-              fontWeight="500"
-            >
-              0
-            </Flex>
-          </Flex>
+          <CodeInput
+            onFill={(value) => setRecoverCode((e) => ({ ...e, value }))}
+            error={recoverCode.error}
+            onChange={() => setRecoverCode((e) => ({ ...e, error: '' }))}
+          />
         </Flex>
-        <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error}/>
+        <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
 
-        <GenericButton label="Confirmar" onClick={() => setStep('NEW_PASSWORD')} marginTop="8px" w="100%" marginBottom='2rem' />
+        <GenericButton label="Confirmar" onClick={() => setStep('NEW_PASSWORD')} marginTop="8px" w="100%" marginBottom="2rem" />
       </Flex>
     ),
     NEW_PASSWORD: (
@@ -188,13 +149,19 @@ const Recover: React.FC = () => {
           </Flex>
         </Flex>
         <PasswordInput
-            label="Senha"
-            placeholder="Sua senha"
-          />
-          <PasswordInput
-            label="Confirmar senha"
-            placeholder="Sua senha"
-          />
+          label="Senha"
+          placeholder="Sua senha"
+          value={data.new_password}
+          onInputChange={(value) => onInputChange('new_password', value)}
+          error={errors.new_password}
+        />
+        <PasswordInput
+          label="Confirmar senha"
+          placeholder="Sua senha"
+          value={data.password_confirmation}
+          onInputChange={(value) => onInputChange('password_confirmation', value)}
+          error={errors.password_confirmation}
+        />
         <Flex
           color="white"
           align="center"
@@ -202,8 +169,8 @@ const Recover: React.FC = () => {
           borderRadius="8px"
           padding="10px 18px"
           bg="primary900"
-          onClick={() => setStep('PASSWORD_CHANGED')}
-          cursor='pointer'
+          onClick={() => submit(handleRecoverPassword)}
+          cursor="pointer"
         >
           <Text fontWeight="600">Redefinir senha</Text>
         </Flex>
@@ -212,7 +179,7 @@ const Recover: React.FC = () => {
     PASSWORD_CHANGED: (
       <Flex direction="column" justify="space-between" h="100%">
         <Flex width="100%" marginTop="32px" gap="20px">
-        <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
+          <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
@@ -234,10 +201,10 @@ const Recover: React.FC = () => {
     ),
     RECOVER_BY_USERNAME: (
       <Flex direction="column" justify="space-between" h="100%">
-         <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px" onClick={() => setStep('RECOVER_BY_EMAIL')} cursor='pointer'>
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-            <Text textAlign="left">Voltar</Text>
-          </Flex>
+        <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px" onClick={() => setStep('RECOVER_BY_EMAIL')} cursor="pointer">
+          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+          <Text textAlign="left">Voltar</Text>
+        </Flex>
         {/*Botão de voltar */}
         <Flex direction="column" gap="8px">
           <Text fontWeight="600" fontSize="20px" color="gray900">
@@ -252,9 +219,9 @@ const Recover: React.FC = () => {
         >
           <TextInput
             leftElement={<FiUser style={{ margin: '10px 8px 10px 14px' }} />}
-            // value={data.username}
-            // error={errors.username}
-            // onInputChange={(value) => onInputChange('username', value)}
+            value={identifier.value}
+            error={identifier.error}
+            onInputChange={(value) => setIdentifier((e) => ({ ...e, value }))}
             label="Nome de usuário"
             color="gray700"
             padding="10px 14px 10px 8px"
@@ -305,7 +272,7 @@ const Recover: React.FC = () => {
     TEACHER_SENT: (
       <Flex direction="column" justify="space-between" h="100%">
         <Flex width="100%" marginTop="32px" gap="20px">
-        <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
+          <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
