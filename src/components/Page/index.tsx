@@ -4,14 +4,13 @@ import { PropsWithChildren } from 'react';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 import { GenericButton } from '../Buttons/Generic';
-
 const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, user: admin, children }) => {
   const { colorMode, toggleColorMode } = useColorMode();
 
   return (
-    <Flex h="100vh" w="100vw" flexDirection="column" bg="primary100" position="relative" overflow="hidden">
+    <Flex h="100vh" w="100vw" flexDirection="column" bg="primary100" position="relative" overflow="hidden" zIndex="0">
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
       ) : (
@@ -35,8 +34,8 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedP
         label={`Toggle ${colorMode === 'light' ? 'Dark' : 'Light'}`}
         onClick={toggleColorMode}
       />
-      <Image position="absolute" left="0" top="11.5rem" src="/patterns/line-pattern.svg" zIndex="0" h={{ base: '0', lg: '445px' }} />
-      <Image position="absolute" bottom="0" right="-5rem" src="/patterns/line-pattern.svg" zIndex="0" h={{ base: '0', lg: '445px' }} />
+      <Image position="absolute" left="0" top="11.5rem" src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} />
+      <Image position="absolute" bottom="0" right="-5rem" src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} />
     </Flex>
   );
 };

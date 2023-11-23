@@ -5,4 +5,4 @@ const toastConfig = {
   isClosable: true,
 };
 
-export const useCustomToast = (options: UseToastOptions = {}) => useToast({ ...toastConfig, ...options });
+export const useCustomToast = (options: UseToastOptions = {}) => useToast({ ...toastConfig, ...options, colorScheme: 'blue' });

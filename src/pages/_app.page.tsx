@@ -1,4 +1,4 @@
-import { ChakraProvider, ColorModeScript, CSSReset } from '@chakra-ui/react';
+import { ChakraProvider, CSSReset } from '@chakra-ui/react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import type { AppProps } from 'next/app';
 
@@ -19,7 +19,6 @@ export default function App({ Component, pageProps }: AppProps) {
         <LoadingProvider changeSignal={{}}>
           <CustomRouterProvider>
             <Page {...pageProps}>
-              <ColorModeScript initialColorMode="light" />
               <Component {...pageProps} />
               <CSSReset />
             </Page>

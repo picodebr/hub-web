@@ -1,5 +1,5 @@
-import 'rsuite/dist/rsuite-no-reset.min.css';
 import { extendTheme } from '@chakra-ui/react';
+import 'rsuite/dist/rsuite-no-reset.min.css';
 
 import { dark, light } from './colors';
 
@@ -26,7 +26,7 @@ export const globalTheme = extendTheme((props) => {
           width: '100%',
         },
         body: {
-          background: 'white',
+          background: '#fff',
           fontSize: '16px',
           color: '#3f3f3f',
           opacity: props.disabled ? '0.3' : '1',

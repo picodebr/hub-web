@@ -23,7 +23,7 @@ export const EMPTY_REGISTER_USER_DATA: IRegisterUser = {
   username: '',
   password: '',
   password_confirmation: '',
-  birthdate: new Date(),
+  birthdate: undefined as any,
   user_type: '' as any,
 };
 

@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
 import { MdMailOutline } from 'react-icons/md';
@@ -17,7 +17,7 @@ import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { CodeInput } from '@/components/Inputs/Code';
-import { Flex, Input, Link, Text, useUpdateEffect } from '@chakra-ui/react';
+import { Flex, Link, Text } from '@chakra-ui/react';
 import { IGoogleUserData } from '@/_base/interfaces/auth/IGoogleUserData';
 import { checkEmail, checkPrimaryCode, checkUsername, signup } from '@/_base/services/user';
 import { DateInput } from '@/components/Inputs/Date';
@@ -32,7 +32,7 @@ const SizeMapper: Record<PageStepsType, string> = {
 };
 
 export const formatDateInput = (value?: string | number | Date) =>
-  value ? new Date(new Date(value).getTime() + 600000).toISOString().split('T')[0] : '';
+  value ? new Date(new Date(value || 0).getTime() + 600000)?.toISOString().split('T')[0] : '';
 
 const SignUp: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('USER_TYPE');
@@ -41,6 +41,7 @@ const SignUp: React.FC = () => {
   const [primaryCode, setPrimaryCode] = useState<{ value?: string; valid?: boolean; error?: string }>({});
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isGoogleSignin, setIsGoogleSignin] = useState(false);
+  const [passwordIsValid, setPasswordIsValid] = useState(false);
 
   const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<IRegisterUser>({
     data: EMPTY_REGISTER_USER_DATA,
@@ -60,6 +61,11 @@ const SignUp: React.FC = () => {
   useEffect(() => {
     if (captcha.token && primaryCode.value) (async () => await handleCheckCode(primaryCode.value || ''))();
   }, [captcha.token, primaryCode.value]);
+
+  const canSubmit = useMemo(
+    () => passwordIsValid && !Object.values(Object.assign(EMPTY_REGISTER_USER_DATA, { ...data, email: '_' })).filter((e) => !e).length,
+    [passwordIsValid, data],
+  );
 
   const handleCheckCode = useAsyncCallback(
     async (code: string) => {
@@ -86,6 +92,11 @@ const SignUp: React.FC = () => {
 
   const handleRegisterUser = useAsyncCallback(
     async () => {
+      if (data.password !== data.password_confirmation) {
+        setErrors((e) => ({ ...e, password: 'As senhas não correspondem', password_confirmation: 'As senhas não correspondem' }));
+        return;
+      }
+
       setSubmitLoading(true);
       const [emailResponse, usernameResponse] = await Promise.all([checkEmail(data.email || ''), checkUsername(data.username)]);
 
@@ -99,10 +110,13 @@ const SignUp: React.FC = () => {
         return;
       }
 
-      alert('user registered');
+      const signupData = { ...data };
 
-      // await signup(data)
-      // setStep('FINISH')
+      delete (signupData as any).password_confirmation;
+
+      await signup(signupData);
+
+      setStep('FINISH');
     },
     [data],
     false,
@@ -237,13 +251,22 @@ const SignUp: React.FC = () => {
           />
 
           <DateInput
-            placeholder="asdas"
             label="Data de Nascimento"
             value={formatDateInput(data.birthdate)}
             error={errors.birthdate}
-            onInputChange={(value) => onInputChange('birthdate', new Date(value))}
+            onInputChange={(value) => onInputChange('birthdate', value ? new Date(value) : '')}
           />
-          <PasswordInput label="Senha" error={errors.password} value={data?.password} onInputChange={(value) => onInputChange('password', value)} />
+
+          <PasswordInput
+            label="Senha"
+            error={errors.password}
+            value={data?.password}
+            onInputChange={(value) => onInputChange('password', value)}
+            passStrong={2}
+            onPassStrongReached={() => setPasswordIsValid(true)}
+            onPassStrongUnreached={() => setPasswordIsValid(false)}
+          />
+
           <PasswordInput
             label="Confirmar Senha"
             error={errors.password_confirmation}
@@ -252,7 +275,14 @@ const SignUp: React.FC = () => {
           />
         </Flex>
 
-        <GenericButton label="Cadastrar" onClick={() => submit(handleRegisterUser)} isLoading={submitLoading} marginTop="8px" w="100%" />
+        <GenericButton
+          label="Cadastrar"
+          onClick={() => submit(handleRegisterUser)}
+          isLoading={submitLoading}
+          marginTop="8px"
+          w="100%"
+          isDisabled={!canSubmit}
+        />
       </Flex>
     ),
     FINISH: (

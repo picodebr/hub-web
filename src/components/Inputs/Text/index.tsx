@@ -34,7 +34,7 @@ export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', pl
         )}
       </Flex>
       {!!error && (
-        <Flex align="center" gap="0.25rem" color="error500">
+        <Flex align="center" gap="0.25rem" pl="0.15rem" color="error500">
           <Text fontSize="12.5px">{error}</Text>
         </Flex>
       )}
