@@ -9,3 +9,5 @@ export * from './refinePasswordSchema';
 export * from './removeDuplicateItems';
 export * from './showErrorToClient';
 export * from './tokenManager';
+export * from './validateEmail';
+export * from './validatePassword';

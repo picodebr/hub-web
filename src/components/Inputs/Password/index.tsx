@@ -20,6 +20,7 @@ import { FaRegCircleQuestion } from 'react-icons/fa6';
 
 import { BsEye, BsEyeSlash } from 'react-icons/bs';
 import { IInputProps } from '../interfaces';
+import { validatePassword } from '@/_base/utils';
 
 interface IPasswordProps {
   passStrong?: 2 | 3 | 4;
@@ -40,10 +41,18 @@ export const PasswordInput: React.FC<IInputProps & IPasswordProps> = ({
   minPassLength = 8,
 }) => {
   const [showPass, setShowPass] = useState(false);
-  const passwordStrong: number = useMemo(() => zxcvbn(value).score, [value]);
+  const passwordStrong = useMemo<number>(() => {
+    let score: number = zxcvbn(value).score;
+
+    const isValid = validatePassword(value);
+
+    if (!isValid && score > 2) score = (passStrong || 2) - 1;
+
+    return score;
+  }, [value]);
 
   useUpdateEffect(() => {
-    if (onPassStrongReached && passStrong && value.length >= minPassLength && passwordStrong > passStrong) onPassStrongReached();
+    if (onPassStrongReached && passStrong && value.length >= minPassLength && passwordStrong >= passStrong) onPassStrongReached();
     else onPassStrongUnreached && onPassStrongUnreached();
   }, [passwordStrong]);
 

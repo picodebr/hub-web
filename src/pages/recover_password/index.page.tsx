@@ -1,20 +1,20 @@
 import { FiChevronLeft, FiUser } from 'react-icons/fi';
 import { AiOutlineMail } from 'react-icons/ai';
-import { ReactNode, useState } from 'react';
-// import { GetServerSideProps } from 'next';
-// import { IoCheckmarkCircle } from 'react-icons/io5';
+import { ReactNode, useMemo, useState } from 'react';
+import { Flex, Link, Text } from '@chakra-ui/react';
+import { GiCheckMark } from 'react-icons/gi';
 
 import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
-import { Flex, Link, Text } from '@chakra-ui/react';
-import { useInputHandler } from '@/_base/hooks';
+import { useAsyncCallback, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { IRecoverPassword, recoverPasswordSchema } from '@/_base/interfaces/help';
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 import { PasswordInput } from '@/components/Inputs/Password';
-import { GiCheckMark } from 'react-icons/gi';
 import { CodeInput } from '@/components/Inputs/Code';
+import { checkRecoveryToken, recoverPassword, sendRecoveryToken } from '@/_base/services/user';
+import { validateEmail } from '@/_base/utils';
 
 type PageStepsType = 'RECOVER_BY_EMAIL' | 'RECOVER_BY_USERNAME' | 'TEACHER_SENT' | 'RECOVER_CODE' | 'NEW_PASSWORD' | 'PASSWORD_CHANGED';
 
@@ -22,25 +22,61 @@ const SizeMapper: Record<PageStepsType, string> = {
   RECOVER_BY_EMAIL: '27rem',
   RECOVER_BY_USERNAME: '28rem',
   TEACHER_SENT: '21rem',
-  RECOVER_CODE: '34.5rem',
+  RECOVER_CODE: 'fit-content',
   PASSWORD_CHANGED: '21rem',
   NEW_PASSWORD: '28.5rem',
 };
 
-const Recover: React.FC = () => {
+const RecoverPassword: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('RECOVER_BY_EMAIL');
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
-  const [recoverCode, setRecoverCode] = useState<{ value?: string; valid?: boolean; error?: string }>({});
-  const [identifier, setIdentifier] = useState<{ value?: string; error?: string }>({});
+  const [passwordIsStronger, setPasswordIsStronger] = useState(false);
 
-  const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<IRecoverPassword>({ schema: recoverPasswordSchema });
-  const handleRecoverPassword = () => {
+  const toast = useCustomToast();
+  const { errors, onInputChange, data, setErrors, submit, checkErrors } = useInputHandler<IRecoverPassword>({ schema: recoverPasswordSchema });
+
+  const canRedefine = useMemo<boolean>(() => passwordIsStronger && data.new_password === data.password_confirmation, [passwordIsStronger, data]);
+
+  const handleSendRecoveryToken = useAsyncCallback(async () => {
+    checkErrors();
+    if (!validateEmail(data.identifier)) {
+      setErrors((e) => ({ ...e, identifier: 'E-mail inválido' }));
+      return;
+    }
+
+    if (errors.identifier) return;
+
+    await sendRecoveryToken(data.identifier);
+
+    setStep('RECOVER_CODE');
+    setErrors({} as any);
+  }, []);
+
+  const handleCheckRecoveryToken = useAsyncCallback(async () => {
+    checkErrors();
+
+    if (errors.recovery_token) return;
+    if (!captcha.token) setCaptcha((e) => ({ ...e, error: 'Campo obrigatório' }));
+
+    const { is_valid, message } = await checkRecoveryToken({ identifier: data.identifier, token: data.recovery_token });
+
+    if (is_valid) setStep('NEW_PASSWORD');
+    else toast({ status: 'error', description: message || 'Código inválido' });
+    setErrors({} as any);
+  }, []);
+
+  const handleRecoverPassword = useAsyncCallback(async () => {
+    if (!data.identifier || !data.recovery_token) return;
+
     if (data.new_password !== data.password_confirmation) {
       setErrors((e) => ({ ...e, new_password: 'As senhas não correspondem', password_confirmation: 'As senhas não correspondem' }));
       return;
     }
+
+    await recoverPassword({ identifier: data.identifier, token: data.recovery_token, password: data.new_password });
+
     setStep('PASSWORD_CHANGED');
-  };
+  }, []);
 
   const PageStepElement: Record<PageStepsType, ReactNode> = {
     RECOVER_BY_EMAIL: (
@@ -65,26 +101,14 @@ const Recover: React.FC = () => {
         >
           <TextInput
             leftElement={<AiOutlineMail style={{ margin: '10px 8px 10px 14px' }} />}
-            value={identifier.value}
-            error={identifier.error}
-            onInputChange={(value) => {
-              setIdentifier((e) => ({ ...e, value }));
-              setData((e) => ({ ...e, identifier: value }));
-            }}
+            value={data.identifier}
+            error={errors.identifier}
+            onInputChange={(value) => onInputChange('identifier', value)}
             label="E-mail"
             color="gray700"
             padding="10px 14px 10px 8px"
             placeholder="Informe seu e-mail"
           />
-          {/* <Text
-            padding='6px 0 0 0'
-            textAlign="left"
-            color="status.error"
-            fontSize="14px"
-            textDecoration="none"
-          >
-            Esse e-mail não possui cadastro
-          </Text> */}
         </Flex>
         <Flex width="100%" textAlign="right" display="column" onClick={() => setStep('RECOVER_BY_USERNAME')}>
           <Text
@@ -107,7 +131,7 @@ const Recover: React.FC = () => {
           borderRadius="8px"
           padding="10px 18px"
           bg="primary900"
-          onClick={() => setStep('RECOVER_CODE')}
+          onClick={handleSendRecoveryToken}
           cursor="pointer"
         >
           <Text fontWeight="600">Enviar código</Text>
@@ -128,14 +152,14 @@ const Recover: React.FC = () => {
             <Text color="gray500">Foi enviado um código para o e-mail, verifique e informe o código nos campos abaixo</Text>
           </Flex>
           <CodeInput
-            onFill={(value) => setRecoverCode((e) => ({ ...e, value }))}
-            error={recoverCode.error}
-            onChange={() => setRecoverCode((e) => ({ ...e, error: '' }))}
+            onFill={(value) => onInputChange('recovery_token', value)}
+            error={errors.recovery_token}
+            onChange={(value) => onInputChange('recovery_token', value)}
           />
         </Flex>
         <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
 
-        <GenericButton label="Confirmar" onClick={() => setStep('NEW_PASSWORD')} marginTop="8px" w="100%" marginBottom="2rem" />
+        <GenericButton label="Confirmar" onClick={handleCheckRecoveryToken} marginTop="8px" w="100%" />
       </Flex>
     ),
     NEW_PASSWORD: (
@@ -154,6 +178,9 @@ const Recover: React.FC = () => {
           value={data.new_password}
           onInputChange={(value) => onInputChange('new_password', value)}
           error={errors.new_password}
+          passStrong={2}
+          onPassStrongReached={() => setPasswordIsStronger(true)}
+          onPassStrongUnreached={() => setPasswordIsStronger(false)}
         />
         <PasswordInput
           label="Confirmar senha"
@@ -168,9 +195,10 @@ const Recover: React.FC = () => {
           justify="center"
           borderRadius="8px"
           padding="10px 18px"
-          bg="primary900"
           onClick={() => submit(handleRecoverPassword)}
-          cursor="pointer"
+          cursor={canRedefine ? 'pointer' : 'not-allowed'}
+          bg={canRedefine ? 'primary900' : 'gray400'}
+          pointerEvents={canRedefine ? 'auto' : 'none'}
         >
           <Text fontWeight="600">Redefinir senha</Text>
         </Flex>
@@ -219,23 +247,14 @@ const Recover: React.FC = () => {
         >
           <TextInput
             leftElement={<FiUser style={{ margin: '10px 8px 10px 14px' }} />}
-            value={identifier.value}
-            error={identifier.error}
-            onInputChange={(value) => setIdentifier((e) => ({ ...e, value }))}
+            value={data.identifier}
+            error={errors.identifier}
+            onInputChange={(value) => onInputChange('identifier', value)}
             label="Nome de usuário"
             color="gray700"
             padding="10px 14px 10px 8px"
             placeholder="Informe seu nome de usuário"
           />
-          {/* <Text
-            padding='6px 0 0 0'
-            textAlign="left"
-            color="status.error"
-            fontSize="14px"
-            textDecoration="none"
-          >
-            Esse nome de usuário não possui cadastro
-          </Text> */}
         </Flex>
 
         <Flex width="100%" textAlign="right" display="column">
@@ -307,7 +326,6 @@ const Recover: React.FC = () => {
       padding="24px"
       transition="all 0.2s"
       h={SizeMapper[step]}
-      // h="fit-content"
     >
       <Logo />
 
@@ -316,4 +334,4 @@ const Recover: React.FC = () => {
   );
 };
 
-export default Recover;
+export default RecoverPassword;

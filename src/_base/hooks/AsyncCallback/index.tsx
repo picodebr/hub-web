@@ -24,8 +24,7 @@ export function useAsyncCallback<T extends (...args: any[]) => any>(callback: T,
 
           await callback(...args);
         } catch (err: any) {
-          const error = err?.message || err;
-          showErrorToClient(error, toast);
+          showErrorToClient(err, toast);
         } finally {
           setLoadingConfig((e) => ({ ...e, isLoading: false }));
           if (onEnd) onEnd();

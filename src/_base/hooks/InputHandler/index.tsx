@@ -12,12 +12,18 @@ export function useInputHandler<T>(props?: IInputHandlerProps<T>): IInputHandler
     setData((e) => ({ ...e, [field]: value }));
   };
 
+  const checkErrors = () => {
+    if (!props?.schema) return;
+    const invalidData = zodErrorHandler(props.schema, data);
+    setErrors(invalidData as any);
+  };
+
   const submit = (cb: () => any) => {
     if (!props?.schema) return cb();
     const invalidData = zodErrorHandler(props.schema, data);
     if (!invalidData) return cb();
     setErrors(invalidData as any);
-  }
+  };
 
-  return { errors, setErrors, data, setData, onInputChange, submit }
+  return { errors, setErrors, data, setData, onInputChange, submit, checkErrors };
 }

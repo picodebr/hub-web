@@ -15,4 +15,5 @@ export interface IInputHandlerOutput<T> {
   setData: Dispatch<SetStateAction<T>>;
   onInputChange: (field: keyof T, value: any) => void;
   submit: (cb: (args?: any) => any) => void;
+  checkErrors: () => void;
 }
