@@ -5,11 +5,4 @@ const toastConfig = {
   isClosable: true,
 };
 
-export const useCustomToast = (options: UseToastOptions = {}) =>
-  useToast({
-    ...toastConfig,
-    ...options,
-    colorScheme: 'green',
-    variant: 'subtle',
-    containerStyle: { bg: 'primary900', color: 'white', borderRadius: 'md' },
-  });
+export const useCustomToast = (options: UseToastOptions = {}) => useToast({ ...toastConfig, ...options });

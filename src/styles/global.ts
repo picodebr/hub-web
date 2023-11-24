@@ -47,7 +47,6 @@ export const globalTheme = extendTheme((props) => {
       xl: '1200px',
       '2xl': '1536px',
     },
-    colors: light,
     semanticTokens,
   };
 });
