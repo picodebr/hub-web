@@ -1,6 +1,5 @@
 import { PropsWithChildren, useContext, useEffect, useState, createContext } from 'react';
 import { Flex, Image } from '@chakra-ui/react';
-import { motion } from 'framer-motion';
 
 import { ILoadingConfig, ILoadingContext, ILoadingProviderProps } from './interfaces';
 
@@ -37,27 +36,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         opacity={loadingConfig.isLoading ? '1' : '0'}
         pointerEvents={loadingConfig.isLoading ? 'auto' : 'none'}
       >
-        <Flex gap="1rem" margin="auto">
-          <motion.div animate={{ scale: 1.35 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear', repeatType: 'reverse' }}>
-            <Image src="/logo/pi-logo-light.svg" />
-          </motion.div>
-        </Flex>
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          style={{
-            position: 'fixed',
-            left: '46.05%',
-            top: '42.2%',
-            transform: 'translate(-50%, -50%)',
-            width: '150px',
-            height: '150px',
-            margin: '0 75px 75px 0',
-            borderBottom: '3px solid #6699FF',
-            borderRadius: '50%',
-          }}
-        />
-
+        <Image src="/loading/happy-loading.gif" zIndex="-1" h="500px" position="fixed" left="50%" top="50%" transform="translate(-50%, -50%)" />
         <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
         <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" />
       </Flex>
