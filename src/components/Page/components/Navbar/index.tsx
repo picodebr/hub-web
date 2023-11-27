@@ -13,11 +13,11 @@ type MenuItemType = { name: string; page: string; icon: IconType; permission?: {
 
 const menuItems: Array<MenuItemType> = [
   { name: 'Cursos', page: 'home', icon: FaHome },
-  { name: 'Loja', page: 'campaigns', icon: FaChartLine, permission: { scope: 'campaign', action: 'read' } },
-  { name: 'Meus Planejamentos', page: 'publishers', icon: FaImages, permission: { scope: 'publisher', action: 'read' } },
-  { name: 'Meus Projetos (CODE)', page: 'agencies', icon: MdHomeWork, permission: { scope: 'agency', action: 'read' } },
-  { name: 'Meus Grupos', page: 'advertisers', icon: IoMegaphone, permission: { scope: 'advertiser', action: 'read' } },
-  { name: 'Desafio Bônus', page: 'users', icon: FaUsers, permission: { scope: 'admin', action: 'read' } },
+  { name: 'Loja', page: 'store', icon: FaChartLine, permission: { scope: 'store', action: 'read' } },
+  { name: 'Meus Planejamentos', page: 'planner', icon: FaImages, permission: { scope: 'planner', action: 'read' } },
+  { name: 'Meus Projetos (CODE)', page: 'code', icon: MdHomeWork, permission: { scope: 'code', action: 'read' } },
+  { name: 'Meus Grupos', page: 'groups', icon: IoMegaphone, permission: { scope: 'groups', action: 'read' } },
+  { name: 'Desafio Bônus', page: 'challenge', icon: FaUsers, permission: { scope: 'challenge', action: 'read' } },
 ];
 
 interface IProps {
