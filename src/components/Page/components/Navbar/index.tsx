@@ -2,11 +2,13 @@ import { IconType } from 'react-icons';
 import { FaRegStar } from 'react-icons/fa';
 import { FiCheckCircle, FiEdit2, FiFileText, FiFolder, FiShoppingBag, FiUsers } from 'react-icons/fi';
 import { RiCopperCoinFill } from 'react-icons/ri';
+import { FcMoneyTransfer } from 'react-icons/fc';
 
 import { Box, Flex, Icon, Progress, Text } from '@chakra-ui/react';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
 import { IHubUser } from '@/_base/interfaces/user';
+import { GiRank3 } from 'react-icons/gi';
 
 type MenuItemType = { name: string; page: string; icon: IconType; permission?: { scope: string; action: string } };
 
@@ -56,15 +58,33 @@ export const Navbar: React.FC<IProps> = ({ page }) => {
       </Flex>
       {/* Ranking */}
       <Flex bg="white" display="column" padding="0.5rem 2.5rem 2.5rem" gap="0.5rem" h="fit-content">
-        <Flex align="center" justify="space-between" gap="0.5rem">
+        <Flex align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
           <Text w="fit-content">0</Text>
           <Text w="fit-content">5</Text>
         </Flex>
         <Progress value={2} rounded={8} flex="1" min={0} max={5} />
-        <Flex marginTop="2.5rem" border="1px" color="primary900" bg="primary50" justify="space-between" borderRadius="10px" w="100%" h="60px">
-          <Flex>
+        <Flex
+          fontWeight="600"
+          marginTop="2.5rem"
+          border="1px"
+          color="primary900"
+          bg="primary50"
+          justify="space-between"
+          borderRadius="10px"
+          w="100%"
+          h="60px"
+        >
+          <Flex align="center" justify="center" padding="1rem 0.5rem">
             <RiCopperCoinFill />
-            <Text></Text>
+            <Text marginLeft="6px">28</Text>
+          </Flex>
+          <Flex align="center" justify="center" padding="1rem 0.5rem">
+            <GiRank3 />
+            <Text marginLeft="6px">#17</Text>
+          </Flex>
+          <Flex align="center" justify="center" padding="1rem 0.5rem">
+            <FcMoneyTransfer />
+            <Text marginLeft="6px">48</Text>
           </Flex>
         </Flex>
       </Flex>
