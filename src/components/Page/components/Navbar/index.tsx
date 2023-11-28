@@ -1,8 +1,8 @@
-import { Box, Flex, Icon } from '@chakra-ui/react';
 import { IconType } from 'react-icons';
 import { FaRegStar } from 'react-icons/fa';
-import { FiCheckCircle, FiFileText, FiFolder, FiShoppingBag, FiUsers } from 'react-icons/fi';
+import { FiCheckCircle, FiEdit2, FiFileText, FiFolder, FiShoppingBag, FiUsers } from 'react-icons/fi';
 
+import { Box, Flex, Icon, Progress, Text } from '@chakra-ui/react';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
 import { IHubUser } from '@/_base/interfaces/user';
@@ -28,7 +28,38 @@ export const Navbar: React.FC<IProps> = ({ page }) => {
   return (
     <Flex direction="column" bg="white" minW={dimensions.navbar.width} gap="0.5rem" overflow="hidden" h="auto" userSelect="none" borderRadius="10px">
       <Flex bg="primary900" h="102px" position="relative" borderRadius="10px" marginBottom="2rem">
-        <Flex position="absolute" borderRadius="50%" bg="gray300" bottom="-2rem" w="6rem" h="6rem" left="50%" transform="translate(-50%, 0)"></Flex>
+        <Flex
+          position="absolute"
+          borderRadius="50%"
+          bg="gray300"
+          bottom="-2rem"
+          w="6rem"
+          h="6rem"
+          left="50%"
+          boxShadow=" 0px 4px 6px -2px"
+          transform="translate(-50%, 0)"
+        ></Flex>
+      </Flex>
+      {/* Informações */}
+      <Flex bg="white" display="column" padding="0.5rem 2.5rem 2.5rem" gap="0.5rem" h="fit-content">
+        <Flex fontSize="18px" fontWeight="600" flex="1 0 0" color="primary900" justify="space-between" align="center">
+          Anderson Felix
+          <FiEdit2 size="1rem" color="gray400" />
+        </Flex>
+        <Flex fontSize="12px" fontWeight="400" color="gray400" h="18px" display="column">
+          anderson-felix@picode.com
+        </Flex>
+        <Flex fontSize="1rem" color="gray600" font-weight="400" marginTop="0.5rem">
+          Entusiasta da tecnologia em busca de conhecimento e inovação. Apaixonado por música, viagens e aprendizado contínuo.
+        </Flex>
+      </Flex>
+      {/* Ranking */}
+      <Flex bg="white" display="column" padding="0.5rem 2.5rem 2.5rem" gap="0.5rem" h="fit-content">
+        <Flex align="center" justify="space-between">
+          <Text>0</Text>
+          <Text>5</Text>
+          <Progress value={20} rounded={8} flex="1" min={0} max={100} />
+        </Flex>
       </Flex>
       <Flex padding="0.5rem" direction="column" gap="0.5rem">
         {menuItems.map((item) => (
