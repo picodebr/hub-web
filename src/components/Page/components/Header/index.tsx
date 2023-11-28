@@ -27,8 +27,8 @@ export const Header: React.FC<IProps> = () => {
     >
       <Logo size="md" />
       <Flex gap="1rem" align="center" fontSize="1.75rem">
-        <FiBell />
-        <FiLogOut />
+        <FiBell color="gray500" />
+        <FiLogOut color="error300" />
       </Flex>
     </Flex>
   );
