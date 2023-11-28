@@ -34,6 +34,16 @@ export const globalTheme = extendTheme((props) => {
         'a:hover': {
           textDecoration: 'none!important',
         },
+        '&::-webkit-scrollbar': {
+          width: '4px',
+        },
+        '&::-webkit-scrollbar-track': {
+          width: '6px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: '#EAECF0',
+          borderRadius: '24px',
+        },
       }),
     },
     focus: {
