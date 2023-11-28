@@ -16,7 +16,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedP
       ) : (
         <>
           <Header user={admin} />
-          <Flex flex="1" padding="10px" gap="10px" overflow="hidden">
+          <Flex flex="1" padding="32px 112px" gap="32px" overflow="hidden">
             <Navbar page={selectedPage} user={admin} />
             <Flex flex="1" height="100%" overflow="hidden">
               {children}

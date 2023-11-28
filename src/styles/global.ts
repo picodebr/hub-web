@@ -53,9 +53,9 @@ export const globalTheme = extendTheme((props) => {
 
 export const dimensions = {
   header: {
-    height: '62px',
+    height: '96px',
   },
   navbar: {
-    width: '175px',
+    width: '384px',
   },
 };

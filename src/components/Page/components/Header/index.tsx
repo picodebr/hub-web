@@ -1,3 +1,5 @@
+import { FiBell, FiLogOut } from 'react-icons/fi';
+
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
@@ -18,31 +20,15 @@ export const Header: React.FC<IProps> = () => {
       w="100%"
       alignItems="center"
       justifyContent="space-between"
-      padding="0 1rem"
+      padding="0 112px"
       borderRadius="0 0 0.4rem 0.4rem"
-      borderBottom="2px solid"
       borderColor="primary"
+      bg="white"
     >
-      <Logo size='sm'/>
-      <Flex
-        border="2px solid"
-        bg="bg.white"
-        borderColor="secondary"
-        w="2.875rem"
-        h="2.875rem"
-        borderRadius="50%"
-        justify="center"
-        align="center"
-        position="relative"
-        userSelect="none"
-        cursor="pointer"
-        transition="all 0.2s"
-        _hover={{ background: 'bg.gray' }}
-        onClick={() => router.push(`/profile`)}
-      >
-        <Text color="primary" fontWeight="extrabold" fontSize="1.5rem" letterSpacing={1}>
-          PI
-        </Text>
+      <Logo size="md" />
+      <Flex gap="1rem" align="center" fontSize="1.75rem">
+        <FiBell />
+        <FiLogOut />
       </Flex>
     </Flex>
   );
