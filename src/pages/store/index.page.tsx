@@ -7,39 +7,39 @@ import { useState } from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Header } from 'rsuite';
 
-interface ICourse {
+interface IProducts {
   id: string;
   img: string;
   name: string;
-  percent: number;
+  price: number;
 }
 
-const mockCourses: ICourse[] = [
+const mockProducts: IProducts[] = [
   {
     id: '1',
     img: '',
-    name: 'Caneca',
-    percent: 60,
+    name: 'Moletom PiCode',
+    price: 60,
   },
   {
     id: '2',
     img: '',
-    name: 'Introdução à tecnologia',
-    percent: 10,
+    name: 'Caneca PiCode',
+    price: 10,
   },
   {
     id: '3',
     img: '',
-    name: 'Matemática',
-    percent: 0,
+    name: 'Boné PiCode',
+    price: 0,
   },
 ];
 
-const Home: React.FC = () => {
-  const [myCourses, setMyCourses] = useState<ICourse[]>(mockCourses);
+const Store: React.FC = () => {
+  const [myProducts, setMyProducts] = useState<IProducts[]>(mockProducts);
   return (
     <Flex
-      backgroundColor="white"
+      bgColor="white"
       direction="column"
       borderRadius="12px"
       boxShadow="md"
@@ -55,9 +55,9 @@ const Home: React.FC = () => {
         Meus cursos
       </Text>
       <Flex gap="2rem" padding="0 20px">
-        {myCourses.map((course) => (
+        {myProducts.map((products) => (
           <Flex
-            key={course.id}
+            key={products.id}
             direction="column"
             h="100%"
             w="156px"
@@ -66,12 +66,11 @@ const Home: React.FC = () => {
             cursor="pointer"
             _hover={{ filter: 'brightness(0.95)' }}
           >
-            <Flex backgroundImage={course.img} backgroundSize="cover" backgroundPosition="center" h="203px" w="156px" borderRadius="3px" />
-            <Text>{course.name}</Text>
+            <Flex backgroundImage={products.img} backgroundSize="cover" backgroundPosition="center" h="203px" w="156px" borderRadius="3px" />
+            <Text>{products.name}</Text>
             <Flex align="center" gap="1rem">
-              <Progress value={course.percent} rounded={8} flex="1" min={0} max={100} />
               <Text w="fit-content" fontSize="12px">
-                {course.percent}%
+                {products.price}
               </Text>
             </Flex>
           </Flex>
@@ -81,7 +80,7 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home;
+export default Store;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const selectedPage = 'store';

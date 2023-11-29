@@ -29,7 +29,7 @@ const Support: React.FC = () => {
   const PageStepElement: Record<PageStepsType, ReactNode> = {
     FORM: (
       <Flex
-        backgroundColor="white"
+        bgColor="white"
         width="400px"
         height="fit-content"
         margin="auto"
@@ -86,7 +86,7 @@ const Support: React.FC = () => {
     ),
     SENT: (
       <Flex
-        backgroundColor="white"
+        bgColor="white"
         width="400px"
         height="fit-content"
         margin="auto"
@@ -98,7 +98,7 @@ const Support: React.FC = () => {
       >
         <Logo />
         <Flex width="100%" marginTop="32px" gap="20px">
-          <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
+          <GiCheckMark fontSize="40px" style={{ bgColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">

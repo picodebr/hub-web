@@ -1,87 +1,81 @@
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
+import { LuRocket } from 'react-icons/lu';
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
+import { FaHeart, FaRegClock, FaRegHeart } from 'react-icons/fa';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Header } from 'rsuite';
 
-interface ICourse {
-  id: string;
-  img: string;
-  name: string;
-  percent: number;
-}
+import { validateSession } from '@/_base/services/auth';
+import { logError, cookieManager } from '@/_base/utils';
+import { Logo } from '@/components/Logo';
+import { Button, Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
 
-const mockCourses: ICourse[] = [
-  {
-    id: '1',
-    img: 'https://assets-global.website-files.com/616d40df2ab95b424def1e10/64678e4b202d786e594d520f_isaac-ilustra-maker.png',
-    name: 'Programação',
-    percent: 60,
-  },
-  {
-    id: '2',
-    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR8Q-QYyvLg4l4rvvnacVU7RcU2ey4UDd-h0bfNicuIdyeGGP1y9QcCXdGyXewfsDcHRU&usqp=CAU',
-    name: 'Introdução à tecnologia',
-    percent: 10,
-  },
-  {
-    id: '3',
-    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXAufehYrBgkUrORvN8CDV57WpOm78xRofbwauRh2eqBqJAtvybMR7ExidQIkVJfpRntg&usqp=CAU',
-    name: 'Matemática',
-    percent: 0,
-  },
-];
-
-const Home: React.FC = () => {
-  const [myCourses, setMyCourses] = useState<ICourse[]>(mockCourses);
+const Challenge: React.FC = () => {
   return (
-    <Flex
-      backgroundColor="white"
-      direction="column"
-      borderRadius="12px"
-      boxShadow="md"
-      w="100%"
-      h="360px"
-      padding="20px 0"
-      gap="20px"
-      textAlign="left"
-      whiteSpace="nowrap"
-      borderBottom="1px solid gray300"
-    >
-      <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
-        Meus cursos
-      </Text>
-      <Flex gap="2rem" padding="0 20px">
-        {myCourses.map((course) => (
-          <Flex
-            key={course.id}
-            direction="column"
-            h="100%"
-            w="156px"
-            gap="0.5rem"
-            overflow="hidden"
-            cursor="pointer"
-            _hover={{ filter: 'brightness(0.95)' }}
-          >
-            <Flex backgroundImage={course.img} backgroundSize="cover" backgroundPosition="center" h="203px" w="156px" borderRadius="3px" />
-            <Text>{course.name}</Text>
-            <Flex align="center" gap="1rem">
-              <Progress value={course.percent} rounded={8} flex="1" min={0} max={100} />
-              <Text w="fit-content" fontSize="12px">
-                {course.percent}%
-              </Text>
-            </Flex>
+    <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
+      <Flex align="center" justify="flex-end" h="fit-content"></Flex>
+      <Flex
+        h="fit-content"
+        bgColor="white"
+        borderRadius="10px"
+        boxShadow="md"
+        align="center"
+        padding="20px 24px"
+        color="gray400"
+        gap="16px"
+        fontSize="15px"
+        border="1px"
+        borderColor="gray300"
+      >
+        <Flex gap="2rem" justify="space-between">
+          <Text>Vidas restantes</Text>
+          <Flex color="error600" gap="0.5rem" fontSize="24px">
+            <FaHeart />
+            <FaRegHeart color="error200" />
+            <FaRegHeart color="error200" />
+            <FaRegHeart color="error200" />
+            <FaRegHeart color="error200" />
           </Flex>
-        ))}
+        </Flex>
+      </Flex>
+      <Flex
+        bgColor="white"
+        display="flex"
+        flexDirection="column"
+        justify="center"
+        align="center"
+        h="fit-content"
+        borderRadius="10px"
+        boxShadow="md"
+        color="primary700"
+        gap="16px"
+        fontSize="18px"
+        p="96px 128px"
+      >
+        {/* <Img src="https://media.newyorker.com/photos/64629d9ca8c7816949e96e85/1:1/w_1910,h_1910,c_limit/Dillon-Blur-11.jpg"></Img> */}
+        <Flex display="flex" flexDirection="column" align="center" justify="center" gap="8px" fontSize="20px" fontWeight="600" color="primary800">
+          <FaRegClock size="26px" />
+          Tempo restante para o desafio
+        </Flex>
+        <Flex color="gray600" fontSize="16px" gap="8px" textAlign="center">
+          Fique atento(a)! O desafio está em andamento, e o tempo está passando. Você tem o seguinte período para completar o desafio
+        </Flex>
+        <Flex display="flex" flexDirection="column" fontSize="40px" fontWeight="700" color="gray800" align="center">
+          00:10
+        </Flex>
+        <Text fontSize="14px" color="gray600">
+          Use cada momento valioso para dar o seu melhor. Boa sorte!
+        </Text>
+        <Button bgColor="primary600" gap="8px" color="white" p="12px">
+          Iniciar Desafio
+          <LuRocket />
+        </Button>
       </Flex>
     </Flex>
   );
 };
 
-export default Home;
+export default Challenge;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const selectedPage = 'challenge';

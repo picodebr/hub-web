@@ -39,7 +39,7 @@ const Home: React.FC = () => {
   const [myCourses, setMyCourses] = useState<ICourse[]>(mockCourses);
   return (
     <Flex
-      backgroundColor="white"
+      bgColor="white"
       direction="column"
       borderRadius="12px"
       boxShadow="md"

@@ -6,7 +6,7 @@ import { Flex, Link, Text } from '@chakra-ui/react';
 const Help: React.FC = () => {
   return (
     <Flex
-      backgroundColor="white"
+      bgColor="white"
       width="400px"
       height="fit-content"
       margin="auto"
