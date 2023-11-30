@@ -146,12 +146,22 @@ const Store: React.FC = () => {
           <Text>Item</Text>
           <Text>Quantidade</Text>
         </Flex>
-
-        <Flex border="1px" gap="12px" paddingBottom="24px">
+        <Flex w="344px" h="66px" border="1px" gap="12px" paddingBottom="24px">
           <Checkbox defaultChecked>
-            <Flex w="40px" h="40px" borderRadius="4px" bgColor="gray200" display="flex" direction="row" />
+            <Flex w="40px" h="40px" paddingRight="32px" borderRadius="4px" bgColor="gray200" display="flex" direction="row" />
           </Checkbox>
-          <Flex display="column" align="center" justify="center" gap="9px">
+          <Flex
+            w="97.5px"
+            h="66px"
+            border="1px"
+            display="column"
+            align="center"
+            justify="center"
+            gap="9px"
+            fontWeight="500"
+            fontSize="14px"
+            color="gray700"
+          >
             Moletom Picode
             <Flex display="flex" align="center" justify="center" gap="9px" h="18px">
               <LiaMoneyBillWaveSolid color="green" />
