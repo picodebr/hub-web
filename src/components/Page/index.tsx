@@ -1,10 +1,12 @@
+import { PropsWithChildren } from 'react';
+
 import { IPageProps } from '@/_base/hooks/Page/interfaces';
 import { Flex, Image, useColorMode } from '@chakra-ui/react';
-import { PropsWithChildren } from 'react';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 import { GenericButton } from '../Buttons/Generic';
-const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
+
+const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password', 'store'];
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, user: admin, children }) => {
   const { colorMode, toggleColorMode } = useColorMode();
