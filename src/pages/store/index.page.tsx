@@ -76,10 +76,12 @@ const Store: React.FC = () => {
     <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" p="32px 112px" gap="32px">
       {' '}
       <Flex h="60px" w="100%" display="flex" justify="space-between" align="center" gap="8px">
-        <Flex cursor="pointer" fontWeight="600" color="primary700">
-          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-          <Text textAlign="left">Voltar</Text>
-        </Flex>
+        <Link href="/home" width="100%">
+          <Flex cursor="pointer" fontWeight="600" color="primary700">
+            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+            <Text textAlign="left">Voltar</Text>
+          </Flex>
+        </Link>
         <Flex w="250px" h="60px" display="flex" align="center" p="16px 20px" borderRadius="10px" border="1px" borderColor="primary600" gap="32px">
           <Text color="gray500" fontSize="14px">
             Seu saldo:
@@ -228,6 +230,14 @@ const Store: React.FC = () => {
             Limpar
             <FaRegTrashCan />
           </Flex>
+        </Flex>
+        {/* If Shopping Cart is empty => show: */}
+        <Flex justify="center" align="center" direction="column" p="24px" color="gray400" fontWeight="600">
+          <FiShoppingCart fontSize="100px" />
+          <Text fontSize="">Seu carrinho está vazio</Text>
+          <Text fontSize="14px" fontWeight="400">
+            Os produtos adicionados aparecerão aqui
+          </Text>
         </Flex>
       </Flex>
     </Flex>
