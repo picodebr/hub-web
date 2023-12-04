@@ -46,8 +46,6 @@ const getItemStyle = (isDragging: any, draggableStyle: any) => ({
   padding: "15px",
   margin: `20px`,
   borderRadius: '10px',
-
-
   background: isDragging ? "lightgreen" : "#F9F5FF",
 
   ...draggableStyle
@@ -89,13 +87,15 @@ function QuoteApp(){
   }
 
   return (
-    <div>
+    <div
+
+    >
       <button
         type="button"
         onClick={() => {
           setState([...state, getItems(1)]);
         }}
-        style={{ display: "flex", background: "white", padding: '10px', borderRadius: "5px", boxShadow: 'md', marginLeft: '20px'}}
+        style={{ display: "flex", background: "#13277A", color: 'white', fontWeight: '500' , padding: '10px', borderRadius: "8px", boxShadow: 'md', marginLeft: '20px'}}
       >
         Adicionar novo item
       </button>
@@ -108,7 +108,9 @@ function QuoteApp(){
                   ref={provided.innerRef}
                   style={getListStyle(snapshot.isDraggingOver)}
                   {...provided.droppableProps}
-                >
+                > <div
+                style={{ display: "flex", justifyContent:'center', padding: "4px", fontWeight: '500' }}
+                >Para fazer | Em progresso | Feito</div>
                   {el.map((item, index) => (
                     <Draggable
                       key={item.id}
