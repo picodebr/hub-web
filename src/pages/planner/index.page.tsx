@@ -95,7 +95,7 @@ function QuoteApp(){
         onClick={() => {
           setState([...state, getItems(1)]);
         }}
-        style={{ display: "flex", background: "white", padding: '10px', borderRadius: "5px", boxShadow: 'md'}}
+        style={{ display: "flex", background: "white", padding: '10px', borderRadius: "5px", boxShadow: 'md', marginLeft: '20px'}}
       >
         Adicionar novo item
       </button>
@@ -128,7 +128,7 @@ function QuoteApp(){
                           <div
                             style={{
                               display: "flex",
-                              justifyContent: "space-around",
+                              justifyContent: "space-between",
                             }}
                           >
                             {item.content}
