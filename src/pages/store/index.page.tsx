@@ -1,13 +1,13 @@
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
 import { Logo } from '@/components/Logo';
-import { Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
-import { Checkbox, CheckboxGroup } from '@chakra-ui/react';
+import { Flex, Link, Text } from '@chakra-ui/react';
+import { Checkbox } from '@chakra-ui/react';
 
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
 import { LiaMoneyBillWaveSolid } from 'react-icons/lia';
-import { FiChevronLeft, FiChevronRight, FiHelpCircle, FiShoppingCart, FiTrash } from 'react-icons/fi';
+import { FiChevronLeft, FiHelpCircle, FiShoppingCart, FiTrash } from 'react-icons/fi';
 import { Header } from 'rsuite';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
