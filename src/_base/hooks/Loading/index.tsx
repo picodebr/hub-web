@@ -13,9 +13,11 @@ const LoadingContext = createContext<ILoadingContext>({
 
 export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>> = ({ children, changeSignal }) => {
   const [loadingConfig, setLoadingConfig] = useState({ ...defaultConfig });
+  const [randomMsg, setRandomMsg] = useState('');
 
   useEffect(() => {
     setLoadingConfig({ ...defaultConfig });
+    setRandomMsg(getRandomMessage());
   }, [changeSignal]);
 
   const runTransition = (time = 500) => {
@@ -60,7 +62,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
           </Text>
         </Flex>
         <Text fontSize="16px" color="primary800" position="absolute" bottom="20%" left="50%" transform="translate(-50%, 0)">
-          {getRandomMessage()}
+          {randomMsg}
         </Text>
       </Flex>
       {children}
