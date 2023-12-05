@@ -117,15 +117,17 @@ const Store: React.FC = () => {
               h="auto"
               w="156px"
               gap="0.5rem"
-              overflow="hidden"
               cursor="pointer"
               fontWeight="500"
               color="gray700"
               fontSize="14px"
               align="center"
+              position="relative"
             >
               <Flex
                 position="absolute"
+                top="-0.4rem"
+                right="-0.4rem"
                 gap="9px"
                 w="24px"
                 h="24px"

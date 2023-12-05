@@ -114,7 +114,7 @@ export const Navbar: React.FC<IProps> = ({ page }) => {
               cursor="pointer"
               _hover={{ outline: '1px solid white' }}
               bg={page === item.page ? 'primary50' : 'primary50'}
-              color={page === item.page ? 'primary900' : 'primary900'}
+              color={page === item.page ? 'primary900' : 'primary700'}
               fontSize="1rem"
               onClick={() => router.push(`/${item.page}`)}
             >
