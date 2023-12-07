@@ -2,6 +2,7 @@ import { PropsWithChildren, useContext, useEffect, useState, createContext } fro
 import { Flex, Image, Text } from '@chakra-ui/react';
 
 import { ILoadingConfig, ILoadingContext, ILoadingProviderProps } from './interfaces';
+import { useAuth } from '../Auth';
 
 const defaultConfig: ILoadingConfig = { isLoading: false };
 
@@ -14,6 +15,8 @@ const LoadingContext = createContext<ILoadingContext>({
 export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>> = ({ children, changeSignal }) => {
   const [loadingConfig, setLoadingConfig] = useState({ ...defaultConfig });
   const [randomMsg, setRandomMsg] = useState('');
+
+  const { user } = useAuth();
 
   useEffect(() => {
     setLoadingConfig({ ...defaultConfig });
@@ -49,14 +52,16 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" />
 
         <Flex direction="column" position="absolute" top="50%" left="50%" transform="translate(-50%, 0)">
-          <Flex gap="5px">
-            <Text textAlign="center" color="gray900" fontWeight="600" fontSize="30px">
-              Bem-vindo(a) de volta,
-            </Text>
-            <Text textAlign="center" color="primary900" fontWeight="600" fontSize="30px">
-              Maria Luisa
-            </Text>
-          </Flex>
+          {!!user?.name && (
+            <Flex gap="5px">
+              <Text textAlign="center" color="gray900" fontWeight="600" fontSize="30px">
+                Bem-vindo(a) de volta,
+              </Text>
+              <Text textAlign="center" color="primary900" fontWeight="600" fontSize="30px">
+                {user.name}
+              </Text>
+            </Flex>
+          )}
           <Text textAlign="center" color="gray400" fontSize="18px" marginTop="12px">
             Estamos carregando o seu ambiente...
           </Text>

@@ -1,24 +1,20 @@
 import Head from 'next/head';
-import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { PropsWithChildren, createContext, useCallback, useContext, useEffect } from 'react';
 
 import { validateSession } from '@/_base/services/auth';
 import { PageWrapper } from '@/components/Page';
-import { IPageContext, IPageProps } from './interfaces';
-import { EMPTY_HUB_USER, IHubUser } from '@/_base/interfaces/user';
+import { IPageProps } from './interfaces';
+import { useAuth } from '../Auth';
 
-const PageContext = createContext<IPageContext>({
-  user: EMPTY_HUB_USER,
-  setUser: (e) => ({ ...(e || ({} as any)) }),
-  permissions: EMPTY_HUB_USER.permissions,
-});
+const PageContext = createContext({});
 
-export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ user: _admin, children, pageTitle, selectedPage }) => {
-  const [user, setUser] = useState<IHubUser>(_admin || EMPTY_HUB_USER);
+export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTitle, selectedPage }) => {
+  const { user, setUser } = useAuth();
 
   const syncProfile = useCallback(async () => {
     try {
-      const user = await validateSession();
-      setUser(user);
+      const sessionData = await validateSession();
+      setUser(sessionData);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err);
@@ -26,12 +22,11 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ user: _admin, ch
   }, []);
 
   useEffect(() => {
-    if (_admin) setUser(_admin);
-    else syncProfile();
-  }, [_admin]);
+    syncProfile();
+  }, []);
 
   return (
-    <PageContext.Provider value={{ user: user, setUser: setUser, permissions: user.permissions }}>
+    <PageContext.Provider value={user}>
       <Head>
         <title>{pageTitle}</title>
       </Head>

@@ -254,7 +254,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
-    // await validateSession();
+    await validateSession();
 
     return { props: { selectedPage, pageTitle: 'Loja' } };
   } catch (err: any) {

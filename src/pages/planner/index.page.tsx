@@ -1,9 +1,9 @@
 import { GetServerSideProps } from 'next';
-import React, { useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Header } from 'rsuite';
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
@@ -11,10 +11,10 @@ import { Logo } from '@/components/Logo';
 import { Flex, Link, Progress, Text } from '@chakra-ui/react';
 import { FaRegTrashCan } from 'react-icons/fa6';
 
-  const getItems = (count: any, offset = 0) =>
-  Array.from({ length: count }, (v, k) => k).map(k => ({
+const getItems = (count: any, offset = 0) =>
+  Array.from({ length: count }, (v, k) => k).map((k) => ({
     id: `item-${k + offset}-${new Date().getTime()}`,
-    content: `item ${k + offset}`
+    content: `item ${k + offset}`,
   }));
 
 const reorder = (list: any, startIndex: any, endIndex: any) => {
@@ -41,28 +41,27 @@ const move = (source: any, destination: any, droppableSource: any, droppableDest
 const grid = 8;
 
 const getItemStyle = (isDragging: any, draggableStyle: any) => ({
-
-  userSelect: "none",
-  padding: "15px",
+  userSelect: 'none',
+  padding: '15px',
   margin: `20px`,
   borderRadius: '10px',
-  background: isDragging ? "lightgreen" : "#F9F5FF",
+  background: isDragging ? 'lightgreen' : '#F9F5FF',
 
-  ...draggableStyle
+  ...draggableStyle,
 });
 const getListStyle = (isDraggingOver: boolean) => ({
-  background: isDraggingOver ? "lightblue" : "white",
-  borderRadius:'10px',
+  background: isDraggingOver ? 'lightblue' : 'white',
+  borderRadius: '10px',
   padding: grid,
   width: 250,
   boxShadow: '0px 20px 24px -4px rgba(16, 24, 40, 0.08)',
   margin: '20px',
 });
 
-function QuoteApp(){
+function QuoteApp() {
   const [state, setState] = useState([getItems(10), getItems(5, 10)]);
 
-  function onDragEnd(result: { source: any; destination: any; }) {
+  function onDragEnd(result: { source: any; destination: any }) {
     const { source, destination } = result;
 
     if (!destination) {
@@ -82,55 +81,53 @@ function QuoteApp(){
       newState[sInd] = result[sInd];
       newState[dInd] = result[dInd];
 
-      setState(newState.filter(group => group.length));
+      setState(newState.filter((group) => group.length));
     }
   }
 
   return (
-    <div
-
-    >
+    <div>
       <button
         type="button"
         onClick={() => {
           setState([...state, getItems(1)]);
         }}
-        style={{ display: "flex", background: "#13277A", color: 'white', fontWeight: '500' , padding: '10px', borderRadius: "8px", boxShadow: 'md', marginLeft: '20px'}}
+        style={{
+          display: 'flex',
+          background: '#13277A',
+          color: 'white',
+          fontWeight: '500',
+          padding: '10px',
+          borderRadius: '8px',
+          boxShadow: 'md',
+          marginLeft: '20px',
+        }}
       >
         Adicionar novo item
       </button>
-      <div style={{ display: "flex" }}>
+      <div style={{ display: 'flex' }}>
         <DragDropContext onDragEnd={onDragEnd}>
           {state.map((el, ind) => (
             <Droppable key={ind} droppableId={`${ind}`}>
               {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  style={getListStyle(snapshot.isDraggingOver)}
-                  {...provided.droppableProps}
-                > <div
-                style={{ display: "flex", justifyContent:'center', padding: "4px", fontWeight: '500' }}
-                >Para fazer | Em progresso | Feito</div>
+                <div ref={provided.innerRef} style={getListStyle(snapshot.isDraggingOver)} {...provided.droppableProps}>
+                  {' '}
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '4px', fontWeight: '500' }}>
+                    Para fazer | Em progresso | Feito
+                  </div>
                   {el.map((item, index) => (
-                    <Draggable
-                      key={item.id}
-                      draggableId={item.id}
-                      index={index}
-                    >
+                    <Draggable key={item.id} draggableId={item.id} index={index}>
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          style={getItemStyle(
-                            snapshot.isDragging,
-                            provided.draggableProps.style
-                          )}
+                          style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                         >
                           <div
                             style={{
-                              display: "flex",
-                              justifyContent: "space-between",
+                              display: 'flex',
+                              justifyContent: 'space-between',
                             }}
                           >
                             {item.content}
@@ -139,11 +136,9 @@ function QuoteApp(){
                               onClick={() => {
                                 const newState = [...state];
                                 newState[ind].splice(index, 1);
-                                setState(
-                                  newState.filter(group => group.length)
-                                );
+                                setState(newState.filter((group) => group.length));
                               }}
-                              style={{ color: 'red', fontSize: '14px',  }}
+                              style={{ color: 'red', fontSize: '14px' }}
                             >
                               <FaRegTrashCan />
                             </button>
@@ -171,7 +166,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
-    // await validateSession();
+    await validateSession();
 
     return { props: { selectedPage, pageTitle: 'Meus planejamentos' } };
   } catch (err: any) {

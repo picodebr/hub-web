@@ -36,8 +36,24 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedP
         label={`Toggle ${colorMode === 'light' ? 'Dark' : 'Light'}`}
         onClick={toggleColorMode}
       />
-      <Image position="absolute" left="0" top="11.5rem" src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} />
-      <Image position="absolute" bottom="0" right="-5rem" src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} />
+      <Image
+        userSelect="none"
+        position="absolute"
+        left="0"
+        top="11.5rem"
+        src="/patterns/line-pattern.svg"
+        zIndex="-1"
+        h={{ base: '0', lg: '445px' }}
+      />
+      <Image
+        userSelect="none"
+        position="absolute"
+        bottom="0"
+        right="-5rem"
+        src="/patterns/line-pattern.svg"
+        zIndex="-1"
+        h={{ base: '0', lg: '445px' }}
+      />
     </Flex>
   );
 };

@@ -38,6 +38,7 @@
     "recharts": "^2.9.0",
     "rsuite": "^5.41.0",
     "zod": "^3.21.4",
+    "zustand": "^4.4.7",
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
