@@ -1,11 +1,29 @@
 import { GetServerSideProps } from 'next';
 import { useMemo, useState } from 'react';
 import { FaPlus, FaRegFolder } from 'react-icons/fa';
-import { FiMoreVertical, FiUsers } from 'react-icons/fi';
+import { FiHelpCircle, FiMoreVertical, FiUsers } from 'react-icons/fi';
 import { IoIosArrowDown } from 'react-icons/io';
 import { Header } from 'rsuite';
 
-import { Avatar, AvatarGroup, ButtonGroup, FormControl, FormLabel, Image, Menu, MenuButton, MenuItem, MenuList, Switch } from '@chakra-ui/react';
+import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Avatar,
+  AvatarGroup,
+  Box,
+  ButtonGroup,
+  FormControl,
+  FormLabel,
+  Image,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Switch,
+} from '@chakra-ui/react';
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
 import { Logo } from '@/components/Logo';
@@ -123,7 +141,7 @@ const defaultAvatarOptions = {
     'variant25',
     'variant26',
   ],
-  glassesProbability: [0, 100],
+  glassesProbability: [false, true],
   glasses: ['variant01', 'variant02', 'variant03', 'variant04', 'variant05'],
   mouth: [
     'variant01',
@@ -177,10 +195,10 @@ const Profile: React.FC = () => {
   }, [avatarOptions]);
 
   return (
-    <Flex w="100%">
+    <Flex w="100%" direction="column" gap="24px">
       <Flex
         bgColor="white"
-        flexDirection="row"
+        flexDirection="column"
         borderRadius="10px"
         boxShadow="md"
         w="100%"
@@ -188,7 +206,7 @@ const Profile: React.FC = () => {
         padding="20px"
         gap="20px"
         textAlign="left"
-        display="row"
+        display="column"
         justify="center"
       >
         <Text w="100%" borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
@@ -197,7 +215,6 @@ const Profile: React.FC = () => {
         <Flex direction="column" p="20px" justify="space-between">
           <Img src={avatar} w="200px" h="200px" alt="Avatar" />
         </Flex>
-        {/* TODO: Add avatarOptions as menu list */}
         <Flex gap="8px" overflow="visible">
           <Menu>
             <MenuButton as={Button} rightIcon={<IoIosArrowDown />}>
@@ -282,7 +299,7 @@ const Profile: React.FC = () => {
           <Flex>
             <Text>Usar óculos?</Text>
             {defaultAvatarOptions.glassesProbability.map((glassesProbability) => (
-              <Switch id="glassesProb" onChange={() => setAvatarOptions((state) => ({ ...state, glassesProbability }))} />
+              <Switch onChange={(e) => setAvatarOptions((state) => ({ ...state, glassesProbability: e.target.checked }))} />
             ))}
           </Flex>
           <Menu>
@@ -317,6 +334,100 @@ const Profile: React.FC = () => {
               ))}
             </MenuList>
           </Menu>
+        </Flex>
+      </Flex>
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="20px"
+        gap="20px"
+        textAlign="left"
+        display="column"
+        justify="center"
+        color="gray600"
+      >
+        <Accordion defaultIndex={[0]} allowMultiple>
+          <AccordionItem>
+            <h2>
+              <AccordionButton>
+                <Box as="span" flex="1" textAlign="left">
+                  Meus dados
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4}>Nome</AccordionPanel>
+          </AccordionItem>
+        </Accordion>
+      </Flex>
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="20px"
+        gap="20px"
+        textAlign="left"
+        display="column"
+        justify="center"
+        color="gray600"
+      >
+        <Accordion defaultIndex={[0]} allowMultiple>
+          <AccordionItem>
+            <h2>
+              <AccordionButton>
+                <Box as="span" flex="1" textAlign="left">
+                  Certificados
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4}></AccordionPanel>
+          </AccordionItem>
+        </Accordion>
+      </Flex>
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="20px"
+        gap="20px"
+        textAlign="left"
+        display="column"
+        justify="space-between"
+        color="gray600"
+      >
+        <Flex display="flex" justify="space-between" direction="row">
+          <Text>Modo noturno</Text>
+          <Switch />
+        </Flex>
+      </Flex>
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="20px"
+        gap="20px"
+        textAlign="left"
+        display="column"
+        justify="space-between"
+        color="gray600"
+      >
+        <Flex display="flex" justify="space-between" direction="row">
+          <Text>Suporte Picode</Text>
+          <FiHelpCircle color="#D0D5DD" />
         </Flex>
       </Flex>
     </Flex>
