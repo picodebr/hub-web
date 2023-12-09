@@ -5,7 +5,7 @@ import { GetServerSideProps } from 'next';
 import { useState } from 'react';
 import { FiUser } from 'react-icons/fi';
 
-import { useAsyncCallback, useCustomToast, useInputHandler } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { googleLogin, hubLogin, validateSession } from '@/_base/services/auth';
 import { logError, showErrorToClient, cookieManager } from '@/_base/utils';
@@ -25,6 +25,7 @@ const LoginPage: React.FC = () => {
   const { errors, onInputChange, data, submit } = useInputHandler<IAuthRequest>({ schema: authSchema });
   const router = useCustomRouter();
   const toast = useCustomToast();
+  const { setUser } = useAuth();
 
   const handleLogin = useAsyncCallback(
     async (googleAccessToken?: string) => {
@@ -36,12 +37,14 @@ const LoginPage: React.FC = () => {
         return;
       } else setCaptcha((e) => ({ ...e, error: undefined }));
 
-      const { access_token } = googleAccessToken
+      const { access_token, user } = googleAccessToken
         ? await googleLogin(googleAccessToken)
         : await hubLogin({
             identifier: data.identifier,
             password: data.password,
           });
+
+      setUser(user);
 
       // If keep logged in is checked, the token will be expires in 15 days
       cookieManager.setToken(access_token, keepLogged ? 15 : 1);
