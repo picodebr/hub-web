@@ -16,7 +16,7 @@ import { FiDivide, FiHelpCircle } from 'react-icons/fi';
 import { IoChevronForward } from 'react-icons/io5';
 import { MdOutlinePlayCircleFilled } from 'react-icons/md';
 
-const TeacherProfile: React.FC = () => {
+export const TeacherProfile: React.FC = () => {
   return (
     <Flex w="100%" display="flex" direction="column" gap="24px">
       <Flex w="100%" h="fit-content" gap="32px">
@@ -38,31 +38,33 @@ const TeacherProfile: React.FC = () => {
               Disciplinas lecionadas
             </Flex>
           </Flex>
-          <Flex align="center" gap="12px" w="100%" borderBottom="1px" borderColor="gray300">
-            <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
-              <FiDivide fontSize="24px" />
-              <Flex w="100%" fontWeight="500" color="gray700">
-                Matemática
+          <Flex direction="column" justify="center" flex="1" gap="20px">
+            <Flex align="center" gap="12px" w="100%" borderBottom="1px" borderColor="gray300">
+              <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
+                <FiDivide fontSize="24px" />
+                <Flex w="100%" fontWeight="500" color="gray700">
+                  Matemática
+                </Flex>
+                <IoChevronForward />
               </Flex>
-              <IoChevronForward />
             </Flex>
-          </Flex>
-          <Flex align="center" gap="12px" w="100%" borderBottom="1px" borderColor="gray300">
-            <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
-              <FiDivide fontSize="24px" />
-              <Flex w="100%" fontWeight="500" color="gray700">
-                Geometria
+            <Flex align="center" gap="12px" w="100%" borderBottom="1px" borderColor="gray300">
+              <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
+                <FiDivide fontSize="24px" />
+                <Flex w="100%" fontWeight="500" color="gray700">
+                  Geometria
+                </Flex>
+                <IoChevronForward />
               </Flex>
-              <IoChevronForward />
             </Flex>
-          </Flex>
-          <Flex align="center" gap="12px" w="100%">
-            <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
-              <FiDivide fontSize="24px" />
-              <Flex w="100%" fontWeight="500" color="gray700">
-                Tecnologia
+            <Flex align="center" gap="12px" w="100%">
+              <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
+                <FiDivide fontSize="24px" />
+                <Flex w="100%" fontWeight="500" color="gray700">
+                  Tecnologia
+                </Flex>
+                <IoChevronForward />
               </Flex>
-              <IoChevronForward />
             </Flex>
           </Flex>
         </Flex>
@@ -85,108 +87,12 @@ const TeacherProfile: React.FC = () => {
             </Flex>
           </Flex>
           <Flex align="center" gap="0.75rem" w="100%" pb="1.25rem">
-            <Flex w="100%" h="11rem" borderRadius="6px" bg="pink" align="center" justify="center" fontSize="3rem">
+            <Flex w="100%" h="11rem" borderRadius="6px" bg="lightgray" align="center" justify="center" fontSize="3rem">
               <MdOutlinePlayCircleFilled />
             </Flex>
           </Flex>
         </Flex>
       </Flex>
-      <Flex
-        bgColor="white"
-        flexDirection="column"
-        borderRadius="10px"
-        boxShadow="md"
-        w="100%"
-        h="fit-content"
-        padding="1.25rem"
-        gap="1.25rem"
-        textAlign="left"
-        display="column"
-        justify="center"
-        color="gray600"
-      >
-        <Accordion defaultIndex={[0]} allowMultiple>
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box as="span" flex="1" textAlign="left">
-                  Meus dados
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>Nome</AccordionPanel>
-          </AccordionItem>
-        </Accordion>
-      </Flex>
-      <Flex
-        bgColor="white"
-        flexDirection="column"
-        borderRadius="10px"
-        boxShadow="md"
-        w="100%"
-        h="fit-content"
-        padding="1.25rem"
-        gap="1.25rem"
-        textAlign="left"
-        display="column"
-        justify="center"
-        color="gray600"
-      >
-        <Accordion defaultIndex={[0]} allowMultiple>
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box as="span" flex="1" textAlign="left">
-                  Certificados
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}></AccordionPanel>
-          </AccordionItem>
-        </Accordion>
-      </Flex>
-      <Flex
-        bgColor="white"
-        flexDirection="column"
-        borderRadius="10px"
-        boxShadow="md"
-        w="100%"
-        h="fit-content"
-        padding="1.25rem"
-        gap="1.25rem"
-        textAlign="left"
-        display="column"
-        justify="space-between"
-        color="gray600"
-      >
-        <Flex display="flex" justify="space-between" direction="row">
-          <Text>Modo noturno</Text>
-          <Switch />
-        </Flex>
-      </Flex>
-      <Flex
-        bgColor="white"
-        flexDirection="column"
-        borderRadius="10px"
-        boxShadow="md"
-        w="100%"
-        h="fit-content"
-        padding="1.25rem"
-        gap="1.25rem"
-        textAlign="left"
-        display="column"
-        justify="space-between"
-        color="gray600"
-      >
-        <Flex display="flex" justify="space-between" direction="row">
-          <Text>Suporte Picode</Text>
-          <FiHelpCircle color="#D0D5DD" />
-        </Flex>
-      </Flex>
     </Flex>
   );
 };
-
-export default TeacherProfile;

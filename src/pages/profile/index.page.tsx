@@ -24,8 +24,8 @@ import {
   MenuList,
   Switch,
 } from '@chakra-ui/react';
-import teacherProfile from './components/TeacherProfile';
-import studentProfile from './components/StudentProfile';
+import { TeacherProfile } from './components/TeacherProfile';
+import { StudentProfile } from './components/StudentProfile';
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
 import { Logo } from '@/components/Logo';
@@ -40,14 +40,111 @@ import { useCustomRouter } from '@/_base/hooks';
 import { IoChevronForward } from 'react-icons/io5';
 import { MdOutlinePlayCircleFilled } from 'react-icons/md';
 
-interface IPropss {
-  page: string;
-  user?: IHubUser;
+interface IProps {
+  user: IHubUser;
 }
 
-const Profile: React.FC<IPropss> = ({ page, user }) => {
-  const componentUser = user?.role === 'student' ? studentProfile : teacherProfile;
-  return <>{componentUser({ page, user })}</>;
+const Profile: React.FC<IProps> = ({ user }) => {
+  const ComponentUser = user?.role === 'student' ? StudentProfile : TeacherProfile;
+  return (
+    <Flex direction="column" flex="1" gap="24px">
+      <ComponentUser />
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="0.85rem 0.5rem"
+        gap="1.25rem"
+        textAlign="left"
+        display="column"
+        justify="center"
+        color="gray600"
+      >
+        <Accordion allowMultiple>
+          <AccordionItem border="none">
+            <h2>
+              <AccordionButton>
+                <Box as="span" flex="1" textAlign="left">
+                  Meus dados
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4}>{user?.name}</AccordionPanel>
+          </AccordionItem>
+        </Accordion>
+      </Flex>
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="0.85rem 0.5rem"
+        gap="1.25rem"
+        textAlign="left"
+        display="column"
+        justify="center"
+        color="gray600"
+      >
+        <Accordion allowMultiple>
+          <AccordionItem border="none">
+            <h2>
+              <AccordionButton>
+                <Box as="span" flex="1" textAlign="left">
+                  Certificados
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4}></AccordionPanel>
+          </AccordionItem>
+        </Accordion>
+      </Flex>
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="1.25rem"
+        gap="1.25rem"
+        textAlign="left"
+        display="column"
+        justify="space-between"
+        color="gray600"
+      >
+        <Flex display="flex" justify="space-between" direction="row">
+          <Text>Modo noturno</Text>
+          <Switch />
+        </Flex>
+      </Flex>
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="1.25rem"
+        gap="1.25rem"
+        textAlign="left"
+        display="column"
+        justify="space-between"
+        color="gray600"
+      >
+        <Flex display="flex" justify="space-between" direction="row">
+          <Text>Suporte Picode</Text>
+          <FiHelpCircle color="#D0D5DD" />
+        </Flex>
+      </Flex>
+    </Flex>
+  );
 };
 
 export default Profile;
@@ -58,9 +155,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
-    // await validateSession();
+    const user = await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Meu perfil' } };
+    return { props: { selectedPage, pageTitle: 'Meu perfil', user } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
