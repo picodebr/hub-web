@@ -163,7 +163,7 @@ const SignUp: React.FC = () => {
             onClick={() => handleUserTypeChange('student')}
           >
             <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
-            <Flex h="28px" bg="primary900" color="gray25" align="center" justify="center">
+            <Flex h="28px" bg="primary300" color="gray900" align="center" justify="center">
               Aluno
             </Flex>
           </Flex>
@@ -179,7 +179,7 @@ const SignUp: React.FC = () => {
             onClick={() => handleUserTypeChange('teacher')}
           >
             <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
-            <Flex h="28px" bg="primary200" color="gray800" align="center" justify="center">
+            <Flex h="28px" bg="primary400" color="gray800" align="center" justify="center">
               Professor
             </Flex>
           </Flex>
@@ -288,7 +288,7 @@ const SignUp: React.FC = () => {
     FINISH: (
       <Flex direction="column" justify="space-between" h="100%">
         <Flex width="100%" marginTop="32px" gap="20px">
-          <GiCheckMark fontSize="40px" style={{ bgColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
+          <GiCheckMark fontSize="40px" style={{ background-color: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">

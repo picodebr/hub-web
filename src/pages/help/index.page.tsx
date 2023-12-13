@@ -35,7 +35,7 @@ const Help: React.FC = () => {
         href="/recover_password"
         width="100%"
       >
-        <Flex color="white" align="center" justify="space-between" borderRadius="8px" padding="10px 18px" bg="primary600">
+        <Flex color="white" align="center" justify="space-between" borderRadius="8px" padding="10px 18px" bg="primary700">
           <Text fontWeight="600">Esqueci minha senha</Text>
           <FiChevronRight />
         </Flex>
@@ -44,7 +44,7 @@ const Help: React.FC = () => {
         href="/support"
         width="100%"
       >
-        <Flex color="primary700" align="center" justify="space-between" borderRadius="8px" padding="10px 18px" bg="primary50">
+        <Flex color="white" align="center" justify="space-between" borderRadius="8px" padding="10px 18px" bg="primary300">
           <Text fontWeight="600">Suporte PiCode</Text>
           <FiChevronRight />
         </Flex>

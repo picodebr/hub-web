@@ -12,7 +12,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedP
   const { colorMode, toggleColorMode } = useColorMode();
 
   return (
-    <Flex h="100vh" w="100vw" flexDirection="column" bg="primary100" position="relative" overflow="hidden" zIndex="0">
+    <Flex h="100vh" w="100vw" flexDirection="column" bg="primary50" position="relative" overflow="hidden" zIndex="0">
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
       ) : (
@@ -36,24 +36,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedP
         label={`Toggle ${colorMode === 'light' ? 'Dark' : 'Light'}`}
         onClick={toggleColorMode}
       />
-      <Image
-        userSelect="none"
-        position="absolute"
-        left="0"
-        top="11.5rem"
-        src="/patterns/line-pattern.svg"
-        zIndex="-1"
-        h={{ base: '0', lg: '445px' }}
-      />
-      <Image
-        userSelect="none"
-        position="absolute"
-        bottom="0"
-        right="-5rem"
-        src="/patterns/line-pattern.svg"
-        zIndex="-1"
-        h={{ base: '0', lg: '445px' }}
-      />
+      <Image userSelect="none" backgroundSize="cover" position="fixed" w="100%" h="100%" src="/patterns/bg-light.svg" zIndex="-1" />
     </Flex>
   );
 };

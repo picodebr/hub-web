@@ -3,6 +3,7 @@ import { Flex, Image, Text } from '@chakra-ui/react';
 
 import { ILoadingConfig, ILoadingContext, ILoadingProviderProps } from './interfaces';
 import { useAuth } from '../Auth';
+import { Logo } from '@/components/Logo';
 
 const defaultConfig: ILoadingConfig = { isLoading: false };
 
@@ -47,28 +48,44 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         opacity={loadingConfig.isLoading ? '1' : '0'}
         pointerEvents={loadingConfig.isLoading ? 'auto' : 'none'}
       >
-        <Image src="/loading/happy-loading.gif" zIndex="-1" h="500px" position="fixed" left="50%" top="30%" transform="translate(-50%, -50%)" />
-        <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
-        <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" />
+        <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md">
+          <Flex
+            bgColor="white"
+            display="flex"
+            w="450px"
+            h="557px"
+            p="24px"
+            direction="column"
+            align="center"
+            justifyContent="center"
+            gap="2rem"
+            borderRadius="12px"
+            boxShadow="md"
+          >
+            <Logo size="md"></Logo>
+            <Image src="/loading/happy-loading.gif" />
+            <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
+            <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" />
 
-        <Flex direction="column" position="absolute" top="50%" left="50%" transform="translate(-50%, 0)">
-          {!!user?.name && (
-            <Flex gap="5px">
-              <Text textAlign="center" color="gray900" fontWeight="600" fontSize="30px">
-                Bem-vindo(a) de volta,
-              </Text>
-              <Text textAlign="center" color="primary900" fontWeight="600" fontSize="30px">
-                {user.name}
+            <Flex border="1px" h="auto" w="100%" direction="column">
+              <Flex direction="column" justify="center">
+                {!!user?.name && (
+                  <Flex gap="5px" direction="row">
+                    <Text textAlign="center" color="gray900" fontWeight="600" fontSize="20px">
+                      Bem-vindo(a) de volta,
+                    </Text>
+                    <Text textAlign="center" color="primary300" fontWeight="600" fontSize="20px">
+                      {user.name}
+                    </Text>
+                  </Flex>
+                )}
+              </Flex>
+              <Text fontSize="16px" color="gray500">
+                {randomMsg}
               </Text>
             </Flex>
-          )}
-          <Text textAlign="center" color="gray400" fontSize="18px" marginTop="12px">
-            Estamos carregando o seu ambiente...
-          </Text>
+          </Flex>
         </Flex>
-        <Text fontSize="16px" color="primary800" position="absolute" bottom="20%" left="50%" transform="translate(-50%, 0)">
-          {randomMsg}
-        </Text>
       </Flex>
       {children}
     </LoadingContext.Provider>
