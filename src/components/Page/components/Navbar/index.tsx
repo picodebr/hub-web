@@ -79,10 +79,9 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
           <Flex
             fontWeight="600"
             marginTop="2.5rem"
-            border="1px"
-            color="primary700"
+            color="white"
             borderColor="primary600"
-            bg="primary50"
+            bg="primary400"
             justify="space-between"
             borderRadius="10px"
             w="100%"
@@ -107,6 +106,10 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
                 <Flex align="center" justify="center" padding="1rem 0.5rem">
                   <Image src="/icons/coin.svg" />
                   <Text marginLeft="6px">28</Text>
+                </Flex>
+                <Flex align="center" justify="center" padding="1rem 0.5rem">
+                  <Image src="/icons/cash.svg" />
+                  <Text marginLeft="6px">48</Text>
                 </Flex>
               </>
             )}

@@ -31,7 +31,7 @@ const Classes: React.FC = () => {
             boxShadow="md"
           >
             <FaPlus />
-            Nova turma
+            Adicionar Turma
           </Flex>
         </Link>
       </Flex>

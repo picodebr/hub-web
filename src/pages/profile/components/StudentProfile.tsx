@@ -194,7 +194,7 @@ export const StudentProfile: React.FC = () => {
     }).toDataUriSync();
   }, [avatarOptions]);
   return (
-    <Flex w="100%" gap="24px">
+    <Flex w="100%" gap="24px" direction="column">
       <Flex
         bgColor="white"
         direction="column"
@@ -476,6 +476,25 @@ export const StudentProfile: React.FC = () => {
               )}
             </Grid>
           </Flex>
+        </Flex>
+      </Flex>
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="1.25rem"
+        gap="1.25rem"
+        textAlign="left"
+        display="column"
+        justify="space-between"
+        color="gray600"
+      >
+        <Flex display="flex" justify="space-between" direction="row">
+          <Text>Suporte Picode</Text>
+          <FiHelpCircle color="#D0D5DD" />
         </Flex>
       </Flex>
     </Flex>

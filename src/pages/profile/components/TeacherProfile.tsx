@@ -12,7 +12,7 @@ import {
   Switch,
   Text,
 } from '@chakra-ui/react';
-import { FiDivide, FiHelpCircle } from 'react-icons/fi';
+import { FiDivide, FiFileText, FiHelpCircle } from 'react-icons/fi';
 import { IoChevronForward } from 'react-icons/io5';
 import { MdOutlinePlayCircleFilled } from 'react-icons/md';
 
@@ -92,6 +92,51 @@ export const TeacherProfile: React.FC = () => {
             </Flex>
           </Flex>
         </Flex>
+      </Flex>
+      <Flex
+        bgColor="white"
+        flexDirection="column"
+        borderRadius="10px"
+        boxShadow="md"
+        w="100%"
+        h="fit-content"
+        padding="0.85rem 0.5rem"
+        gap="1.25rem"
+        textAlign="left"
+        display="column"
+        justify="center"
+        color="gray600"
+      >
+        <Accordion allowMultiple>
+          <AccordionItem border="none">
+            <h2>
+              <AccordionButton>
+                <Box as="span" flex="1" textAlign="left">
+                  Projetos
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4} display="flex" gap="8px">
+              <Flex boxShadow="md" bgColor="primary50" borderRadius="10px" w="207px" h="183px" p="12px" direction="column" gap="8px">
+                <Flex w="183px" h="109px" bgColor="gray300" borderRadius="5px"></Flex>
+                <Flex direction="row" align="center" gap="4px" color="primary500" fontWeight="500">
+                  <FiFileText />
+                  <Text>Arquivo de texto</Text>
+                </Flex>
+                <Text fontSize="12px">3 dias atrás</Text>
+              </Flex>
+              <Flex boxShadow="md" bgColor="primary50" borderRadius="10px" w="207px" h="183px" p="12px" direction="column" gap="8px">
+                <Flex w="183px" h="109px" bgColor="gray300" borderRadius="5px"></Flex>
+                <Flex direction="row" align="center" gap="4px" color="primary500" fontWeight="500">
+                  <FiFileText />
+                  <Text>Arquivo de texto</Text>
+                </Flex>
+                <Text fontSize="12px">3 dias atrás</Text>
+              </Flex>
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
       </Flex>
     </Flex>
   );

@@ -50,6 +50,9 @@ const Home: React.FC = () => {
       textAlign="left"
       whiteSpace="nowrap"
       borderBottom="1px solid gray300"
+      border="1px"
+      borderColor="gray300"
+      color="gray600"
     >
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
         Meus cursos
@@ -69,7 +72,7 @@ const Home: React.FC = () => {
             <Flex backgroundImage={course.img} backgroundSize="cover" backgroundPosition="center" h="203px" w="156px" borderRadius="3px" />
             <Text>{course.name}</Text>
             <Flex align="center" gap="1rem">
-              <Progress value={course.percent} rounded={8} flex="1" min={0} max={100} />
+              <Progress size="sm" colorScheme="green" value={course.percent} rounded={8} flex="1" min={0} max={100} />
               <Text w="fit-content" fontSize="12px">
                 {course.percent}%
               </Text>
