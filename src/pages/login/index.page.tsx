@@ -5,7 +5,7 @@ import { GetServerSideProps } from 'next';
 import { useState } from 'react';
 import { FiUser } from 'react-icons/fi';
 
-import { useAsyncCallback, useAuth, useCustomToast, useInputHandler } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomToast, useInputHandler, useLoading } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { googleLogin, hubLogin, validateSession } from '@/_base/services/auth';
 import { logError, showErrorToClient, cookieManager } from '@/_base/utils';
@@ -23,9 +23,10 @@ const LoginPage: React.FC = () => {
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
 
   const { errors, onInputChange, data, submit } = useInputHandler<IAuthRequest>({ schema: authSchema });
+  const { setLoadingConfig } = useLoading();
+  const { setUser } = useAuth();
   const router = useCustomRouter();
   const toast = useCustomToast();
-  const { setUser } = useAuth();
 
   const handleLogin = useAsyncCallback(
     async (googleAccessToken?: string) => {
@@ -49,7 +50,14 @@ const LoginPage: React.FC = () => {
       // If keep logged in is checked, the token will be expires in 15 days
       cookieManager.setToken(access_token, keepLogged ? 15 : 1);
 
-      router.push('/courses');
+      setLoadingConfig((cfg) => ({ ...cfg, isLoading: true, type: 'fullscreen-with-info' }));
+
+      await new Promise((res) =>
+        setTimeout(() => {
+          router.push('/profile');
+          setTimeout(() => res(true), 5000);
+        }, 5000),
+      );
     },
     [router, captcha],
     false,

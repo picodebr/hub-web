@@ -1,11 +1,12 @@
 import { PropsWithChildren, useContext, useEffect, useState, createContext } from 'react';
-import { Flex, Image, Text } from '@chakra-ui/react';
+import { Flex, Image, Slide, Text } from '@chakra-ui/react';
 
 import { ILoadingConfig, ILoadingContext, ILoadingProviderProps } from './interfaces';
 import { useAuth } from '../Auth';
 import { Logo } from '@/components/Logo';
+import { formatShortName } from '@/_base/utils';
 
-const defaultConfig: ILoadingConfig = { isLoading: false };
+const defaultConfig: ILoadingConfig = { isLoading: false, type: 'spinner' };
 
 const LoadingContext = createContext<ILoadingContext>({
   loadingConfig: { ...defaultConfig },
@@ -20,7 +21,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
   const { user } = useAuth();
 
   useEffect(() => {
-    setLoadingConfig({ ...defaultConfig });
+    setLoadingConfig(() => ({ ...defaultConfig }));
     setRandomMsg(getRandomMessage());
   }, [changeSignal]);
 
@@ -43,49 +44,87 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         width="100vw"
         height="100vh"
         zIndex="9999"
-        bg="primary100"
+        bg={loadingConfig.type === 'spinner' ? 'transparent' : 'primary100'}
         transition="all 0.35s"
         opacity={loadingConfig.isLoading ? '1' : '0'}
         pointerEvents={loadingConfig.isLoading ? 'auto' : 'none'}
       >
-        <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md">
-          <Flex
-            bgColor="white"
-            display="flex"
-            w="450px"
-            h="557px"
-            p="24px"
-            direction="column"
-            align="center"
-            justifyContent="center"
-            gap="2rem"
-            borderRadius="12px"
-            boxShadow="md"
-          >
-            <Logo size="md"></Logo>
-            <Image src="/loading/happy-loading.gif" />
+        {loadingConfig.type !== 'spinner' && (
+          <>
             <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
             <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" />
+          </>
+        )}
 
-            <Flex h="auto" w="100%" direction="column">
-              <Flex direction="column" justify="center">
-                {!!user?.name && (
-                  <Flex gap="5px" direction="row">
-                    <Text textAlign="center" color="gray900" fontWeight="600" fontSize="20px">
-                      Bem-vindo(a) de volta,
-                    </Text>
-                    <Text textAlign="center" color="primary300" fontWeight="600" fontSize="20px">
-                      {user.name}
-                    </Text>
-                  </Flex>
-                )}
+        {loadingConfig.type === 'fullscreen' && (
+          <Flex position="absolute" top="50%" left="50%" transform="translate(-50%,-50%)">
+            <Image src="/loading/happy-loading.gif" />
+          </Flex>
+        )}
+
+        {loadingConfig.type === 'spinner' && (
+          <Slide direction="bottom" in={loadingConfig.isLoading} style={{ zIndex: 10, justifyContent: 'flex-end', display: 'flex' }}>
+            <Flex>
+              <Image
+                src="/loading/o-loading.svg"
+                w="4rem"
+                h="4rem"
+                m="0 3.5rem 3.5rem 0"
+                css={`
+                  animation: letterRotation 1s linear infinite;
+
+                  @keyframes letterRotation {
+                    from {
+                      transform: rotateZ(0deg);
+                    }
+
+                    to {
+                      transform: rotateZ(360deg);
+                    }
+                  }
+                `}
+              />
+            </Flex>
+          </Slide>
+        )}
+
+        {loadingConfig.type === 'fullscreen-with-info' && (
+          <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md">
+            <Flex
+              bgColor="white"
+              display="flex"
+              w="450px"
+              h="557px"
+              p="24px"
+              direction="column"
+              align="center"
+              justifyContent="center"
+              gap="2rem"
+              borderRadius="12px"
+              boxShadow="md"
+            >
+              <Logo size="md"></Logo>
+              <Image src="/loading/happy-loading.gif" />
+              <Flex h="auto" w="100%" gap="1rem" direction="column">
+                <Flex direction="column" justify="center">
+                  {!!user?.name && (
+                    <Flex gap="5px" direction="row">
+                      <Text textAlign="center" color="gray900" fontWeight="600" fontSize="20px">
+                        Bem-vindo(a) de volta,
+                      </Text>
+                      <Text textAlign="center" color="primary300" fontWeight="600" fontSize="20px">
+                        {formatShortName(user?.name, true)}
+                      </Text>
+                    </Flex>
+                  )}
+                </Flex>
+                <Text fontSize="16px" color="gray500">
+                  {randomMsg}
+                </Text>
               </Flex>
-              <Text fontSize="16px" color="gray500">
-                {randomMsg}
-              </Text>
             </Flex>
           </Flex>
-        </Flex>
+        )}
       </Flex>
       {children}
     </LoadingContext.Provider>
