@@ -163,7 +163,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     await validateSession();
 
-    return { redirect: { destination: '/courses', permanent: false } };
+    return { redirect: { destination: '/profile', permanent: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

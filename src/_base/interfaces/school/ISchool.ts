@@ -12,3 +12,10 @@ export interface IHubSchool {
   hub_school_group: IHubSchoolGroup;
   hub_classes: IHubClass[];
 }
+export interface IHubUserSchool {
+  id: string;
+  hub_school_group_id: string | null;
+  display_name: string;
+  description: string | null;
+  approved_at: Date | null;
+}
