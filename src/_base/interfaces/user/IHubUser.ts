@@ -1,4 +1,5 @@
 import { HubPermissions } from '../permissions';
+import { IHubUserSchool } from '../school';
 import { HubUserRole } from './HubUserRole';
 import { IHubUserPreferences } from './IHubUserPreferences';
 
@@ -16,6 +17,7 @@ export interface IHubUser {
   permissions: HubPermissions;
   birthdate: Date;
   created_at: Date;
+  schools: IHubUserSchool[];
 }
 
 export const EMPTY_HUB_USER: IHubUser = {
@@ -38,4 +40,5 @@ export const EMPTY_HUB_USER: IHubUser = {
   },
   birthdate: new Date(),
   created_at: new Date(),
+  schools: [],
 };

@@ -288,7 +288,7 @@ const SignUp: React.FC = () => {
     FINISH: (
       <Flex direction="column" justify="space-between" h="100%">
         <Flex width="100%" marginTop="32px" gap="20px">
-          <GiCheckMark fontSize="40px" style={{ background-color: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
+          <GiCheckMark fontSize="40px" style={{ backgroundColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
@@ -341,7 +341,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     await validateSession();
 
-    return { redirect: { destination: '/courses', permanent: false } };
+    return { redirect: { destination: '/profile', permanent: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

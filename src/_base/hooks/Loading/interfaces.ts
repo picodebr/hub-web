@@ -1,5 +1,6 @@
 export interface ILoadingConfig {
   isLoading: boolean;
+  type?: HookLoadingType;
 }
 
 export interface ILoadingContext {
@@ -11,3 +12,5 @@ export interface ILoadingContext {
 export interface ILoadingProviderProps {
   changeSignal?: any;
 }
+
+export type HookLoadingType = 'spinner' | 'fullscreen' | 'fullscreen-with-info';

@@ -3,7 +3,7 @@ import { IInputProps } from '../interfaces';
 
 export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', placeholder, label, error, rightElement, leftElement, ...rest }) => {
   return (
-    <Flex direction="column" color="text.light">
+    <Flex direction="column" color="gray600">
       {!!label && (
         <Text color="gray700" fontSize="13.5px" fontWeight="500" pb="0.25rem">
           {label}
