@@ -76,7 +76,7 @@ const Store: React.FC = () => {
     <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" p="32px 112px" gap="32px">
       {' '}
       <Flex h="60px" w="100%" display="flex" justify="space-between" align="center" gap="8px">
-        <Link href="/home" width="100%">
+        <Link href="/profile" width="100%">
           <Flex cursor="pointer" fontWeight="600" color="primary700">
             <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
             <Text textAlign="left">Voltar</Text>

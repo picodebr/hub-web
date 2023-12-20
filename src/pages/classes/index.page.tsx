@@ -46,7 +46,7 @@ const Classes: React.FC = () => {
         gap="16px"
         fontSize="18px"
       >
-        <FiUsers fontSize="40px" />
+        <FiUsers fontSize="40px" color="#21E080" />
         <Flex display="column" justify="space-between">
           <Text fontWeight="700">1º ano B - Matutino</Text>
           <AvatarGroup size="sm" max={10}>
@@ -82,7 +82,7 @@ const Classes: React.FC = () => {
         gap="16px"
         fontSize="18px"
       >
-        <FiUsers fontSize="40px" />
+        <FiUsers fontSize="40px" color="#21E080" />
         <Flex display="column" justify="space-between">
           <Text fontWeight="700">2º ano D - Vespertino</Text>
           <AvatarGroup size="sm" max={10}>

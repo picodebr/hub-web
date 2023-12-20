@@ -141,7 +141,7 @@ export const dark: typeof light = {
   primary100: '#344054',
   primary200: '#C1DCFF',
   primary300: '#344054',
-  primary400: '#8CB6FF',
+  primary400: '#F5BA3D',
   primary500: '#6699FF',
   primary600: '#4A75DB',
   primary700: '#3356B7',

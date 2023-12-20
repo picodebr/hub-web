@@ -1,11 +1,10 @@
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { Header } from 'rsuite';
+
+import { validateSession } from '@/_base/services/auth';
+import { logError, cookieManager } from '@/_base/utils';
+import { Flex, Progress, Text } from '@chakra-ui/react';
+import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 
 interface ICourse {
   id: string;
@@ -35,7 +34,9 @@ const mockCourses: ICourse[] = [
   },
 ];
 
-const Home: React.FC = () => {
+const Courses: React.FC = () => {
+  const router = useCustomRouter();
+
   const [myCourses, setMyCourses] = useState<ICourse[]>(mockCourses);
   return (
     <Flex
@@ -57,7 +58,7 @@ const Home: React.FC = () => {
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
         Meus cursos
       </Text>
-      <Flex gap="2rem" padding="0 20px">
+      <Flex gap="2rem" padding="0 20px" onClick={() => router.push('/programming')}>
         {myCourses.map((course) => (
           <Flex
             key={course.id}
@@ -84,7 +85,7 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home;
+export default Courses;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const selectedPage = 'courses';

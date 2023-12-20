@@ -49,7 +49,7 @@ const LoginPage: React.FC = () => {
       // If keep logged in is checked, the token will be expires in 15 days
       cookieManager.setToken(access_token, keepLogged ? 15 : 1);
 
-      router.push('/courses');
+      router.push('/profile');
     },
     [router, captcha],
     false,
@@ -155,7 +155,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     await validateSession();
 
-    return { redirect: { destination: '/courses', permanent: false } };
+    return { redirect: { destination: '/profile', permanent: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

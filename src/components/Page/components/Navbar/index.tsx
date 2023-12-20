@@ -82,7 +82,7 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
             color="white"
             borderColor="primary600"
             bg="primary400"
-            justify="space-between"
+            justify="center"
             borderRadius="10px"
             w="100%"
           >
@@ -107,7 +107,7 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
                   <Image src="/icons/coin.svg" />
                   <Text marginLeft="6px">28</Text>
                 </Flex>
-                <Flex align="center" justify="center" padding="1rem 0.5rem">
+                <Flex cursor="pointer" align="center" justify="center" padding="1rem 0.5rem" onClick={() => router.push('/store')}>
                   <Image src="/icons/cash.svg" />
                   <Text marginLeft="6px">48</Text>
                 </Flex>

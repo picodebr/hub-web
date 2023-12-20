@@ -12,7 +12,7 @@ const Programming: React.FC = () => {
   return (
     <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
       <Flex align="center" justify="flex-end" h="fit-content">
-        <Link href="/home" width="100%">
+        <Link href="/courses" width="100%">
           <Flex cursor="pointer" fontWeight="600" color="primary700">
             <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
             <Text textAlign="left">Voltar</Text>
@@ -36,7 +36,7 @@ const Programming: React.FC = () => {
           Módulos
         </Text>
         <Flex direction="column" p="20px" fontWeight="700" color="gray700" gap="12px">
-          <Flex borderBottom="1px" borderColor="gray100" paddingBottom="12px" display="flex" justify="space-between">
+          <Flex cursor="pointer" borderBottom="1px" borderColor="gray100" paddingBottom="12px" display="flex" justify="space-between">
             Programação 1
             <Flex w="320px" gap="12px" align="center">
               <Progress value={70} rounded={8} flex="1" min={0} max={100} size="md" />
