@@ -16,6 +16,7 @@ import { Logo } from '@/components/Logo';
 import { AppReCaptcha } from '@/components/ReCaptcha';
 import { IAuthRequest, authSchema } from '@/_base/interfaces/auth';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
+import { api } from '@/_base/classes/api';
 
 const LoginPage: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -38,30 +39,26 @@ const LoginPage: React.FC = () => {
         return;
       } else setCaptcha((e) => ({ ...e, error: undefined }));
 
-      const { access_token, user } = googleAccessToken
+      const { access_token } = googleAccessToken
         ? await googleLogin(googleAccessToken)
         : await hubLogin({
             identifier: data.identifier,
             password: data.password,
           });
 
-      setUser(user);
-
       // If keep logged in is checked, the token will be expires in 15 days
       cookieManager.setToken(access_token, keepLogged ? 15 : 1);
+      api.defaults.headers.authorization = `Bearer ${access_token}`;
+      setUser(await validateSession());
 
-<<<<<<< HEAD
-      router.push('/profile');
-=======
       setLoadingConfig((cfg) => ({ ...cfg, isLoading: true, type: 'fullscreen-with-info' }));
 
       await new Promise((res) =>
         setTimeout(() => {
           router.push('/profile');
-          setTimeout(() => res(true), 5000);
-        }, 5000),
+          setTimeout(() => res(true), 15000);
+        }, 2000),
       );
->>>>>>> caa2bfe23890797d4336e879a2aaee88e8fbf3df
     },
     [router, captcha],
     false,

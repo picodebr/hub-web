@@ -7,6 +7,7 @@ import { IPageProps } from './interfaces';
 import { useAuth } from '../Auth';
 
 const PageContext = createContext({});
+export const usePageContext = () => useContext(PageContext);
 
 export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTitle, selectedPage }) => {
   const { user, setUser } = useAuth();
@@ -36,5 +37,3 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTi
     </PageContext.Provider>
   );
 };
-
-export const usePageContext = () => useContext(PageContext);

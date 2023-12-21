@@ -40,9 +40,9 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
       case 'primary':
         return undefined;
       case 'outline':
-        return '1px solid primary900';
+        return '1px solid #1A1740';
       case 'outline-white':
-        return '1px solid primary900';
+        return '1px solid #1A1740';
       case 'warning':
         return '1px solid #BA1B1B';
       case 'outline-warning':

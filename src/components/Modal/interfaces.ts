@@ -10,4 +10,9 @@ export interface IModalProps extends Partial<ModalProps> {
   disableOkButton?: boolean;
   disableCancelButton?: boolean;
   overlay?: ModalOverlayProps;
+  topIcon?: ModalTopIconType | React.ReactElement;
 }
+
+export const modalTopIconTypes = <const>['ray', 'checked', 'warning'];
+
+export type ModalTopIconType = (typeof modalTopIconTypes)[number];

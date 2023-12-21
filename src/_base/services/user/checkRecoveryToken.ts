@@ -11,6 +11,6 @@ interface IResponse {
 }
 
 export const checkRecoveryToken = async (params: IParams): Promise<IResponse> => {
-  const { data } = await api.post(`/user/check_recovery_token`, params);
+  const { data } = await api.post(`/check_recovery_token`, params);
   return data;
 };

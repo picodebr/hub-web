@@ -13,6 +13,7 @@ interface IProps {
 
 export const Header: React.FC<IProps> = ({ user }) => {
   const router = useCustomRouter();
+
   const data = user?.schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
 
   return (

@@ -1,1 +1,1 @@
-export * from './IClass';
+export * from './IHubClass';

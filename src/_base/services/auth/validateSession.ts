@@ -2,6 +2,6 @@ import { api } from '@/_base/classes/api';
 import { IHubUser } from '@/_base/interfaces/user';
 
 export const validateSession = async (): Promise<IHubUser> => {
-  const { data } = await api.get('/user/validate');
+  const { data } = await api.get('/validate');
   return data;
 };

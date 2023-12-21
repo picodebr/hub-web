@@ -1,4 +1,4 @@
-import { IHubSchool } from '../school';
+import { IProject } from '../project';
 import { IHubUser } from '../user';
 
 export interface IHubClass {
@@ -8,8 +8,6 @@ export interface IHubClass {
   description: string | null;
   code: string;
   grade: string;
-  created_at: Date;
-  updated_at: Date;
-  hub_school: IHubSchool;
-  users: IHubUser[];
+  students: IHubUser[];
+  projects: IProject[];
 }

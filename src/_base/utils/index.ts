@@ -1,6 +1,7 @@
 export * from './copyToClipboard';
 export * from './currencyFormatter';
 export * from './documentFormatter';
+export * from './formatClassGrade';
 export * from './formatShortName';
 export * from './getFilenameFromUrl';
 export * from './logError';

@@ -7,5 +7,5 @@ interface IParams {
 }
 
 export const recoverPassword = async (params: IParams): Promise<void> => {
-  await api.post(`/user/recover_password`, params);
+  await api.post(`/recover_password`, params);
 };
