@@ -1,9 +1,10 @@
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Text } from '@chakra-ui/react';
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Text, useColorMode } from '@chakra-ui/react';
 import { FiDivide, FiFileText } from 'react-icons/fi';
 import { IoChevronForward } from 'react-icons/io5';
 import { MdOutlinePlayCircleFilled } from 'react-icons/md';
 
 export const TeacherProfile: React.FC = () => {
+  const { colorMode } = useColorMode();
   return (
     <Flex w="100%" display="flex" direction="column" gap="24px">
       <Flex w="100%" h="fit-content" gap="32px" maxH="330px">
@@ -30,11 +31,11 @@ export const TeacherProfile: React.FC = () => {
               (subject) => (
                 <Flex key={subject} align="center" gap="12px" w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
                   <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
-                    <FiDivide fontSize="24px" />
+                    <FiDivide fontSize="24px" color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
                     <Flex w="100%" fontWeight="500" color="gray700">
                       {subject}
                     </Flex>
-                    <IoChevronForward />
+                    <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
                   </Flex>
                 </Flex>
               ),

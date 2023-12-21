@@ -106,16 +106,39 @@ const Profile: React.FC<IProps> = ({ user }) => {
               <AccordionIcon />
             </AccordionButton>
             <AccordionPanel pb={4}>
-              <Img src="/icons/medal.svg" />
-              JavaScript
-              <CircularProgress value={100}>
-                <CircularProgressLabel>100%</CircularProgressLabel>
-              </CircularProgress>
-              <Img src="/icons/medal.svg" />
-              SQL
-              <CircularProgress value={50}>
-                <CircularProgressLabel>50%</CircularProgressLabel>
-              </CircularProgress>
+              <Flex w="100%" justify="space-between" p="20px" borderTop="1px" borderBottom="1px" borderColor="gray300">
+                <Flex align="center" gap="20px">
+                  <Img src="/icons/medal.svg" w="40px" />
+                  <Text fontWeight="500" fontSize="15px">
+                    JavaScript
+                  </Text>
+                </Flex>
+                <CircularProgress value={100}>
+                  <CircularProgressLabel>100%</CircularProgressLabel>
+                </CircularProgress>
+              </Flex>
+              <Flex w="100%" justify="space-between" p="20px" borderBottom="1px" borderColor="gray300">
+                <Flex align="center" gap="20px">
+                  <Img src="/icons/medal.svg" w="40px" />
+                  <Text fontWeight="500" fontSize="15px">
+                    SQL
+                  </Text>
+                </Flex>
+                <CircularProgress value={50}>
+                  <CircularProgressLabel>50%</CircularProgressLabel>
+                </CircularProgress>
+              </Flex>
+              <Flex w="100%" justify="space-between" p="20px">
+                <Flex align="center" gap="20px">
+                  <Img src="/icons/medal.svg" w="40px" />
+                  <Text fontWeight="500" fontSize="15px">
+                    Python
+                  </Text>
+                </Flex>
+                <CircularProgress value={60}>
+                  <CircularProgressLabel>60%</CircularProgressLabel>
+                </CircularProgress>
+              </Flex>
             </AccordionPanel>
           </AccordionItem>
         </Accordion>
@@ -136,7 +159,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
       >
         <Flex display="flex" justify="space-between" direction="row">
           <Text>Modo noturno</Text>
-          <Switch onChange={toggleColorMode} isChecked={colorMode === 'dark'} />
+          <Switch onChange={toggleColorMode} isChecked={colorMode === 'dark'} colorScheme="yellow" />
         </Flex>
       </Flex>
     </Flex>
