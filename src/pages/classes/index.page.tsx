@@ -1,4 +1,4 @@
-import { Avatar, AvatarGroup, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Skeleton } from '@chakra-ui/react';
+import { Avatar, AvatarGroup, Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Skeleton } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
@@ -16,13 +16,13 @@ import { Modal } from '@/components/Modal';
 import { TextInput } from '@/components/Inputs/Text';
 import { InputValueType } from '@/_base/interfaces/shared/InputValueType';
 
-type IModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
+type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
 
 const Classes: React.FC = () => {
   const [classCode, setClassCode] = useState<InputValueType<string>>({ value: '' });
   const [classes, setClasses] = useState<PageDataType<IHubClass>>({ data: [] });
   const [newClass, setNewClass] = useState<IHubClass | null>(null);
-  const [modalOpt, setOpenOpt] = useState<IModalType>({});
+  const [modalOpt, setOpenOpt] = useState<ModalType>({});
 
   const getClasses = useAsyncCallback(async () => {
     const userClasses = await listClasses();
@@ -115,11 +115,15 @@ const Classes: React.FC = () => {
               maxH="5.5rem"
             >
               <Flex flex="1" gap="1rem">
-                <FiUsers fontSize="40px" color="#21E080" />
+                <Link href={`/classes/${hubClass.id}`} transition="color 0.1s" color="#21E080" _hover={{ color: '#36c27c' }}>
+                  <FiUsers fontSize="40px" />
+                </Link>
                 <Flex display="column" justify="space-between">
-                  <Text fontWeight="700">
-                    {formatClassGrade(hubClass.grade)} - {hubClass.display_name}
-                  </Text>
+                  <Link href={`/classes/${hubClass.id}`}>
+                    <Text fontWeight="700" transition="color 0.1s" _hover={{ color: 'indigo600' }}>
+                      {formatClassGrade(hubClass.grade)} - {hubClass.display_name}
+                    </Text>
+                  </Link>
                   <AvatarGroup size="sm" max={10}>
                     {hubClass.students?.length ? (
                       hubClass.students.map((student) => (
