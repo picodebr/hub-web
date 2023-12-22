@@ -1,5 +1,5 @@
 import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Text, useColorMode } from '@chakra-ui/react';
-import { FiDivide, FiFileText } from 'react-icons/fi';
+import { FiFileText, FiHelpCircle } from 'react-icons/fi';
 import { IoChevronForward } from 'react-icons/io5';
 import { MdOutlinePlayCircleFilled } from 'react-icons/md';
 
@@ -23,23 +23,29 @@ export const TeacherProfile: React.FC = () => {
         >
           <Flex direction="column" w="100%" borderBottom="1px" borderColor="gray300" justify="center">
             <Flex marginBottom="20px" fontSize="14px" color="gray600">
-              Disciplinas lecionadas
+              Guia Rápido
             </Flex>
           </Flex>
           <Flex direction="column" flex="1" gap="20px" overflow="hidden auto">
-            {['Matemática', 'Geometria', 'Tecnologia', 'Física', 'Lógica de programação', 'Compiladores e Transpiladores', 'Estrutura de dados'].map(
-              (subject) => (
-                <Flex key={subject} align="center" gap="12px" w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
-                  <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
-                    <FiDivide fontSize="24px" color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
-                    <Flex w="100%" fontWeight="500" color="gray700">
-                      {subject}
-                    </Flex>
-                    <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
+            {[
+              'Como abrir o livro na plataforma?',
+              'Como criar um novo projeto?',
+              'Como acessar minhas turmas?',
+              'O que fazer se meu aluno esquecer a senha?',
+              'Como começar um novo curso?',
+              'Como entrar em contato com o suporte da PiCode?',
+              'Como pedir um novo produto através da loja?',
+            ].map((subject) => (
+              <Flex key={subject} align="center" gap="12px" w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
+                <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
+                  <FiHelpCircle fontSize="24px" color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
+                  <Flex w="100%" fontWeight="500" color="gray700">
+                    {subject}
                   </Flex>
+                  <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
                 </Flex>
-              ),
-            )}
+              </Flex>
+            ))}
           </Flex>
         </Flex>
 
@@ -59,7 +65,7 @@ export const TeacherProfile: React.FC = () => {
         >
           <Flex direction="column" w="100%" h="fit-content" borderBottom="1px" borderColor="gray300" justify="center">
             <Flex fontSize="0.875rem" color="gray600" marginBottom="1.25rem">
-              Continue assistindo
+              Boas vindas à PiCode 🚀
             </Flex>
           </Flex>
           <Flex flex="1" align="center" gap="0.75rem" w="100%" pb="1.25rem">
