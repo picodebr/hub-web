@@ -109,10 +109,30 @@ const Classes: React.FC = () => {
 
   return (
     <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
-      <TabSwitch
-        tabs={classPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
-        onSwitch={(view) => setPageView(view as any)}
-      />
+      <Flex justify="space-between">
+        <TabSwitch
+          tabs={classPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
+          onSwitch={(view) => setPageView(view as any)}
+        />
+        <Flex
+          minH="52px"
+          maxH="52px"
+          border="1px"
+          borderColor="gray300"
+          align="center"
+          px="1rem"
+          bg="white"
+          w="fit-content"
+          borderRadius="lg"
+          boxShadow="sm"
+          gap="0.65rem"
+          cursor="pointer"
+          transition="all 0.1s"
+          _hover={{ bg: 'gray50' }}
+        >
+          Adicionar projeto
+        </Flex>
+      </Flex>
       {pageView === 'Alunos' ? (
         <StudentTable
           rows={students}
