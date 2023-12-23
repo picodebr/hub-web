@@ -92,7 +92,7 @@ const Store: React.FC = () => {
             <Text textAlign="left">Voltar</Text>
           </Flex>
         </Link>
-        <Flex w="250px" h="60px" display="flex" align="center" p="16px 20px" borderRadius="10px" border="1px" borderColor="primary600" gap="32px">
+        <Flex w="280px" h="60px" display="flex" align="center" p="16px 20px" borderRadius="10px" gap="32px" bg="primary400">
           <Text color="gray500" fontSize="14px">
             Seu saldo:
           </Text>
@@ -102,7 +102,7 @@ const Store: React.FC = () => {
               48
             </Text>
           </Flex>
-          <FiHelpCircle fontSize="16px" color="gray400" />
+          <FiHelpCircle fontSize="16px" color="#98A2B3" />
         </Flex>
       </Flex>
       <Flex

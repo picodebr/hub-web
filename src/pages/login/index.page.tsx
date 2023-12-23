@@ -75,7 +75,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md">
-      <Flex direction="column" bg="white" p="1rem" boxShadow="md" borderColor="gray300" borderRadius="md" gap="1.15rem" align="center">
+      <Flex w="400px" direction="column" bg="white" p="1rem" boxShadow="md" borderColor="gray300" borderRadius="10px" gap="1.15rem" align="center">
         <Flex direction="column" gap="1rem" alignSelf="center" w="100%">
           <Logo size="sm" />
 
