@@ -28,6 +28,7 @@ export const Header: React.FC<IProps> = ({ user }) => {
       borderColor="primary"
       bg="white"
       userSelect="none"
+      boxShadow="md"
     >
       <Logo size="md" />
       <Flex gap="1rem" align="center" fontSize="1.75rem">

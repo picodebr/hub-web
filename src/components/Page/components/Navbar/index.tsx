@@ -1,12 +1,13 @@
 import { IconType } from 'react-icons';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
-import { Flex, Icon, Image, Img, Progress, Text } from '@chakra-ui/react';
 import { FiCheckCircle, FiEdit2, FiFileText, FiFolder, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
+import { RiHome2Line } from 'react-icons/ri';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
 import { IHubUser } from '@/_base/interfaces/user';
 import { formatShortName } from '@/_base/utils';
+import { Flex, Icon, Image, Img, Progress, Text, useColorMode } from '@chakra-ui/react';
 
 type MenuItemType = { name: string; page: string; icon: IconType };
 
@@ -16,6 +17,7 @@ interface IProps {
 }
 
 export const Navbar: React.FC<IProps> = ({ page, user }) => {
+  const { colorMode } = useColorMode();
   const router = useCustomRouter();
 
   const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
@@ -34,7 +36,7 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
       justify="space-between"
     >
       <Flex direction="column" gap="2rem">
-        <Flex bg="primary900" h="102px" position="relative" borderRadius="10px" minH="102px">
+        <Flex bg={colorMode === 'light' ? 'primary900' : 'primary400'} h="102px" position="relative" borderRadius="10px" minH="102px">
           <Flex
             position="absolute"
             borderRadius="50%"
@@ -152,6 +154,7 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
 };
 
 const studentMenuItems: Array<MenuItemType> = [
+  { name: 'Home', page: 'profile', icon: RiHome2Line },
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
   { name: 'Loja', page: 'store', icon: FiShoppingBag },
   { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
@@ -161,6 +164,7 @@ const studentMenuItems: Array<MenuItemType> = [
 ];
 
 const teacherMenuItems: Array<MenuItemType> = [
+  { name: 'Home', page: 'profile', icon: RiHome2Line },
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
   { name: 'Turmas', page: 'classes', icon: FiUsers },
   { name: 'Loja', page: 'store', icon: FiShoppingBag },

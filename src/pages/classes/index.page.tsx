@@ -198,7 +198,7 @@ const Classes: React.FC = () => {
         onCancel={onCloseModal}
         topIcon="warning"
       >
-        <Flex direction="column" maxW="300px" gap="1rem">
+        <Flex direction="column" gap="1rem">
           <Text color="gray500" fontSize="15px">
             Tem certeza que deseja remover essa turma?
           </Text>

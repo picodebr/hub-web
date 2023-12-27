@@ -4,4 +4,5 @@ export interface IPageProps {
   user?: IHubUser;
   selectedPage?: string;
   pageTitle?: string;
+  showBackButton?: boolean;
 }

@@ -13,8 +13,10 @@ import { ClassPageView, classPageViews } from './interfaces';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { HubTable } from '@/components/Table';
 import { useCustomRouter } from '@/_base/hooks';
-import { Badge } from 'rsuite';
+import { Badge, FlexboxGrid } from 'rsuite';
 import moment from 'moment';
+import { IoMdArrowUp } from 'react-icons/io';
+import { FiCalendar } from 'react-icons/fi';
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -92,7 +94,12 @@ const Classes: React.FC = () => {
         </Flex>
       ),
       status: <Badge color="green" content="Em execução" />,
-      created_at: <Text fontWeight="500">{moment(new Date()).format('DD/MM/YYYY')}</Text>,
+      created_at: (
+        <Flex gap="8px" align="center">
+          <FiCalendar />
+          <Text fontWeight="500">{moment(new Date()).format('DD/MM/YYYY')}</Text>
+        </Flex>
+      ),
     },
     {
       id: '2',
@@ -103,7 +110,12 @@ const Classes: React.FC = () => {
         </Flex>
       ),
       status: <Badge color="red" content="Pausado" />,
-      created_at: <Text fontWeight="500">{moment(new Date()).format('DD/MM/YYYY')}</Text>,
+      created_at: (
+        <Flex gap="8px" align="center">
+          <FiCalendar />
+          <Text fontWeight="500">{moment(new Date()).format('DD/MM/YYYY')}</Text>
+        </Flex>
+      ),
     },
   ];
 
@@ -160,18 +172,33 @@ const Classes: React.FC = () => {
           onRowClick={(e) => router.push(`/projects/${e.id}`)}
           columnSizes={[{ field: 'user_avatar', width: '2rem' }]}
           columns={[
+            { label: 'Nome do projeto', field: 'name' },
+            {
+              label: (
+                <Tooltip label="Status">
+                  <Flex justify="center" gap="8px" align="center">
+                    <Text color="gray600" fontSize="16px">
+                      Status
+                    </Text>
+                    <IoMdArrowUp fontSize="14px" />
+                  </Flex>
+                </Tooltip>
+              ),
+              field: 'status',
+            },
             {
               label: (
                 <Tooltip label="Educador">
-                  <Flex justify="center" fontSize="1.25rem">
-                    <CiUser />
+                  <Flex justify="center" gap="8px">
+                    <Text color="gray600" fontSize="16px">
+                      Educador
+                    </Text>
+                    <CiUser fontSize="17px" />
                   </Flex>
                 </Tooltip>
               ),
               field: 'user_avatar',
             },
-            { label: 'Nome do projeto', field: 'name' },
-            { label: 'Status', field: 'status' },
             { label: 'Data de criação', field: 'created_at' },
           ]}
         />
