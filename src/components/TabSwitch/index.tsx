@@ -15,6 +15,7 @@ export const TabSwitch: React.FC<ITabSwitchProps> = ({ tabs, onSwitch, currentTa
       borderRadius="lg"
       boxShadow="sm"
       gap="0.65rem"
+      userSelect="none"
     >
       {tabs.map((tab) => (
         <Flex

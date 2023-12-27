@@ -183,7 +183,7 @@ const Classes: React.FC = () => {
 export default Classes;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
-  const selectedPage = 'class';
+  const selectedPage = 'classes';
 
   try {
     cookieManager.updateToken(req);
