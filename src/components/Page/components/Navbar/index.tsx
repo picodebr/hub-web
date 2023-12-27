@@ -1,6 +1,6 @@
 import { IconType } from 'react-icons';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
-import { Flex, Icon, Image, Img, Progress, Text } from '@chakra-ui/react';
+import { Flex, Icon, Image, Img, Progress, Text, useColorMode } from '@chakra-ui/react';
 import { FiCheckCircle, FiEdit2, FiFileText, FiFolder, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
@@ -16,6 +16,7 @@ interface IProps {
 }
 
 export const Navbar: React.FC<IProps> = ({ page, user }) => {
+  const { colorMode } = useColorMode();
   const router = useCustomRouter();
 
   const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
@@ -34,7 +35,7 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
       justify="space-between"
     >
       <Flex direction="column" gap="2rem">
-        <Flex bg="primary900" h="102px" position="relative" borderRadius="10px" minH="102px">
+        <Flex bg={colorMode === 'light' ? 'primary900' : 'primary400'} h="102px" position="relative" borderRadius="10px" minH="102px">
           <Flex
             position="absolute"
             borderRadius="50%"

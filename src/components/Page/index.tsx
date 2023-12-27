@@ -5,7 +5,7 @@ import { Flex, useColorMode } from '@chakra-ui/react';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 
-const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password', 'store', 'coinstore'];
+const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, user, children }) => {
   const { colorMode } = useColorMode();
