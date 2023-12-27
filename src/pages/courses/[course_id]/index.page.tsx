@@ -1,14 +1,13 @@
+import { GetServerSideProps } from 'next';
+
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
-import { GetServerSideProps } from 'next';
-import { useState } from 'react';
-import { FaPlus, FaRegFolder } from 'react-icons/fa';
-import { FiChevronLeft, FiChevronRight, FiLock, FiMoreVertical } from 'react-icons/fi';
-import { Header } from 'rsuite';
+import { Flex, Link, Progress, Text } from '@chakra-ui/react';
+import { FiChevronLeft, FiLock } from 'react-icons/fi';
+import { useCustomRouter } from '@/_base/hooks';
 
-const Programming: React.FC = () => {
+const Courses: React.FC = () => {
+  const router = useCustomRouter();
   return (
     <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
       <Flex align="center" justify="flex-end" h="fit-content">
@@ -36,7 +35,15 @@ const Programming: React.FC = () => {
           Módulos
         </Text>
         <Flex direction="column" p="20px" fontWeight="700" color="gray700" gap="12px">
-          <Flex cursor="pointer" borderBottom="1px" borderColor="gray100" paddingBottom="12px" display="flex" justify="space-between">
+          <Flex
+            cursor="pointer"
+            borderBottom="1px"
+            borderColor="gray100"
+            paddingBottom="12px"
+            display="flex"
+            justify="space-between"
+            onClick={() => router.push(`/courses/3/1`)}
+          >
             Programação 1
             <Flex w="320px" gap="12px" align="center">
               <Progress value={70} rounded={8} flex="1" min={0} max={100} size="md" />
@@ -75,17 +82,17 @@ const Programming: React.FC = () => {
   );
 };
 
-export default Programming;
+export default Courses;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const selectedPage = 'code';
+  const selectedPage = 'courses';
 
   try {
     cookieManager.updateToken(req);
 
     await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Meus projetos (CODE)' } };
+    return { props: { selectedPage, pageTitle: 'Curso tal' } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

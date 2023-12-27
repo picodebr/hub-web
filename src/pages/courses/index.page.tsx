@@ -58,7 +58,7 @@ const Courses: React.FC = () => {
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
         Meus cursos
       </Text>
-      <Flex gap="2rem" padding="0 20px" onClick={() => router.push('/programming')}>
+      <Flex gap="2rem" padding="0 20px">
         {myCourses.map((course) => (
           <Flex
             key={course.id}
@@ -69,6 +69,7 @@ const Courses: React.FC = () => {
             overflow="hidden"
             cursor="pointer"
             _hover={{ filter: 'brightness(0.95)' }}
+            onClick={() => router.push(`/courses/${course.id}`)}
           >
             <Flex backgroundImage={course.img} backgroundSize="cover" backgroundPosition="center" h="203px" w="156px" borderRadius="3px" />
             <Text>{course.name}</Text>
