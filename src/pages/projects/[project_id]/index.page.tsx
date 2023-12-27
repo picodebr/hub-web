@@ -23,14 +23,50 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Select,
   Text,
 } from '@chakra-ui/react';
 import { ProjectPageView, projectPageViews } from './interfaces';
 import { TabSwitch } from '@/components/TabSwitch';
 import { EditableTextInput } from '@/components/Inputs/EditableText';
+import { Modal } from '@/components/Modal';
+import { AppTable } from './components/Table';
+
+const bnccList = [
+  {
+    id: 1,
+    subject: 'Matemática',
+    code: 'EF01MA01',
+    description:
+      'Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação.',
+  },
+  {
+    id: 2,
+    subject: 'História',
+    code: 'EF01HI01',
+    description:
+      'Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação.',
+  },
+  {
+    id: 3,
+    subject: 'Geografia',
+    code: 'EF01GE01',
+    description:
+      'Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação.',
+  },
+  {
+    id: 4,
+    subject: 'Matemática',
+    code: 'EF01MA02',
+    description:
+      'Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação.',
+  },
+];
 
 const ProjectPage: React.FC = () => {
   const [pageView, setPageView] = useState<ProjectPageView>('Sobre');
+  const [showModal, setShowModal] = useState(false);
+  const selectData = bnccList.map((data) => ({ value: data.id, label: data.code }));
 
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Sobre: (
@@ -91,7 +127,7 @@ const ProjectPage: React.FC = () => {
             w="100%"
             h="42px"
             bg="primary500"
-            p="12px 39px 12px 12px"
+            p="12px 30px 12px 12px"
             color="white"
             borderTopRadius="10px"
             fontWeight="500"
@@ -99,14 +135,17 @@ const ProjectPage: React.FC = () => {
             justify="space-between"
           >
             Habilidades BNCC
-            <Menu>
-              <MenuButton as={IconButton} icon={<FiEdit2 />}></MenuButton>
-              <MenuList color="gray700">
-                <MenuItem>Adicionar nova habilidade</MenuItem>
-                <MenuItem>Excluir habilidade</MenuItem>
-                <MenuItem>Editar habilidade</MenuItem>
-              </MenuList>
-            </Menu>
+            <Flex
+              onClick={() => setShowModal(true)}
+              border="1px"
+              borderColor="white"
+              borderRadius="4px"
+              p="2px"
+              cursor="pointer"
+              _hover={{ filter: 'brightness(0.8)' }}
+            >
+              <FiPlus color="white" fontSize="16px" />
+            </Flex>
           </Flex>
           <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderBottomRadius="10px" border="1px" borderColor="gray300">
             <Flex pb={4} direction="column" gap="6px">
@@ -314,6 +353,19 @@ const ProjectPage: React.FC = () => {
         currentTabColor="primary700"
       />
       {PageViewComponent[pageView]}
+      <Modal
+        size="6xl"
+        title="Adicionar habilidade BNCC"
+        show={showModal}
+        onConfirm={() => setShowModal(false)}
+        okText={'Confirmar'}
+        onCancel={() => setShowModal(false)}
+        topIcon="warning"
+      >
+        <Flex direction="column" gap="1rem">
+          <AppTable />
+        </Flex>
+      </Modal>
     </Flex>
   );
 };

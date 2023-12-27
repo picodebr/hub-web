@@ -82,7 +82,6 @@ export const TeacherProfile: React.FC = () => {
         borderRadius="10px"
         boxShadow="md"
         w="100%"
-        padding="0.85rem 0.5rem"
         gap="1.25rem"
         textAlign="left"
         display="column"
@@ -92,7 +91,7 @@ export const TeacherProfile: React.FC = () => {
         <Accordion allowMultiple>
           <AccordionItem border="none">
             <AccordionButton borderRadius="md">
-              <Text flex="1" textAlign="left">
+              <Text flex="1" textAlign="left" padding="0.85rem 0.5rem">
                 Projetos
               </Text>
               <AccordionIcon />

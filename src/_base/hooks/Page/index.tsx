@@ -9,7 +9,7 @@ import { useAuth } from '../Auth';
 const PageContext = createContext({});
 export const usePageContext = () => useContext(PageContext);
 
-export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTitle, selectedPage }) => {
+export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTitle, selectedPage, showBackButton }) => {
   const { user, setUser } = useAuth();
 
   const syncProfile = useCallback(async () => {
@@ -31,7 +31,7 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTi
       <Head>
         <title>{pageTitle}</title>
       </Head>
-      <PageWrapper user={user} selectedPage={selectedPage}>
+      <PageWrapper user={user} selectedPage={selectedPage} showBackButton={showBackButton}>
         {children}
       </PageWrapper>
     </PageContext.Provider>

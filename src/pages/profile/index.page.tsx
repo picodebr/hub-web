@@ -33,7 +33,6 @@ const Profile: React.FC<IProps> = ({ user }) => {
         borderRadius="10px"
         boxShadow="md"
         w="100%"
-        padding="0.85rem 0.5rem"
         gap="1.25rem"
         textAlign="left"
         display="column"
@@ -41,9 +40,9 @@ const Profile: React.FC<IProps> = ({ user }) => {
         color="gray600"
       >
         <Accordion allowMultiple>
-          <AccordionItem border="none">
+          <AccordionItem border="none" borderRadius="10px">
             <AccordionButton borderRadius="md">
-              <Text flex="1" textAlign="left">
+              <Text flex="1" textAlign="left" padding="0.85rem 0.5rem">
                 Meus dados
               </Text>
               <AccordionIcon />
@@ -91,7 +90,6 @@ const Profile: React.FC<IProps> = ({ user }) => {
         boxShadow="md"
         w="100%"
         h="fit-content"
-        padding="0.85rem 0.5rem"
         gap="1.25rem"
         textAlign="left"
         color="gray600"
@@ -100,7 +98,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
         <Accordion allowMultiple w="100%">
           <AccordionItem border="none">
             <AccordionButton borderRadius="md">
-              <Text flex="1" textAlign="left">
+              <Text flex="1" textAlign="left" padding="0.85rem 0.5rem">
                 Certificados
               </Text>
               <AccordionIcon />

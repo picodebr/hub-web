@@ -30,7 +30,7 @@ export const Modal: React.FC<PropsWithChildren<IModalProps>> = ({
   return (
     <ChakraModal {...rest} isOpen={show} onClose={() => onCancel && onCancel()} scrollBehavior="inside">
       <ModalOverlay {...overlay} />
-      <ModalContent w="fit-content">
+      <ModalContent w={!rest.size ? 'fit-content' : undefined} zIndex="9998">
         {typeof topIcon === 'string' ? (
           <Box m="1rem 0 0 1rem">
             <Image src={`/icons/${topIcon}.svg`} h="48px" />
