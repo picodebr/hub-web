@@ -4,7 +4,7 @@ import { ReactNode, useState } from 'react';
 import { CiUser } from 'react-icons/ci';
 
 import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
+import { logError, cookieManager, formatShortName, statusLabelMapper } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
 import { getClassData } from '@/_base/services/class';
 
@@ -13,10 +13,11 @@ import { ClassPageView, classPageViews } from './interfaces';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { HubTable } from '@/components/Table';
 import { useCustomRouter } from '@/_base/hooks';
-import { Badge, FlexboxGrid } from 'rsuite';
+import { Badge } from 'rsuite';
 import moment from 'moment';
 import { IoMdArrowUp } from 'react-icons/io';
 import { FiCalendar } from 'react-icons/fi';
+import { IHubClass } from '@/_base/interfaces/class';
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -24,7 +25,11 @@ const StudentTable = HubTable<StudentTableType>;
 type ProjectTableType = { id: string; user_avatar: ReactNode; name: ReactNode; status: ReactNode; created_at: ReactNode };
 const ProjectTable = HubTable<ProjectTableType>;
 
-const Classes: React.FC = () => {
+interface IProps {
+  hubClass: IHubClass;
+}
+
+const Class: React.FC<IProps> = ({ hubClass }) => {
   const [pageView, setPageView] = useState<ClassPageView>('Alunos');
 
   const router = useCustomRouter();
@@ -84,40 +89,30 @@ const Classes: React.FC = () => {
     },
   ];
 
-  const projects: ProjectTableType[] = [
-    {
-      id: '1',
-      user_avatar: (<Avatar name="Anderson Felix" src={undefined} title="Anderson Felix" h="40px" w="40px" />) as any,
-      name: (
-        <Flex direction="column">
-          <Text color="gray800">Energia solar</Text>
-        </Flex>
-      ),
-      status: <Badge color="green" content="Em execução" />,
-      created_at: (
-        <Flex gap="8px" align="center">
-          <FiCalendar />
-          <Text fontWeight="500">{moment(new Date()).format('DD/MM/YYYY')}</Text>
-        </Flex>
-      ),
-    },
-    {
-      id: '2',
-      user_avatar: (<Avatar name="Ana Sichieri" title="Ana Sichieri" h="40px" w="40px" />) as any,
-      name: (
-        <Flex direction="column">
-          <Text color="gray800">Cidade inteligente</Text>
-        </Flex>
-      ),
-      status: <Badge color="red" content="Pausado" />,
-      created_at: (
-        <Flex gap="8px" align="center">
-          <FiCalendar />
-          <Text fontWeight="500">{moment(new Date()).format('DD/MM/YYYY')}</Text>
-        </Flex>
-      ),
-    },
-  ];
+  const projects: ProjectTableType[] = hubClass.projects.map((project) => ({
+    id: project.id,
+    user_avatar: (
+      <Avatar
+        name={formatShortName(project.educator.name)}
+        src={project.educator.avatar || undefined}
+        title={project.educator.name}
+        h="40px"
+        w="40px"
+      />
+    ) as any,
+    name: (
+      <Flex direction="column">
+        <Text color="gray800">{project.title}</Text>
+      </Flex>
+    ),
+    status: <Badge color="green" content={statusLabelMapper[project.status]} />,
+    created_at: (
+      <Flex gap="8px" align="center">
+        <FiCalendar />
+        <Text fontWeight="500">{moment(project.created_at).format('DD/MM/YYYY')}</Text>
+      </Flex>
+    ),
+  }));
 
   return (
     <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
@@ -207,7 +202,7 @@ const Classes: React.FC = () => {
   );
 };
 
-export default Classes;
+export default Class;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
   const selectedPage = 'classes';

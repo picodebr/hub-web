@@ -2,6 +2,7 @@ export * from './checkEmail';
 export * from './checkPrimaryCode';
 export * from './checkRecoveryToken';
 export * from './checkUsername';
+export * from './getBnccSkills';
 export * from './getProfile';
 export * from './recoverPassword';
 export * from './sendRecoveryToken';

@@ -3,7 +3,6 @@ import { ReactNode, useState } from 'react';
 import { FaArrowUp, FaPaperclip, FaPlus } from 'react-icons/fa';
 import { FiEdit2, FiPlus, FiSend, FiTrash, FiUsers } from 'react-icons/fi';
 
-import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
 import {
   Accordion,
@@ -16,14 +15,8 @@ import {
   Box,
   Button,
   Flex,
-  IconButton,
   Img,
   Input,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Select,
   Text,
 } from '@chakra-ui/react';
 import { ProjectPageView, projectPageViews } from './interfaces';
@@ -31,42 +24,20 @@ import { TabSwitch } from '@/components/TabSwitch';
 import { EditableTextInput } from '@/components/Inputs/EditableText';
 import { Modal } from '@/components/Modal';
 import { AppTable } from './components/Table';
+import { getProject } from '@/_base/services/project';
+import { IProject } from '@/_base/interfaces/project';
+import { getBnccSkills } from '@/_base/services/user';
+import { IBnccSkill } from '@/_base/interfaces/shared/IBnccSkill';
 
-const bnccList = [
-  {
-    id: 1,
-    subject: 'Matemática',
-    code: 'EF01MA01',
-    description:
-      'Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação.',
-  },
-  {
-    id: 2,
-    subject: 'História',
-    code: 'EF01HI01',
-    description:
-      'Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação.',
-  },
-  {
-    id: 3,
-    subject: 'Geografia',
-    code: 'EF01GE01',
-    description:
-      'Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação.',
-  },
-  {
-    id: 4,
-    subject: 'Matemática',
-    code: 'EF01MA02',
-    description:
-      'Utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas e reconhecer situações em que os números não indicam contagem nem ordem, mas sim código de identificação.',
-  },
-];
+interface IProps {
+  project: IProject;
+  bnccSkills: IBnccSkill[];
+}
 
-const ProjectPage: React.FC = () => {
+const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const [pageView, setPageView] = useState<ProjectPageView>('Sobre');
   const [showModal, setShowModal] = useState(false);
-  const selectData = bnccList.map((data) => ({ value: data.id, label: data.code }));
+  const [project, setProject] = useState<IProject>(hubProject);
 
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Sobre: (
@@ -76,13 +47,13 @@ const ProjectPage: React.FC = () => {
             <Text fontSize="14px" fontWeight="500">
               Nome do projeto
             </Text>
-            <EditableTextInput placeholder="Soma" />
+            <EditableTextInput value={project.title || ''} onInputChange={(title) => setProject((e) => ({ ...e, title }))} />
           </Flex>
           <Flex pb={4} direction="column" gap="6px">
             <Text fontSize="14px" fontWeight="500">
               Objetivo
             </Text>
-            <EditableTextInput placeholder="Ensinar os alunos do 2º ano sobre a operação de soma de forma lúdica e prática" />
+            <EditableTextInput value={project.description || ''} onInputChange={(description) => setProject((e) => ({ ...e, description }))} />
           </Flex>
         </Flex>
         <Flex gap="0px" direction="column">
@@ -90,36 +61,14 @@ const ProjectPage: React.FC = () => {
             Etapas
           </Flex>
           <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderBottomRadius="10px" border="1px" borderColor="gray300">
-            <Flex pb={4} direction="column" gap="6px">
-              <Text fontSize="14px" fontWeight="500">
-                Contextualização
-              </Text>
-              <EditableTextInput placeholder="Apresente aos alunos situações do cotidiano em que a soma é utilizada, como por exemplo, contar objetos, somar dinheiro." />
-            </Flex>
-            <Flex pb={4} direction="column" gap="6px">
-              <Text fontSize="14px" fontWeight="500">
-                Planejamento
-              </Text>
-              <EditableTextInput placeholder="Auxilie os alunos a construírem o jogo utilizando os materiais disponíveis. Eles podem desenhar o tabuleiro, os dados e as regras." />
-            </Flex>
-            <Flex pb={4} direction="column" gap="6px">
-              <Text fontSize="14px" fontWeight="500">
-                Construção
-              </Text>
-              <EditableTextInput placeholder="Distribua folhas de papel e peça para os alunos planejarem um jogo utilizando a operação de soma. Eles devem pensar em regras simples." />
-            </Flex>
-            <Flex pb={4} direction="column" gap="6px">
-              <Text fontSize="14px" fontWeight="500">
-                Apresentação e Testes
-              </Text>
-              <EditableTextInput placeholder="Cada aluno ou grupo apresentará o jogo construído para a turma. Durante a apresentação, eles devem explicar as regras." />
-            </Flex>
-            <Flex pb={4} direction="column" gap="6px">
-              <Text fontSize="14px" fontWeight="500">
-                Desafio Maker
-              </Text>
-              <EditableTextInput placeholder="Cada aluno ou grupo apresentará o jogo construído para a turma. Durante a apresentação, eles devem explicar as regras." />
-            </Flex>
+            {project.metadata?.steps?.map((step) => (
+              <Flex key={step.title} pb={4} direction="column" gap="6px">
+                <Text fontSize="14px" fontWeight="500">
+                  {step.title}
+                </Text>
+                <EditableTextInput value={step.description || ``} />
+              </Flex>
+            ))}
           </Flex>
         </Flex>
         <Flex gap="0px" direction="column">
@@ -144,26 +93,20 @@ const ProjectPage: React.FC = () => {
               cursor="pointer"
               _hover={{ filter: 'brightness(0.8)' }}
             >
-              <FiPlus color="white" fontSize="16px" />
+              <FiEdit2 color="white" fontSize="16px" />
             </Flex>
           </Flex>
           <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderBottomRadius="10px" border="1px" borderColor="gray300">
-            <Flex pb={4} direction="column" gap="6px">
-              <Text fontSize="14px" fontWeight="500">
-                Matemática
-              </Text>
-              <Flex p="8px" border="1px" borderColor="gray300" borderRadius="8px">
-                EF06MA01 - Utilizar estratégias pessoais de cálculo mental ou escrito, como contar, estimar, utilizar fatos da adição e da subtração.
+            {project.metadata.bncc?.map((bncc) => (
+              <Flex key={bncc.tag} pb={4} direction="column" gap="6px">
+                <Text fontSize="14px" fontWeight="500">
+                  {bncc.subject}
+                </Text>
+                <Flex p="8px" border="1px" borderColor="gray300" borderRadius="8px">
+                  {`${bncc.tag} - ${bncc.title}`}
+                </Flex>
               </Flex>
-            </Flex>
-            <Flex pb={4} direction="column" gap="6px">
-              <Text fontSize="14px" fontWeight="500">
-                História
-              </Text>
-              <Flex p="8px" border="1px" borderColor="gray300" borderRadius="8px">
-                EF06MA01 - Utilizar estratégias pessoais de cálculo mental ou escrito, como contar, estimar, utilizar fatos da adição e da subtração.
-              </Flex>
-            </Flex>
+            ))}
           </Flex>
         </Flex>
         <Flex gap="0px" direction="column">
@@ -175,7 +118,10 @@ const ProjectPage: React.FC = () => {
               <Text fontSize="14px" fontWeight="500">
                 Apresentação
               </Text>
-              <EditableTextInput placeholder="Descreva como foi a apresentação do projeto de cada grupo" />
+              <EditableTextInput
+                value={project.metadata.presentation || ``}
+                onInputChange={(presentation) => setProject((e) => ({ ...e, metadata: { ...e.metadata, presentation } }))}
+              />
               <Button gap="8px">
                 <FaPaperclip />
                 Anexar arquivo
@@ -355,16 +301,18 @@ const ProjectPage: React.FC = () => {
       {PageViewComponent[pageView]}
       <Modal
         size="6xl"
-        title="Adicionar habilidade BNCC"
+        title="Habilidades BNCC"
         show={showModal}
         onConfirm={() => setShowModal(false)}
         okText={'Confirmar'}
         onCancel={() => setShowModal(false)}
         topIcon="warning"
       >
-        <Flex direction="column" gap="1rem">
-          <AppTable />
-        </Flex>
+        <AppTable
+          bnccSkills={bnccSkills}
+          values={project.metadata.bncc || []}
+          onChange={(bncc) => setProject((e) => ({ ...e, metadata: { ...e.metadata, bncc } }))}
+        />
       </Modal>
     </Flex>
   );
@@ -372,15 +320,15 @@ const ProjectPage: React.FC = () => {
 
 export default ProjectPage;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
   const selectedPage = 'project';
 
   try {
     cookieManager.updateToken(req);
 
-    const user = await validateSession();
+    const [project, bnccSkills] = await Promise.all([getProject(`${query.project_id}`), getBnccSkills()]);
 
-    return { props: { selectedPage, pageTitle: 'Projeto', user } };
+    return { props: { selectedPage, pageTitle: project.title, project, bnccSkills } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

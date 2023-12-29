@@ -1,4 +1,7 @@
+import { IHubGlobalComment } from '../globalComment';
+import { IHubGroup } from '../group';
 import { HubStatus } from '../shared';
+import { IHubUser } from '../user';
 import { IProjectMetadata } from './IProjectMetadata';
 
 export interface IProject {
@@ -12,4 +15,7 @@ export interface IProject {
   metadata: IProjectMetadata;
   created_at: Date;
   updated_at: Date;
+  groups: IHubGroup[];
+  annotations: IHubGlobalComment[];
+  educator: IHubUser;
 }
