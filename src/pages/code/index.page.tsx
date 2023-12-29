@@ -1,12 +1,10 @@
+import { GetServerSideProps } from 'next';
+import { FaPlus, FaRegFolder } from 'react-icons/fa';
+import { FiMoreVertical } from 'react-icons/fi';
+
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
-import { GetServerSideProps } from 'next';
-import { useState } from 'react';
-import { FaPlus, FaRegFolder } from 'react-icons/fa';
-import { FiChevronLeft, FiChevronRight, FiMoreVertical } from 'react-icons/fi';
-import { Header } from 'rsuite';
+import { Flex, Link, Text } from '@chakra-ui/react';
 
 const Project: React.FC = () => {
   return (
@@ -68,7 +66,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Meus projetos (CODE)' } };
+    return { props: { selectedPage, pageTitle: 'Meus projetos', showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

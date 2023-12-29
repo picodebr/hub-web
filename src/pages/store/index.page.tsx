@@ -1,12 +1,12 @@
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
-import { FiChevronLeft, FiHelpCircle, FiShoppingCart, FiTrash } from 'react-icons/fi';
+import { FiHelpCircle, FiShoppingCart, FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
 
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Flex, Image, Link, Text } from '@chakra-ui/react';
+import { Flex, Image, Text } from '@chakra-ui/react';
 import { Checkbox } from '@chakra-ui/react';
 
 interface IProducts {
@@ -83,16 +83,10 @@ const Store: React.FC = () => {
   };
   const [myProducts] = useState<IProducts[]>(mockProducts);
   return (
-    <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" p="32px 112px" gap="32px">
+    <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" gap="32px">
       {' '}
-      <Flex h="60px" w="100%" display="flex" justify="space-between" align="center" gap="8px">
-        <Link href="/profile" width="100%">
-          <Flex cursor="pointer" fontWeight="600" color="primary700">
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-            <Text textAlign="left">Voltar</Text>
-          </Flex>
-        </Link>
-        <Flex w="280px" h="60px" display="flex" align="center" p="16px 20px" borderRadius="10px" gap="32px" bg="primary400">
+      <Flex h="60px" w="100%" display="flex" align="center" gap="8px" justify="end">
+        <Flex w="280px" h="60px" display="flex" align="center" p="16px 20px" borderRadius="10px" gap="32px" bg="primary400" justify="space-between">
           <Text color="gray500" fontSize="14px">
             Seu saldo:
           </Text>
@@ -172,7 +166,7 @@ const Store: React.FC = () => {
         justify="center"
         bg="white"
         w="384px"
-        h="618px"
+        h="auto"
         gap="2.5rem"
         borderRadius="10px"
         boxShadow="md"
@@ -276,7 +270,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Loja' } };
+    return { props: { selectedPage, pageTitle: 'Loja', showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

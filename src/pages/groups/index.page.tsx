@@ -1,14 +1,11 @@
 import { GetServerSideProps } from 'next';
-import { useState } from 'react';
-import { FaPlus, FaRegFolder } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import { FiMoreVertical, FiUsers } from 'react-icons/fi';
-import { Header } from 'rsuite';
 
 import { Avatar, AvatarGroup } from '@chakra-ui/react';
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
+import { Flex, Link, Text } from '@chakra-ui/react';
 
 const Groups: React.FC = () => {
   return (
@@ -85,7 +82,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Meus grupos' } };
+    return { props: { selectedPage, pageTitle: 'Meus grupos', showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

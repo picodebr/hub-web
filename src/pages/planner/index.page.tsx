@@ -1,14 +1,9 @@
 import { GetServerSideProps } from 'next';
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { Header } from 'rsuite';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Flex, Link, Progress, Text } from '@chakra-ui/react';
 import { FaRegTrashCan } from 'react-icons/fa6';
 
 const getItems = (count: any, offset = 0) =>
@@ -168,7 +163,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Meus planejamentos' } };
+    return { props: { selectedPage, pageTitle: 'Meus planejamentos', showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
