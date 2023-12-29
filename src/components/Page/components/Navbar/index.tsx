@@ -158,7 +158,7 @@ const studentMenuItems: Array<MenuItemType> = [
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
   { name: 'Loja', page: 'store', icon: FiShoppingBag },
   { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
-  { name: 'Meus Projetos (CODE)', page: 'code', icon: FiFolder },
+  { name: 'Meus Projetos', page: 'code', icon: FiFolder },
   { name: 'Meus Grupos', page: 'groups', icon: FiUsers },
   { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle },
 ];
