@@ -10,10 +10,10 @@ import {
   ModalOverlay,
 } from '@chakra-ui/react';
 import React, { PropsWithChildren } from 'react';
-import { GenericButton } from '../Buttons/Generic';
+import { GenericButton } from '../../Buttons/Generic';
 import { IModalProps } from './interfaces';
 
-export const Modal: React.FC<PropsWithChildren<IModalProps>> = ({
+export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
   show,
   title,
   onConfirm,

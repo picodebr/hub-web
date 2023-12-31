@@ -1,7 +1,7 @@
-import { Flex, Text, Textarea } from '@chakra-ui/react';
+import { Flex, Text, Textarea, TextareaProps } from '@chakra-ui/react';
 import { IInputProps } from '../interfaces';
 
-export const TextAreaInput: React.FC<IInputProps> = ({
+export const TextAreaInput: React.FC<IInputProps & TextareaProps> = ({
   onInputChange,
   value = '',
   placeholder,

@@ -19,3 +19,19 @@ export interface IProject {
   annotations: IHubGlobalComment[];
   educator: IHubUser;
 }
+
+export const EMPTY_PROJECT_DATA: IProject = {
+  id: '',
+  project_id: null,
+  class_id: '',
+  user_id: null,
+  title: '',
+  description: null,
+  status: 'stopped',
+  metadata: {},
+  created_at: new Date(),
+  updated_at: new Date(),
+  groups: [],
+  annotations: [],
+  educator: {} as any,
+};

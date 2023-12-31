@@ -1,4 +1,13 @@
-import { Avatar, Box, Tooltip } from '@chakra-ui/react';
+import {
+  Avatar,
+  Box,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  Tooltip,
+} from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useState } from 'react';
 import { CiUser } from 'react-icons/ci';
@@ -12,12 +21,41 @@ import { TabSwitch } from '@/components/TabSwitch';
 import { ClassPageView, classPageViews } from './interfaces';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { HubTable } from '@/components/Table';
-import { useCustomRouter } from '@/_base/hooks';
+import { useAsyncCallback, useCustomRouter } from '@/_base/hooks';
 import { Badge } from 'rsuite';
 import moment from 'moment';
 import { IoMdArrowUp } from 'react-icons/io';
-import { FiCalendar } from 'react-icons/fi';
+import { FiCalendar, FiFileText } from 'react-icons/fi';
 import { IHubClass } from '@/_base/interfaces/class';
+import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
+import { SmallModal } from '@/components/Modal/Small';
+import { TextInput } from '@/components/Inputs/Text';
+import { addProject } from '@/_base/services/project';
+import { TextAreaInput } from '@/components/Inputs/TextArea';
+
+const makeRowTableTable = (data: IProject): ProjectTableType => ({
+  id: data.id,
+  user_avatar: (
+    <Avatar name={formatShortName(data.educator.name)} src={data.educator.avatar || undefined} title={data.educator.name} h="40px" w="40px" />
+  ) as any,
+  name: (
+    <Flex direction="column">
+      <Text color="gray800">{data.title}</Text>
+    </Flex>
+  ),
+  status: (
+    <Badge
+      color={data.status === 'running' ? 'green' : data.status === 'stopped' ? 'red' : 'blue'}
+      content={statusLabelMapper[data.status || 'stopped']}
+    />
+  ),
+  created_at: (
+    <Flex gap="8px" align="center">
+      <FiCalendar />
+      <Text fontWeight="500">{moment(data.created_at).format('DD/MM/YYYY')}</Text>
+    </Flex>
+  ),
+});
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -29,10 +67,33 @@ interface IProps {
   hubClass: IHubClass;
 }
 
+type ModalStep = 'creation_type' | 'man_project_name' | 'man_task_quantity' | 'man_task_naming';
+
 const Class: React.FC<IProps> = ({ hubClass }) => {
   const [pageView, setPageView] = useState<ClassPageView>('Alunos');
+  const [newProject, setNewProject] = useState<IProject | null>(null);
+  const [modalStep, setModalStep] = useState<ModalStep>('creation_type');
+  const [newProjectSteps, setNewProjectSteps] = useState<IHubProjectStep[]>([]);
+  const [dataProjects, setDataProjects] = useState<ProjectTableType[]>(hubClass.projects.map((project) => makeRowTableTable(project)));
 
   const router = useCustomRouter();
+
+  const handleCreateProject = useAsyncCallback(async () => {
+    if (!newProject) return;
+
+    const project = await addProject({
+      title: newProject.title,
+      class_id: hubClass.id,
+      description: newProject.description,
+      metadata: { steps: newProjectSteps },
+    });
+
+    setDataProjects((e) => [makeRowTableTable(project), ...e]);
+
+    setModalStep('creation_type');
+    setNewProjectSteps([]);
+    setNewProject(null);
+  }, []);
 
   const students: StudentTableType[] = [
     {
@@ -89,31 +150,6 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
     },
   ];
 
-  const projects: ProjectTableType[] = hubClass.projects.map((project) => ({
-    id: project.id,
-    user_avatar: (
-      <Avatar
-        name={formatShortName(project.educator.name)}
-        src={project.educator.avatar || undefined}
-        title={project.educator.name}
-        h="40px"
-        w="40px"
-      />
-    ) as any,
-    name: (
-      <Flex direction="column">
-        <Text color="gray800">{project.title}</Text>
-      </Flex>
-    ),
-    status: <Badge color="green" content={statusLabelMapper[project.status]} />,
-    created_at: (
-      <Flex gap="8px" align="center">
-        <FiCalendar />
-        <Text fontWeight="500">{moment(project.created_at).format('DD/MM/YYYY')}</Text>
-      </Flex>
-    ),
-  }));
-
   return (
     <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
       <Flex justify="space-between">
@@ -121,24 +157,27 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
           tabs={classPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
           onSwitch={(view) => setPageView(view as any)}
         />
-        <Flex
-          minH="52px"
-          maxH="52px"
-          border="1px"
-          borderColor="gray300"
-          align="center"
-          px="1rem"
-          bg="white"
-          w="fit-content"
-          borderRadius="lg"
-          boxShadow="sm"
-          gap="0.65rem"
-          cursor="pointer"
-          transition="all 0.1s"
-          _hover={{ bg: 'gray50' }}
-        >
-          Adicionar projeto
-        </Flex>
+        {pageView === 'Projetos' && (
+          <Flex
+            minH="52px"
+            maxH="52px"
+            border="1px"
+            borderColor="gray300"
+            align="center"
+            px="1rem"
+            bg="white"
+            w="fit-content"
+            borderRadius="lg"
+            boxShadow="sm"
+            gap="0.65rem"
+            cursor="pointer"
+            transition="all 0.1s"
+            _hover={{ bg: 'gray50' }}
+            onClick={() => setNewProject(EMPTY_PROJECT_DATA)}
+          >
+            Adicionar projeto
+          </Flex>
+        )}
       </Flex>
       {pageView === 'Alunos' ? (
         <StudentTable
@@ -163,7 +202,7 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
         />
       ) : (
         <ProjectTable
-          rows={projects}
+          rows={dataProjects}
           onRowClick={(e) => router.push(`/projects/${e.id}`)}
           columnSizes={[{ field: 'user_avatar', width: '2rem' }]}
           columns={[
@@ -198,6 +237,103 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
           ]}
         />
       )}
+      <SmallModal
+        title="Método de criação do projeto"
+        show={!!newProject && modalStep === 'creation_type'}
+        onConfirm={() => setNewProject(null)}
+        onCancel={() => setModalStep('man_project_name')}
+        okText="Inteligência Artificial"
+        cancelText="Manual"
+        topIcon="ray"
+      >
+        <Flex direction="column" gap="1rem">
+          <Text color="gray500" fontSize="15px">
+            Antes de começarmos, você tem a opção de escolher como deseja criar o projeto. Selecione uma das opções abaixo:
+          </Text>
+        </Flex>
+      </SmallModal>
+      <SmallModal
+        title="Criação manual do projeto"
+        show={!!newProject && modalStep === 'man_project_name'}
+        onCancel={() => setNewProject(null)}
+        onConfirm={() => setModalStep('man_task_quantity')}
+        okText="Enviar"
+        topIcon="warning"
+        disableOkButton={!newProject?.title}
+      >
+        <Flex direction="column" gap="1rem">
+          <Text color="gray500" fontSize="15px">
+            Vamos começar a criar o projeto manualmente! Por favor, forneça um nome e uma descrição para o seu projeto e, em seguida, você poderá
+            adicionar detalhes e elementos conforme desejar.
+          </Text>
+          <TextInput
+            placeholder="Informe o nome"
+            leftElement={<FiFileText />}
+            value={newProject?.title || ''}
+            onInputChange={(title) => setNewProject((e) => ({ ...(e || ({} as any)), title }))}
+          />
+          <TextAreaInput
+            placeholder="Descreva a ideia do seu projeto"
+            value={newProject?.description || ''}
+            onInputChange={(description) => setNewProject((e) => ({ ...(e || ({} as any)), description }))}
+          />
+        </Flex>
+      </SmallModal>
+      <SmallModal
+        title="Configuração das etapas do projeto"
+        show={!!newProject && modalStep === 'man_task_quantity'}
+        onCancel={() => setNewProject(null)}
+        onConfirm={() => setModalStep('man_task_naming')}
+        okText="Prosseguir"
+        topIcon="ray"
+      >
+        <Flex direction="column" gap="1rem">
+          <Text color="gray500" fontSize="15px">
+            Antes de iniciar, precisamos saber quantas etapas comporão o seu projeto. Por favor, informe o número de etapas que você planeja incluir.
+            Isso ajudará na organização e no acompanhamento do progresso.
+          </Text>
+          <NumberInput
+            defaultValue={1}
+            min={1}
+            max={6}
+            onChange={(_, length) => setNewProjectSteps(Array.from({ length }, (_, i) => ({ title: '', description: null, position: i + 1 })))}
+          >
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+        </Flex>
+      </SmallModal>
+      <SmallModal
+        title="Nomes das etapas do projeto"
+        show={!!newProject && modalStep === 'man_task_naming'}
+        onCancel={() => setNewProject(null)}
+        onConfirm={handleCreateProject}
+        okText="Finalizar"
+        topIcon="checked"
+        disableOkButton={!!newProjectSteps.find((e) => !e.title)}
+      >
+        <Flex direction="column" gap="1rem">
+          <Text color="gray500" fontSize="15px">
+            Informe os nomes das etapas do seu projeto. Liste uma a uma para que possamos personalizar a jornada do seu projeto.
+          </Text>
+          <Flex direction="column" gap="0.5rem">
+            {newProjectSteps.map((step) => (
+              <TextInput
+                key={step.position}
+                label={`Etapa ${step.position}`}
+                placeholder={`Nome da etapa`}
+                p="0.35rem 0.65rem"
+                fontSize="15px"
+                value={step.title}
+                onInputChange={(title) => setNewProjectSteps((e) => e.map((s) => (s.position === step.position ? { ...s, title } : s)))}
+              />
+            ))}
+          </Flex>
+        </Flex>
+      </SmallModal>
     </Flex>
   );
 };

@@ -12,7 +12,7 @@ import { PageDataType } from '@/_base/interfaces/shared/IPageData';
 import { IHubClass } from '@/_base/interfaces/class';
 import { addClass, listClasses, removeClass } from '@/_base/services/class';
 import { EmptyPageData } from '@/components/EmptyPageData';
-import { Modal } from '@/components/Modal';
+import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { InputValueType } from '@/_base/interfaces/shared/InputValueType';
 
@@ -164,7 +164,7 @@ const Classes: React.FC = () => {
           </Skeleton>
         ))
       )}
-      <Modal
+      <SmallModal
         title="Código da turma"
         show={!!modalOpt.class_code}
         onConfirm={newClass ? onCloseModal : handleCheckClassCode}
@@ -189,8 +189,8 @@ const Classes: React.FC = () => {
             />
           )}
         </Flex>
-      </Modal>
-      <Modal
+      </SmallModal>
+      <SmallModal
         title="Remover turma"
         show={!!modalOpt.confirm_remove}
         onConfirm={handleRemoveClass}
@@ -203,7 +203,7 @@ const Classes: React.FC = () => {
             Tem certeza que deseja remover essa turma?
           </Text>
         </Flex>
-      </Modal>
+      </SmallModal>
     </Flex>
   );
 };

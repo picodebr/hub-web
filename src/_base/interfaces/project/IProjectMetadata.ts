@@ -6,4 +6,5 @@ export interface IProjectMetadata {
   presentation?: string;
   bncc?: IBnccSkill[];
   tools?: string[];
+  attachments?: string[];
 }
