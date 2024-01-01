@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 
 import { IPageProps } from '@/_base/hooks/Page/interfaces';
-import { Flex, Link, Text, useColorMode } from '@chakra-ui/react';
+import { Flex, Text, useColorMode } from '@chakra-ui/react';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 import { FiChevronLeft } from 'react-icons/fi';
@@ -35,7 +35,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedP
             <Navbar page={selectedPage} user={user} />
             <Flex flex="1" height="100%" overflow="hidden" direction="column">
               {showBackButton && (
-                <Flex cursor="pointer" fontWeight="600" color="primary700" onClick={() => router.back()}>
+                <Flex cursor="pointer" fontWeight="600" color="primary700" onClick={() => router.back()} pb="0.5rem">
                   <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
                   <Text textAlign="left">Voltar</Text>
                 </Flex>

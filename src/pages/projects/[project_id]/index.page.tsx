@@ -7,8 +7,8 @@ import axios from 'axios';
 import { logError, cookieManager } from '@/_base/utils';
 import { ProjectPageView, projectPageViews } from './interfaces';
 import { TabSwitch } from '@/components/TabSwitch';
-import { getProject, updateProject } from '@/_base/services/project';
-import { IProject } from '@/_base/interfaces/project';
+import { addProjectAnnotation, getProject, removeProjectAnnotation, updateProject } from '@/_base/services/project';
+import { IAddProjectAnnotationParams, IProject } from '@/_base/interfaces/project';
 import { getBnccSkills } from '@/_base/services/user';
 import { IBnccSkill } from '@/_base/interfaces/shared/IBnccSkill';
 import { About } from './components/About/index.page';
@@ -18,7 +18,7 @@ import { Groups } from './components/Groups/index.page';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { getPresignedUrl } from '@/_base/services/upload';
-import { IUpdateProjectParams } from '@/_base/interfaces/project/IAddProjectParams';
+import { IUpdateProjectParams } from '@/_base/interfaces/project';
 
 interface IProps {
   project: IProject;
@@ -63,10 +63,25 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
     toast({ status: 'success', description: 'Projeto salvo' });
   }, []);
 
+  const handleAddAnnotation = useAsyncCallback(async (dto: IAddProjectAnnotationParams) => {
+    //TODO: add attachments
+    const annotation = await addProjectAnnotation(dto);
+
+    setProject((e) => ({ ...e, annotations: [annotation, ...e.annotations] }));
+    setSavedProject((e) => ({ ...e, annotations: [annotation, ...e.annotations] }));
+  }, []);
+
+  const handleRemoveAnnotation = useAsyncCallback(async (id: string) => {
+    await removeProjectAnnotation(id);
+
+    setProject((e) => ({ ...e, annotations: e.annotations.filter((a) => a.id !== id) }));
+    setSavedProject((e) => ({ ...e, annotations: e.annotations.filter((a) => a.id !== id) }));
+  }, []);
+
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} />,
     Materiais: <Materials project={project} setProject={setProject} />,
-    Anotações: <Annotations project={project} setProject={setProject} />,
+    Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} />,
     Grupos: <Groups project={project} setProject={setProject} />,
   };
 
