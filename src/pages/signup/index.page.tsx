@@ -21,12 +21,15 @@ import { Flex, Link, Text } from '@chakra-ui/react';
 import { IGoogleUserData } from '@/_base/interfaces/auth/IGoogleUserData';
 import { checkEmail, checkPrimaryCode, checkUsername, signup } from '@/_base/services/user';
 import { DateInput } from '@/components/Inputs/Date';
+import { Select } from 'antd';
+import { listAvailableSchools } from '@/_base/services/school';
 
-type PageStepsType = 'USER_TYPE' | 'PRIMARY_CODE' | 'FORM' | 'FINISH';
+type PageStepsType = 'USER_TYPE' | 'PRIMARY_CODE' | 'SCHOOL_CODE' | 'FORM' | 'FINISH';
 
 const SizeMapper: Record<PageStepsType, string> = {
   USER_TYPE: '28.5rem',
   PRIMARY_CODE: '35.25rem',
+  SCHOOL_CODE: '28.5rem',
   FORM: 'fit-content',
   FINISH: '22rem',
 };
@@ -42,6 +45,7 @@ const SignUp: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isGoogleSignin, setIsGoogleSignin] = useState(false);
   const [passwordIsValid, setPasswordIsValid] = useState(false);
+  const [availableSchools, setAvailableSchools] = useState<{ value: string; label: string }[]>([]);
 
   const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<IRegisterUser>({
     data: EMPTY_REGISTER_USER_DATA,
@@ -79,6 +83,9 @@ const SignUp: React.FC = () => {
           setPrimaryCode({ error: 'Código inválido' });
           return;
         }
+        const schools = await listAvailableSchools(code);
+
+        setAvailableSchools(schools.map((s) => ({ label: s.name, value: s.code })));
 
         setData((e) => ({ ...e, primary_code: code }));
         setPrimaryCode((e) => ({ ...e, valid: true }));
@@ -206,6 +213,38 @@ const SignUp: React.FC = () => {
           />
         </Flex>
         <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
+
+        <GenericButton
+          label="Avançar"
+          onClick={() => setStep(userType === `student` ? 'FORM' : 'SCHOOL_CODE')}
+          marginTop="8px"
+          w="100%"
+          isDisabled={!primaryCode.valid}
+        />
+      </Flex>
+    ),
+    SCHOOL_CODE: (
+      <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem">
+        <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px" cursor="pointer" onClick={() => setStep('USER_TYPE')}>
+          <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
+          <Text textAlign="left">Voltar</Text>
+        </Flex>
+        <Flex direction="column" width="100%" align="center" gap="16px">
+          <Flex direction="column" gap="8px">
+            <Text fontWeight="600" fontSize="20px" color="gray900">
+              Quais são suas escolas?
+            </Text>
+            <Text color="gray500">Seu acesso precisa ser aprovado internamete pela PiCode</Text>
+          </Flex>
+          <Select
+            mode="multiple"
+            allowClear
+            style={{ width: '100%', fontSize: `16px`, fontWeight: `500` }}
+            placeholder="Selecione as escolas"
+            onChange={(e) => onInputChange(`school_codes`, e)}
+            options={availableSchools}
+          />
+        </Flex>
 
         <GenericButton label="Avançar" onClick={() => setStep('FORM')} marginTop="8px" w="100%" isDisabled={!primaryCode.valid} />
       </Flex>

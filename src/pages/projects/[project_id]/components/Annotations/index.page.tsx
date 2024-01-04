@@ -9,6 +9,7 @@ import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { formatShortName } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { SmallModal } from '@/components/Modal/Small';
+import { useAuth } from '@/_base/hooks';
 
 interface IProps {
   project: IProject;
@@ -19,6 +20,8 @@ interface IProps {
 export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemoveAnnotation }) => {
   const [newAnnotation, setNewAnnotation] = useState('');
   const [annotationIdToRemove, setAnnotationIdToRemove] = useState('');
+
+  const { user } = useAuth();
 
   const handleSend = () => {
     onAddAnnotation({ hub_project_class_id: project.id, metadata: { message: newAnnotation, attachments: [] } });
@@ -66,9 +69,9 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
                 <Flex gap="10px" direction="row" align="center">
                   <Img src={annotation.user?.avatar || '/avatars/default.jpeg'} w="32px" h="32px" borderRadius="100%"></Img>
                   <Flex color="primary700" fontWeight="600" fontSize="17px" direction="column">
-                    {formatShortName(annotation.user?.name, true)}
+                    {formatShortName(annotation.user?.name || user.name, true)}
                     <Flex color="gray400" fontSize="14px">
-                      @{annotation.user?.username}
+                      @{annotation.user?.username || user.username}
                     </Flex>
                   </Flex>
                 </Flex>

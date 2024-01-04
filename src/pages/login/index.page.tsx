@@ -39,12 +39,17 @@ const LoginPage: React.FC = () => {
         return;
       } else setCaptcha((e) => ({ ...e, error: undefined }));
 
-      const { access_token } = googleAccessToken
+      const { user, access_token } = googleAccessToken
         ? await googleLogin(googleAccessToken)
         : await hubLogin({
             identifier: data.identifier,
             password: data.password,
           });
+
+      if (user.schools.find((e) => !e.approved_at)) {
+        toast({ status: `error`, description: `Seu cadastro está pendente de avaliação` });
+        return;
+      }
 
       // If keep logged in is checked, the token will be expires in 15 days
       cookieManager.setToken(access_token, keepLogged ? 15 : 1);

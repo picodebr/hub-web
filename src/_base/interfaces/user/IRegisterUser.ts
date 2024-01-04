@@ -14,6 +14,7 @@ export default interface IRegisterUser {
   password_confirmation: string;
   birthdate: Date;
   user_type: HubUserType;
+  school_codes: string[];
 }
 
 export const EMPTY_REGISTER_USER_DATA: IRegisterUser = {
@@ -25,6 +26,7 @@ export const EMPTY_REGISTER_USER_DATA: IRegisterUser = {
   password_confirmation: '',
   birthdate: undefined as any,
   user_type: '' as any,
+  school_codes: [],
 };
 
 /** Zod schemas */
@@ -41,4 +43,5 @@ export const registerUserSchema: ZodCustomSchema<IRegisterUser> = z.object({
   password_confirmation: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(6, { message: zodSchemaErrors.MININUM_LENGTH }),
   birthdate: z.date({ required_error: zodSchemaErrors.REQUIRED_FIELD }).max(new Date(), { message: zodSchemaErrors.INVALID_FIELD }),
   user_type: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }),
+  school_codes: z.array(z.string()).optional().default([]),
 });

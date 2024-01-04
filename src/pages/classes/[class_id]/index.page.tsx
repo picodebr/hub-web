@@ -21,7 +21,7 @@ import { TabSwitch } from '@/components/TabSwitch';
 import { ClassPageView, classPageViews } from './interfaces';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { HubTable } from '@/components/Table';
-import { useAsyncCallback, useCustomRouter } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomRouter } from '@/_base/hooks';
 import { Badge } from 'rsuite';
 import moment from 'moment';
 import { IoMdArrowUp } from 'react-icons/io';
@@ -77,6 +77,7 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
   const [dataProjects, setDataProjects] = useState<ProjectTableType[]>(hubClass.projects.map((project) => makeRowTableTable(project)));
 
   const router = useCustomRouter();
+  const { user } = useAuth();
 
   const handleCreateProject = useAsyncCallback(async () => {
     if (!newProject) return;
@@ -87,7 +88,7 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
       description: newProject.description,
       metadata: { steps: newProjectSteps },
     });
-
+    project.educator = user;
     setDataProjects((e) => [makeRowTableTable(project), ...e]);
 
     setModalStep('creation_type');
