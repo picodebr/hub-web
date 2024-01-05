@@ -81,7 +81,15 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
                 <Text fontSize="14px" fontWeight="500">
                   {step.title}
                 </Text>
-                <EditableTextInput value={step.description || ``} />
+                <EditableTextInput
+                  value={step.description || ``}
+                  onInputChange={(description) =>
+                    setProject((e) => ({
+                      ...e,
+                      metadata: { ...e.metadata, steps: e.metadata.steps?.map((s) => (s.position === step.position ? { ...s, description } : s)) },
+                    }))
+                  }
+                />
               </Flex>
             ))}
           </Flex>
@@ -145,6 +153,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
               rows={6}
               value={project.metadata.presentation || ``}
               onInputChange={(presentation) => setProject((e) => ({ ...e, metadata: { ...e.metadata, presentation } }))}
+              placeholder="Descreva a apresentação"
             />
             <FileInput onChange={onChangeFiles} />
 

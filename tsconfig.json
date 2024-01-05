@@ -19,6 +19,6 @@
     }
   },
   "typeRoots": ["./node_modules/@types", "./src/types/"],
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/_base/classes/gpt/index.js"],
   "exclude": ["node_modules"]
 }

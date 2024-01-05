@@ -19,6 +19,7 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { getPresignedUrl } from '@/_base/services/upload';
 import { IUpdateProjectParams } from '@/_base/interfaces/project';
+import { IHubGroup } from '@/_base/interfaces/group';
 
 interface IProps {
   project: IProject;
@@ -78,11 +79,13 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
     setSavedProject((e) => ({ ...e, annotations: e.annotations.filter((a) => a.id !== id) }));
   }, []);
 
+  const handleManagePendingGroup = useAsyncCallback(async (group: IHubGroup, accept: boolean) => {}, []);
+
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} />,
     Materiais: <Materials project={project} setProject={setProject} />,
     Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} />,
-    Grupos: <Groups project={project} setProject={setProject} />,
+    Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} />,
   };
 
   return (

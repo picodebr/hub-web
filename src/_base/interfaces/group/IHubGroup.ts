@@ -1,3 +1,5 @@
+import { IProject } from '../project';
+import { IHubUser } from '../user';
 import { IHubGroupMetadata } from './IHubGroupMetadata';
 
 export interface IHubGroup {
@@ -8,4 +10,7 @@ export interface IHubGroup {
   metadata: IHubGroupMetadata;
   created_at: Date;
   updated_at: Date;
+  students: IHubUser[];
+  educator: IHubUser | null;
+  project: IProject | null;
 }
