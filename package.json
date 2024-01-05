@@ -14,7 +14,7 @@
     "commitprettier": "git add . && git commit -m \"chore(lint): Code Linted\""
   },
   "dependencies": {
-    "@chakra-ui/react": "^2.8.1",
+    "@chakra-ui/react": "^2.8.2",
     "@dicebear/collection": "^7.0.1",
     "@dicebear/core": "^7.0.1",
     "@emotion/react": "^11.11.1",

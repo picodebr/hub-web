@@ -33,6 +33,8 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
       h="100%"
       userSelect="none"
       borderRadius="10px"
+      border="1px"
+      borderColor="gray300"
       justify="space-between"
     >
       <Flex direction="column" gap="2rem">
