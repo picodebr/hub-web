@@ -1,11 +1,11 @@
-import { Avatar, AvatarGroup, Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Skeleton } from '@chakra-ui/react';
+import { Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Skeleton } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import { FiEdit2, FiMoreVertical, FiUsers } from 'react-icons/fi';
 
 import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager, formatClassGrade, formatShortName } from '@/_base/utils';
+import { logError, cookieManager, formatClassGrade } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
 import { useAsyncCallback } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
@@ -15,6 +15,7 @@ import { EmptyPageData } from '@/components/EmptyPageData';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { InputValueType } from '@/_base/interfaces/shared/InputValueType';
+import { AvatarList } from '@/components/AvatarList';
 
 type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
 
@@ -124,19 +125,7 @@ const Classes: React.FC = () => {
                       {formatClassGrade(hubClass.grade)} - {hubClass.display_name}
                     </Text>
                   </Link>
-                  <AvatarGroup size="sm" max={10}>
-                    {hubClass.students?.length ? (
-                      hubClass.students.map((student) => (
-                        <Avatar name={formatShortName(student.name, true)} title={student.name} src={student.avatar || undefined} />
-                      ))
-                    ) : (
-                      <Flex align="flex-end">
-                        <Text color="gray400" fontSize="14px">
-                          Nenhum aluno cadastrado
-                        </Text>
-                      </Flex>
-                    )}
-                  </AvatarGroup>
+                  <AvatarList users={hubClass.students} max={10} />
                 </Flex>
               </Flex>
               <Popover placement="left">
