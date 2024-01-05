@@ -8,8 +8,9 @@ export interface IHubGroup {
   hub_user_id: string | null;
   display_name: string;
   metadata: IHubGroupMetadata;
-  created_at: Date;
-  updated_at: Date;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
   students: IHubUser[];
   educator: IHubUser | null;
   project: IProject | null;

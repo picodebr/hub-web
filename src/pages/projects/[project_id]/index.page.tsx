@@ -20,16 +20,66 @@ import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { getPresignedUrl } from '@/_base/services/upload';
 import { IUpdateProjectParams } from '@/_base/interfaces/project';
 import { IHubGroup } from '@/_base/interfaces/group';
+import { acceptGroup, removeGroup } from '@/_base/services/group';
 
 interface IProps {
   project: IProject;
   bnccSkills: IBnccSkill[];
 }
-
+const mockGroups: Partial<IHubGroup>[] = [
+  {
+    id: `1`,
+    display_name: `Grupo brabo`,
+    students: [{ name: `Aluno 1` }, { name: `Aluno 2` }, { name: `Aluno 3` }, { name: `Aluno 4` }] as any,
+    approved_at: new Date().toString(),
+  },
+  {
+    id: `5`,
+    display_name: `Grupo tech`,
+    students: [{ name: `Aluno 1` }, { name: `Aluno 2` }, { name: `Aluno 3` }, { name: `Aluno 4` }] as any,
+    approved_at: new Date().toString(),
+  },
+  {
+    id: `6`,
+    display_name: `Grupo always`,
+    students: [{ name: `Aluno 1` }, { name: `Aluno 2` }, { name: `Aluno 3` }, { name: `Aluno 4` }] as any,
+    approved_at: new Date().toString(),
+  },
+  {
+    id: `7`,
+    display_name: `Grupo leet code`,
+    students: [{ name: `Aluno 1` }, { name: `Aluno 2` }, { name: `Aluno 3` }, { name: `Aluno 4` }] as any,
+    approved_at: new Date().toString(),
+  },
+  {
+    id: `11`,
+    display_name: `Grupo rico`,
+    students: [{ name: `Aluno 1` }, { name: `Aluno 2` }, { name: `Aluno 3` }, { name: `Aluno 4` }] as any,
+    updated_at: new Date().toString(),
+  },
+  {
+    id: `12`,
+    display_name: `Grupo pobre`,
+    students: [{ name: `Aluno 1` }, { name: `Aluno 2` }, { name: `Aluno 3` }, { name: `Aluno 4` }] as any,
+    updated_at: new Date().toString(),
+  },
+  {
+    id: `13`,
+    display_name: `Grupo influencer`,
+    students: [{ name: `Aluno 1` }, { name: `Aluno 2` }, { name: `Aluno 3` }, { name: `Aluno 4` }] as any,
+    updated_at: new Date().toString(),
+  },
+  {
+    id: `14`,
+    display_name: `Grupo top`,
+    students: [{ name: `Aluno 1` }, { name: `Aluno 2` }, { name: `Aluno 3` }, { name: `Aluno 4` }] as any,
+    updated_at: new Date().toString(),
+  },
+];
 const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
-  const [savedProject, setSavedProject] = useState<IProject>(hubProject);
+  const [savedProject, setSavedProject] = useState<IProject>({ ...hubProject, groups: mockGroups as any });
   const [pageView, setPageView] = useState<ProjectPageView>('Sobre');
-  const [project, setProject] = useState<IProject>(hubProject);
+  const [project, setProject] = useState<IProject>({ ...hubProject, groups: mockGroups as any });
   const [files, setFiles] = useState<File[]>([]);
 
   const toast = useCustomToast();
@@ -79,7 +129,18 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
     setSavedProject((e) => ({ ...e, annotations: e.annotations.filter((a) => a.id !== id) }));
   }, []);
 
-  const handleManagePendingGroup = useAsyncCallback(async (group: IHubGroup, accept: boolean) => {}, []);
+  const handleManagePendingGroup = useAsyncCallback(async (group: IHubGroup, accept: boolean) => {
+    if (accept) {
+      // const updatedGroup = await acceptGroup(group.id);
+      const updatedGroup = { approved_at: new Date().toString() };
+      setProject((p) => ({ ...p, groups: p.groups.map((g) => (g.id === group.id ? { ...g, approved_at: updatedGroup.approved_at } : g)) }));
+      setSavedProject((p) => ({ ...p, groups: p.groups.map((g) => (g.id === group.id ? { ...g, approved_at: updatedGroup.approved_at } : g)) }));
+    } else {
+      // await removeGroup(group.id);
+      setProject((p) => ({ ...p, groups: p.groups.filter((g) => g.id !== group.id) }));
+      setSavedProject((p) => ({ ...p, groups: p.groups.filter((g) => g.id !== group.id) }));
+    }
+  }, []);
 
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} />,
