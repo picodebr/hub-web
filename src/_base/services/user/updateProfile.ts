@@ -1,8 +1,8 @@
 import { api } from '@/_base/classes/api';
-import { IAuthResponse } from '@/_base/interfaces/auth';
+import { IHubUser } from '@/_base/interfaces/user';
 import IUpdateProfile from '@/_base/interfaces/user/IUpdateProfile';
 
-export const updateProfile = async (params: IUpdateProfile): Promise<IAuthResponse> => {
-  const { data } = await api.post('/update', params);
+export const updateProfile = async (params: IUpdateProfile): Promise<IHubUser> => {
+  const { data } = await api.patch('/me', params);
   return data;
 };

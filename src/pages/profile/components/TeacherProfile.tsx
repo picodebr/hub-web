@@ -1,10 +1,16 @@
+import moment from 'moment';
+
 import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Text, useColorMode } from '@chakra-ui/react';
 import { FiFileText, FiHelpCircle } from 'react-icons/fi';
 import { IoChevronForward } from 'react-icons/io5';
 import { MdOutlinePlayCircleFilled } from 'react-icons/md';
+import { IProfileComponentProps } from './interfaces';
+import { useCustomRouter } from '@/_base/hooks';
 
-export const TeacherProfile: React.FC = () => {
+export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) => {
   const { colorMode } = useColorMode();
+  const router = useCustomRouter();
+
   return (
     <Flex w="100%" display="flex" direction="column" gap="24px">
       <Flex w="100%" h="fit-content" gap="32px" maxH="330px">
@@ -97,20 +103,42 @@ export const TeacherProfile: React.FC = () => {
               <AccordionIcon />
             </AccordionButton>
             <AccordionPanel pb={4} display="flex" gap="8px">
-              <Flex boxShadow="md" bgColor="primary50" borderRadius="10px" w="207px" h="183px" p="12px" direction="column" gap="8px">
-                <Flex direction="row" align="center" gap="4px" color="primary500" fontWeight="500">
-                  <FiFileText />
-                  <Text>Arquivo de texto</Text>
-                </Flex>
-                <Text fontSize="12px">3 dias atrás</Text>
-              </Flex>
-              <Flex boxShadow="md" bgColor="primary50" borderRadius="10px" w="207px" h="183px" p="12px" direction="column" gap="8px">
-                <Flex direction="row" align="center" gap="4px" color="primary500" fontWeight="500">
-                  <FiFileText />
-                  <Text>Arquivo de texto</Text>
-                </Flex>
-                <Text fontSize="12px">3 dias atrás</Text>
-              </Flex>
+              {projects
+                .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+                .map((project) => (
+                  <Flex
+                    key={project.id}
+                    boxShadow="md"
+                    bgColor="primary50"
+                    borderRadius="10px"
+                    w="207px"
+                    h="183px"
+                    p="12px"
+                    direction="column"
+                    gap="8px"
+                  >
+                    <Flex
+                      direction="row"
+                      align="center"
+                      gap="4px"
+                      color="primary500"
+                      fontWeight="500"
+                      cursor="pointer"
+                      transition="all 0.1s"
+                      _hover={{ filter: `brightness(0.9)` }}
+                      onClick={() => router.push(`/projects/${project.id}`)}
+                    >
+                      <FiFileText />
+                      <Text>{project.title}</Text>
+                    </Flex>
+                    <Flex direction="column">
+                      <Text fontSize="11px" fontWeight="500">
+                        Atualizado em
+                      </Text>
+                      <Text fontSize="12px">{moment(project.updated_at).calendar()}</Text>
+                    </Flex>
+                  </Flex>
+                ))}
             </AccordionPanel>
           </AccordionItem>
         </Accordion>

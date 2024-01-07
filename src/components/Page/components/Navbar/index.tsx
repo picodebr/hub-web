@@ -61,7 +61,7 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
         <Flex bg="white" display="column" padding="0 2.5rem" gap="0.5rem" h="fit-content" mt="0.65rem">
           <Flex fontSize="18px" fontWeight="600" flex="1 0 0" color="primary900" justify="space-between" align="center">
             {formatShortName(user?.name || '', true)}
-            <Flex cursor="pointer" transition="all 0.12s" _hover={{ filter: 'brightness(0.7)' }} onClick={() => router.push('/profile')}>
+            <Flex cursor="pointer" transition="all 0.12s" _hover={{ filter: 'brightness(0.7)' }} onClick={() => router.push('/profile?opened=true')}>
               <FiEdit2 size="1rem" color="#98A2B3" />
             </Flex>
           </Flex>

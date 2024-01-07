@@ -4,14 +4,15 @@ import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
-import { Flex, Tooltip } from '@chakra-ui/react';
+import { Flex, Text, Tooltip } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
 
 interface IProps {
   user?: IHubUser;
+  headerLabel?: string;
 }
 
-export const Header: React.FC<IProps> = ({ user }) => {
+export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
   const router = useCustomRouter();
 
   const data = user?.schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
@@ -29,8 +30,18 @@ export const Header: React.FC<IProps> = ({ user }) => {
       bg="white"
       userSelect="none"
       boxShadow="md"
+      position="relative"
     >
       <Logo size="md" />
+      {!!headerLabel && (
+        <Flex position="absolute" top="50%" left="50%" transform="translate(-50%, -50%)">
+          <Tooltip label={`Projeto: ${headerLabel}`}>
+            <Text fontSize="19px" fontWeight="500">
+              {headerLabel}
+            </Text>
+          </Tooltip>
+        </Flex>
+      )}
       <Flex gap="1rem" align="center" fontSize="1.75rem">
         <SelectPicker data={data} value={data[0]?.value} size="sm" style={{ paddingBottom: 5 }} searchable={false} cleanable={false} />
         <Tooltip label="Notificações">

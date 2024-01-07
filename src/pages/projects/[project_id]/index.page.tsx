@@ -185,7 +185,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
 
     const [project, bnccSkills] = await Promise.all([getProject(`${query.project_id}`), getBnccSkills()]);
 
-    return { props: { selectedPage, pageTitle: project.title, project, bnccSkills } };
+    return { props: { selectedPage, headerLabel: project.title, pageTitle: project.title, project, bnccSkills } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

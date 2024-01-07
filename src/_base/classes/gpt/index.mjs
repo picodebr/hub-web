@@ -5,7 +5,7 @@ import { OpenAI } from 'openai';
   const grade = 6;
   const topic = `Biologia`;
   try {
-    const apiKey = `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`;
+    const apiKey = `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`;
     if (!apiKey) throw new Error('Not found api key');
 
     const openai = new OpenAI({ apiKey });

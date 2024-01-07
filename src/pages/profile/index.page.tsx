@@ -1,5 +1,5 @@
 import { GetServerSideProps } from 'next';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Switch, useColorMode } from '@chakra-ui/react';
 import { CircularProgress, CircularProgressLabel } from '@chakra-ui/react';
 import { TeacherProfile } from './components/TeacherProfile';
@@ -12,6 +12,10 @@ import { IHubUser } from '@/_base/interfaces/user';
 import { EditableTextInput } from '@/components/Inputs/EditableText';
 import { DateInput } from '@/components/Inputs/Date';
 import { formatDateInput } from '../signup/index.page';
+import { useAsyncCallback, useAuth, useCustomRouter } from '@/_base/hooks';
+import { getMyProjects } from '@/_base/services/project';
+import { IProject } from '@/_base/interfaces/project';
+import { updateProfile } from '@/_base/services/user';
 
 interface IProps {
   user: IHubUser;
@@ -19,14 +23,48 @@ interface IProps {
 
 const Profile: React.FC<IProps> = ({ user }) => {
   const { colorMode, toggleColorMode } = useColorMode();
+  const [eventIsClicked, setEventIsClicked] = useState(false);
+  const [projects, setProjects] = useState<IProject[]>([]);
 
   const [profile, setProfile] = useState<IHubUser>(user);
+
+  const router = useCustomRouter();
+  const { setUser, user: authUser } = useAuth();
+  const isOpened = useMemo<boolean>(() => !!router.query.opened, [router]);
+
+  useEffect(() => {
+    (async () => {
+      const myProjects = await getMyProjects();
+      setProjects(myProjects);
+    })();
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      const el = document.getElementsByClassName(`my-data-btn`);
+      if (el[0] && isOpened && !eventIsClicked) {
+        (el[0] as any).click();
+        setEventIsClicked(true);
+      }
+    }, 250);
+  }, [isOpened]);
+
+  const handleUpdateProfile = useAsyncCallback(async () => {
+    const updatedProfile = await updateProfile({
+      name: profile.name,
+      username: profile.username,
+      bio: profile.bio || undefined,
+    });
+
+    setProfile((e) => ({ ...e, ...updatedProfile }));
+    setUser({ ...authUser, ...updatedProfile });
+  }, []);
 
   const ComponentUser = user?.role === 'student' ? StudentProfile : TeacherProfile;
 
   return (
     <Flex direction="column" flex="1" gap="24px" overflow="auto">
-      <ComponentUser />
+      <ComponentUser projects={projects} />
       <Flex
         bgColor="white"
         flexDirection="column"
@@ -41,7 +79,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
       >
         <Accordion allowMultiple>
           <AccordionItem border="none" borderRadius="10px">
-            <AccordionButton borderRadius="md">
+            <AccordionButton className="my-data-btn" borderRadius="md">
               <Text flex="1" textAlign="left" padding="0.85rem 0.5rem">
                 Meus dados
               </Text>
@@ -50,15 +88,31 @@ const Profile: React.FC<IProps> = ({ user }) => {
             <AccordionPanel>
               <Flex pb={5} direction="column">
                 <Text>Nome Completo</Text>
-                <EditableTextInput onInputChange={(name) => setProfile((e) => ({ ...e, name }))} value={profile.name} />
+                <EditableTextInput
+                  onInputChange={(name) => setProfile((e) => ({ ...e, name }))}
+                  value={profile.name}
+                  onOk={handleUpdateProfile}
+                  onCancel={() => setProfile((e) => ({ ...e, name: user.name }))}
+                />
               </Flex>
               <Flex pb={5} direction="column">
                 <Text>Nome de Usuário</Text>
-                <EditableTextInput onInputChange={(username) => setProfile((e) => ({ ...e, username }))} value={profile.username} />
+                <EditableTextInput
+                  onInputChange={(username) => setProfile((e) => ({ ...e, username }))}
+                  value={profile.username}
+                  onOk={handleUpdateProfile}
+                  onCancel={() => setProfile((e) => ({ ...e, username: user.username }))}
+                />
               </Flex>
               <Flex pb={5} direction="column">
                 <Text>Biografia</Text>
-                <EditableTextInput placeholder="Biografia" onInputChange={(bio) => setProfile((e) => ({ ...e, bio }))} value={profile.bio || ''} />
+                <EditableTextInput
+                  placeholder="Biografia"
+                  onInputChange={(bio) => setProfile((e) => ({ ...e, bio }))}
+                  value={profile.bio || ''}
+                  onOk={handleUpdateProfile}
+                  onCancel={() => setProfile((e) => ({ ...e, bio: user.bio }))}
+                />
               </Flex>
               <Flex pb={5} direction="column">
                 <Text>E-mail (opcional)</Text>
@@ -66,16 +120,18 @@ const Profile: React.FC<IProps> = ({ user }) => {
                   placeholder="Seu e-mail"
                   onInputChange={(email) => setProfile((e) => ({ ...e, email }))}
                   value={profile.email || ''}
+                  isDisabled
                 />
               </Flex>
-              <Flex pb={5} direction="column">
+              {/* <Flex pb={5} direction="column">
                 <Text>Endereço (opcional)</Text>
                 <EditableTextInput placeholder="Informe seu endereço" />
-              </Flex>
+              </Flex> */}
               <Flex direction="column">
                 <Text>Data de Nascimento</Text>
                 <DateInput
                   value={formatDateInput(profile.birthdate)}
+                  isDisabled
                   onInputChange={(birthdate) => setProfile((e) => ({ ...e, birthdate: birthdate ? new Date(birthdate) : e.birthdate }))}
                 />
               </Flex>

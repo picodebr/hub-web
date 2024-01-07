@@ -32,6 +32,7 @@ import { createAvatar } from '@dicebear/core';
 import { adventurer } from '@dicebear/collection';
 import { Button } from '@chakra-ui/react';
 import { Grid, GridItem } from '@chakra-ui/react';
+import { IProfileComponentProps } from './interfaces';
 
 interface IAvatarOptions {
   skinColor?: string;
@@ -177,7 +178,7 @@ const defaultAvatarOptions = {
   ],
 };
 
-export const StudentProfile: React.FC = () => {
+export const StudentProfile: React.FC<IProfileComponentProps> = () => {
   const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({});
   const avatar = useMemo(() => {
     return createAvatar(adventurer, {

@@ -97,7 +97,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project }) => {
       >
         <Flex direction="column" gap="1rem">
           <Text fontWeight="500" color="gray600">
-            Aceitar o grupo <b>{targetGroup?.display_name}</b> ?
+            {targetGroup?.accept ? 'Aprovar' : 'Recusar'} o grupo <b>{targetGroup?.display_name}</b> ?
           </Text>
         </Flex>
       </SmallModal>
