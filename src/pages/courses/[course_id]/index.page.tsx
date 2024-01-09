@@ -11,12 +11,7 @@ const Courses: React.FC = () => {
   return (
     <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
       <Flex align="center" justify="flex-end" h="fit-content">
-        <Link href="/courses" width="100%">
-          <Flex cursor="pointer" fontWeight="600" color="primary700">
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-            <Text textAlign="left">Voltar</Text>
-          </Flex>
-        </Link>
+        <Link href="/courses" width="100%"></Link>
       </Flex>
       <Flex
         bgColor="white"
