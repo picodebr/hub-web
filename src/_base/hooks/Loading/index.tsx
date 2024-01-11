@@ -67,22 +67,21 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
             <Flex>
               <Image
                 src="/loading/rocket-picode.gif"
-                w="5rem"
-                h="5rem"
-                m="0 3.5rem 3.5rem 0"
-                css={`
-                  animation: letterRotation 1s linear infinite;
+                h="12rem"
+                m="0 1rem -1.5rem 0"
+                // css={`
+                //   animation: letterRotation 1s linear infinite;
 
-                  @keyframes letterRotation {
-                    from {
-                      transform: rotateZ(0deg);
-                    }
+                //   @keyframes letterRotation {
+                //     from {
+                //       transform: rotateZ(0deg);
+                //     }
 
-                    to {
-                      transform: rotateZ(360deg);
-                    }
-                  }
-                `}
+                //     to {
+                //       transform: rotateZ(360deg);
+                //     }
+                //   }
+                // `}
               />
             </Flex>
           </Slide>

@@ -61,7 +61,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     },
     {
       name: 'Suporte',
-      page: 'support',
+      page: 'reports',
       icon: FiHeadphones,
       ref: useRef(),
       tourDescription: `Tem alguma dúvida ou sugestão? Nosso suporte sempre estará disponível para te ajudar.`,

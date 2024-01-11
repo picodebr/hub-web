@@ -1,98 +1,129 @@
 import { GetServerSideProps } from 'next';
-import { useState } from 'react';
-import { FaPlus, FaRegFolder } from 'react-icons/fa';
-import { FiMoreVertical, FiUsers } from 'react-icons/fi';
-import { Header } from 'rsuite';
+import { useMemo, useState } from 'react';
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverBody,
+  Flex,
+  Link,
+  Text,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionIcon,
+  AccordionPanel,
+} from '@chakra-ui/react';
 
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
+import { logError, cookieManager, formatClassGrade } from '@/_base/utils';
+import { TabSwitch } from '@/components/TabSwitch';
+import { listBookCategories } from '@/_base/services/book';
+import { IHubBook, IHubBookCategory } from '@/_base/interfaces/book';
+import { GenericButton } from '@/components/Buttons/Generic';
+import { EmptyPageData } from '@/components/EmptyPageData';
 
-interface IBooks {
-  id: string;
-  title: string;
-  img: string;
+type BookByGrade = Record<string, IHubBook[]>;
+interface IProps {
+  bookCategories: IHubBookCategory[];
 }
 
-const mockBooks: IBooks[] = [
-  {
-    id: '1',
-    title: 'Geografia',
-    img: 'https://www.editoracrv.com.br/img_produtos/99a54fe727fbda27a1c9676f6884298d.jpg',
-  },
-  {
-    id: '2',
-    title: 'Tecnologia',
-    img: 'https://www.editoracrv.com.br/img_produtos/f2dbe7bb6cbf23a82bddbc411a60eaf5.jpg',
-  },
-  {
-    id: '3',
-    title: 'Matemática',
-    img: 'https://portal.utfpr.edu.br/cursos/coordenacoes/graduacao/curitiba/ct-licenciatura-em-matematica/destaques/capalivrodidticaMalu.jpg/@@images/image.jpeg',
-  },
-];
+const Books: React.FC<IProps> = ({ bookCategories }) => {
+  const [selectedCategory, setSelectedCategory] = useState<IHubBookCategory>(bookCategories[0]);
 
-const Books: React.FC = () => {
-  const [myBooks, setMyBooks] = useState<IBooks[]>(mockBooks);
-  return (
+  const handleCategoryView = (key: string) => {
+    const targetCategory = bookCategories.find((e) => e.id === key);
+
+    if (targetCategory) setSelectedCategory(targetCategory);
+  };
+
+  const booksByGrade = useMemo<BookByGrade>(
+    () =>
+      selectedCategory?.books?.reduce((acc, book) => {
+        book.grades.forEach((grade) => {
+          if (acc[grade]?.length) acc[grade].push(book);
+          else acc[grade] = [book];
+        });
+        return acc;
+      }, {} as BookByGrade) || {},
+    [],
+  );
+
+  return !Object.keys(booksByGrade).length ? (
+    <EmptyPageData />
+  ) : (
     <Flex w="100%" h="100%" direction="column" gap="24px">
-      <Flex direction="column" w="100%" bgColor="white" boxShadow="md" p="8px 14px" borderRadius="8px">
-        <Tabs variant="unstyled">
-          <TabList>
-            <Tab _selected={{ color: 'white', bg: 'primary300', borderRadius: '8px' }} fontWeight="600">
-              Aluno
-            </Tab>
-            <Tab _selected={{ color: 'white', bg: 'primary300', borderRadius: '8px' }} fontWeight="600">
-              Professor
-            </Tab>
-            <Tab _selected={{ color: 'white', bg: 'primary300', borderRadius: '8px' }} fontWeight="600">
-              Materiais Complementares
-            </Tab>
-          </TabList>
-          <TabPanels>
-            <TabPanel>Alunos</TabPanel>
-            <TabPanel>Professor</TabPanel>
-            <TabPanel>Complementares</TabPanel>
-          </TabPanels>
-        </Tabs>
-      </Flex>
-      <Flex
-        bgColor="white"
-        direction="column"
-        borderRadius="12px"
-        boxShadow="md"
-        w="100%"
-        h="360px"
-        padding="20px 0"
-        gap="20px"
-        textAlign="left"
-        whiteSpace="nowrap"
-        borderBottom="1px solid gray300"
-      >
-        <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
-          4 ano
-        </Text>
-        <Flex gap="2rem" padding="0 20px">
-          {myBooks.map((book) => (
-            <Flex
-              key={book.id}
-              direction="column"
-              h="100%"
-              w="156px"
-              gap="0.5rem"
-              overflow="hidden"
-              cursor="pointer"
-              _hover={{ filter: 'brightness(0.95)' }}
-            >
-              <Flex backgroundImage={book.img} backgroundSize="cover" backgroundPosition="center" h="203px" w="156px" borderRadius="4px" />
-              <Text>{book.title}</Text>
-              <Flex align="center" gap="1rem"></Flex>
-            </Flex>
-          ))}
-        </Flex>
-      </Flex>
+      {!!bookCategories?.length && (
+        <TabSwitch
+          tabs={bookCategories.map((cat) => ({ isSelected: selectedCategory.id === cat.id, key: cat.id, label: cat.display_name }))}
+          onSwitch={handleCategoryView}
+        />
+      )}
+      <Accordion borderColor="gray300" w="100%" h="100%" gridGap={5}>
+        {Object.keys(booksByGrade).map((grade) => (
+          <AccordionItem bgColor="white" key={grade} borderRadius="12px" border="1px" borderColor="gray300" mb="1rem">
+            <AccordionButton borderRadius="md" h="64px" justifyContent="space-between">
+              <Text>{formatClassGrade(grade)}</Text>
+              <AccordionIcon />
+            </AccordionButton>
+            <AccordionPanel>
+              <Flex gap="2rem" pt="0.5rem">
+                {booksByGrade[grade]?.map((book) => (
+                  <Popover key={book.id + grade}>
+                    <PopoverTrigger>
+                      <Flex
+                        direction="column"
+                        h="100%"
+                        w="156px"
+                        gap="0.5rem"
+                        overflow="hidden"
+                        cursor="pointer"
+                        _hover={{ filter: 'brightness(0.95)' }}
+                      >
+                        <Flex
+                          backgroundImage={book.thumbnail || `/images/book.svg`}
+                          backgroundSize="cover"
+                          backgroundPosition="center"
+                          h="203px"
+                          w="156px"
+                          borderRadius="4px"
+                        />
+                        <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
+                          {book.title}
+                        </Text>
+                      </Flex>
+                    </PopoverTrigger>
+                    <PopoverContent border="none" boxShadow="md" bg="gray50">
+                      <PopoverArrow />
+                      <PopoverBody>
+                        <Flex direction="column" gap="0.5rem">
+                          <Flex w="100%" fontSize="15px" color="gray500" gap="0.25rem">
+                            <Text fontWeight="500" mt="5px">
+                              Título:
+                            </Text>
+                            <Text flex="1" mt="5px">
+                              {book.title}
+                            </Text>
+                            <Link key={book.id} href={book.file} target="_blank" w="fit-content">
+                              <GenericButton label="Visualizar" size="sm" btntype="outline" />
+                            </Link>
+                          </Flex>
+
+                          {!!book.description && (
+                            <Flex w="100%" fontSize="15px" color="gray500" gap="0.25rem">
+                              <Text>{book.description}</Text>
+                            </Flex>
+                          )}
+                        </Flex>
+                      </PopoverBody>
+                    </PopoverContent>
+                  </Popover>
+                ))}
+              </Flex>
+            </AccordionPanel>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </Flex>
   );
 };
@@ -104,10 +135,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
   try {
     cookieManager.updateToken(req);
+    const { results } = await listBookCategories();
 
-    await validateSession();
-
-    return { props: { selectedPage, pageTitle: 'Meus livros' } };
+    return { props: { selectedPage, pageTitle: 'Meus livros', bookCategories: results } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

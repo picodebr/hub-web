@@ -4,6 +4,7 @@ import { IHubTableProps } from './interface';
 export function HubTable<T>({ columns, rows, onRowClick, columnSizes = [] }: IHubTableProps<T>): React.ReactElement {
   return (
     <Flex
+      w="100%"
       direction="column"
       overflow="auto"
       bg="white"
