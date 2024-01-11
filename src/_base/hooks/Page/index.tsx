@@ -5,12 +5,15 @@ import { validateSession } from '@/_base/services/auth';
 import { PageWrapper } from '@/components/Page';
 import { IPageProps } from './interfaces';
 import { useAuth } from '../Auth';
+import { Tour } from 'antd';
+import { useHubTour } from '../HubTour';
 
 const PageContext = createContext({});
 export const usePageContext = () => useContext(PageContext);
 
 export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTitle, selectedPage, showBackButton, headerLabel }) => {
   const { user, setUser } = useAuth();
+  const { isOpen, steps, stopTour, navbar } = useHubTour();
 
   const syncProfile = useCallback(async () => {
     try {
@@ -27,13 +30,21 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTi
   }, []);
 
   return (
-    <PageContext.Provider value={user}>
+    <PageContext.Provider value={{}}>
       <Head>
         <title>{pageTitle}</title>
       </Head>
-      <PageWrapper user={user} selectedPage={selectedPage} showBackButton={showBackButton} headerLabel={headerLabel}>
+      <PageWrapper
+        user={user}
+        selectedPage={selectedPage}
+        showBackButton={showBackButton}
+        headerLabel={headerLabel}
+        isOpen={navbar.isOpen}
+        stopTour={navbar.stopTour}
+      >
         {children}
       </PageWrapper>
+      <Tour open={isOpen} onClose={() => stopTour()} steps={steps} />
     </PageContext.Provider>
   );
 };

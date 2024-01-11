@@ -1,26 +1,108 @@
-import { IconType } from 'react-icons';
-import { FaRegSmile, FaRegStar } from 'react-icons/fa';
+import { Flex, Icon, Image, Img, Progress, Text, useColorMode } from '@chakra-ui/react';
 import { FiCheckCircle, FiEdit2, FiFileText, FiFolder, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
+import { useRef } from 'react';
+import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
+import { Tour, TourProps } from 'antd';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
-import { IHubUser } from '@/_base/interfaces/user';
 import { formatShortName } from '@/_base/utils';
-import { Flex, Icon, Image, Img, Progress, Text, useColorMode } from '@chakra-ui/react';
+import { INavbarProps, MenuItemType } from './interfaces';
+import { GenericButton } from '@/components/Buttons/Generic';
 
-type MenuItemType = { name: string; page: string; icon: IconType };
+export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour }) => {
+  const studentMenuItems: Array<MenuItemType> = [
+    {
+      name: 'Home',
+      page: 'profile',
+      icon: RiHome2Line,
+      ref: useRef(),
+      tourDescription: `Nesta seção, é possível editar suas preferências, visualizar seus certificados e visulizar suas últimas interações na plataforma.`,
+    },
+    { name: 'Cursos', page: 'courses', icon: FaRegStar, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Loja', page: 'store', icon: FiShoppingBag, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Meus Projetos', page: 'code', icon: FiFolder, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Meus Grupos', page: 'groups', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+  ];
 
-interface IProps {
-  page: string;
-  user?: IHubUser;
-}
+  const teacherMenuItems: Array<MenuItemType> = [
+    {
+      name: 'Home',
+      page: 'profile',
+      icon: RiHome2Line,
+      ref: useRef(),
+      tourDescription: `Nesta seção, é possível editar suas preferências, visualizar seus certificados e visulizar suas últimas interações na plataforma.`,
+    },
+    {
+      name: 'Cursos',
+      page: 'courses',
+      icon: FaRegStar,
+      ref: useRef(),
+      tourDescription: `Aqui é onde fica todo o conteúdo de aprendizagem e capacitação Maker.`,
+    },
+    { name: 'Turmas', page: 'classes', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para ver visualizar ou adicionar uma turma.` },
+    {
+      name: 'Loja',
+      page: 'store',
+      icon: FiShoppingBag,
+      ref: useRef(),
+      tourDescription: `Nossa loja onde é possível adquirir produtos exclusivos da PiCode!`,
+    },
+    { name: 'Biblioteca', page: 'library', icon: FiFileText, ref: useRef(), tourDescription: `Aqui é onde fica todo o material gráfico da PiCode.` },
+    {
+      name: 'Comunidade',
+      page: 'community',
+      icon: FaRegSmile,
+      ref: useRef(),
+      tourDescription: `Nossa comunidade exclusiva para alunois e professores Maker`,
+    },
+    {
+      name: 'Suporte',
+      page: 'support',
+      icon: FiHeadphones,
+      ref: useRef(),
+      tourDescription: `Tem alguma dúvida ou sugestão? Nosso suporte sempre estará disponível para te ajudar.`,
+    },
+    { name: 'Eventos', page: 'events', icon: FiList, ref: useRef(), tourDescription: `Clique aqui para ver mais informações sobre nossos eventos.` },
+  ];
 
-export const Navbar: React.FC<IProps> = ({ page, user }) => {
-  const { colorMode } = useColorMode();
   const router = useCustomRouter();
-
+  const { colorMode } = useColorMode();
+  // const { isOpen, stopTour } = useHubTour().navbar;
   const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
+
+  const headerTourSteps: TourProps['steps'] = menuItems.map((e) => ({
+    title: e.name,
+    description: e.tourDescription,
+    target: () => e.ref?.current as any,
+    nextButtonProps: {
+      children: <GenericButton label="Próximo" size="sm" w="100%" />,
+      style: {
+        background: `transparent`,
+        color: `#fff !important`,
+        border: `none`,
+        transition: `all 0`,
+        width: `fit-content`,
+        height: `fit-content`,
+        padding: `0`,
+      },
+    },
+    prevButtonProps: {
+      children: <GenericButton label="Anterior" size="sm" btntype="outline" />,
+      style: {
+        background: `transparent`,
+        color: `#fff !important`,
+        border: `none`,
+        transition: `all 0`,
+        width: `fit-content`,
+        height: `fit-content`,
+        padding: `0`,
+      },
+    },
+  }));
 
   return (
     <Flex
@@ -132,7 +214,7 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
         mb="2rem"
       >
         {menuItems.map((item) => (
-          <Flex key={item.name} w="100%" direction="column" fontWeight="600">
+          <Flex key={item.name} ref={item.ref as any} w="100%" direction="column" fontWeight="600">
             <Flex
               align="center"
               padding="10px 18px"
@@ -151,27 +233,8 @@ export const Navbar: React.FC<IProps> = ({ page, user }) => {
           </Flex>
         ))}
       </Flex>
+
+      <Tour open={isOpen} onClose={() => stopTour()} steps={headerTourSteps} />
     </Flex>
   );
 };
-
-const studentMenuItems: Array<MenuItemType> = [
-  { name: 'Home', page: 'profile', icon: RiHome2Line },
-  { name: 'Cursos', page: 'courses', icon: FaRegStar },
-  { name: 'Loja', page: 'store', icon: FiShoppingBag },
-  { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
-  { name: 'Meus Projetos', page: 'code', icon: FiFolder },
-  { name: 'Meus Grupos', page: 'groups', icon: FiUsers },
-  { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle },
-];
-
-const teacherMenuItems: Array<MenuItemType> = [
-  { name: 'Home', page: 'profile', icon: RiHome2Line },
-  { name: 'Cursos', page: 'courses', icon: FaRegStar },
-  { name: 'Turmas', page: 'classes', icon: FiUsers },
-  { name: 'Loja', page: 'store', icon: FiShoppingBag },
-  { name: 'Biblioteca', page: 'library', icon: FiFileText },
-  { name: 'Comunidade', page: 'community', icon: FaRegSmile },
-  { name: 'Suporte', page: 'support', icon: FiHeadphones },
-  { name: 'Eventos', page: 'events', icon: FiList },
-];

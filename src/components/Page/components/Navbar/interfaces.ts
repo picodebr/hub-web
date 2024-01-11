@@ -1,14 +1,11 @@
+import { IHubUser } from '@/_base/interfaces/user';
+import { IconType } from 'react-icons';
+
+export type MenuItemType = { name: string; page: string; icon: IconType; ref?: any; tourDescription?: string };
+
 export interface INavbarProps {
-  page?: string;
+  page: string;
+  user?: IHubUser;
+  isOpen: boolean;
+  stopTour: () => void;
 }
-
-type MenuItemType = {
-  page?: string;
-  children?: MenuItemType[];
-};
-
-interface MenuItemProps {
-  items: MenuItemType[];
-}
-
-export type MenuItem = Required<MenuItemProps>['items'][number];

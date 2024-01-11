@@ -2,22 +2,14 @@ import { GetServerSideProps } from 'next';
 
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Flex, Link, Progress, Text } from '@chakra-ui/react';
-import { FiChevronLeft, FiLock } from 'react-icons/fi';
+import { Flex, Progress, Text } from '@chakra-ui/react';
+import {  FiLock } from 'react-icons/fi';
 import { useCustomRouter } from '@/_base/hooks';
 
 const Courses: React.FC = () => {
   const router = useCustomRouter();
   return (
     <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
-      <Flex align="center" justify="flex-end" h="fit-content">
-        <Link href="/courses" width="100%">
-          <Flex cursor="pointer" fontWeight="600" color="primary700">
-            <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-            <Text textAlign="left">Voltar</Text>
-          </Flex>
-        </Link>
-      </Flex>
       <Flex
         bgColor="white"
         direction="column"

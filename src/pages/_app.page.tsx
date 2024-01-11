@@ -9,10 +9,12 @@ import { LoadingProvider } from '@/_base/hooks/Loading';
 import { Page } from '@/_base/hooks/Page';
 import { cookieManager } from '@/_base/utils';
 import { globalTheme } from '@/styles/global';
+import { useHubTour } from '@/_base/hooks';
 
 export default function App({ Component, pageProps }: AppProps) {
   const token = cookieManager.getToken();
   api.defaults.headers.authorization = `Bearer ${token}`;
+  const { isOpen, stopTour } = useHubTour().navbar;
 
   return (
     <GoogleOAuthProvider clientId="47490597990-gfmoh1pha85b9qi3b19fg3t75ebb0rm2.apps.googleusercontent.com">

@@ -22,14 +22,14 @@ interface IProps {
 }
 
 const Profile: React.FC<IProps> = ({ user }) => {
-  const { colorMode, toggleColorMode } = useColorMode();
   const [eventIsClicked, setEventIsClicked] = useState(false);
   const [projects, setProjects] = useState<IProject[]>([]);
 
   const [profile, setProfile] = useState<IHubUser>(user);
 
-  const router = useCustomRouter();
+  const { colorMode, toggleColorMode } = useColorMode();
   const { setUser, user: authUser } = useAuth();
+  const router = useCustomRouter();
   const isOpened = useMemo<boolean>(() => !!router.query.opened, [router]);
 
   useEffect(() => {

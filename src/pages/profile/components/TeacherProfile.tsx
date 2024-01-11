@@ -5,15 +5,29 @@ import { FiFileText, FiHelpCircle } from 'react-icons/fi';
 import { IoChevronForward } from 'react-icons/io5';
 import { MdOutlinePlayCircleFilled } from 'react-icons/md';
 import { IProfileComponentProps } from './interfaces';
-import { useCustomRouter } from '@/_base/hooks';
+import { useCustomRouter, useHubTour } from '@/_base/hooks';
+
+type GuideType = { label: string; action: () => void };
 
 export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) => {
   const { colorMode } = useColorMode();
   const router = useCustomRouter();
+  const { navbar } = useHubTour();
+
+  const guides: GuideType[] = [
+    { action: () => navbar.startTour(), label: 'Como navegar pela plataforma?' },
+    { action: () => navbar.startTour(), label: 'Como abrir o livro na plataforma?' },
+    { action: () => navbar.startTour(), label: 'Como criar um novo projeto?' },
+    { action: () => navbar.startTour(), label: 'Como acessar minhas turmas?' },
+    { action: () => navbar.startTour(), label: 'O que fazer se meu aluno esquecer a senha?' },
+    { action: () => navbar.startTour(), label: 'Como começar um novo curso?' },
+    { action: () => navbar.startTour(), label: 'Como entrar em contato com o suporte da PiCode?' },
+    { action: () => navbar.startTour(), label: 'Como pedir um novo produto através da loja?' },
+  ];
 
   return (
     <Flex w="100%" display="flex" direction="column" gap="24px">
-      <Flex w="100%" h="fit-content" gap="32px" maxH="330px">
+      <Flex w="100%" h="fit-content" gap="32px" maxH="330px" minH="330px">
         <Flex
           bg="white"
           p="20px"
@@ -32,23 +46,27 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
               Guia Rápido
             </Flex>
           </Flex>
-          <Flex direction="column" flex="1" gap="20px" overflow="hidden auto">
-            {[
-              'Como abrir o livro na plataforma?',
-              'Como criar um novo projeto?',
-              'Como acessar minhas turmas?',
-              'O que fazer se meu aluno esquecer a senha?',
-              'Como começar um novo curso?',
-              'Como entrar em contato com o suporte da PiCode?',
-              'Como pedir um novo produto através da loja?',
-            ].map((subject) => (
-              <Flex key={subject} align="center" gap="12px" w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
-                <Flex align="center" justify="center" gap="12px" marginBottom="20px" w="100%">
-                  <FiHelpCircle fontSize="24px" color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
-                  <Flex w="100%" fontWeight="500" color="gray700">
-                    {subject}
+          <Flex direction="column" flex="1" overflow="hidden auto">
+            {guides.map((guide) => (
+              <Flex key={guide.label} w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
+                <Flex
+                  onClick={() => guide.action()}
+                  align="center"
+                  gap="12px"
+                  w="100%"
+                  p="10px 4px"
+                  m="7px 0"
+                  borderRadius="md"
+                  cursor="pointer"
+                  _hover={{ bg: `gray100` }}
+                >
+                  <Flex align="center" justify="center" gap="12px" w="100%">
+                    <FiHelpCircle fontSize="24px" color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
+                    <Flex w="100%" fontWeight="500" color="gray700">
+                      {guide.label}
+                    </Flex>
+                    <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
                   </Flex>
-                  <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
                 </Flex>
               </Flex>
             ))}
