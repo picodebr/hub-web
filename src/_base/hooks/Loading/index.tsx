@@ -58,7 +58,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
 
         {loadingConfig.type === 'fullscreen' && (
           <Flex position="absolute" top="50%" left="50%" transform="translate(-50%,-50%)">
-            <Image src="/loading/happy-loading.gif" />
+            <Image src="/loading/rocket-loading.gif" />
           </Flex>
         )}
 
@@ -66,9 +66,9 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
           <Slide direction="bottom" in={loadingConfig.isLoading} style={{ zIndex: 10, justifyContent: 'flex-end', display: 'flex' }}>
             <Flex>
               <Image
-                src="/loading/o-loading.svg"
-                w="4rem"
-                h="4rem"
+                src="/loading/rocket-picode.gif"
+                w="5rem"
+                h="5rem"
                 m="0 3.5rem 3.5rem 0"
                 css={`
                   animation: letterRotation 1s linear infinite;
@@ -104,7 +104,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
               boxShadow="md"
             >
               <Logo size="md"></Logo>
-              <Image src="/loading/happy-loading.gif" />
+              <Image src="/loading/rocket-loading.gif" />
               <Flex h="auto" w="100%" gap="1rem" direction="column">
                 <Flex direction="column" justify="center">
                   {!!user?.name && (

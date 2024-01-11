@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next';
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
 import { Flex, Progress, Text } from '@chakra-ui/react';
-import {  FiLock } from 'react-icons/fi';
+import { FiLock } from 'react-icons/fi';
 import { useCustomRouter } from '@/_base/hooks';
 
 const Courses: React.FC = () => {
