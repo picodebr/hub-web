@@ -14,7 +14,7 @@ import { TbThumbUpFilled } from 'react-icons/tb';
 import { IoMdHeart } from 'react-icons/io';
 import { RiUserStarFill } from 'react-icons/ri';
 
-const Community: React.FC = () => {
+const Assistance: React.FC = () => {
   return (
     <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" gap="32px" overflow="auto">
       {' '}
@@ -155,17 +155,17 @@ const Community: React.FC = () => {
   );
 };
 
-export default Community;
+export default Assistance;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const selectedPage = 'community';
+  const selectedPage = 'assistance';
 
   try {
     cookieManager.updateToken(req);
 
     await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Comunidade', showBackButton: false } };
+    return { props: { selectedPage, pageTitle: 'Suporte PiCode', showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

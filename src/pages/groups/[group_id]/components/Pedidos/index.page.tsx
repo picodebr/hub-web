@@ -1,4 +1,4 @@
-import { Avatar, Button, Divider, Flex, Text } from '@chakra-ui/react';
+import { Avatar, Badge, Button, Divider, Flex, Text } from '@chakra-ui/react';
 import { FaPlus } from 'react-icons/fa';
 
 interface IProps {}
@@ -62,6 +62,9 @@ export const GroupRequests: React.FC<IProps> = () => {
           <Flex color="gray500" fontSize="14px">
             19/11/2023
           </Flex>
+          <Badge bg="yellow.300" color="yellow.700">
+            a caminho
+          </Badge>
         </Flex>
         <Divider></Divider>
         <Flex w="100%" h="auto" p="12px" justify="space-between" align="center">
@@ -74,6 +77,9 @@ export const GroupRequests: React.FC<IProps> = () => {
           <Flex color="gray500" fontSize="14px">
             21/10/2023
           </Flex>
+          <Badge bg="green.300" color="green.700">
+            Entregue
+          </Badge>
         </Flex>
       </Flex>
     </Flex>
