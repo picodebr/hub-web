@@ -8,9 +8,9 @@ import { PlanningPageView, planningPageViews } from './components/interfaces';
 import { TabSwitch } from '@/components/TabSwitch';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
-import { Kanban } from './components/Kanban/index.page';
-import { Gantt } from './components/Gantt/index.page';
-import { Bill } from './components/Bill/index.page';
+import { Kanban } from './components/Kanban';
+import { Gantt } from './components/Gantt';
+import { Bill } from './components/Bill';
 
 interface IProps {}
 

@@ -6,12 +6,12 @@ import { ReactNode, useMemo, useState } from 'react';
 import { logError, cookieManager } from '@/_base/utils';
 import { ProjectPageView, projectPageViews } from './interfaces';
 import { TabSwitch } from '@/components/TabSwitch';
-import { Activities } from './components/Atividades/index.page';
-import { GroupRequests } from './components/Pedidos/index.page';
-import { Planning } from './components/Planejamentos/index.page';
-import { Members } from './components/Membros/index.page';
+import { Activities } from './components/Atividades';
+import { GroupRequests } from './components/Pedidos';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
+import Planning from './components/Planejamentos';
+import { Members } from './components/Membros';
 
 interface IProps {}
 

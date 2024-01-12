@@ -11,10 +11,10 @@ import { addProjectAnnotation, getProject, removeProjectAnnotation, updateProjec
 import { IAddProjectAnnotationParams, IProject } from '@/_base/interfaces/project';
 import { getBnccSkills } from '@/_base/services/user';
 import { IBnccSkill } from '@/_base/interfaces/shared/IBnccSkill';
-import { About } from './components/About/index.page';
-import { Materials } from './components/Materials/index.page';
-import { Annotations } from './components/Annotations/index.page';
-import { Groups } from './components/Groups/index.page';
+import { About } from './components/About';
+import { Materials } from './components/Materials';
+import { Annotations } from './components/Annotations';
+import { Groups } from './components/Groups';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { getPresignedUrl } from '@/_base/services/upload';
