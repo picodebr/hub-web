@@ -33,7 +33,7 @@ import { TextInput } from '@/components/Inputs/Text';
 import { addProject } from '@/_base/services/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 
-const makeRowTableTable = (data: IProject): ProjectTableType => ({
+const makeRowTable = (data: IProject): ProjectTableType => ({
   id: data.id,
   user_avatar: (
     <Avatar name={formatShortName(data.educator.name)} src={data.educator.avatar || undefined} title={data.educator.name} h="40px" w="40px" />
@@ -74,7 +74,7 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
   const [newProject, setNewProject] = useState<IProject | null>(null);
   const [modalStep, setModalStep] = useState<ModalStep>('creation_type');
   const [newProjectSteps, setNewProjectSteps] = useState<IHubProjectStep[]>([]);
-  const [dataProjects, setDataProjects] = useState<ProjectTableType[]>(hubClass.projects.map((project) => makeRowTableTable(project)));
+  const [dataProjects, setDataProjects] = useState<ProjectTableType[]>(hubClass.projects.map((project) => makeRowTable(project)));
 
   const router = useCustomRouter();
   const { user } = useAuth();
@@ -89,67 +89,39 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
       metadata: { steps: newProjectSteps },
     });
     project.educator = user;
-    setDataProjects((e) => [makeRowTableTable(project), ...e]);
+    setDataProjects((e) => [makeRowTable(project), ...e]);
 
     setModalStep('creation_type');
     setNewProjectSteps([]);
     setNewProject(null);
   }, []);
 
-  const students: StudentTableType[] = [
-    {
-      id: '1',
-      name: (
-        <Flex direction="column">
-          <Text color="gray800">Matheus Silva Rodrigues</Text>
-          <Text color="gray500">@mathalegria</Text>
-        </Flex>
-      ),
-      avatar: (<Avatar name="Matheus Silva" title="Matheus Silva Rodrigues" h="40px" w="40px" />) as any,
-      engagement: (
-        <Flex align="center" gap="0.25rem">
-          <Text fontWeight="500">50</Text>
-          <Box borderRadius="50%" color="primary700" fontSize="1.75rem">
-            <IoArrowUpCircleOutline />
-          </Box>
-        </Flex>
-      ),
-      xp: (
-        <Flex align="center" gap="0.25rem">
-          <Text fontWeight="500">180</Text>
-          <Box borderRadius="50%" color="primary300" fontSize="1.75rem">
-            <IoArrowUpCircleOutline />
-          </Box>
-        </Flex>
-      ),
-    },
-    {
-      id: '2',
-      name: (
-        <Flex direction="column">
-          <Text color="gray800">Marina Almeida Santos</Text>
-          <Text color="gray500">@marialmeida</Text>
-        </Flex>
-      ),
-      avatar: (<Avatar name="Marina Almeida" title="Marina Almeida Santos" h="40px" w="40px" />) as any,
-      engagement: (
-        <Flex align="center" gap="0.25rem">
-          <Text fontWeight="500">10</Text>
-          <Box borderRadius="50%" color="primary500" fontSize="1.75rem">
-            <IoArrowUpCircleOutline />
-          </Box>
-        </Flex>
-      ),
-      xp: (
-        <Flex align="center" gap="0.25rem">
-          <Text fontWeight="500">200</Text>
-          <Box borderRadius="50%" color="primary300" fontSize="1.75rem">
-            <IoArrowUpCircleOutline />
-          </Box>
-        </Flex>
-      ),
-    },
-  ];
+  const students: StudentTableType[] = hubClass.students.map((student) => ({
+    id: student.id,
+    name: (
+      <Flex direction="column">
+        <Text color="gray800">{student.name}</Text>
+        <Text color="gray500">@{student.username}</Text>
+      </Flex>
+    ),
+    avatar: (<Avatar name={formatShortName(student.name, true)} title={student.name} h="40px" w="40px" />) as any,
+    engagement: (
+      <Flex align="center" gap="0.25rem">
+        <Text fontWeight="500">0</Text>
+        <Box borderRadius="50%" color="primary700" fontSize="1.75rem">
+          <IoArrowUpCircleOutline />
+        </Box>
+      </Flex>
+    ),
+    xp: (
+      <Flex align="center" gap="0.25rem">
+        <Text fontWeight="500">0</Text>
+        <Box borderRadius="50%" color="primary300" fontSize="1.75rem">
+          <IoArrowUpCircleOutline />
+        </Box>
+      </Flex>
+    ),
+  }));
 
   return (
     <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
@@ -244,6 +216,7 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
         onConfirm={() => setNewProject(null)}
         onCancel={() => setModalStep('man_project_name')}
         okText="Inteligência Artificial"
+        disableOkButton
         cancelText="Manual"
         topIcon="ray"
       >

@@ -179,7 +179,7 @@ const defaultAvatarOptions = {
 };
 
 export const StudentProfile: React.FC<IProfileComponentProps> = () => {
-  const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({});
+  const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({ skinColor: `ccc` });
   const avatar = useMemo(() => {
     return createAvatar(adventurer, {
       size: 200,
@@ -220,7 +220,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
             <Grid templateColumns="repeat(3, 1fr)" templateRows="repeat(3, 1fr)" gap={6}>
               <GridItem w="100%" h="10">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />}>
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Cor da pele
                   </MenuButton>
                   <MenuList>
@@ -255,7 +255,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
               </GridItem>
               <GridItem w="100%" h="10">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />}>
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Cabelos
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -290,7 +290,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
               </GridItem>
               <GridItem w="100%" h="10">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />}>
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Cor do Cabelo
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -325,7 +325,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
               </GridItem>
               <GridItem w="100%" h="10">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />}>
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Olhos
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -360,7 +360,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
               </GridItem>
               <GridItem w="100%" h="10">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />}>
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Sobrancelhas
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -396,7 +396,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
 
               <GridItem w="100%" h="10">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />}>
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Bocas
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -430,7 +430,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                 </Menu>
               </GridItem>
               <GridItem w="100%" h="10">
-                <Flex>
+                <Flex gap="1rem" align="center" justify="center">
                   <Text>Usar óculos?</Text>
                   <Switch
                     value={(avatarOptions.glassesProbability || 0) * 100}
@@ -441,7 +441,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
               {!!avatarOptions.glassesProbability && (
                 <GridItem w="100%" h="10">
                   <Menu>
-                    <MenuButton as={Button} rightIcon={<IoIosArrowDown />}>
+                    <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                       Óculos
                     </MenuButton>
                     <MenuList overflow="hidden auto" h="15rem">

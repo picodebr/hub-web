@@ -33,10 +33,11 @@ const Profile: React.FC<IProps> = ({ user }) => {
   const isOpened = useMemo<boolean>(() => !!router.query.opened, [router]);
 
   useEffect(() => {
-    (async () => {
-      const myProjects = await getMyProjects();
-      setProjects(myProjects);
-    })();
+    if (user.role === `teacher`)
+      (async () => {
+        const myProjects = await getMyProjects();
+        setProjects(myProjects);
+      })();
   }, []);
 
   useEffect(() => {
