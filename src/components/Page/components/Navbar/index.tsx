@@ -178,7 +178,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
                   <Image src="/icons/coin.svg" />
                   <Text marginLeft="6px">28</Text>
                 </Flex>
-                <Flex align="center" justify="center" padding="1rem 0.5rem">
+                <Flex align="center" justify="center" padding="1rem 0.5rem" onClick={() => router.push('/ranking')}>
                   <Image src="/icons/medal.svg" />
                   <Text marginLeft="6px">#17</Text>
                 </Flex>
