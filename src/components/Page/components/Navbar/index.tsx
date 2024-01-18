@@ -1,6 +1,6 @@
 import { Flex, Icon, Image, Img, Progress, Text, useColorMode } from '@chakra-ui/react';
 import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
-import { useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
 import { Tour, TourProps } from 'antd';
@@ -10,8 +10,12 @@ import { dimensions } from '@/styles/global';
 import { formatShortName } from '@/_base/utils';
 import { INavbarProps, MenuItemType } from './interfaces';
 import { GenericButton } from '@/components/Buttons/Generic';
+import { Uploader } from 'rsuite';
+import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
+import { updateProfile } from '@/_base/services/user';
 
 export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour }) => {
+  const [userAvatar, setUserAvatar] = useState(``);
   const studentMenuItems: Array<MenuItemType> = [
     {
       name: 'Home',
@@ -104,6 +108,16 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     },
   }));
 
+  const handleUploadAvatar = useCallback(async (file?: File) => {
+    if (file) {
+      const response = await getPresignedUrl(file.type, 'avatars');
+      await uploadFile(response.link, file);
+
+      const updatedUser = await updateProfile({ avatar: response.path });
+      setUserAvatar(updatedUser.avatar || ``);
+    }
+  }, []);
+
   return (
     <Flex
       direction="column"
@@ -121,22 +135,38 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     >
       <Flex direction="column" gap="2rem">
         <Flex bg={colorMode === 'light' ? 'primary900' : 'primary400'} h="102px" position="relative" borderRadius="10px" minH="102px">
-          <Flex
-            position="absolute"
-            borderRadius="50%"
-            bg="gray300"
-            bottom="-2rem"
-            w="6rem"
-            h="6rem"
-            left="50%"
-            boxShadow=" 0px 4px 6px -2px"
-            transform="translate(-50%, 0)"
-            overflow="hidden"
-            border="4px"
-            borderColor="white"
-          >
-            <Img src={user?.avatar || '/avatars/default.jpeg'} w="100%" h="100%" />
-          </Flex>
+          <Uploader
+            autoUpload={true}
+            accept={`img/*`}
+            draggable={false}
+            action=""
+            fileListVisible={false}
+            onChange={(e) => {
+              handleUploadAvatar(e[0]?.blobFile as File);
+            }}
+            toggleAs={(e) => (
+              <Flex
+                title="Trocar foto de perfil"
+                position="absolute"
+                borderRadius="50%"
+                bg="gray300"
+                bottom="-2rem"
+                w="6rem"
+                h="6rem"
+                left="50%"
+                transform="translate(-50%, 0)"
+                boxShadow=" 0px 4px 6px -2px"
+                overflow="hidden"
+                border="4px"
+                borderColor="white"
+                cursor="pointer"
+                _hover={{ filter: `brightness(0.9)` }}
+                onClick={() => e.onClick(e)}
+              >
+                <Img src={userAvatar || user?.avatar || '/avatars/default.jpeg'} w="100%" h="100%" />
+              </Flex>
+            )}
+          />
         </Flex>
 
         {/* Informações */}
