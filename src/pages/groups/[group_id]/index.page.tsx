@@ -10,8 +10,9 @@ import { Activities } from './components/Atividades';
 import { GroupRequests } from './components/Pedidos';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
-import Planning from './components/Planejamentos';
+import { Planning } from './components/Planejamentos';
 import { Members } from './components/Membros';
+import { getGroupById } from '@/_base/services/group';
 
 interface IProps {}
 
@@ -61,13 +62,15 @@ const GroupPage: React.FC<IProps> = () => {
 
 export default GroupPage;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
   const selectedPage = 'groups';
 
   try {
     cookieManager.updateToken(req);
 
-    return { props: { selectedPage, pageTitle: `Grupo tal` } };
+    const group = await getGroupById(`${query.group_id}`);
+
+    return { props: { selectedPage, pageTitle: group.display_name, group } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

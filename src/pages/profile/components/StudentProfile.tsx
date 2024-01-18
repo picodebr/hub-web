@@ -1,5 +1,5 @@
 import { GetServerSideProps } from 'next';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FaPlus, FaRegFolder } from 'react-icons/fa';
 import { FiHelpCircle, FiMoreVertical, FiUsers } from 'react-icons/fi';
 import { IoIosArrowDown } from 'react-icons/io';
@@ -179,7 +179,9 @@ const defaultAvatarOptions = {
 };
 
 export const StudentProfile: React.FC<IProfileComponentProps> = () => {
-  const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({ skinColor: `ccc` });
+  const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>(
+    (cookieManager.getCookie(`avatar`, true) as IAvatarOptions) || { skinColor: `ccc` },
+  );
   const avatar = useMemo(() => {
     return createAvatar(adventurer, {
       size: 200,
@@ -194,6 +196,11 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
       mouth: [avatarOptions.mouth] as any,
     }).toDataUriSync();
   }, [avatarOptions]);
+
+  useEffect(() => {
+    cookieManager.setCookie(`avatar`, JSON.stringify(avatarOptions));
+  }, [avatarOptions]);
+
   return (
     <Flex w="100%" gap="24px" direction="column">
       <Flex
