@@ -132,6 +132,7 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
         onConfirm={() => submit(handleAddGroup)}
         okText="Criar"
         onCancel={() => setOpenModal(false)}
+        disableOkButton={!data.users?.length || !data.hub_project_class_id || !data.display_name}
         topIcon={'checked'}
       >
         <Flex direction="column" minW="350px" gap="1rem">
@@ -143,39 +144,47 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
             error={errors.display_name}
           />
 
-          <Menu>
-            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />}>
+          <Menu placement="right">
+            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               {availableProjects.find((e) => data.hub_project_class_id === e.id)?.title || `Selecione o projeto`}
             </MenuButton>
-            <MenuList>
-              {availableProjects.map((project) => (
-                <MenuItem key={project.id} onClick={() => handleChangeProject(project.id)}>
-                  {project.title}
-                </MenuItem>
-              ))}
+            <MenuList borderColor="gray300" boxShadow="md">
+              {availableProjects.length ? (
+                availableProjects.map((project) => (
+                  <MenuItem key={project.id} onClick={() => handleChangeProject(project.id)}>
+                    {project.title}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem isDisabled>Nenhum projeto disponível</MenuItem>
+              )}
             </MenuList>
           </Menu>
 
-          <Menu closeOnSelect={false}>
-            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />}>
+          <Menu closeOnSelect={false} placement="right">
+            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               Selecione os membros do grupo
             </MenuButton>
-            <MenuList>
+            <MenuList borderColor="gray300" boxShadow="md">
               <MenuOptionGroup type="checkbox">
-                {availableStudents.map((student) => (
-                  <MenuItemOption
-                    key={student.id}
-                    value={student.id}
-                    onClick={() =>
-                      onInputChange(
-                        `users`,
-                        data.users.find((id) => id === student.id) ? data.users.filter((id) => id !== student.id) : [...data.users, student.id],
-                      )
-                    }
-                  >
-                    {student.name}
-                  </MenuItemOption>
-                ))}
+                {availableStudents.length ? (
+                  availableStudents.map((student) => (
+                    <MenuItemOption
+                      key={student.id}
+                      value={student.id}
+                      onClick={() =>
+                        onInputChange(
+                          `users`,
+                          data.users.find((id) => id === student.id) ? data.users.filter((id) => id !== student.id) : [...data.users, student.id],
+                        )
+                      }
+                    >
+                      {student.name}
+                    </MenuItemOption>
+                  ))
+                ) : (
+                  <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
+                )}
               </MenuOptionGroup>
             </MenuList>
           </Menu>

@@ -1,3 +1,3 @@
-export const planningPageViews = <const>['Planejamentos', 'Kanban', 'GráficodeGantt', 'Orçamentos'];
+export const planningPageViews = <const>['Kanban', 'Gantt', 'Orçamentos'];
 
 export type PlanningPageView = (typeof planningPageViews)[number];

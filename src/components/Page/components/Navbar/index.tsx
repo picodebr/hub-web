@@ -1,5 +1,5 @@
 import { Flex, Icon, Image, Img, Progress, Text, useColorMode } from '@chakra-ui/react';
-import { FiCheckCircle, FiEdit2, FiFileText, FiFolder, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
+import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
 import { useRef } from 'react';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
@@ -23,7 +23,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     { name: 'Cursos', page: 'courses', icon: FaRegStar, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Loja', page: 'store', icon: FiShoppingBag, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    { name: 'Meus Projetos', page: 'code', icon: FiFolder, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    // { name: 'Meus Projetos', page: 'code', icon: FiFolder, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Meus Grupos', page: 'groups', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
   ];
