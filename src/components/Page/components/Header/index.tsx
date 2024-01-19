@@ -6,6 +6,7 @@ import { Logo } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
 import { Flex, Text, Tooltip } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
+import { useState } from 'react';
 
 interface IProps {
   user?: IHubUser;
@@ -14,6 +15,7 @@ interface IProps {
 
 export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
   const router = useCustomRouter();
+  const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
 
   const data = user?.schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
 
@@ -43,7 +45,15 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
         </Flex>
       )}
       <Flex gap="1rem" align="center" fontSize="1.75rem">
-        <SelectPicker data={data} value={data[0]?.value} size="sm" style={{ paddingBottom: 5 }} searchable={false} cleanable={false} />
+        <SelectPicker
+          data={data}
+          value={selectedSchool?.value}
+          size="sm"
+          style={{ paddingBottom: 5 }}
+          searchable={false}
+          cleanable={false}
+          onChange={(e) => setSelectedSchool(data.find((d) => d.value === e))}
+        />
         <Tooltip label="Notificações">
           <Flex cursor="pointer" transition="0.12s" _hover={{ filter: 'brightness(0.7)' }}>
             <FiBell color="#667085" />
