@@ -160,9 +160,9 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
                 overflow="hidden"
                 border="4px"
                 borderColor="white"
-                cursor={user?.role !== `student` ? 'pointer' : undefined}
-                _hover={user?.role !== `student` ? { filter: `brightness(0.9)` } : undefined}
-                onClick={() => (user?.role !== `student` ? e.onClick(e) : {})}
+                cursor={'pointer'}
+                _hover={{ filter: `brightness(0.9)` }}
+                onClick={() => e.onClick(e)}
               >
                 <Img src={userAvatar || user?.avatar || '/avatars/default.jpeg'} w="100%" h="100%" />
               </Flex>
