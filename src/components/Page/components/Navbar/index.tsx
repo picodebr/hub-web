@@ -26,6 +26,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     },
     { name: 'Cursos', page: 'courses', icon: FaRegStar, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Loja', page: 'store', icon: FiShoppingBag, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Biblioteca', page: 'library', icon: FiFileText, ref: useRef(), tourDescription: `Aqui é onde fica todo o material gráfico da PiCode.` },
     { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     // { name: 'Meus Projetos', page: 'code', icon: FiFolder, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Meus Grupos', page: 'groups', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
@@ -159,9 +160,9 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
                 overflow="hidden"
                 border="4px"
                 borderColor="white"
-                cursor="pointer"
-                _hover={{ filter: `brightness(0.9)` }}
-                onClick={() => e.onClick(e)}
+                cursor={user?.role !== `student` ? 'pointer' : undefined}
+                _hover={user?.role !== `student` ? { filter: `brightness(0.9)` } : undefined}
+                onClick={() => (user?.role !== `student` ? e.onClick(e) : {})}
               >
                 <Img src={userAvatar || user?.avatar || '/avatars/default.jpeg'} w="100%" h="100%" />
               </Flex>
