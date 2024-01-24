@@ -1,4 +1,4 @@
-import { Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Skeleton } from '@chakra-ui/react';
+import { Badge, Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Skeleton } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
@@ -127,6 +127,9 @@ const Classes: React.FC = () => {
                   </Link>
                   <AvatarList users={hubClass.students} max={10} />
                 </Flex>
+                <Badge h="fit-content" fontSize="14px" colorScheme="purple">
+                  #{hubClass.code}
+                </Badge>
               </Flex>
               <Popover placement="left">
                 <PopoverTrigger>
