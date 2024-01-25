@@ -1,21 +1,25 @@
 import { Flex, Icon, Image, Img, Progress, Text, useColorMode } from '@chakra-ui/react';
 import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
 import { Tour, TourProps } from 'antd';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
-import { formatShortName } from '@/_base/utils';
+import { cookieManager, formatShortName } from '@/_base/utils';
 import { INavbarProps, MenuItemType } from './interfaces';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { Uploader } from 'rsuite';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
+import { createAvatar } from '@dicebear/core';
+import { IAvatarOptions } from '@/pages/profile/components/interfaces';
+import { adventurer } from '@dicebear/collection';
 
 export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour }) => {
   const [userAvatar, setUserAvatar] = useState(``);
+  const [tempAvatar, setTempAvatar] = useState(``);
   const studentMenuItems: Array<MenuItemType> = [
     {
       name: 'Home',
@@ -119,6 +123,30 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     }
   }, []);
 
+  useEffect(() => {
+    const avatarOptions = cookieManager.getCookie(`avatar`, true) as IAvatarOptions;
+    if (!avatarOptions) return;
+
+    const rawAvatar = createAvatar(adventurer, {
+      size: 200,
+      skinColor: [avatarOptions.skinColor] as any,
+      earrings: [avatarOptions.earrings] as any,
+      eyebrows: [avatarOptions.eyebrows] as any,
+      eyes: [avatarOptions.eyes] as any,
+      glassesProbability: avatarOptions.glassesProbability,
+      glasses: [avatarOptions.glasses] as any,
+      hair: [avatarOptions.hair] as any,
+      hairColor: [avatarOptions.hairColor] as any,
+      mouth: [avatarOptions.mouth] as any,
+    });
+    setTempAvatar(rawAvatar.toDataUriSync());
+  }, []);
+
+  const avatar = useMemo(
+    () => (userAvatar || user?.role === `student` ? tempAvatar || user?.avatar : user?.avatar) || '/avatars/default.jpeg',
+    [tempAvatar, user],
+  );
+
   return (
     <Flex
       direction="column"
@@ -164,7 +192,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
                 _hover={{ filter: `brightness(0.9)` }}
                 onClick={() => e.onClick(e)}
               >
-                <Img src={userAvatar || user?.avatar || '/avatars/default.jpeg'} w="100%" h="100%" />
+                <Img src={avatar} w="100%" h="100%" />
               </Flex>
             )}
           />

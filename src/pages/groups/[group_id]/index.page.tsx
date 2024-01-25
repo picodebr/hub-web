@@ -13,10 +13,13 @@ import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { Planning } from './components/Planejamentos';
 import { Members } from './components/Membros';
 import { getGroupById } from '@/_base/services/group';
+import { IHubGroup } from '@/_base/interfaces/group';
 
-interface IProps {}
+interface IProps {
+  group: IHubGroup;
+}
 
-const GroupPage: React.FC<IProps> = () => {
+const GroupPage: React.FC<IProps> = ({ group }) => {
   const [pageView, setPageView] = useState<ProjectPageView>('Atividades');
 
   const toast = useCustomToast();
@@ -28,10 +31,10 @@ const GroupPage: React.FC<IProps> = () => {
   }, []);
 
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
-    Atividades: <Activities />,
+    Atividades: <Activities group={group} />,
     Planejamentos: <Planning />,
     Pedidos: <GroupRequests />,
-    Membros: <Members />,
+    Membros: <Members group={group} />,
   };
 
   return (
