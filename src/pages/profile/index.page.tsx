@@ -65,7 +65,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
 
   return (
     <Flex direction="column" flex="1" gap="24px" overflow="auto">
-      <ComponentUser projects={projects} />
+      <ComponentUser projects={projects} user={profile} />
       <Flex
         bgColor="white"
         flexDirection="column"
