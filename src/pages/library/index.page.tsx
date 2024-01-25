@@ -53,15 +53,25 @@ const Books: React.FC<IProps> = ({ bookCategories }) => {
           gap="1rem"
           gridTemplateColumns="repeat(auto-fill, minmax(180px, 1fr))"
           gridTemplateRows="minmax(min-content, max-content)"
-          bg="transparentBG"
           padding="2rem"
           borderRadius="md"
           flex="1"
-          backdropFilter="blur(1px)"
         >
           {booksByGrade[user.hub_class?.grade]?.map((book) => (
             <Link key={book.id} target="_blank" href={book.file}>
-              <Flex direction="column" h="100%" w="156px" gap="0.5rem" overflow="hidden" cursor="pointer" _hover={{ filter: 'brightness(0.95)' }}>
+              <Flex
+                direction="column"
+                h="100%"
+                w="156px"
+                gap="0.5rem"
+                overflow="hidden"
+                cursor="pointer"
+                _hover={{ filter: 'brightness(0.95)' }}
+                bg="white"
+                border="1px"
+                borderColor="gray300"
+                borderRadius="md"
+              >
                 <Flex
                   backgroundImage={book.thumbnail || `/images/book.svg`}
                   backgroundSize="cover"
@@ -69,6 +79,7 @@ const Books: React.FC<IProps> = ({ bookCategories }) => {
                   h="203px"
                   w="156px"
                   borderRadius="4px"
+                  p="1rem"
                 />
                 <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
                   {book.title}

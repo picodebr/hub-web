@@ -1,205 +1,53 @@
-import { GetServerSideProps } from 'next';
-import { useEffect, useMemo, useState } from 'react';
-import { FaPlus, FaRegFolder } from 'react-icons/fa';
-import { FiHelpCircle, FiMoreVertical, FiUsers } from 'react-icons/fi';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FiHelpCircle } from 'react-icons/fi';
 import { IoIosArrowDown } from 'react-icons/io';
-import { FaArrowDownLong } from 'react-icons/fa6';
-
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Avatar,
-  AvatarGroup,
-  Box,
-  ButtonGroup,
-  FormControl,
-  FormLabel,
-  Image,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Switch,
-} from '@chakra-ui/react';
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
-import { createAvatar } from '@dicebear/core';
+import { Flex, Img, Text, useUpdateEffect } from '@chakra-ui/react';
+import { Result, ResultConvertOptions, createAvatar } from '@dicebear/core';
 import { adventurer } from '@dicebear/collection';
 import { Button } from '@chakra-ui/react';
 import { Grid, GridItem } from '@chakra-ui/react';
-import { IProfileComponentProps } from './interfaces';
 
-interface IAvatarOptions {
-  skinColor?: string;
-  earrings?: string;
-  eyebrows?: string;
-  eyes?: string;
-  glassesProbability?: number;
-  glasses?: string;
-  mouth?: string;
-  hair?: string;
-  hairColor?: string;
-}
+import { Image, Menu, MenuButton, MenuItem, MenuList, Switch } from '@chakra-ui/react';
+import { cookieManager } from '@/_base/utils';
+import { IAvatarOptions, IProfileComponentProps } from './interfaces';
+import { defaultAvatarOptions } from './utils';
+import { GenericButton } from '@/components/Buttons/Generic';
 
-const defaultAvatarOptions = {
-  skinColor: ['9e5622', '763900', 'ecad80', 'f2d3b1'],
-  earrings: ['variant01', 'variant02', 'variant03', 'variant05', 'variant05', 'variant06'],
-  hair: [
-    'long01',
-    'long02',
-    'long03',
-    'long04',
-    'long05',
-    'long06',
-    'long07',
-    'long08',
-    'long09',
-    'long10',
-    'long11',
-    'long12',
-    'long13',
-    'long14',
-    'long15',
-    'long16',
-    'long17',
-    'long18',
-    'long19',
-    'long20',
-    'long21',
-    'long22',
-    'long23',
-    'long24',
-    'long25',
-    'long26',
-    'short01',
-    'short02',
-    'short03',
-    'short04',
-    'short05',
-    'short06',
-    'short07',
-    'short08',
-    'short09',
-    'short10',
-    'short11',
-    'short12',
-    'short13',
-    'short14',
-    'short15',
-    'short16',
-    'short17',
-    'short18',
-    'short19',
-  ],
-  hairColor: ['0e0e0e', '6a4e35', '796a45', '562306', 'ac6511', 'afafaf', 'b9a05f', 'cb6820', 'e5d7a3', '3ac2c', '85c2c6', '592454', 'ab2a18'],
-  eyebrows: [
-    'variant01',
-    'variant02',
-    'variant03',
-    'variant04',
-    'variant05',
-    'variant06',
-    'variant07',
-    'variant08',
-    'variant09',
-    'variant10',
-    'variant11',
-    'variant12',
-    'variant13',
-    'variant14',
-    'variant15',
-  ],
-  eyes: [
-    'variant01',
-    'variant02',
-    'variant03',
-    'variant04',
-    'variant05',
-    'variant06',
-    'variant07',
-    'variant08',
-    'variant09',
-    'variant10',
-    'variant11',
-    'variant12',
-    'variant13',
-    'variant14',
-    'variant15',
-    'variant16',
-    'variant17',
-    'variant18',
-    'variant19',
-    'variant20',
-    'variant21',
-    'variant22',
-    'variant23',
-    'variant24',
-    'variant25',
-    'variant26',
-  ],
-  glassesProbability: 0,
-  glasses: ['variant01', 'variant02', 'variant03', 'variant04', 'variant05'],
-  mouth: [
-    'variant01',
-    'variant02',
-    'variant03',
-    'variant04',
-    'variant05',
-    'variant06',
-    'variant07',
-    'variant08',
-    'variant09',
-    'variant10',
-    'variant11',
-    'variant12',
-    'variant13',
-    'variant14',
-    'variant15',
-    'variant16',
-    'variant17',
-    'variant18',
-    'variant19',
-    'variant20',
-    'variant21',
-    'variant22',
-    'variant23',
-    'variant24',
-    'variant25',
-    'variant26',
-    'variant27',
-    'variant28',
-    'variant29',
-    'variant30',
-  ],
-};
+export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
+  const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({ skinColor: `ccc` });
+  const [rawAvatar, setRawAvatar] = useState<(Result & ResultConvertOptions) | null>(null);
 
-export const StudentProfile: React.FC<IProfileComponentProps> = () => {
-  const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>(
-    (cookieManager.getCookie(`avatar`, true) as IAvatarOptions) || { skinColor: `ccc` },
-  );
   const avatar = useMemo(() => {
-    return createAvatar(adventurer, {
+    const raw = createAvatar(adventurer, {
       size: 200,
-      skinColor: [avatarOptions.skinColor] as any,
-      earrings: [avatarOptions.earrings] as any,
-      eyebrows: [avatarOptions.eyebrows] as any,
-      eyes: [avatarOptions.eyes] as any,
-      glassesProbability: avatarOptions.glassesProbability,
-      glasses: [avatarOptions.glasses] as any,
-      hair: [avatarOptions.hair] as any,
-      hairColor: [avatarOptions.hairColor] as any,
-      mouth: [avatarOptions.mouth] as any,
-    }).toDataUriSync();
+      skinColor: [avatarOptions?.skinColor] as any,
+      earrings: [avatarOptions?.earrings] as any,
+      eyebrows: [avatarOptions?.eyebrows] as any,
+      eyes: [avatarOptions?.eyes] as any,
+      glassesProbability: avatarOptions?.glassesProbability,
+      glasses: [avatarOptions?.glasses] as any,
+      hair: [avatarOptions?.hair] as any,
+      hairColor: [avatarOptions?.hairColor] as any,
+      mouth: [avatarOptions?.mouth] as any,
+    });
+    setRawAvatar(raw);
+
+    return raw.toDataUriSync();
+  }, [avatarOptions]);
+
+  useUpdateEffect(() => {
+    cookieManager.setCookie(`avatar:uri`, avatar, undefined, false);
+    cookieManager.setCookie(`avatar`, JSON.stringify(avatarOptions));
   }, [avatarOptions]);
 
   useEffect(() => {
-    cookieManager.setCookie(`avatar`, JSON.stringify(avatarOptions));
-  }, [avatarOptions]);
+    const avatarTemp = cookieManager.getCookie(`avatar`, true) as IAvatarOptions;
+    if (avatarTemp?.skinColor) setAvatarOptions(avatarTemp);
+  }, []);
+
+  const downloadAvatar = useCallback(async () => {
+    if (rawAvatar) await rawAvatar?.png().toFile(`${user?.name?.split(` `)[0] || ``} avatar picode`);
+  }, [rawAvatar]);
 
   return (
     <Flex w="100%" gap="24px" direction="column">
@@ -220,8 +68,9 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
           Seu avatar
         </Text>
         <Flex justify="space-between">
-          <Flex direction="column" p="20px" justify="space-between">
+          <Flex direction="column" p="20px" justify="space-between" align="center">
             <Img src={avatar} w="200px" h="200px" alt="Avatar" />
+            <GenericButton label="Download" w="fit-content" btntype="outline" size="xs" onClick={() => !!rawAvatar && downloadAvatar()} />
           </Flex>
           <Flex gap="8px" overflow="visible" align="center">
             <Grid templateColumns="repeat(3, 1fr)" templateRows="repeat(3, 1fr)" gap={6}>
@@ -231,7 +80,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                     Cor da pele
                   </MenuButton>
                   <MenuList>
-                    {defaultAvatarOptions.skinColor.map((skinColor, index) => (
+                    {defaultAvatarOptions.skinColor.map((skinColor) => (
                       <MenuItem
                         key={skinColor}
                         bgColor={avatarOptions.hair === skinColor ? 'lightblue' : undefined}
@@ -260,13 +109,14 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                   </MenuList>
                 </Menu>
               </GridItem>
+
               <GridItem w="100%" h="10">
                 <Menu>
                   <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Cabelos
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
-                    {defaultAvatarOptions.hair.map((hair, index) => (
+                    {defaultAvatarOptions.hair.map((hair) => (
                       <MenuItem
                         key={hair}
                         bgColor={avatarOptions.hair === hair ? 'lightblue' : undefined}
@@ -295,13 +145,14 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                   </MenuList>
                 </Menu>
               </GridItem>
+
               <GridItem w="100%" h="10">
                 <Menu>
                   <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Cor do Cabelo
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
-                    {defaultAvatarOptions.hairColor.map((hairColor, index) => (
+                    {defaultAvatarOptions.hairColor.map((hairColor) => (
                       <MenuItem
                         key={hairColor}
                         bgColor={avatarOptions.hairColor === hairColor ? 'lightblue' : undefined}
@@ -330,13 +181,14 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                   </MenuList>
                 </Menu>
               </GridItem>
+
               <GridItem w="100%" h="10">
                 <Menu>
                   <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Olhos
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
-                    {defaultAvatarOptions.eyes.map((eyes, index) => (
+                    {defaultAvatarOptions.eyes.map((eyes) => (
                       <MenuItem
                         key={eyes}
                         bgColor={avatarOptions.eyes === eyes ? 'lightblue' : undefined}
@@ -365,13 +217,14 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                   </MenuList>
                 </Menu>
               </GridItem>
+
               <GridItem w="100%" h="10">
                 <Menu>
                   <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
                     Sobrancelhas
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
-                    {defaultAvatarOptions.eyebrows.map((eyebrows, index) => (
+                    {defaultAvatarOptions.eyebrows.map((eyebrows) => (
                       <MenuItem
                         key={eyebrows}
                         bgColor={avatarOptions.eyebrows === eyebrows ? 'lightblue' : undefined}
@@ -407,7 +260,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                     Bocas
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
-                    {defaultAvatarOptions.mouth.map((mouth, index) => (
+                    {defaultAvatarOptions.mouth.map((mouth) => (
                       <MenuItem
                         key={mouth}
                         bgColor={avatarOptions.hair === mouth ? 'lightblue' : undefined}
@@ -436,6 +289,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                   </MenuList>
                 </Menu>
               </GridItem>
+
               <GridItem w="100%" h="10">
                 <Flex gap="1rem" align="center" justify="center">
                   <Text>Usar óculos?</Text>
@@ -445,6 +299,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                   />
                 </Flex>
               </GridItem>
+
               {!!avatarOptions.glassesProbability && (
                 <GridItem w="100%" h="10">
                   <Menu>
@@ -452,7 +307,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = () => {
                       Óculos
                     </MenuButton>
                     <MenuList overflow="hidden auto" h="15rem">
-                      {defaultAvatarOptions.glasses.map((glasses, index) => (
+                      {defaultAvatarOptions.glasses.map((glasses) => (
                         <MenuItem
                           key={glasses}
                           bgColor={avatarOptions.glasses === glasses ? 'lightblue' : undefined}
