@@ -4,10 +4,9 @@ import { FiHelpCircle, FiShoppingCart, FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
 
+import { Flex, Image, Text, Checkbox } from '@chakra-ui/react';
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Flex, Image, Text } from '@chakra-ui/react';
-import { Checkbox } from '@chakra-ui/react';
 
 interface IProducts {
   id: string;

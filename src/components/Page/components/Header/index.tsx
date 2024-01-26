@@ -45,7 +45,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
         </Flex>
       )}
       <Flex gap="1rem" align="center" fontSize="1.75rem">
-        <SelectPicker
+        {/* <SelectPicker
           data={data}
           value={selectedSchool?.value}
           size="sm"
@@ -53,7 +53,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
           searchable={false}
           cleanable={false}
           onChange={(e) => setSelectedSchool(data.find((d) => d.value === e))}
-        />
+        /> */}
         <Tooltip label="Notificações">
           <Flex cursor="pointer" transition="0.12s" _hover={{ filter: 'brightness(0.7)' }}>
             <FiBell color="#667085" />
