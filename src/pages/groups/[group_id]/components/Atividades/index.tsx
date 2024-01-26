@@ -14,7 +14,7 @@ interface IProps {
   group: IHubGroup;
 }
 
-export const Activities: React.FC<IProps> = ({ group }) => {
+export const Activities: React.FC<IProps> = () => {
   const [targetStep, setTargetStep] = useState<IHubProjectStep | null>(null);
   const [editorValue, setEditorValue] = useState<EditorState>(EditorState.createEmpty());
 
@@ -53,37 +53,26 @@ export const Activities: React.FC<IProps> = ({ group }) => {
           borderRadius="md"
           flex="1"
         >
-          {group.project?.metadata?.steps
-            ?.sort((a, b) => a.position - b.position)
-            ?.map((step) => (
-              <Flex
-                key={step.position + step.title}
-                w="220px"
-                h="183px"
-                p="12px"
-                gap="4px"
-                display="flex"
-                direction="column"
-                bg="white"
-                borderRadius="10px"
-                border="1px"
-                borderColor="gray300"
-                cursor="pointer"
-                _hover={{ bg: 'gray50' }}
-                onClick={() => setTargetStep(step)}
-              >
-                <Flex flex="1" overflow="hidden" fontSize="12px" color="gray500" mb="0.25rem">
-                  {step.description}
-                </Flex>
-                <Flex align="center" color="primary500" gap="4px" fontWeight="500">
-                  <FiFileText />
-                  {step.title}
-                </Flex>
-                <Text color="gray500" fontSize="13px">
-                  3 dias atrás
-                </Text>
-              </Flex>
-            ))}
+          <Flex
+            w="220px"
+            h="183px"
+            p="12px"
+            gap="4px"
+            display="flex"
+            direction="column"
+            bg="white"
+            borderRadius="10px"
+            border="1px"
+            borderColor="gray300"
+            cursor="pointer"
+            _hover={{ bg: 'gray50' }}
+            onClick={() => setTargetStep({ title: ``, position: 1, description: `` })}
+          >
+            <Flex align="center" color="primary500" gap="4px" fontWeight="500">
+              <FiFileText />
+              Anotações
+            </Flex>
+          </Flex>
         </Grid>
       )}
       {!!targetStep && (

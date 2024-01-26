@@ -1,5 +1,6 @@
 import { IProject } from '../project';
 import { IHubUser } from '../user';
+import { IHubGroupStudentLink } from './IHubGroupStudentLink';
 import { IHubGroupMetadata } from './IHubGroupMetadata';
 
 export interface IHubGroup {
@@ -14,4 +15,5 @@ export interface IHubGroup {
   students: IHubUser[];
   educator: IHubUser | null;
   project: IProject | null;
+  student_links: IHubGroupStudentLink[];
 }

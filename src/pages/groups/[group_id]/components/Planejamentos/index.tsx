@@ -46,12 +46,12 @@ export const Planning: React.FC = () => {
 
   return (
     <Flex flex="1" overflow="auto">
-      <TabSwitch
+      {/* <TabSwitch
         tabs={planningPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
         onSwitch={(view) => setPageView(view as any)}
         currentTabColor="primary600"
         direction="column"
-      />
+      /> */}
       {pageView === `Kanban` ? (
         <DragDropContext onDragEnd={onDragEnd}>
           {state.map((el, ind) => (

@@ -12,10 +12,12 @@ import { cookieManager } from '@/_base/utils';
 import { IAvatarOptions, IProfileComponentProps } from './interfaces';
 import { defaultAvatarOptions } from './utils';
 import { GenericButton } from '@/components/Buttons/Generic';
+import { useAuth } from '@/_base/hooks';
 
 export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({ skinColor: `ccc` });
   const [rawAvatar, setRawAvatar] = useState<(Result & ResultConvertOptions) | null>(null);
+  const { setUser } = useAuth();
 
   const avatar = useMemo(() => {
     const raw = createAvatar(adventurer, {
@@ -38,7 +40,12 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   useUpdateEffect(() => {
     cookieManager.setCookie(`avatar:uri`, avatar, undefined, false);
     cookieManager.setCookie(`avatar`, JSON.stringify(avatarOptions));
+    if (user.role === `student`) setUser({ ...user, avatar });
   }, [avatarOptions]);
+
+  useUpdateEffect(() => {
+    if (user.role === `student`) setUser({ ...user, avatar });
+  }, [avatar]);
 
   useEffect(() => {
     const avatarTemp = cookieManager.getCookie(`avatar`, true) as IAvatarOptions;
