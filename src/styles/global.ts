@@ -31,6 +31,15 @@ export const globalTheme = extendTheme((props) => {
           fontSize: '16px',
           color: '#3f3f3f',
           opacity: props.disabled ? '0.3' : '1',
+          '@media (max-width: 800px)': {
+            '*': { fontSize: '99% !important' },
+          },
+          '@media (max-width: 700px)': {
+            '*': { fontSize: '98% !important' },
+          },
+          '@media (max-width: 600px)': {
+            '*': { fontSize: '97% !important' },
+          },
         },
         'a:hover': {
           textDecoration: 'none!important',

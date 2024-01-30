@@ -220,7 +220,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
             <Text w="fit-content">0</Text>
             <Text w="fit-content">5</Text>
           </Flex>
-          <Progress value={2} rounded={8} flex="1" min={0} max={5} />
+          <Progress value={0} rounded={8} flex="1" min={0} max={5} />
           <Flex
             fontWeight="600"
             marginTop="2.5rem"
@@ -235,26 +235,26 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
               <>
                 <Flex align="center" justify="center" padding="1rem 0.5rem">
                   <Image src="/icons/coin.svg" />
-                  <Text marginLeft="6px">28</Text>
+                  <Text marginLeft="6px">0</Text>
                 </Flex>
                 <Flex align="center" justify="center" padding="1rem 0.5rem" onClick={() => router.push('/ranking')}>
                   <Image src="/icons/medal.svg" />
-                  <Text marginLeft="6px">#17</Text>
+                  <Text marginLeft="6px">#0</Text>
                 </Flex>
                 <Flex align="center" justify="center" padding="1rem 0.5rem">
                   <Image src="/icons/cash.svg" />
-                  <Text marginLeft="6px">48</Text>
+                  <Text marginLeft="6px">0</Text>
                 </Flex>
               </>
             ) : (
               <>
                 <Flex align="center" justify="center" padding="1rem 0.5rem">
                   <Image src="/icons/coin.svg" />
-                  <Text marginLeft="6px">28</Text>
+                  <Text marginLeft="6px">0</Text>
                 </Flex>
                 <Flex cursor="pointer" align="center" justify="center" padding="1rem 0.5rem" onClick={() => router.push('/store')}>
                   <Image src="/icons/cash.svg" />
-                  <Text marginLeft="6px">48</Text>
+                  <Text marginLeft="6px">0</Text>
                 </Flex>
               </>
             )}

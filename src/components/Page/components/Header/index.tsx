@@ -1,23 +1,66 @@
+import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, useUpdateEffect } from '@chakra-ui/react';
+import { SelectPicker } from 'rsuite';
+import { useEffect, useState } from 'react';
+import { create } from 'zustand';
 import { FiBell, FiLogOut } from 'react-icons/fi';
+import { persist } from 'zustand/middleware';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
-import { Flex, Text, Tooltip } from '@chakra-ui/react';
-import { SelectPicker } from 'rsuite';
-import { useState } from 'react';
+import { IHubUserSchool } from '@/_base/interfaces/school';
 
 interface IProps {
   user?: IHubUser;
   headerLabel?: string;
 }
 
+type TargetSchoolHookType = { school: IHubUserSchool | null; setSchool: (school: IHubUserSchool) => void };
+
+// export const useSelectedSchool = create<TargetSchoolHookType>((set) => ({
+//   school: null,
+//   setSchool: (data: IHubUserSchool) => set(() => ({ school: data })),
+// }));
+
+export const useSelectedSchool = create<TargetSchoolHookType>(
+  persist(
+    (set) => ({
+      school: null,
+      setSchool: (data: IHubUserSchool) => set(() => ({ school: data })),
+    }),
+    { name: `context-storage` },
+  ) as any,
+);
+
 export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
-  const router = useCustomRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
 
+  const router = useCustomRouter();
+  const { colorMode } = useColorMode();
+  const { setSchool, school } = useSelectedSchool();
+
   const data = user?.schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
+  useUpdateEffect(() => {
+    setIsLoading(true);
+    const target = user?.schools.find((e) => e.id === selectedSchool?.value);
+
+    if (target) {
+      setSchool(target);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 3000);
+    }
+  }, [selectedSchool]);
+
+  useEffect(() => {
+    const target = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0];
+
+    if (target) {
+      setSchool(target);
+    }
+  }, []);
 
   return (
     <Flex
@@ -45,15 +88,17 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
         </Flex>
       )}
       <Flex gap="1rem" align="center" fontSize="1.75rem">
-        {/* <SelectPicker
-          data={data}
-          value={selectedSchool?.value}
-          size="sm"
-          style={{ paddingBottom: 5 }}
-          searchable={false}
-          cleanable={false}
-          onChange={(e) => setSelectedSchool(data.find((d) => d.value === e))}
-        /> */}
+        {user?.role === `teacher` && (
+          <SelectPicker
+            data={data}
+            value={selectedSchool?.value || school?.id}
+            size="sm"
+            style={{ paddingBottom: 5 }}
+            searchable={false}
+            cleanable={false}
+            onChange={(e) => setSelectedSchool(data.find((d) => d.value === e))}
+          />
+        )}
         <Tooltip label="Notificações">
           <Flex cursor="pointer" transition="0.12s" _hover={{ filter: 'brightness(0.7)' }}>
             <FiBell color="#667085" />
@@ -65,6 +110,36 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
           </Flex>
         </Tooltip>
       </Flex>
+
+      <ScaleFade
+        in={isLoading}
+        style={{
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          bottom: '0',
+          right: '0',
+          background: 'white',
+          backgroundImage: `/patterns/bg-${colorMode}.svg`,
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'cover',
+          height: '100%',
+          width: '100%',
+          pointerEvents: 'none',
+          zIndex: '9999',
+          opacity: isLoading ? `1` : `0`,
+          transition: 'all 0.2s',
+        }}
+      >
+        <Flex height="100%" w="100%" bg="white" bgImg={`/patterns/bg-${colorMode}.svg`} bgRepeat="no-repeat" bgSize="cover">
+          <Flex direction="column" margin="auto" gap="1rem" align="center">
+            <Image src="/loading/rocket-loading.gif" h="100%" borderRadius="1rem" boxShadow="md" />
+            <Text fontSize="24px" mt="-6rem">
+              {selectedSchool?.label}
+            </Text>
+          </Flex>
+        </Flex>
+      </ScaleFade>
     </Flex>
   );
 };

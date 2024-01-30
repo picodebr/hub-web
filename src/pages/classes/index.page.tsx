@@ -16,6 +16,7 @@ import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { InputValueType } from '@/_base/interfaces/shared/InputValueType';
 import { AvatarList } from '@/components/AvatarList';
+import { useSelectedSchool } from '@/components/Page/components/Header';
 
 type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
 
@@ -24,17 +25,18 @@ const Classes: React.FC = () => {
   const [classes, setClasses] = useState<PageDataType<IHubClass>>({ data: [] });
   const [newClass, setNewClass] = useState<IHubClass | null>(null);
   const [modalOpt, setOpenOpt] = useState<ModalType>({});
+  const { school } = useSelectedSchool();
 
-  const getClasses = useAsyncCallback(async () => {
-    const userClasses = await listClasses();
+  const getClasses = useAsyncCallback(async (school_id: string) => {
+    const userClasses = await listClasses(school_id);
 
     setClasses({ _isLoading: false, data: userClasses });
   }, []);
 
   useEffect(() => {
     setClasses(() => ({ data: [{ id: '1' }, { id: '2' }, { id: '3' }] as any, _isLoading: true }));
-    getClasses();
-  }, []);
+    getClasses(school?.hub_school_id || ``);
+  }, [school]);
 
   const handleCheckClassCode = useAsyncCallback(async () => {
     try {
