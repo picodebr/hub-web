@@ -120,44 +120,50 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
               </Text>
               <AccordionIcon />
             </AccordionButton>
-            <AccordionPanel pb={4} display="flex" gap="8px">
-              {projects
-                .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-                .map((project) => (
-                  <Flex
-                    key={project.id}
-                    boxShadow="md"
-                    bgColor="primary50"
-                    borderRadius="10px"
-                    w="207px"
-                    h="183px"
-                    p="12px"
-                    direction="column"
-                    gap="8px"
-                  >
+            {projects?.length ? (
+              <AccordionPanel pb={4} display="flex" gap="8px">
+                {projects
+                  .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+                  .map((project) => (
                     <Flex
-                      direction="row"
-                      align="center"
-                      gap="4px"
-                      color="primary500"
-                      fontWeight="500"
-                      cursor="pointer"
-                      transition="all 0.1s"
-                      _hover={{ filter: `brightness(0.9)` }}
-                      onClick={() => router.push(`/projects/${project.id}`)}
+                      key={project.id}
+                      boxShadow="md"
+                      bgColor="primary50"
+                      borderRadius="10px"
+                      w="207px"
+                      h="183px"
+                      p="12px"
+                      direction="column"
+                      gap="8px"
                     >
-                      <FiFileText />
-                      <Text>{project.title}</Text>
+                      <Flex
+                        direction="row"
+                        align="center"
+                        gap="4px"
+                        color="primary500"
+                        fontWeight="500"
+                        cursor="pointer"
+                        transition="all 0.1s"
+                        _hover={{ filter: `brightness(0.9)` }}
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
+                        <FiFileText />
+                        <Text>{project.title}</Text>
+                      </Flex>
+                      <Flex direction="column">
+                        <Text fontSize="11px" fontWeight="500">
+                          Atualizado em
+                        </Text>
+                        <Text fontSize="12px">{moment(project.updated_at).calendar()}</Text>
+                      </Flex>
                     </Flex>
-                    <Flex direction="column">
-                      <Text fontSize="11px" fontWeight="500">
-                        Atualizado em
-                      </Text>
-                      <Text fontSize="12px">{moment(project.updated_at).calendar()}</Text>
-                    </Flex>
-                  </Flex>
-                ))}
-            </AccordionPanel>
+                  ))}
+              </AccordionPanel>
+            ) : (
+              <AccordionPanel pb={4}>
+                <Text color="gray500">Você ainda não possui nenhum projeto</Text>
+              </AccordionPanel>
+            )}
           </AccordionItem>
         </Accordion>
       </Flex>

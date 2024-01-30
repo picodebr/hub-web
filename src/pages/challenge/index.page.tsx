@@ -1,18 +1,16 @@
 import { LuRocket } from 'react-icons/lu';
 import { GetServerSideProps } from 'next';
-import { useState } from 'react';
+import { Button, Flex, Text } from '@chakra-ui/react';
 import { FaHeart, FaRegClock, FaRegHeart } from 'react-icons/fa';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { Header } from 'rsuite';
 
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Button, Flex, Img, Link, Progress, Text } from '@chakra-ui/react';
+import { CommingSoon } from '@/components/CommingSoon';
 
 const Challenge: React.FC = () => {
   return (
     <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
+      <CommingSoon />
       <Flex align="center" justify="flex-end" h="fit-content"></Flex>
       <Flex
         h="fit-content"

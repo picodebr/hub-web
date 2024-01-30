@@ -1,9 +1,8 @@
 import { GetServerSideProps } from 'next';
-import { useState } from 'react';
+import { Flex, Progress, Text } from '@chakra-ui/react';
 
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Flex, Progress, Text } from '@chakra-ui/react';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 
 interface ICourse {
@@ -18,13 +17,13 @@ const mockCourses: ICourse[] = [
     id: '1',
     img: 'https://assets-global.website-files.com/616d40df2ab95b424def1e10/64678e4b202d786e594d520f_isaac-ilustra-maker.png',
     name: 'Programação',
-    percent: 60,
+    percent: 0,
   },
   {
     id: '2',
     img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR8Q-QYyvLg4l4rvvnacVU7RcU2ey4UDd-h0bfNicuIdyeGGP1y9QcCXdGyXewfsDcHRU&usqp=CAU',
     name: 'Introdução à tecnologia',
-    percent: 10,
+    percent: 0,
   },
   {
     id: '3',
@@ -37,7 +36,6 @@ const mockCourses: ICourse[] = [
 const Courses: React.FC = () => {
   const router = useCustomRouter();
 
-  const [myCourses, setMyCourses] = useState<ICourse[]>(mockCourses);
   return (
     <Flex
       bgColor="white"
@@ -59,7 +57,7 @@ const Courses: React.FC = () => {
         Meus cursos
       </Text>
       <Flex gap="2rem" padding="0 20px">
-        {myCourses.map((course) => (
+        {mockCourses.map((course) => (
           <Flex
             key={course.id}
             direction="column"

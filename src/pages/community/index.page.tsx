@@ -1,23 +1,22 @@
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
-import { Avatar, Button, Divider, Flex, Image, Input, Link, Text, Tooltip } from '@chakra-ui/react';
-import { Checkbox } from '@chakra-ui/react';
-
+import { Avatar, Button, Divider, Flex, Input, Text, Tooltip } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
-import { useState } from 'react';
 import { FiMessageCircle, FiSend, FiThumbsUp } from 'react-icons/fi';
 import { FaPaperclip } from 'react-icons/fa';
-import { HiLightBulb, HiOutlineLightBulb } from 'react-icons/hi2';
+import { HiLightBulb } from 'react-icons/hi2';
 import { MdOutlinePlayCircleFilled } from 'react-icons/md';
 import { TbThumbUpFilled } from 'react-icons/tb';
 import { IoMdHeart } from 'react-icons/io';
 import { RiUserStarFill } from 'react-icons/ri';
 
-const Assistance: React.FC = () => {
+import { validateSession } from '@/_base/services/auth';
+import { logError, cookieManager } from '@/_base/utils';
+import { CommingSoon } from '@/components/CommingSoon';
+
+const Community: React.FC = () => {
   return (
     <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" gap="32px" overflow="auto">
-      {' '}
+      <CommingSoon />
+
       <Flex
         bgColor="white"
         flexDirection="column"
@@ -155,17 +154,17 @@ const Assistance: React.FC = () => {
   );
 };
 
-export default Assistance;
+export default Community;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const selectedPage = 'assistance';
+  const selectedPage = 'community';
 
   try {
     cookieManager.updateToken(req);
 
     await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Suporte PiCode', showBackButton: false } };
+    return { props: { selectedPage, pageTitle: 'Comunidade PiCode', showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

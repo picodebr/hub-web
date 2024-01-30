@@ -80,10 +80,10 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
             <GenericButton label="Download" w="fit-content" btntype="outline" size="xs" onClick={() => !!rawAvatar && downloadAvatar()} />
           </Flex>
           <Flex gap="8px" overflow="visible" align="center">
-            <Grid templateColumns="repeat(3, 1fr)" templateRows="repeat(3, 1fr)" gap={6}>
-              <GridItem w="100%" h="10">
+            <Grid templateColumns="repeat(2, 1fr)" templateRows="repeat(4, 1fr)" gap={3}>
+              <GridItem w="100%">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="9.35rem" h="2rem" fontSize="15px" fontWeight="500">
                     Cor da pele
                   </MenuButton>
                   <MenuList>
@@ -117,9 +117,9 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
                 </Menu>
               </GridItem>
 
-              <GridItem w="100%" h="10">
+              <GridItem w="100%">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="9.35rem" h="2rem" fontSize="15px" fontWeight="500">
                     Cabelos
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -153,9 +153,9 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
                 </Menu>
               </GridItem>
 
-              <GridItem w="100%" h="10">
+              <GridItem w="100%">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="9.35rem" h="2rem" fontSize="15px" fontWeight="500">
                     Cor do Cabelo
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -189,9 +189,9 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
                 </Menu>
               </GridItem>
 
-              <GridItem w="100%" h="10">
+              <GridItem w="100%">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="9.35rem" h="2rem" fontSize="15px" fontWeight="500">
                     Olhos
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -225,9 +225,9 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
                 </Menu>
               </GridItem>
 
-              <GridItem w="100%" h="10">
+              <GridItem w="100%">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="9.35rem" h="2rem" fontSize="15px" fontWeight="500">
                     Sobrancelhas
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -261,9 +261,9 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
                 </Menu>
               </GridItem>
 
-              <GridItem w="100%" h="10">
+              <GridItem w="100%">
                 <Menu>
-                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
+                  <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="9.35rem" h="2rem" fontSize="15px" fontWeight="500">
                     Bocas
                   </MenuButton>
                   <MenuList overflow="hidden auto" h="15rem">
@@ -297,7 +297,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
                 </Menu>
               </GridItem>
 
-              <GridItem w="100%" h="10">
+              <GridItem w="100%">
                 <Flex gap="1rem" align="center" justify="center">
                   <Text>Usar óculos?</Text>
                   <Switch
@@ -308,9 +308,9 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
               </GridItem>
 
               {!!avatarOptions.glassesProbability && (
-                <GridItem w="100%" h="10">
+                <GridItem w="100%">
                   <Menu>
-                    <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="11rem">
+                    <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="9.35rem" h="2rem" fontSize="15px" fontWeight="500">
                       Óculos
                     </MenuButton>
                     <MenuList overflow="hidden auto" h="15rem">
