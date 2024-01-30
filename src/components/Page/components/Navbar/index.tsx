@@ -61,7 +61,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
       page: 'community',
       icon: FaRegSmile,
       ref: useRef(),
-      tourDescription: `Nossa comunidade exclusiva para alunois e professores Maker`,
+      tourDescription: `Nossa comunidade exclusiva para alunos e professores Maker`,
     },
     {
       name: 'Suporte',
