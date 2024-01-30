@@ -1,13 +1,12 @@
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Switch, useColorMode } from '@chakra-ui/react';
-import { CircularProgress, CircularProgressLabel } from '@chakra-ui/react';
+
 import { TeacherProfile } from './components/TeacherProfile';
 import { StudentProfile } from './components/StudentProfile';
-
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Flex, Img, Text } from '@chakra-ui/react';
+import { Flex, Text } from '@chakra-ui/react';
 import { IHubUser } from '@/_base/interfaces/user';
 import { EditableTextInput } from '@/components/Inputs/EditableText';
 import { DateInput } from '@/components/Inputs/Date';
@@ -16,6 +15,7 @@ import { useAsyncCallback, useAuth, useCustomRouter } from '@/_base/hooks';
 import { getMyProjects } from '@/_base/services/project';
 import { IProject } from '@/_base/interfaces/project';
 import { updateProfile } from '@/_base/services/user';
+import { useSelectedSchool } from '@/components/Page/components/Header';
 
 interface IProps {
   user: IHubUser;
@@ -32,13 +32,15 @@ const Profile: React.FC<IProps> = ({ user }) => {
   const router = useCustomRouter();
   const isOpened = useMemo<boolean>(() => !!router.query.opened, [router]);
 
+  const { school } = useSelectedSchool();
+
   useEffect(() => {
-    if (user.role === `teacher`)
+    if (user.role === `teacher` && school?.hub_school_id)
       (async () => {
-        const myProjects = await getMyProjects();
+        const myProjects = school?.id ? await getMyProjects(school?.hub_school_id || ``) : [];
         setProjects(myProjects);
       })();
-  }, []);
+  }, [school]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -161,6 +163,10 @@ const Profile: React.FC<IProps> = ({ user }) => {
               <AccordionIcon />
             </AccordionButton>
             <AccordionPanel pb={4}>
+              <Text color="gray500">Você ainda não possui nenhum certificado</Text>
+            </AccordionPanel>
+
+            {/* <AccordionPanel pb={4}>
               <Flex w="100%" justify="space-between" p="20px" borderTop="1px" borderBottom="1px" borderColor="gray300">
                 <Flex align="center" gap="20px">
                   <Img src="/icons/medal.svg" w="40px" />
@@ -194,7 +200,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
                   <CircularProgressLabel>60%</CircularProgressLabel>
                 </CircularProgress>
               </Flex>
-            </AccordionPanel>
+            </AccordionPanel> */}
           </AccordionItem>
         </Accordion>
       </Flex>
