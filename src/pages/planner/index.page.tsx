@@ -6,6 +6,7 @@ import { uuid } from 'uuidv4';
 
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
+import { CommingSoon } from '@/components/CommingSoon';
 
 type ItemType = { id: string; content: string; avatar: string };
 
@@ -46,6 +47,8 @@ const Planner: React.FC = () => {
 
   return (
     <Flex flex="1" overflow="auto">
+      <CommingSoon />
+
       <DragDropContext onDragEnd={onDragEnd}>
         {state.map((el, ind) => (
           <Droppable key={ind} droppableId={`${ind}`}>

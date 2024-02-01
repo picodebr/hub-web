@@ -12,7 +12,7 @@ const PageContext = createContext({});
 export const usePageContext = () => useContext(PageContext);
 
 export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTitle, selectedPage, showBackButton, headerLabel, user: _user }) => {
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const { isOpen, steps, stopTour, navbar } = useHubTour();
 
   const syncProfile = useCallback(async () => {
@@ -36,7 +36,7 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTi
         <title>{pageTitle}</title>
       </Head>
       <PageWrapper
-        user={user}
+        user={_user}
         selectedPage={selectedPage}
         showBackButton={showBackButton}
         headerLabel={headerLabel}
