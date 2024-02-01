@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { FiClock, FiPlus } from 'react-icons/fi';
 
-import { Badge, Button, Flex, Menu, MenuButton, MenuItem, MenuList, Text } from '@chakra-ui/react';
+import { Badge, Button, Flex, Select, Text } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { cookieManager, logError } from '@/_base/utils';
 import { validateSession } from '@/_base/services/auth';
@@ -10,13 +10,39 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { SmallModal } from '@/components/Modal/Small';
 import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
-import { IoChevronDownCircleOutline } from 'react-icons/io5';
-import { MdOutlineCloudUpload } from 'react-icons/md';
+import { FaPaperclip } from 'react-icons/fa';
+import { Uploader } from 'rsuite';
 
 type MenuItemType = { name: string; ref?: any };
 
-const HubSupport: React.FC = () => {
+interface IFileInputProps {
+  onChange: (files: File[]) => void;
+  fileUrl?: string;
+  type?: 'image' | 'video';
+}
+
+// interface MyUploaderProps {
+//   yourFileInputProps: IFileInputProps;
+// }
+
+// const ImageList: React.FC<{ images: File[] }> = ({ images }) => {
+//   return (
+//     <div>
+//       <h2>Lista de Imagens:</h2>
+//       <ul>
+//         {images.map((image, index) => (
+//           <li key={index}>
+//             <img src={URL.createObjectURL(image)} alt={`Imagem ${index}`} />
+//           </li>
+//         ))}
+//       </ul>
+//     </div>
+//   );
+// };
+
+const HubSupport: React.FC<IFileInputProps> = ({ type, onChange }) => {
   const [newReport, setNewReport] = useState<Record<string, string> | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
 
   const router = useCustomRouter();
   const toast = useCustomToast();
@@ -85,25 +111,41 @@ const HubSupport: React.FC = () => {
         topIcon="warning"
         okText="Reportar"
       >
-        <Flex marginBottom="8px">
-          <Menu>
-            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} w="100%">
-              Assuntos
-            </MenuButton>
-            <MenuList>
-              <MenuItem>Kit / Placas</MenuItem>
-              <MenuItem>Plataforma</MenuItem>
-              <MenuItem>Biblioteca</MenuItem>
-              <MenuItem>Outros</MenuItem>
-            </MenuList>
-          </Menu>
+        <Flex mb="4px">
+          <Text fontWeight="500" color="primary700">
+            Rede de Escola (do usuário abrindo o chamado)
+          </Text>
         </Flex>
-        <TextAreaInput placeholder="Fale sobre o problema..." rows={8} w="20rem" />
-        <Flex w="100%">
-          <Button m="8px 0 8px 0" gap="4px">
-            <MdOutlineCloudUpload />
-            Enviar arquivo
-          </Button>
+        <Flex mb="4px">
+          <Text>Escola (do usuário abrindo o chamado)</Text>
+        </Flex>
+        <Flex marginBottom="8px">
+          <Select placeholder="Assunto">
+            <option value="kits">Kits / Placas</option>
+            <option value="plataform">Plataforma</option>
+            <option value="library">Biblioteca</option>
+            <option value="others">Outros</option>
+          </Select>
+        </Flex>
+        <TextAreaInput placeholder="Fale sobre o problema..." borderColor="gray300" rows={8} w="20rem" />
+        <Flex w="100%" justify="center">
+          <Uploader
+            autoUpload={false}
+            accept={`${type}/*`}
+            draggable
+            action=""
+            multiple
+            onChange={(e) => {
+              onChange(e.map((file) => file.blobFile as File));
+            }}
+            toggleAs={(e) => (
+              <Button w="100%" mt="8px" gap="8px" onClick={() => e.onClick(e)}>
+                <FaPaperclip />
+                Anexar arquivo
+              </Button>
+            )}
+          />
+          {/* <ImageList images={uploadedImages} /> */}
         </Flex>
       </SmallModal>
     </Flex>
