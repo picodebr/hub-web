@@ -5,6 +5,7 @@ import { ILoadingConfig, ILoadingContext, ILoadingProviderProps } from './interf
 import { useAuth } from '../Auth';
 import { Logo } from '@/components/Logo';
 import { formatShortName } from '@/_base/utils';
+import { EMPTY_HUB_USER } from '@/_base/interfaces/user';
 
 const defaultConfig: ILoadingConfig = { isLoading: false, type: 'spinner' };
 
@@ -110,6 +111,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
                     <Flex gap="5px" direction="row">
                       <Text textAlign="center" color="gray900" fontWeight="600" fontSize="20px">
                         {(user.metadata.first_access || 0) > Date.now() - 1000 * 60 ? ` Seja muito bem-vindo(a),` : `Bem-vindo(a) de volta,`}
+
                       </Text>
                       <Text textAlign="center" color="primary300" fontWeight="600" fontSize="20px">
                         {formatShortName(user?.name, true)}
