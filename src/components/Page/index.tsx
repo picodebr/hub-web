@@ -1,11 +1,12 @@
 import { PropsWithChildren } from 'react';
+import { FiChevronLeft } from 'react-icons/fi';
+import { useRouter } from 'next/router';
 
 import { IPageProps } from '@/_base/hooks/Page/interfaces';
 import { Flex, Text, useColorMode } from '@chakra-ui/react';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
-import { FiChevronLeft } from 'react-icons/fi';
-import { useRouter } from 'next/router';
+import { RedefinePass } from './components/RedefinePass';
 
 const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
 
@@ -41,6 +42,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
           <Header user={user} headerLabel={headerLabel} />
           <Flex flex="1" padding="32px" gap="32px" overflow="hidden">
             <Navbar page={selectedPage} user={user} isOpen={isOpen} stopTour={stopTour} />
+            <RedefinePass user={user} />
             <Flex flex="1" height="100%" overflow="hidden" direction="column" position="relative">
               {showBackButton && (
                 <Flex cursor="pointer" fontWeight="600" color="primary700" onClick={() => router.back()} pb="0.5rem" w="fit-content">
