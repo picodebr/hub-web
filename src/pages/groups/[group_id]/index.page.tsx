@@ -54,7 +54,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
 
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Atividades: <Activities group={group} />,
-    Planejamentos: <Planning />,
+    Planejamentos: <Planning group={group} />,
     Pedidos: <GroupRequests handleFinishOrder={handleFinishOrder} handleSave={handleSave} group={group} handleApproveOrder={handleApproveOrder} />,
     Membros: <Members group={group} />,
   };

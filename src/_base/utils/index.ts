@@ -4,6 +4,7 @@ export * from './documentFormatter';
 export * from './formatClassGrade';
 export * from './formatShortName';
 export * from './getFilenameFromUrl';
+export * from './isColorLight';
 export * from './logError';
 export * from './nFormatter';
 export * from './refinePasswordSchema';
