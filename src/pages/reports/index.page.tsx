@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FiClock, FiPlus } from 'react-icons/fi';
 
-import { Badge, Button, Flex, Select, Text } from '@chakra-ui/react';
+import { Badge, Flex, Select, Text } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { cookieManager, logError } from '@/_base/utils';
 import { validateSession } from '@/_base/services/auth';
@@ -10,8 +10,10 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { SmallModal } from '@/components/Modal/Small';
 import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
-import { FaPaperclip } from 'react-icons/fa';
-import { Uploader } from 'rsuite';
+import { ReportPageView, reportPageViews } from './[report_id]/interface';
+
+import { Upload } from 'antd';
+import type { UploadFile, UploadProps } from 'antd';
 
 type MenuItemType = { name: string; ref?: any };
 
@@ -21,28 +23,56 @@ interface IFileInputProps {
   type?: 'image' | 'video';
 }
 
-// interface MyUploaderProps {
-//   yourFileInputProps: IFileInputProps;
-// }
-
-// const ImageList: React.FC<{ images: File[] }> = ({ images }) => {
-//   return (
-//     <div>
-//       <h2>Lista de Imagens:</h2>
-//       <ul>
-//         {images.map((image, index) => (
-//           <li key={index}>
-//             <img src={URL.createObjectURL(image)} alt={`Imagem ${index}`} />
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// };
-
 const HubSupport: React.FC<IFileInputProps> = ({ type, onChange }) => {
   const [newReport, setNewReport] = useState<Record<string, string> | null>(null);
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [pageView, setPageView] = useState<ReportPageView>('Kits / Placas');
+
+  const PageElement: Record<ReportPageView, React.ReactElement> = {
+    'Kits / Placas': (
+      <Flex>
+        <Flex w="100%" flex="1" direction="column">
+          <TextAreaInput label="Qual componente?" placeholder="Digite aqui..." />
+          <TextAreaInput label="Descreva o problema" placeholder="Digite aqui..." />
+          <Text fontSize="13.5px" fontWeight="500" color="gray700">
+            Anexe imagens do problema
+          </Text>
+          <UploadInput />
+        </Flex>
+      </Flex>
+    ),
+    Plataforma: (
+      <Flex>
+        <Flex w="100%" flex="1" direction="column">
+          <TextAreaInput label="Descreva o problema" placeholder="Digite aqui..." />
+          <Text fontSize="13.5px" fontWeight="500" color="gray700">
+            Anexe capturas de tela do problema
+          </Text>
+          <UploadInput />
+        </Flex>
+      </Flex>
+    ),
+    Biblioteca: (
+      <Flex w="100%" flex="1" direction="column">
+        <TextAreaInput label="Qual livro?" placeholder="Digite aqui..." />
+        <TextAreaInput label="Descreva o problema" placeholder="Digite aqui..." />
+        <Text fontSize="13.5px" fontWeight="500" color="gray700">
+          Anexe imagens do problema
+        </Text>
+        <UploadInput />
+      </Flex>
+    ),
+    Outros: (
+      <Flex w="100%" flex="1" direction="column">
+        <TextAreaInput label="Com o que você precisa de suporte?" placeholder="Digite aqui..." />
+        <TextAreaInput label="Descreva o problema" placeholder="Digite aqui..." />
+        <Text fontSize="13.5px" fontWeight="500" color="gray700">
+          Anexe arquivos do problema
+        </Text>
+        <UploadInput />
+      </Flex>
+    ),
+  };
 
   const router = useCustomRouter();
   const toast = useCustomToast();
@@ -111,41 +141,27 @@ const HubSupport: React.FC<IFileInputProps> = ({ type, onChange }) => {
         topIcon="warning"
         okText="Reportar"
       >
-        <Flex mb="4px">
-          <Text fontWeight="500" color="primary700">
-            Rede de Escola (do usuário abrindo o chamado)
-          </Text>
-        </Flex>
-        <Flex mb="4px">
-          <Text>Escola (do usuário abrindo o chamado)</Text>
-        </Flex>
-        <Flex marginBottom="8px">
-          <Select placeholder="Assunto">
-            <option value="kits">Kits / Placas</option>
-            <option value="plataform">Plataforma</option>
-            <option value="library">Biblioteca</option>
-            <option value="others">Outros</option>
-          </Select>
-        </Flex>
-        <TextAreaInput placeholder="Fale sobre o problema..." borderColor="gray300" rows={8} w="20rem" />
-        <Flex w="100%" justify="center">
-          <Uploader
-            autoUpload={false}
-            accept={`${type}/*`}
-            draggable
-            action=""
-            multiple
-            onChange={(e) => {
-              onChange(e.map((file) => file.blobFile as File));
-            }}
-            toggleAs={(e) => (
-              <Button w="100%" mt="8px" gap="8px" onClick={() => e.onClick(e)}>
-                <FaPaperclip />
-                Anexar arquivo
-              </Button>
-            )}
-          />
-          {/* <ImageList images={uploadedImages} /> */}
+        <Flex direction="column" flex="1">
+          <Flex mb="4px">
+            <Text fontWeight="500" color="primary700">
+              Rede de Escola (do usuário abrindo o chamado)
+            </Text>
+          </Flex>
+          <Flex mb="4px">
+            <Text>Escola (do usuário abrindo o chamado)</Text>
+          </Flex>
+          <Flex marginBottom="8px">
+            <Select placeholder="Assunto" value={pageView} onChange={(e) => setPageView(e.target.value as ReportPageView)}>
+              {reportPageViews.map((view) => (
+                <option key={view} value={view}>
+                  {view}
+                </option>
+              ))}
+            </Select>
+          </Flex>
+          <Flex direction="column" flex="1">
+            {PageElement[pageView]}
+          </Flex>
         </Flex>
       </SmallModal>
     </Flex>
@@ -169,4 +185,50 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     return { redirect: { destination: '/login', permanent: false } };
   }
+};
+
+type FileType = Parameters<any>[0];
+
+const UploadInput: React.FC = () => {
+  const [fileList, setFileList] = useState<UploadFile[]>([
+    // {
+    //   uid: '-1',
+    //   name: 'image.png',
+    //   status: 'done',
+    //   url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
+    // },
+  ]);
+
+  const onChange: UploadProps['onChange'] = ({ fileList: newFileList }) => {
+    setFileList(newFileList);
+  };
+
+  const onPreview = async (file: UploadFile) => {
+    let src = file.url as string;
+    if (!src) {
+      src = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL((file as any).originFileObj as any);
+        reader.onload = () => resolve(reader.result as string);
+      });
+    }
+    const image = new Image();
+    image.src = src;
+    const imgWindow = window.open(src);
+    imgWindow?.document.write(image.outerHTML);
+  };
+
+  return (
+    <Flex w="100%" direction="column" gap="4px" mt="8px">
+      <Upload
+        action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
+        listType="picture-card"
+        fileList={fileList}
+        onChange={onChange}
+        onPreview={onPreview}
+      >
+        {fileList.length < 5 && '+ Upload'}
+      </Upload>
+    </Flex>
+  );
 };
