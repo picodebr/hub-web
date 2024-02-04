@@ -131,6 +131,7 @@ const HubSupport: React.FC<IFileInputProps> = ({ type, onChange }) => {
         ]}
       />
       <SmallModal
+        size="2xl"
         title="Reportar erro"
         show={!!newReport}
         onConfirm={() => {
