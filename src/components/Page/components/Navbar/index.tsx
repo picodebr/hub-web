@@ -1,4 +1,4 @@
-import { Flex, Icon, Image, Img, Progress, Text, useColorMode } from '@chakra-ui/react';
+import { Flex, Icon, Image, Img, Text, useColorMode } from '@chakra-ui/react';
 import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
