@@ -88,6 +88,15 @@ const SignUp: React.FC = () => {
     false,
   );
 
+  const removeSpaceFromString = (str: string) =>
+    str
+      .split(' ')
+      .filter((e) => e)
+      .join(' ');
+
+  const usernameRegex = /^[a-zA-Z0-9_-]{0,}$/;
+  const usernameChecker = (value: string, minLength = 8) => usernameRegex.test(value) && removeSpaceFromString(value).length >= minLength;
+
   const handleRegisterUser = useAsyncCallback(
     async () => {
       if (data.password !== data.password_confirmation) {
@@ -106,6 +115,13 @@ const SignUp: React.FC = () => {
       if (!usernameResponse.is_valid) {
         setErrors((e) => ({ ...e, username: 'Nome de usuário já cadastrado' }));
         return;
+      }
+
+      if (!usernameChecker(data.username)) {
+        setErrors((e) => ({
+          ...e,
+          username: 'O nome de usuário pode conter somente letras maiúsculas e minúsculas, números e os caracteres especiais - e _',
+        }));
       }
 
       const signupData = { ...data };

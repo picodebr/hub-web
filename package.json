@@ -26,6 +26,7 @@
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-draft-wysiwyg": "^1.13.8",
     "antd": "^5.12.5",
+    "antd-img-crop": "^4.21.0",
     "axios": "^1.4.0",
     "draft-js": "^0.11.7",
     "framer-motion": "^10.16.4",
