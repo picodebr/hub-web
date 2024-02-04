@@ -38,7 +38,7 @@ export const KanbanColumn: React.FC<IProps> = ({ column, index, group, onItemCli
             p="0.5rem 1rem"
             borderRadius="md"
             fontWeight="500"
-            mb="0.45rem"
+            mb="0.25rem"
           >
             {column.title}
           </Flex>

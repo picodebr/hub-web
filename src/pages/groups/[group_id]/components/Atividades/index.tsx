@@ -61,7 +61,6 @@ export const Activities: React.FC<IProps> = ({ group, setGroup }) => {
           gap="1rem"
           gridTemplateColumns="repeat(auto-fill, minmax(220px, 1fr))"
           gridTemplateRows="minmax(min-content, max-content)"
-          padding="2rem"
           borderRadius="md"
           flex="1"
         >
