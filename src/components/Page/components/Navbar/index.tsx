@@ -1,21 +1,25 @@
 import { Flex, Icon, Image, Img, Progress, Text, useColorMode } from '@chakra-ui/react';
 import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
 import { Tour, TourProps } from 'antd';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
-import { formatShortName } from '@/_base/utils';
+import { cookieManager, formatShortName } from '@/_base/utils';
 import { INavbarProps, MenuItemType } from './interfaces';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { Uploader } from 'rsuite';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
+import { createAvatar } from '@dicebear/core';
+import { IAvatarOptions } from '@/pages/profile/components/interfaces';
+import { adventurer } from '@dicebear/collection';
 
 export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour }) => {
   const [userAvatar, setUserAvatar] = useState(``);
+  const [tempAvatar, setTempAvatar] = useState(``);
   const studentMenuItems: Array<MenuItemType> = [
     {
       name: 'Home',
@@ -26,6 +30,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     },
     { name: 'Cursos', page: 'courses', icon: FaRegStar, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Loja', page: 'store', icon: FiShoppingBag, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Biblioteca', page: 'library', icon: FiFileText, ref: useRef(), tourDescription: `Aqui é onde fica todo o material gráfico da PiCode.` },
     { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     // { name: 'Meus Projetos', page: 'code', icon: FiFolder, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Meus Grupos', page: 'groups', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
@@ -118,22 +123,46 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     }
   }, []);
 
+  useEffect(() => {
+    const avatarOptions = cookieManager.getCookie(`avatar`, true) as IAvatarOptions;
+    if (!avatarOptions) return;
+
+    const rawAvatar = createAvatar(adventurer, {
+      size: 200,
+      skinColor: [avatarOptions.skinColor] as any,
+      earrings: [avatarOptions.earrings] as any,
+      eyebrows: [avatarOptions.eyebrows] as any,
+      eyes: [avatarOptions.eyes] as any,
+      glassesProbability: avatarOptions.glassesProbability,
+      glasses: [avatarOptions.glasses] as any,
+      hair: [avatarOptions.hair] as any,
+      hairColor: [avatarOptions.hairColor] as any,
+      mouth: [avatarOptions.mouth] as any,
+    });
+    setTempAvatar(rawAvatar.toDataUriSync());
+  }, []);
+
+  const avatar = useMemo(
+    () => (userAvatar || user?.role === `student` ? tempAvatar || user?.avatar : user?.avatar) || '/avatars/default.jpeg',
+    [tempAvatar, user],
+  );
+
   return (
     <Flex
       direction="column"
       bg="white"
       minW={dimensions.navbar.width}
       maxW={dimensions.navbar.width}
-      gap="2rem"
+      gap="1rem"
       overflow="hidden"
-      h="100%"
       userSelect="none"
       borderRadius="10px"
       border="1px"
       borderColor="gray300"
       justify="space-between"
+      margin="1.5rem"
     >
-      <Flex direction="column" gap="2rem">
+      <Flex direction="column" gap="1rem">
         <Flex bg={colorMode === 'light' ? 'primary900' : 'primary400'} h="102px" position="relative" borderRadius="10px" minH="102px">
           <Uploader
             autoUpload={true}
@@ -159,18 +188,18 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
                 overflow="hidden"
                 border="4px"
                 borderColor="white"
-                cursor="pointer"
+                cursor={'pointer'}
                 _hover={{ filter: `brightness(0.9)` }}
                 onClick={() => e.onClick(e)}
               >
-                <Img src={userAvatar || user?.avatar || '/avatars/default.jpeg'} w="100%" h="100%" />
+                <Img src={avatar} w="100%" h="100%" />
               </Flex>
             )}
           />
         </Flex>
 
         {/* Informações */}
-        <Flex bg="white" display="column" padding="0 2.5rem" gap="0.5rem" h="fit-content" mt="0.65rem">
+        <Flex bg="white" display="column" padding="0 2.5rem" gap="0.5rem" h="fit-content" mt="1.5rem">
           <Flex fontSize="18px" fontWeight="600" flex="1 0 0" color="primary900" justify="space-between" align="center">
             {formatShortName(user?.name || '', true)}
             <Flex cursor="pointer" transition="all 0.12s" _hover={{ filter: 'brightness(0.7)' }} onClick={() => router.push('/profile?opened=true')}>
@@ -180,52 +209,43 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
           <Flex fontSize="12px" fontWeight="400" color="gray400" h="18px" display="column">
             {user?.email}
           </Flex>
-          <Flex fontSize="1rem" color="gray600" fontWeight="400" marginTop="0.5rem" maxH="8rem" overflow="auto" opacity={user?.bio ? '1' : '0.5'}>
+          <Flex fontSize="13px" color="gray600" fontWeight="400" marginTop="0.5rem" maxH="8rem" overflow="auto" opacity={user?.bio ? '1' : '0.5'}>
             {user?.bio || '.'}
           </Flex>
         </Flex>
 
         {/* Ranking */}
         <Flex bg="white" display="column" padding="0 2.5rem" gap="0.5rem" h="fit-content">
-          <Flex align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
+          {/* <Flex align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
             <Text w="fit-content">0</Text>
             <Text w="fit-content">5</Text>
           </Flex>
-          <Progress value={2} rounded={8} flex="1" min={0} max={5} />
-          <Flex
-            fontWeight="600"
-            marginTop="2.5rem"
-            color="white"
-            borderColor="primary600"
-            bg="primary400"
-            justify="center"
-            borderRadius="10px"
-            w="100%"
-          >
+          <Progress value={0} rounded={8} flex="1" min={0} max={5} /> */}
+          <Flex fontWeight="600" color="white" borderColor="primary600" bg="primary400" justify="center" borderRadius="10px" w="100%">
             {user?.role === 'student' ? (
               <>
                 <Flex align="center" justify="center" padding="1rem 0.5rem">
                   <Image src="/icons/coin.svg" />
-                  <Text marginLeft="6px">28</Text>
+                  <Text marginLeft="6px">0</Text>
                 </Flex>
                 <Flex align="center" justify="center" padding="1rem 0.5rem" onClick={() => router.push('/ranking')}>
                   <Image src="/icons/medal.svg" />
-                  <Text marginLeft="6px">#17</Text>
+                  <Text marginLeft="6px">#0</Text>
                 </Flex>
                 <Flex align="center" justify="center" padding="1rem 0.5rem">
                   <Image src="/icons/cash.svg" />
-                  <Text marginLeft="6px">48</Text>
+                  <Text marginLeft="6px">0</Text>
                 </Flex>
               </>
             ) : (
               <>
                 <Flex align="center" justify="center" padding="1rem 0.5rem">
                   <Image src="/icons/coin.svg" />
-                  <Text marginLeft="6px">28</Text>
+                  <Text marginLeft="6px">0</Text>
                 </Flex>
                 <Flex cursor="pointer" align="center" justify="center" padding="1rem 0.5rem" onClick={() => router.push('/store')}>
                   <Image src="/icons/cash.svg" />
-                  <Text marginLeft="6px">48</Text>
+                  <Text marginLeft="6px">0</Text>
                 </Flex>
               </>
             )}
@@ -254,7 +274,6 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
               _hover={{ outline: '1px solid #3356B7' }}
               bg={page === item.page ? 'primary50' : 'primary50'}
               color={page === item.page ? 'primary900' : 'primary700'}
-              fontSize="1rem"
               onClick={() => router.push(`/${item.page}`)}
             >
               {item.icon && <Icon mr="3" fontSize="16" as={item.icon} />}

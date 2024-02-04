@@ -12,30 +12,75 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { Planning } from './components/Planejamentos';
 import { Members } from './components/Membros';
-import { getGroupById } from '@/_base/services/group';
+import { addOrder, getGroupById, updateGroup } from '@/_base/services/group';
+import { IHubGroup, IHubGroupMetadata, IHubGroupOrder, IHubGroupOrderItem } from '@/_base/interfaces/group';
+import { acceptOrder } from '@/_base/services/group/acceptOrder';
 
-interface IProps {}
+interface IProps {
+  group: IHubGroup;
+}
 
-const GroupPage: React.FC<IProps> = () => {
+const GroupPage: React.FC<IProps> = ({ group: _group }) => {
+  const [group, setGroup] = useState<IHubGroup>(_group);
+  const [savedGroup, setSavedGroup] = useState<IHubGroup>(_group);
   const [pageView, setPageView] = useState<ProjectPageView>('Atividades');
+  const [isLoading, setIsLoading] = useState(false);
 
   const toast = useCustomToast();
 
-  const needSave = useMemo<boolean>(() => false, []);
+  const needSave = useMemo<boolean>(() => JSON.stringify(group) !== JSON.stringify(savedGroup), [group, savedGroup]);
 
-  const handleSave = useAsyncCallback(async () => {
-    toast({ status: 'success', description: 'Grupo salvo' });
+  const handleSaveGroup = useAsyncCallback(
+    async (metadata: IHubGroupMetadata, showToast = true) => {
+      setIsLoading(true);
+      const updatedGroup = await updateGroup({ id: group.id, metadata });
+      showToast && toast({ status: 'success', description: 'Atualizado com sucesso!' });
+
+      setGroup((g) => ({ ...g, ...updatedGroup }));
+      setSavedGroup((g) => ({ ...g, ...updatedGroup }));
+    },
+    [],
+    false,
+    () => {
+      setIsLoading(false);
+    },
+  );
+
+  const handleFinishOrder = useAsyncCallback(async (metadata: IHubGroupOrderItem[]) => {
+    const data = await addOrder({ group_id: group.id, metadata });
+
+    setGroup((e) => ({ ...e, student_links: data.student_links }));
+    setSavedGroup((e) => ({ ...e, student_links: data.student_links }));
+  }, []);
+
+  const handleApproveOrder = useAsyncCallback(async (order: IHubGroupOrder) => {
+    await acceptOrder({ order_id: order.id, group_id: group.id });
+    setGroup((e) => {
+      const res = {
+        ...e,
+        student_links: e.student_links.map((s) => ({
+          ...s,
+          metadata: { orders: s.metadata.orders?.map((o) => (o.id === order.id ? { ...o, approved_at: new Date() } : o)) || [] },
+        })),
+      };
+
+      setSavedGroup(res);
+
+      return res;
+    });
   }, []);
 
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
-    Atividades: <Activities />,
-    Planejamentos: <Planning />,
-    Pedidos: <GroupRequests />,
-    Membros: <Members />,
+    Atividades: <Activities group={group} setGroup={setGroup} />,
+    Planejamentos: <Planning group={group} setGroup={setGroup} />,
+    Pedidos: (
+      <GroupRequests handleFinishOrder={handleFinishOrder} handleSave={handleSaveGroup} group={group} handleApproveOrder={handleApproveOrder} />
+    ),
+    Membros: <Members group={group} />,
   };
 
   return (
-    <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
+    <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflow="hidden" mb="-1rem" pb="1rem">
       <Flex justify="space-between">
         <TabSwitch
           tabs={projectPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
@@ -45,9 +90,10 @@ const GroupPage: React.FC<IProps> = () => {
 
         <GenericButton
           label="Salvar"
-          onClick={handleSave}
+          onClick={() => handleSaveGroup(group.metadata)}
           border="1px"
           borderColor="gray300"
+          isLoading={isLoading}
           bg={needSave ? 'primary500' : 'primary700'}
           color="white"
           boxShadow="sm"

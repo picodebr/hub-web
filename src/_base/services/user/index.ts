@@ -5,6 +5,7 @@ export * from './checkUsername';
 export * from './getBnccSkills';
 export * from './getProfile';
 export * from './recoverPassword';
+export * from './redefinePassword';
 export * from './sendRecoveryToken';
 export * from './signup';
 export * from './updateProfile';

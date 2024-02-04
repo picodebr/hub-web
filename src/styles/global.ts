@@ -1,5 +1,6 @@
 import { extendTheme } from '@chakra-ui/react';
 import 'rsuite/dist/rsuite-no-reset.min.css';
+import '../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
 import { dark, light } from './colors';
 
@@ -27,9 +28,18 @@ export const globalTheme = extendTheme((props) => {
         },
         body: {
           background: '#fff',
-          fontSize: '16px',
+          fontSize: '15px',
           color: '#3f3f3f',
           opacity: props.disabled ? '0.3' : '1',
+          '@media (max-width: 800px)': {
+            '*': { fontSize: '99% !important' },
+          },
+          '@media (max-width: 700px)': {
+            '*': { fontSize: '98% !important' },
+          },
+          '@media (max-width: 600px)': {
+            '*': { fontSize: '97% !important' },
+          },
         },
         'a:hover': {
           textDecoration: 'none!important',
@@ -63,7 +73,7 @@ export const globalTheme = extendTheme((props) => {
 
 export const dimensions = {
   header: {
-    height: '76px',
+    height: '66px',
   },
   navbar: {
     width: '24rem',

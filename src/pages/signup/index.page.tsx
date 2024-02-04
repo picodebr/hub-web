@@ -1,4 +1,3 @@
-import { DatePicker } from '@orange_digital/chakra-datepicker';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Flex } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
@@ -28,9 +27,6 @@ const SizeMapper: Record<SignUpPageStepsType, string> = {
   FORM: 'fit-content',
   FINISH: '23.5rem',
 };
-
-export const formatDateInput = (value?: string | number | Date) =>
-  value ? new Date(new Date(value || 0).getTime() + 600000)?.toISOString().split('T')[0] : '';
 
 const SignUp: React.FC = () => {
   const [step, setStep] = useState<SignUpPageStepsType>('USER_TYPE');
@@ -216,8 +212,4 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     return { props: { selectedPage, pageTitle: 'Cadastro' } };
   }
-};
-
-export const CustomDatePicker: React.FC = () => {
-  return <DatePicker initialValue={new Date()} />;
 };

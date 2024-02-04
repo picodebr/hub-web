@@ -4,10 +4,10 @@ import { FiHelpCircle, FiShoppingCart, FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
 
+import { Flex, Image, Text, Checkbox } from '@chakra-ui/react';
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Flex, Image, Text } from '@chakra-ui/react';
-import { Checkbox } from '@chakra-ui/react';
+import { CommingSoon } from '@/components/CommingSoon';
 
 interface IProducts {
   id: string;
@@ -84,7 +84,8 @@ const Store: React.FC = () => {
   const [myProducts] = useState<IProducts[]>(mockProducts);
   return (
     <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" gap="32px">
-      {' '}
+      <CommingSoon />
+
       <Flex h="60px" w="100%" display="flex" align="center" gap="8px" justify="end">
         <Flex w="280px" h="60px" display="flex" align="center" p="16px 20px" borderRadius="10px" gap="32px" bg="primary400" justify="space-between">
           <Text color="gray500" fontSize="14px">

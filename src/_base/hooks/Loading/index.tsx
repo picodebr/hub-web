@@ -110,7 +110,8 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
                   {!!user?.name && (
                     <Flex gap="5px" direction="row">
                       <Text textAlign="center" color="gray900" fontWeight="600" fontSize="20px">
-                        {user === EMPTY_HUB_USER ? 'Bem-vindo(a),' : 'Bem-vindo(a) de volta,'}
+                        {(user.metadata.first_access || 0) > Date.now() - 1000 * 60 ? ` Seja muito bem-vindo(a),` : `Bem-vindo(a) de volta,`}
+
                       </Text>
                       <Text textAlign="center" color="primary300" fontWeight="600" fontSize="20px">
                         {formatShortName(user?.name, true)}
