@@ -4,4 +4,5 @@ export default interface IUpdateProfile {
   avatar?: string;
   bio?: string;
   school_codes?: string[];
+  kanban?: string;
 }

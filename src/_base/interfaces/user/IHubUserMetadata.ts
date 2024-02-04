@@ -6,4 +6,5 @@ export interface IHubUserMetadata {
   redefine_password?: boolean;
   last_access?: number;
   first_access?: number;
+  kanban?: string;
 }

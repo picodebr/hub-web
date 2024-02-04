@@ -5,12 +5,11 @@ import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPane
 import { TeacherProfile } from './components/TeacherProfile';
 import { StudentProfile } from './components/StudentProfile';
 import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
+import { logError, cookieManager, formatDateInput } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
 import { IHubUser } from '@/_base/interfaces/user';
 import { EditableTextInput } from '@/components/Inputs/EditableText';
 import { DateInput } from '@/components/Inputs/Date';
-import { formatDateInput } from '../signup/index.page';
 import { useAsyncCallback, useAuth, useCustomRouter } from '@/_base/hooks';
 import { getMyProjects } from '@/_base/services/project';
 import { IProject } from '@/_base/interfaces/project';

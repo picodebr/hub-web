@@ -24,18 +24,27 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const [group, setGroup] = useState<IHubGroup>(_group);
   const [savedGroup, setSavedGroup] = useState<IHubGroup>(_group);
   const [pageView, setPageView] = useState<ProjectPageView>('Atividades');
+  const [isLoading, setIsLoading] = useState(false);
 
   const toast = useCustomToast();
 
   const needSave = useMemo<boolean>(() => JSON.stringify(group) !== JSON.stringify(savedGroup), [group, savedGroup]);
 
-  const handleSaveGroup = useAsyncCallback(async (metadata: IHubGroupMetadata, showToast = true) => {
-    const updatedGroup = await updateGroup({ id: group.id, metadata });
-    showToast && toast({ status: 'success', description: 'Atualizado com sucesso!' });
+  const handleSaveGroup = useAsyncCallback(
+    async (metadata: IHubGroupMetadata, showToast = true) => {
+      setIsLoading(true);
+      const updatedGroup = await updateGroup({ id: group.id, metadata });
+      showToast && toast({ status: 'success', description: 'Atualizado com sucesso!' });
 
-    setGroup((g) => ({ ...g, ...updatedGroup }));
-    setSavedGroup((g) => ({ ...g, ...updatedGroup }));
-  }, []);
+      setGroup((g) => ({ ...g, ...updatedGroup }));
+      setSavedGroup((g) => ({ ...g, ...updatedGroup }));
+    },
+    [],
+    false,
+    () => {
+      setIsLoading(false);
+    },
+  );
 
   const handleFinishOrder = useAsyncCallback(async (metadata: IHubGroupOrderItem[]) => {
     const data = await addOrder({ group_id: group.id, metadata });
@@ -71,7 +80,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   };
 
   return (
-    <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
+    <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflow="hidden" mb="-1rem" pb="1rem">
       <Flex justify="space-between">
         <TabSwitch
           tabs={projectPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
@@ -84,6 +93,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
           onClick={() => handleSaveGroup(group.metadata)}
           border="1px"
           borderColor="gray300"
+          isLoading={isLoading}
           bg={needSave ? 'primary500' : 'primary700'}
           color="white"
           boxShadow="sm"

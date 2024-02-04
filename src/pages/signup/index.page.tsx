@@ -28,9 +28,6 @@ const SizeMapper: Record<SignUpPageStepsType, string> = {
   FINISH: '23.5rem',
 };
 
-export const formatDateInput = (value?: string | number | Date) =>
-  value ? new Date(new Date(value || 0).getTime() + 600000)?.toISOString().split('T')[0] : '';
-
 const SignUp: React.FC = () => {
   const [step, setStep] = useState<SignUpPageStepsType>('USER_TYPE');
   const [userType, setUserType] = useState<HubUserType>();
