@@ -4,11 +4,11 @@ import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
 import { Flex, Text } from '@chakra-ui/react';
 import { MdMailOutline } from 'react-icons/md';
-import { formatDateInput } from '../../index.page';
 import { InputHandlerErrorType } from '@/_base/hooks/InputHandler/interfaces';
 import IRegisterUser from '@/_base/interfaces/user/IRegisterUser';
 import { Dispatch, SetStateAction } from 'react';
 import { FiUser } from 'react-icons/fi';
+import { formatDateInput } from '@/_base/utils';
 
 interface IProps {
   isGoogleSignin: boolean;

@@ -28,7 +28,7 @@ export const globalTheme = extendTheme((props) => {
         },
         body: {
           background: '#fff',
-          fontSize: '16px',
+          fontSize: '15px',
           color: '#3f3f3f',
           opacity: props.disabled ? '0.3' : '1',
           '@media (max-width: 800px)': {
@@ -73,7 +73,7 @@ export const globalTheme = extendTheme((props) => {
 
 export const dimensions = {
   header: {
-    height: '76px',
+    height: '66px',
   },
   navbar: {
     width: '24rem',

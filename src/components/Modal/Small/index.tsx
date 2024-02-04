@@ -41,7 +41,7 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
         <ModalHeader fontSize="1rem" p="0.5rem 1rem">
           {title}
         </ModalHeader>
-        {!!onCancel && <ModalCloseButton isDisabled={disableCancelButton} />}
+        {!!onCancel && <ModalCloseButton isDisabled={disableCancelButton} mt="0.25rem" />}
         <ModalBody>{children}</ModalBody>
 
         <ModalFooter p="1rem" justifyContent="center" gap="1rem">

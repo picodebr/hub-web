@@ -1,124 +1,77 @@
 import { GetServerSideProps } from 'next';
-import { useEffect, useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Flex, Image } from '@chakra-ui/react';
-import { uuid } from 'uuidv4';
+import { useEffect, useMemo, useState } from 'react';
 
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { CommingSoon } from '@/components/CommingSoon';
+import { KanbanColumnData, kanbanColumnLabel, kanbanColumns } from '@/components/Kanban/interfaces';
+import { Kanban } from '@/components/Kanban';
+import { IHubUser } from '@/_base/interfaces/user';
+import { Flex } from '@chakra-ui/react';
+import { GenericButton } from '@/components/Buttons/Generic';
+import { MdWarning } from 'react-icons/md';
+import { updateProfile } from '@/_base/services/user';
+import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 
-type ItemType = { id: string; content: string; avatar: string };
+interface IProps {
+  user: IHubUser;
+}
 
-const Planner: React.FC = () => {
-  const [state, setState] = useState<Array<{ title: string; items: ItemType[] }>>([]);
+const Planner: React.FC<IProps> = ({ user }) => {
+  const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+  const [profile, setProfile] = useState<IHubUser>(user);
+  const [savedProfile, setSavedProfile] = useState<IHubUser>(user);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const toast = useCustomToast();
+  const needSave = useMemo<boolean>(() => JSON.stringify(profile) !== JSON.stringify(savedProfile), [profile, savedProfile]);
 
   useEffect(() => {
-    setState([
-      { title: `A Fazer`, items: getItems([`Projeto Maker`, `Aula do Code (Buzzer)`]) },
-      { title: `Em andamento`, items: getItems([`Aula do Code (LED)`, `Cidade inteligente`]) },
-      { title: `Feito`, items: getItems([`Onboarding`, `Componentes da loja`]) },
-    ]);
+    const initialList = user.metadata.kanban
+      ? (JSON.parse(user.metadata.kanban) as KanbanColumnData[])
+      : kanbanColumns.map((column) => ({ type: column, title: kanbanColumnLabel[column], items: [] }));
+
+    setKanbanList(initialList);
+    setIsMounted(true);
   }, []);
 
-  function onDragEnd(result: { source: any; destination: any }) {
-    const { source, destination } = result;
+  const handleUpdateKanbanList = (data: KanbanColumnData[]) => {
+    setKanbanList(data);
+    setProfile((e) => ({ ...e, metadata: { ...e.metadata, kanban: JSON.stringify(data) } }));
+  };
 
-    if (!destination) {
-      return;
-    }
-    const sInd = +source.droppableId;
-    const dInd = +destination.droppableId;
-
-    if (sInd === dInd) {
-      const items = reorder(state[sInd].items, source.index, destination.index) as ItemType[];
-      const newState = [...state];
-      newState[sInd] = { ...newState[sInd], items };
-      setState(newState);
-    } else {
-      const result = move(state[sInd].items, state[dInd].items, source, destination);
-      const newState = [...state];
-      newState[sInd] = { ...newState[sInd], items: result[sInd] };
-      newState[dInd] = { ...newState[dInd], items: result[dInd] };
-
-      setState(newState.filter((group) => group.items.length));
-    }
-  }
+  const handleSaveProfile = useAsyncCallback(
+    async () => {
+      setIsLoading(true);
+      if (!needSave) return;
+      await updateProfile({ kanban: profile.metadata.kanban });
+      setSavedProfile((e) => ({ ...e, metadata: { ...e.metadata, kanban: profile.metadata.kanban } }));
+      toast({ status: 'success', description: 'Atualizado com sucesso!' });
+    },
+    [],
+    false,
+    () => {
+      setIsLoading(false);
+    },
+  );
 
   return (
-    <Flex flex="1" overflow="auto">
-      <CommingSoon />
-
-      <DragDropContext onDragEnd={onDragEnd}>
-        {state.map((el, ind) => (
-          <Droppable key={ind} droppableId={`${ind}`}>
-            {(provided, snapshot) => (
-              <Flex
-                direction="column"
-                ref={provided.innerRef}
-                transition="boxShadow 0.15s"
-                bg="white"
-                margin="0 1rem"
-                padding="0.5rem"
-                borderRadius="md"
-                gap="0.65rem"
-                minW="15rem"
-                boxShadow={snapshot.isDraggingOver ? `lg` : 'md'}
-                {...provided.droppableProps}
-              >
-                <Flex
-                  bg={`primary${ind === 0 ? 700 : ind === 1 ? 800 : 500}`}
-                  color="white"
-                  p="0.5rem 1rem"
-                  borderRadius="md"
-                  fontWeight="500"
-                  mb="0.45rem"
-                >
-                  {el.title}
-                </Flex>
-                {el.items.map((item, index) => (
-                  <Draggable key={item.id} draggableId={item.id} index={index}>
-                    {(provided, snapshot) => (
-                      <Flex
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        border="1px"
-                        borderColor="gray300"
-                        p="1rem 0.875rem"
-                        justify="space-between"
-                        align="center"
-                        w="100%"
-                        gap="0.5rem"
-                        borderRadius="md"
-                        boxShadow={snapshot.isDragging ? `lg` : undefined}
-                        bg="white"
-                      >
-                        {item.content}
-                        <Flex align="center">
-                          <Image borderRadius="50%" h="2.5rem" src={item.avatar} />
-                        </Flex>
-                        {/* <Flex
-                          align="center"
-                          onClick={() => {
-                            const newState = [...state];
-                            newState[ind]?.items.splice(index, 1);
-                            setState(newState.filter((group) => group.items.length));
-                          }}
-                          color="primary500"
-                        >
-                          <FaRegTrashCan />
-                        </Flex> */}
-                      </Flex>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </Flex>
-            )}
-          </Droppable>
-        ))}
-      </DragDropContext>
+    <Flex direction="column" flex="1" gap="1.5rem">
+      <Flex>
+        <GenericButton
+          label="Salvar"
+          onClick={handleSaveProfile}
+          border="1px"
+          borderColor="gray300"
+          isLoading={isLoading}
+          bg={needSave ? 'primary500' : 'primary800'}
+          color="white"
+          boxShadow="sm"
+          _hover={{ filter: 'brightness(0.9)' }}
+          rightIcon={needSave ? <MdWarning /> : undefined}
+        />
+      </Flex>
+      {isMounted && <Kanban initialData={kanbanList} onChange={handleUpdateKanbanList} />}
     </Flex>
   );
 };
@@ -131,42 +84,13 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
-    await validateSession();
+    const user = await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Meus planejamentos', showBackButton: false } };
+    return { props: { selectedPage, pageTitle: 'Meus planejamentos', user, showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
 
     return { redirect: { destination: '/login', permanent: false } };
   }
-};
-
-const getItems = (items: string[]): ItemType[] =>
-  items.map((content) => ({
-    id: uuid(),
-    content,
-    avatar: `/avatars/${Math.random() > 0.5 ? (Math.random() > 0.5 ? 'purple' : 'yellow') : Math.random() > 0.5 ? 'orange' : 'blue'}-character.png`,
-  }));
-
-const reorder = (list: any, startIndex: any, endIndex: any) => {
-  const result = Array.from(list);
-  const [removed] = result.splice(startIndex, 1);
-  result.splice(endIndex, 0, removed);
-
-  return result;
-};
-
-const move = (source: any, destination: any, droppableSource: any, droppableDestination: any) => {
-  const sourceClone = Array.from(source);
-  const destClone = Array.from(destination);
-  const [removed] = sourceClone.splice(droppableSource.index, 1);
-
-  destClone.splice(droppableDestination.index, 0, removed);
-
-  const result: Record<string, ItemType[]> = {};
-  result[droppableSource.droppableId] = sourceClone as ItemType[];
-  result[droppableDestination.droppableId] = destClone as ItemType[];
-
-  return result;
 };

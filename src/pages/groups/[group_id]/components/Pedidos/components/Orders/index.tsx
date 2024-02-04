@@ -26,7 +26,7 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder }
   };
 
   return (
-    <Flex direction="column" gap="24px" overflow="auto">
+    <Flex direction="column" gap="1.5rem" overflow="auto">
       <Flex align="center" justify="flex-end" h="fit-content">
         <Flex
           bgColor="white"
@@ -51,59 +51,101 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder }
           Novo Pedido
         </Flex>
       </Flex>
-      {group.student_links
+
+      {!!group.student_links
         .flatMap((data) => data.metadata.orders?.map((o) => ({ ...o, student: data.user })) || [])
-        .filter((data) => !data.approved_at)
-        .map((order) => (
-          <Flex key={order.id} w="100%" overflow="auto" direction="column" gap="24px" bgColor="warning25" borderRadius="10px" boxShadow="md">
-            <Flex w="100%" h="108px" p="12px 32px" justify="space-between" align="center">
-              <Flex align="center" gap="12px">
-                <Avatar
-                  size="sm"
-                  src="https://images.tcdn.com.br/img/img_prod/650361/10x_cabo_jumper_macho_x_femea_10_cm_de_20_unidades_cada_200_jumpers_no_total_1757_1_20200903185441.jpg"
-                ></Avatar>
-                <Text color="warning700" fontWeight="500">
-                  Solicitação de compra
-                </Text>
+        .filter((data) => !data.approved_at).length && (
+        <Flex
+          direction="column"
+          borderRadius="10px"
+          h="fit-content"
+          border="1px"
+          p="1rem"
+          borderColor="gray300"
+          overflow="hidden"
+          gap="1rem"
+          bgColor="warning25"
+        >
+          {group.student_links
+            .flatMap((data) => data.metadata.orders?.map((o) => ({ ...o, student: data.user })) || [])
+            .filter((data) => !data.approved_at)
+            .map((order) => (
+              <Flex
+                key={order.id}
+                w="100%"
+                overflow="auto"
+                direction="column"
+                _hover={{
+                  boxShadow: `md`,
+                }}
+              >
+                <Flex w="100%" justify="space-between" align="center">
+                  <Flex align="center" gap="12px" w="14rem">
+                    <Avatar
+                      size="sm"
+                      src="https://images.tcdn.com.br/img/img_prod/650361/10x_cabo_jumper_macho_x_femea_10_cm_de_20_unidades_cada_200_jumpers_no_total_1757_1_20200903185441.jpg"
+                    ></Avatar>
+                    <Text color="warning700" fontWeight="500">
+                      Solicitação de compra
+                    </Text>
+                  </Flex>
+                  <Flex color="warning500" fontSize="14px" flex="1" justify="center">
+                    {moment(order.created_at).format(`DD/MM/YYYY`)}
+                  </Flex>
+                  <Flex w={user.role === `teacher` ? undefined : '12rem'} justify="flex-end" gap="0.75rem">
+                    {user.role === `teacher` ? (
+                      <>
+                        <Button bg="success600" color="white" onClick={() => setOrder(order)}>
+                          Aprovar
+                        </Button>
+                        <Button bg="white" color="gray700" border="1px" borderColor="gray300">
+                          Recusar
+                        </Button>
+                      </>
+                    ) : (
+                      <Badge bg="yellow.300" color="yellow.700">
+                        Aguardando aprovação
+                      </Badge>
+                    )}
+                  </Flex>
+                </Flex>
               </Flex>
-              <Flex color="warning500" fontSize="14px">
-                19/11/2023
-              </Flex>
-              <Flex h="100%" align="center" gap="12px">
-                {user.role === `teacher` && (
-                  <>
-                    <Button bg="success600" color="white" onClick={() => setOrder(order)}>
-                      Aprovar
-                    </Button>
-                    <Button bg="white" color="gray700" border="1px" borderColor="gray300">
-                      Recusar
-                    </Button>
-                  </>
-                )}
-              </Flex>
-            </Flex>
-          </Flex>
-        ))}
+            ))}
+        </Flex>
+      )}
 
       {!!group.student_links.flatMap((data) => data.metadata.orders || []).filter((data) => !!data.approved_at)?.length && (
-        <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300">
+        <Flex
+          w="100%"
+          h="auto"
+          p="1rem"
+          display="flex"
+          direction="column"
+          bg="white"
+          borderRadius="10px"
+          border="1px"
+          borderColor="gray300"
+          gap="1rem"
+        >
           {group.student_links
             .flatMap((data) => data.metadata.orders?.map((o) => ({ ...o, student: data.user })) || [])
             .filter((data) => !!data.approved_at)
             .map((order) => (
-              <Flex key={order.id} w="100%" h="auto" p="12px" justify="space-between" align="center">
-                <Flex align="center" gap="12px">
+              <Flex key={order.id} w="100%" h="auto" justify="space-between" align="center">
+                <Flex align="center" gap="12px" w="14rem">
                   <Avatar size="sm" src="https://www.makerhero.com/wp-content/uploads/2017/07/1AC01-9-1-min.jpeg"></Avatar>
                   <Text color="gray700" fontWeight="500">
                     Pedido solicitado
                   </Text>
                 </Flex>
-                <Flex color="gray500" fontSize="14px">
+                <Flex color="gray500" fontSize="14px" flex="1" justify="center">
                   {moment(order.created_at).format(`DD/MM/YYYY`)}
                 </Flex>
-                <Badge bg="yellow.300" color="yellow.700">
-                  Em separação
-                </Badge>
+                <Flex w="12rem" justify="flex-end">
+                  <Badge bg="yellow.300" color="yellow.700">
+                    Em separação
+                  </Badge>
+                </Flex>
               </Flex>
             ))}
         </Flex>

@@ -6,7 +6,7 @@ export const Logo: React.FC<ILogoProps> = ({ size = 'md' }) => {
 
   const sizeMapper = {
     sm: '2rem',
-    md: '3rem',
+    md: '2.875rem',
     lg: '4rem',
     xl: '5.5rem',
     '2xl': '7rem',

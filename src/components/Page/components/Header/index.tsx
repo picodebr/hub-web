@@ -69,7 +69,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
       w="100%"
       alignItems="center"
       justifyContent="space-between"
-      padding="0 112px"
+      padding="0 2rem"
       borderRadius="0 0 0.4rem 0.4rem"
       borderColor="primary"
       bg="white"

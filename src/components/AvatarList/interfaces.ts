@@ -4,4 +4,6 @@ export interface IAvatarListProps {
   users: IHubUser[];
   max?: number;
   emptyMessage?: string;
+  color?: string;
+  showMessage?: boolean;
 }
