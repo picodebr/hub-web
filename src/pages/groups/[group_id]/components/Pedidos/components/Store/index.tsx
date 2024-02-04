@@ -188,7 +188,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
           <Flex pt="24px" pb="24px" w="100%" justify="flex-end" align="center" gap="4px">
             <Image src="/icons/cash.svg" width="60px" />
             <Text fontSize="50px" fontWeight="700" color="primary900">
-              150
+              {cart.reduce((acc, { price, quantity }) => (acc += price * quantity), 0)}
             </Text>
           </Flex>
           <Flex direction="column" gap="1.35rem">
@@ -226,11 +226,12 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
                 w="fit-content"
                 margin="auto"
                 cursor="pointer"
+                fontSize="14px"
                 _hover={{ filter: `brightness(0.5)` }}
                 onClick={() => onChangeView(`orders`)}
               >
                 <BsArrowLeft />
-                Sair
+                Sair da loja
               </Flex>
               <Flex
                 color="gray500"
@@ -240,10 +241,11 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
                 w="fit-content"
                 margin="auto"
                 cursor="pointer"
+                fontSize="14px"
                 _hover={{ filter: `brightness(0.5)` }}
                 onClick={() => setCart([])}
               >
-                Limpar
+                Limpar carrinho
                 <FaRegTrashCan />
               </Flex>
             </Flex>

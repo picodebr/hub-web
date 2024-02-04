@@ -1,6 +1,22 @@
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Button, Flex, Image, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Text } from '@chakra-ui/react';
+import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
+  Button,
+  Flex,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItemOption,
+  MenuList,
+  MenuOptionGroup,
+  Text,
+} from '@chakra-ui/react';
 import { uuid } from 'uuidv4';
 
 import { KanbanColumnType, PlanningPageView, kanbanColumnLabel, kanbanColumns, planningPageViews } from './components/interfaces';
@@ -9,40 +25,116 @@ import { SmallModal } from '@/components/Modal/Small';
 import { IHubUser } from '@/_base/interfaces/user';
 import { FaPlusCircle } from 'react-icons/fa';
 import { AvatarList } from '@/components/AvatarList';
-import { IHubGroup } from '@/_base/interfaces/group';
+import { IHubGroup, IHubGroupMetadata } from '@/_base/interfaces/group';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 import { TextInput } from '@/components/Inputs/Text';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { ColorPicker } from '@/components/ColorPicker';
 import { isColorLight } from '@/_base/utils';
+import { ZodCustomSchema } from '@/_base/interfaces/zod';
+import { z } from 'zod';
+import { zodSchemaErrors } from '@/_base/errors/zodSchemaErrors';
+import { useInputHandler } from '@/_base/hooks';
+import { FaRegTrashCan } from 'react-icons/fa6';
+import { DateInput } from '@/components/Inputs/Date';
+import { formatDateInput } from '@/pages/signup/index.page';
+import moment from 'moment';
 
-const EMPTY_KANBAN_ITEM: KanbanItemType = { id: `1`, title: ``, local: true, content: ``, users: [], column: `todo`, bgcolor: `` };
+const EMPTY_KANBAN_ITEM: KanbanItemType = { id: ``, title: ``, local: true, content: ``, users: [], column: `` as any, bgcolor: `` };
 
 type KanbanColumnData = { type: KanbanColumnType; title: string; items: KanbanItemType[] };
 
-type KanbanItemType = { id: string; title: string; users: IHubUser[]; content: string; local?: boolean; column: KanbanColumnType; bgcolor: string };
+type KanbanItemType = {
+  id: string;
+  title: string;
+  content: string;
+  end_date?: string;
+  local?: boolean;
+  column: KanbanColumnType;
+  bgcolor?: string;
+  users: string[];
+};
+
+const kanbanItemSchema: ZodCustomSchema<KanbanItemType> = z.object({
+  id: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim(),
+  title: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(1, { message: zodSchemaErrors.REQUIRED_FIELD }).trim(),
+  content: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(1, { message: zodSchemaErrors.REQUIRED_FIELD }).trim(),
+  column: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(1, { message: zodSchemaErrors.REQUIRED_FIELD }).trim(),
+  end_date: z.string().optional(),
+  local: z.boolean(),
+  bgcolor: z.string(),
+  users: z.array(z.any()).default([]),
+});
 
 interface IProps {
   group: IHubGroup;
+  setGroup: Dispatch<SetStateAction<IHubGroup>>;
 }
 
-export const Planning: React.FC<IProps> = ({ group }) => {
-  const [kanbanList, setKanbanList] = useState<Array<KanbanColumnData>>([]);
+export const Planning: React.FC<IProps> = ({ group, setGroup }) => {
+  const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>([]);
   const [pageView, setPageView] = useState<PlanningPageView>('Kanban');
-  const [kanbanItem, setKanbanItem] = useState<KanbanItemType | null>(null);
+  const [itemToRemove, setItemToRemove] = useState<KanbanItemType | null>(null);
+
+  const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<KanbanItemType>({
+    data: EMPTY_KANBAN_ITEM,
+    schema: kanbanItemSchema,
+  });
 
   useEffect(() => {
-    setKanbanList(kanbanColumns.map((column) => ({ type: column, title: kanbanColumnLabel[column], items: [] })));
+    const initialList = group.metadata.kanban
+      ? (JSON.parse(group.metadata.kanban) as KanbanColumnData[])
+      : kanbanColumns.map((column) => ({ type: column, title: kanbanColumnLabel[column], items: [] }));
+
+    setKanbanList(initialList);
+
+    setData(EMPTY_KANBAN_ITEM);
   }, []);
 
-  const handleAddNewItem = () => {
-    if (!kanbanItem) return;
-    setKanbanList((e) =>
-      e.map((column) =>
-        column.type === kanbanItem.column ? { ...column, items: [{ ...kanbanItem, id: `${column.items.length + 1}` }, ...column.items] } : column,
-      ),
-    );
-    setKanbanItem(null);
+  const handleUpdateKanbanList = () => {
+    if (!data) return;
+    setKanbanList((e) => {
+      const res = e.map((column) =>
+        column.type === data.column
+          ? {
+              ...column,
+              items: data.id
+                ? column.items.map((item) => (item.id === data.id ? { ...item, ...data } : item))
+                : [{ ...data, id: uuid() }, ...column.items],
+            }
+          : column,
+      );
+
+      setGroup((g) => ({ ...g, metadata: { ...g.metadata, kanban: JSON.stringify(res) } }));
+
+      return res;
+    });
+    clearStates();
+  };
+
+  const handleRemoveItem = () => {
+    if (!itemToRemove) return;
+    setKanbanList((e) => {
+      const res = e.map((column) =>
+        column.type === itemToRemove.column
+          ? {
+              ...column,
+              items: column.items.filter((item) => item.id !== itemToRemove.id),
+            }
+          : column,
+      );
+
+      setGroup((g) => ({ ...g, metadata: { ...g.metadata, kanban: JSON.stringify(res) } }));
+
+      return res;
+    });
+    clearStates();
+  };
+
+  const clearStates = () => {
+    setData({} as any);
+    setErrors({} as any);
+    setItemToRemove(null);
   };
 
   function onDragEnd(result: { source: any; destination: any }) {
@@ -65,9 +157,14 @@ export const Planning: React.FC<IProps> = ({ group }) => {
       newState[sInd] = { ...newState[sInd], items: result[sInd] || [] };
       newState[dInd] = { ...newState[dInd], items: result[dInd] || [] };
 
+      newState.forEach((s) => s.items.forEach((i) => (i.column = s.type)));
+
       setKanbanList(newState);
+      setGroup((g) => ({ ...g, metadata: { ...g.metadata, kanban: JSON.stringify(newState) } }));
     }
   }
+
+  const cancelRef = useRef<any>();
 
   return (
     <Flex flex="1" overflow="auto" userSelect="none" padding="0.5rem">
@@ -123,7 +220,7 @@ export const Planning: React.FC<IProps> = ({ group }) => {
                       transition="0.1s"
                       cursor="pointer"
                       _hover={{ boxShadow: 'sm', borderColor: 'gray400' }}
-                      onClick={() => setKanbanItem({ ...EMPTY_KANBAN_ITEM, column: el.type })}
+                      onClick={() => setData({ ...EMPTY_KANBAN_ITEM, column: el.type })}
                     >
                       <Text>Adicionar</Text>
                       <Flex color={`primary${ind === 0 ? 700 : ind === 1 ? 800 : 500}`}>
@@ -139,34 +236,35 @@ export const Planning: React.FC<IProps> = ({ group }) => {
                             {...provided.dragHandleProps}
                             border="1px"
                             borderColor="gray300"
-                            p="1rem 0.875rem"
+                            p="0rem 0.75rem"
                             justify="space-between"
                             align="center"
                             w="100%"
+                            minH="4.25rem"
                             gap="0.5rem"
                             borderRadius="md"
                             boxShadow={snapshot.isDragging ? `lg` : undefined}
                             bg={item.bgcolor || `white`}
                             color={item.bgcolor ? (isColorLight(item.bgcolor) ? `#4d4b5f` : `#fff`) : `primary800`}
-                            onClick={() => setKanbanItem(item)}
+                            onClick={() => setData(item)}
                             transition="all 0.1s"
                             _hover={{ boxShadow: 'md' }}
                           >
-                            {item.content}
-                            <Flex align="center">
-                              <AvatarList users={item.users} max={4} />
+                            <Flex direction="column" gap="0.25rem" justify="space-between">
+                              <Text flex="1" noOfLines={1}>
+                                {item.title}
+                              </Text>
+                              <Text noOfLines={1} fontSize="12px" minH="1.3rem">
+                                {item.end_date && moment(item.end_date).format(`DD/MM/YYYY`)}
+                              </Text>
                             </Flex>
-                            {/* <Flex
-                          align="center"
-                          onClick={() => {
-                            const newState = [...state];
-                            newState[ind]?.items.splice(index, 1);
-                            setState(newState.filter((group) => group.items.length));
-                          }}
-                          color="primary500"
-                        >
-                          <FaRegTrashCan />
-                        </Flex> */}
+                            <Flex align="center">
+                              <AvatarList
+                                users={item.users.map((studentId) => group.students.find((e) => e.id === studentId) as IHubUser).filter((e) => e)}
+                                max={4}
+                                showMessage={false}
+                              />
+                            </Flex>
                           </Flex>
                         )}
                       </Draggable>
@@ -184,35 +282,63 @@ export const Planning: React.FC<IProps> = ({ group }) => {
           Em Construção
         </Flex>
       )}
+
       <SmallModal
-        show={!!kanbanItem}
-        onConfirm={handleAddNewItem}
-        onCancel={() => setKanbanItem(null)}
-        onClose={() => setKanbanItem(null)}
+        show={!!data?.column}
+        onConfirm={() => submit(handleUpdateKanbanList)}
+        onCancel={() => setData({} as any)}
+        onClose={() => setData({} as any)}
         size="2xl"
       >
+        {!!data.id && (
+          <Flex justify="flex-end" m="-0.5rem 1.5rem 0">
+            <Flex
+              align="center"
+              justify="center"
+              color="primary500"
+              border="1px"
+              borderColor="gray300"
+              p=".35rem .35rem .38rem .38rem"
+              cursor="pointer"
+              borderRadius="50%"
+              transition="0.1s"
+              _hover={{
+                borderColor: `primary500`,
+              }}
+              onClick={() => setItemToRemove(data)}
+            >
+              <FaRegTrashCan fontSize="1rem" />
+            </Flex>
+          </Flex>
+        )}
         <Flex direction="column" gap="1rem" flex="1">
-          <TextInput
-            label="Titulo"
-            placeholder="Informe o nome do grupo"
-            _placeholder={{ fontSize: '14px' }}
-            value={kanbanItem?.title || ``}
-            onInputChange={(title) => setKanbanItem((e) => ({ ...(e || ({} as any)), title }))}
-          />
+          <Flex gap="1rem">
+            <TextInput
+              label="Titulo"
+              placeholder="Informe o nome do grupo"
+              _placeholder={{ fontSize: '14px' }}
+              error={errors.title}
+              value={data?.title || ``}
+              onInputChange={(value) => onInputChange('title', value)}
+            />
+            <DateInput
+              label="Data da entrega"
+              value={formatDateInput(data.end_date)}
+              error={errors.end_date}
+              onInputChange={(value) => onInputChange('end_date', value ? new Date(value).toString() : '')}
+            />
+          </Flex>
           <TextAreaInput
             label="Descrição da tarefa"
-            value={kanbanItem?.content || ``}
-            onInputChange={(content) => setKanbanItem((e) => ({ ...(e || ({} as any)), content }))}
+            error={errors.content}
+            value={data?.content || ``}
+            onInputChange={(value) => onInputChange('content', value)}
             rows={5}
           />
           <Flex align="center" justify="space-between" gap="2rem">
             <Flex gap="1rem" align="center">
               <Text fontWeight="500">Cor de fundo</Text>
-              <ColorPicker
-                onChange={(bgcolor) => setKanbanItem((e) => ({ ...(e || ({} as any)), bgcolor }))}
-                enableInput={false}
-                color={kanbanItem?.bgcolor}
-              />
+              <ColorPicker onChange={(value) => onInputChange('bgcolor', value)} enableInput={false} color={data?.bgcolor} />
             </Flex>
             <Menu closeOnSelect={false} placement="bottom">
               <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white" flex="1">
@@ -225,7 +351,14 @@ export const Planning: React.FC<IProps> = ({ group }) => {
                       <MenuItemOption
                         key={student.id}
                         value={student.id}
-                        onClick={() => setKanbanItem((e) => ({ ...(e || ({} as any)), users: [student, ...(e?.users || [])] }))}
+                        onClick={(e) =>
+                          onInputChange(
+                            'users',
+                            data.users.includes(e.currentTarget.value)
+                              ? data.users.filter((id) => id !== e.currentTarget.value)
+                              : [e.currentTarget.value, ...data.users],
+                          )
+                        }
                       >
                         {student.name}
                       </MenuItemOption>
@@ -238,10 +371,34 @@ export const Planning: React.FC<IProps> = ({ group }) => {
             </Menu>
           </Flex>
           <Flex minH="3rem">
-            <AvatarList users={kanbanItem?.users || []} emptyMessage="Nenhum membro atribuído" />
+            <AvatarList
+              users={data.users?.map((studentId) => group.students.find((e) => e.id === studentId) as IHubUser).filter((e) => e) || []}
+              emptyMessage="Nenhum membro atribuído"
+            />
           </Flex>
         </Flex>
       </SmallModal>
+
+      <AlertDialog isOpen={!!itemToRemove} leastDestructiveRef={cancelRef} onClose={() => setItemToRemove(null)}>
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Excluir Tarefa
+            </AlertDialogHeader>
+
+            <AlertDialogBody>Você tem certeza que deseja remover essa tarefa?</AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setItemToRemove(null)}>
+                Cancelar
+              </Button>
+              <Button colorScheme="red" onClick={handleRemoveItem} ml={3}>
+                Excluir
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Flex>
   );
 };

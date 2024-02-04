@@ -32,7 +32,28 @@ export const ColorPicker: React.FC<IColorPickerProps> = ({
 }) => {
   const [selectedColor, setSelectedColor] = useState(color);
 
-  const colors = ['', '#ffffff', '#000000', '#e53e3e', '#38a169', '#3182ce', '#2a4365', '#dd6b20', '#805ad5', '#d53f8c'];
+  const colors = [
+    '',
+    '#FFFFFF',
+    '#cccccc',
+    '#FFC107',
+    '#FF9800',
+    '#FF5722',
+    '#d63f47',
+    '#FFCDD2',
+    '#E91E63',
+    '#9C27B0',
+    '#673AB7',
+    '#000000',
+    '#212121',
+    '#333333',
+    '#4CAF50',
+    '#009688',
+    '#2196F3',
+    '#03A9F4',
+    '#795548',
+    '#607D8B',
+  ];
 
   const handleChangeColor = (hex: string) => {
     setSelectedColor(hex);
@@ -58,7 +79,8 @@ export const ColorPicker: React.FC<IColorPickerProps> = ({
                   width="2rem"
                   padding={0}
                   minWidth="unset"
-                  border={isColorLight(selectedColor) || !selectedColor ? '1px solid #d3d3d3' : undefined}
+                  border="1px"
+                  borderColor="gray300"
                   borderRadius={3}
                 >
                   {selectedColor ? '' : <IoMdClose fontSize="1.5rem" color="#db3f3f" />}
@@ -66,7 +88,7 @@ export const ColorPicker: React.FC<IColorPickerProps> = ({
               </Tooltip>
             </Flex>
           </PopoverTrigger>
-          <PopoverContent width="170px">
+          <PopoverContent width="170px" borderColor="gray300">
             <PopoverArrow bg={selectedColor || '#000'} />
             <PopoverCloseButton color="white" />
             <PopoverHeader height="100px" backgroundColor={selectedColor || '#fff'} borderTopLeftRadius={5} borderTopRightRadius={5} color="white">
@@ -85,7 +107,8 @@ export const ColorPicker: React.FC<IColorPickerProps> = ({
                     width="22px"
                     padding={0}
                     minWidth="unset"
-                    border={isColorLight(c) || !c ? '1px solid #d3d3d3' : undefined}
+                    border="1px"
+                    borderColor="gray300"
                     borderRadius={3}
                     _hover={{ background: c }}
                     onClick={() => {

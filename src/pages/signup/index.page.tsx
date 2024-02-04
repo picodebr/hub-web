@@ -1,4 +1,3 @@
-import { DatePicker } from '@orange_digital/chakra-datepicker';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Flex } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
@@ -200,8 +199,4 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     return { props: { selectedPage, pageTitle: 'Cadastro' } };
   }
-};
-
-export const CustomDatePicker: React.FC = () => {
-  return <DatePicker initialValue={new Date()} />;
 };
