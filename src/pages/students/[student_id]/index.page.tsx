@@ -1,25 +1,16 @@
 import { GetServerSideProps } from 'next';
 
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Avatar,
-  AvatarGroup,
-  Flex,
-  Img,
-  Progress,
-  Text,
-  useColorMode,
-} from '@chakra-ui/react';
+import { logError, cookieManager, formatShortName } from '@/_base/utils';
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Img, Text, useColorMode } from '@chakra-ui/react';
 import { FiUsers } from 'react-icons/fi';
-import { TbCode, TbMathSymbols } from 'react-icons/tb';
+import { getStudent } from '@/_base/services/user';
+import { IHubUser } from '@/_base/interfaces/user';
 
-const StudentPage: React.FC = () => {
+interface IProps {
+  student: IHubUser;
+}
+
+const StudentPage: React.FC<IProps> = ({ student }) => {
   const { colorMode } = useColorMode();
   return (
     <Flex direction="column" w="100%" h="100%" overflow="auto">
@@ -38,46 +29,35 @@ const StudentPage: React.FC = () => {
           border="4px"
           borderColor="white"
         >
-          <Img src="/avatars/default.jpeg" w="100%" h="100%" />
+          <Img src={student.avatar || '/avatars/default.jpeg'} w="100%" h="100%" />
         </Flex>
       </Flex>
-      {/* Left Content */}
-      <Flex w="100%" h="auto" border="1px" borderColor="gray300" borderRadius="10px" bg="white" display="flex" padding="40px" gap="32px">
-        <Flex direction="column" gap="32px">
-          <Flex w="70%" h="fit-content" display="flex" direction="column" justify="end">
+      <Flex border="1px" borderColor="gray300" borderRadius="10px" bg="white" padding="40px" gap="32px">
+        {/* Left Content */}
+        <Flex direction="column" gap="32px" flex="1">
+          <Flex h="fit-content" display="flex" direction="column" justify="end">
             <Text fontSize="18px" fontWeight="600" color="primary500">
-              Matheus Silva Rodrigues
+              {student.name}
             </Text>
             <Text fontSize="12px" color="gray400">
-              @mathalegria
+              @{student.username}
             </Text>
             <Text fontSize="14px" margin="8px 0 8px 0" color="gray600">
-              Entusiasta da tecnologia em busca de conhecimento e inovação. Apaixonado por música, viagens e aprendizado contínuo.
+              {student.bio || `.`}
             </Text>
           </Flex>
-          <Flex w="50%" direction="row" align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
+          {/* <Flex direction="row" align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
             <Text>0</Text>
             <Text>5</Text>
           </Flex>
-          <Flex w="50%" direction="row" align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
-            <Progress value={4} rounded={8} flex="1" min={0} max={5} size="sm" w="50%" />
-          </Flex>
+          <Flex direction="row" align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
+            <Progress value={0} rounded={8} flex="1" min={0} max={5} size="sm" w="50%" />
+          </Flex> */}
         </Flex>
         {/* Right Content */}
-        <Flex
-          display="flex"
-          flex="1 0 0"
-          justify="flex-end"
-          direction="row"
-          w="183px"
-          h="auto"
-          border="1px"
-          borderRadius="8px"
-          borderColor="primary300"
-          justifyContent="center"
-        >
+        {/* <Flex border="1px" borderRadius="8px" borderColor="primary300" justifyContent="center">
           <Text>Engajamento</Text>
-        </Flex>
+        </Flex> */}
       </Flex>
       <Accordion allowMultiple bg="white" border="1px" borderColor="gray300" borderRadius="10px" margin="24px 0 0 0">
         <AccordionItem border="none" borderRadius="10px">
@@ -88,31 +68,16 @@ const StudentPage: React.FC = () => {
             <AccordionIcon />
           </AccordionButton>
           <AccordionPanel padding="20px">
-            <Flex direction="row" gap="16px" align="center">
-              <FiUsers fontSize="40px" color="#21E080" />
-              <Flex display="column" justify="space-between">
-                <Text fontWeight="700" fontSize="18px" color="primary700">
-                  Grupo de História
-                </Text>
-                <AvatarGroup size="sm" max={10}>
-                  <Avatar name="Ryan Florence" src="https://bit.ly/ryan-florence" />
-                  <Avatar name="Segun Adebayo" src="https://bit.ly/sage-adebayo" />
-                  <Avatar name="Kent Dodds" src="https://bit.ly/kent-c-dodds" />
-                  <Avatar name="Prosper Otemuyiwa" src="https://bit.ly/prosper-baba" />
-                  <Avatar name="Christian Nwamba" src="https://bit.ly/code-beast" />
-                  <Avatar name="Ryan Florence" src="https://bit.ly/ryan-florence" />
-                  <Avatar name="Segun Adebayo" src="https://bit.ly/sage-adebayo" />
-                  <Avatar name="Kent Dodds" src="https://bit.ly/kent-c-dodds" />
-                  <Avatar name="Prosper Otemuyiwa" src="https://bit.ly/prosper-baba" />
-                  <Avatar name="Christian Nwamba" src="https://bit.ly/code-beast" />
-                  <Avatar name="Ryan Florence" src="https://bit.ly/ryan-florence" />
-                  <Avatar name="Segun Adebayo" src="https://bit.ly/sage-adebayo" />
-                  <Avatar name="Kent Dodds" src="https://bit.ly/kent-c-dodds" />
-                  <Avatar name="Prosper Otemuyiwa" src="https://bit.ly/prosper-baba" />
-                  <Avatar name="Christian Nwamba" src="https://bit.ly/code-beast" />
-                </AvatarGroup>
+            {student.groups.map((group) => (
+              <Flex key={group.id} direction="row" gap="16px" align="center">
+                <FiUsers fontSize="40px" color="#21E080" />
+                <Flex display="column" justify="space-between">
+                  <Text fontWeight="700" fontSize="18px" color="primary700">
+                    {group.display_name}
+                  </Text>
+                </Flex>
               </Flex>
-            </Flex>
+            ))}
           </AccordionPanel>
         </AccordionItem>
       </Accordion>
@@ -125,7 +90,7 @@ const StudentPage: React.FC = () => {
             <AccordionIcon />
           </AccordionButton>
           <AccordionPanel padding="20px">
-            <Flex direction="row" gap="16px" align="center">
+            {/* <Flex direction="row" gap="16px" align="center">
               <TbMathSymbols fontSize="40px" color="" />
               <Flex display="column" justify="space-between">
                 <Text fontWeight="700" fontSize="18px" color="primary700">
@@ -142,7 +107,7 @@ const StudentPage: React.FC = () => {
                 </Text>
                 <Text>Lógica de programação e algoritmos</Text>
               </Flex>
-            </Flex>
+            </Flex> */}
           </AccordionPanel>
         </AccordionItem>
       </Accordion>
@@ -155,7 +120,7 @@ const StudentPage: React.FC = () => {
             <AccordionIcon />
           </AccordionButton>
           <AccordionPanel padding="20px">
-            <Flex direction="row" gap="16px" align="center">
+            {/* <Flex direction="row" gap="16px" align="center">
               <TbMathSymbols fontSize="40px" color="" />
               <Flex display="column" justify="space-between">
                 <Text fontWeight="700" fontSize="18px" color="primary700">
@@ -172,7 +137,7 @@ const StudentPage: React.FC = () => {
                 </Text>
                 <Text>Lógica de programação e algoritmos</Text>
               </Flex>
-            </Flex>
+            </Flex> */}
           </AccordionPanel>
         </AccordionItem>
       </Accordion>
@@ -182,15 +147,17 @@ const StudentPage: React.FC = () => {
 
 export default StudentPage;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
   const selectedPage = 'student';
 
   try {
     cookieManager.updateToken(req);
 
-    const user = await validateSession();
+    const studentId = `${query.student_id}`;
 
-    return { props: { selectedPage, pageTitle: 'Aluno', user } };
+    const student = await getStudent(studentId);
+
+    return { props: { selectedPage, pageTitle: formatShortName(student.name, true), student } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

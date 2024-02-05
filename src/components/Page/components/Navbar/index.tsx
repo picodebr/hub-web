@@ -159,7 +159,6 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
       borderRadius="10px"
       border="1px"
       borderColor="gray300"
-      justify="space-between"
       margin="1.5rem"
     >
       <Flex direction="column" gap="1rem">
