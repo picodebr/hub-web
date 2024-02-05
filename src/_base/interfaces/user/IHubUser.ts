@@ -1,4 +1,5 @@
 import { IHubClass } from '../class';
+import { IHubGroup } from '../group';
 import { HubPermissions } from '../permissions';
 import { IHubUserSchool } from '../school';
 import { HubUserRole } from './HubUserRole';
@@ -22,6 +23,8 @@ export interface IHubUser {
   schools: IHubUserSchool[];
   metadata: IHubUserMetadata;
   hub_class: IHubClass;
+  groups: IHubGroup[];
+
 }
 
 export const EMPTY_HUB_USER: IHubUser = {
@@ -47,4 +50,5 @@ export const EMPTY_HUB_USER: IHubUser = {
   schools: [],
   metadata: {},
   hub_class: {} as any,
+  groups: [],
 };
