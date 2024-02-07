@@ -11,9 +11,10 @@ interface IProps {
   index: number;
   group?: IHubGroup;
   onItemClick: (item: KanbanItemType) => void;
+  canEdit?: boolean;
 }
 
-export const KanbanColumn: React.FC<IProps> = ({ column, index, group, onItemClick }) => {
+export const KanbanColumn: React.FC<IProps> = ({ column, index, group, onItemClick, canEdit }) => {
   return (
     <Droppable droppableId={`${index}`}>
       {(provided, snapshot) => (
@@ -56,9 +57,9 @@ export const KanbanColumn: React.FC<IProps> = ({ column, index, group, onItemCli
               bg="white"
               mb="1rem"
               transition="0.1s"
-              cursor="pointer"
-              _hover={{ boxShadow: 'sm', borderColor: 'gray400' }}
-              onClick={() => onItemClick({ ...EMPTY_KANBAN_ITEM, column: column.type })}
+              cursor={canEdit ? 'pointer' : 'not-allowed'}
+              _hover={canEdit ? { boxShadow: 'sm', borderColor: 'gray400' } : undefined}
+              onClick={() => canEdit && onItemClick({ ...EMPTY_KANBAN_ITEM, column: column.type })}
             >
               <Text>Adicionar</Text>
               <Flex color={`primary${index === 0 ? 700 : index === 1 ? 800 : 300}`}>
@@ -66,7 +67,7 @@ export const KanbanColumn: React.FC<IProps> = ({ column, index, group, onItemCli
               </Flex>
             </Flex>
             {column.items.map((item, index) => (
-              <KanbanItem key={item.id} item={item} index={index} group={group} onItemClick={onItemClick} />
+              <KanbanItem key={item.id} item={item} index={index} group={group} onItemClick={onItemClick} columnType={column.type} />
             ))}
           </Flex>
 

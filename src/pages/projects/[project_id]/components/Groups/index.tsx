@@ -12,9 +12,10 @@ import { SmallModal } from '@/components/Modal/Small';
 interface IProps {
   project: IProject;
   onPendingGroupAction: (group: IHubGroup, accept: boolean) => void;
+  canEdit: boolean;
 }
 
-export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project }) => {
+export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit }) => {
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
 
   const handleConfirmAction = () => {
@@ -45,6 +46,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project }) => {
                   size="sm"
                   bg="success600"
                   color="white"
+                  isDisabled={!canEdit}
                   _hover={{ filter: `brightness(0.9)` }}
                   onClick={() => setTargetGroup({ ...(group as any), accept: true })}
                 />
@@ -54,6 +56,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project }) => {
                   bg="white"
                   color="gray700"
                   border="1px"
+                  isDisabled={!canEdit}
                   borderColor="gray300"
                   _hover={{ filter: `brightness(0.9)` }}
                   onClick={() => setTargetGroup({ ...(group as any), accept: false })}

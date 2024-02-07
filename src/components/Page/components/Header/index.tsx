@@ -18,11 +18,6 @@ interface IProps {
 
 type TargetSchoolHookType = { school: IHubUserSchool | null; setSchool: (school: IHubUserSchool) => void };
 
-// export const useSelectedSchool = create<TargetSchoolHookType>((set) => ({
-//   school: null,
-//   setSchool: (data: IHubUserSchool) => set(() => ({ school: data })),
-// }));
-
 export const useSelectedSchool = create<TargetSchoolHookType>(
   persist(
     (set) => ({

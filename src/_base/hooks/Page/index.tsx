@@ -11,7 +11,7 @@ import { useHubTour } from '../HubTour';
 const PageContext = createContext({});
 export const usePageContext = () => useContext(PageContext);
 
-export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTitle, selectedPage, showBackButton, headerLabel, user: _user }) => {
+export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTitle, user: _user, ...rest }) => {
   const { user, setUser } = useAuth();
   const { isOpen, steps, stopTour, navbar } = useHubTour();
 
@@ -35,14 +35,7 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTi
       <Head>
         <title>{pageTitle}</title>
       </Head>
-      <PageWrapper
-        user={_user || user}
-        selectedPage={selectedPage}
-        showBackButton={showBackButton}
-        headerLabel={headerLabel}
-        isOpen={navbar.isOpen}
-        stopTour={navbar.stopTour}
-      >
+      <PageWrapper {...rest} user={_user || user} isOpen={navbar.isOpen} stopTour={navbar.stopTour}>
         {children}
       </PageWrapper>
       <Tour open={isOpen} onClose={() => stopTour()} steps={steps} />

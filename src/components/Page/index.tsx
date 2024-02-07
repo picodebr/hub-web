@@ -17,6 +17,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   headerLabel,
   showBackButton = true,
   isOpen = false,
+  backButtonPath,
   stopTour,
 }) => {
   const { colorMode } = useColorMode();
@@ -45,7 +46,15 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
             <RedefinePass user={user} />
             <Flex flex="1" height="100%" overflow="hidden" direction="column" position="relative" p="1.5rem 1.5rem 1.5rem 0">
               {showBackButton && (
-                <Flex cursor="pointer" fontWeight="600" color="primary700" onClick={() => router.back()} pb="0.5rem" w="fit-content">
+                <Flex
+                  userSelect="none"
+                  cursor="pointer"
+                  fontWeight="600"
+                  color="primary700"
+                  onClick={() => (backButtonPath ? router.push(backButtonPath) : router.back())}
+                  pb="0.5rem"
+                  w="fit-content"
+                >
                   <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
                   <Text textAlign="left">Voltar</Text>
                 </Flex>
