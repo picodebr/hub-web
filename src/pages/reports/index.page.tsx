@@ -14,8 +14,7 @@ import { ReportPageView, reportPageViews } from './[report_id]/interface';
 
 import { Upload } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
-
-type MenuItemType = { name: string; ref?: any };
+import { useSelectedSchool } from '@/components/Page/components/Header';
 
 interface IFileInputProps {
   onChange: (files: File[]) => void;
@@ -25,8 +24,8 @@ interface IFileInputProps {
 
 const HubSupport: React.FC<IFileInputProps> = ({ type, onChange }) => {
   const [newReport, setNewReport] = useState<Record<string, string> | null>(null);
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [pageView, setPageView] = useState<ReportPageView>('Kits / Placas');
+  const { school } = useSelectedSchool();
 
   const PageElement: Record<ReportPageView, React.ReactElement> = {
     'Kits / Placas': (
@@ -145,11 +144,11 @@ const HubSupport: React.FC<IFileInputProps> = ({ type, onChange }) => {
         <Flex direction="column" flex="1">
           <Flex mb="4px">
             <Text fontWeight="500" color="primary700">
-              Rede de Escola (do usuário abrindo o chamado)
+              {school?.display_name}
             </Text>
           </Flex>
           <Flex mb="4px">
-            <Text>Escola (do usuário abrindo o chamado)</Text>
+            <Text>{school?.display_name}</Text>
           </Flex>
           <Flex marginBottom="8px">
             <Select placeholder="Assunto" value={pageView} onChange={(e) => setPageView(e.target.value as ReportPageView)}>
