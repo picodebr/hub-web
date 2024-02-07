@@ -27,9 +27,10 @@ interface IProps {
   setProject: Dispatch<SetStateAction<IProject>>;
   onChangeFiles: (data: File[]) => void;
   bnccSkills: IBnccSkill[];
+  canEdit: boolean;
 }
 
-export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onChangeFiles }) => {
+export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onChangeFiles, canEdit }) => {
   const [showModal, setShowModal] = useState(false);
 
   const columns: ColumnsType<DataType> = [
@@ -62,13 +63,17 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
             <Text fontSize="14px" fontWeight="500">
               Nome do projeto
             </Text>
-            <EditableTextInput value={project.title || ''} onInputChange={(title) => setProject((e) => ({ ...e, title }))} />
+            <EditableTextInput isDisabled={!canEdit} value={project.title || ''} onInputChange={(title) => setProject((e) => ({ ...e, title }))} />
           </Flex>
           <Flex pb={4} direction="column" gap="6px">
             <Text fontSize="14px" fontWeight="500">
               Objetivo
             </Text>
-            <EditableTextInput value={project.description || ''} onInputChange={(description) => setProject((e) => ({ ...e, description }))} />
+            <EditableTextInput
+              isDisabled={!canEdit}
+              value={project.description || ''}
+              onInputChange={(description) => setProject((e) => ({ ...e, description }))}
+            />
           </Flex>
         </Flex>
         <Flex gap="0px" direction="column">
@@ -82,6 +87,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
                   {step.title}
                 </Text>
                 <EditableTextInput
+                  isDisabled={!canEdit}
                   value={step.description || ``}
                   onInputChange={(description) =>
                     setProject((e) => ({
@@ -108,7 +114,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
           >
             Habilidades BNCC
             <Flex
-              onClick={() => setShowModal(true)}
+              onClick={() => canEdit && setShowModal(true)}
               border="1px"
               borderColor="white"
               borderRadius="4px"
@@ -150,12 +156,13 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
           >
             <TextAreaInput
               w="100%"
+              isDisabled={!canEdit}
               rows={6}
               value={project.metadata.presentation || ``}
               onInputChange={(presentation) => setProject((e) => ({ ...e, metadata: { ...e.metadata, presentation } }))}
               placeholder="Descreva a apresentação"
             />
-            <FileInput onChange={onChangeFiles} />
+            {canEdit && <FileInput onChange={onChangeFiles} />}
 
             <Grid gap="1rem" gridTemplateColumns="repeat(auto-fill, minmax(200px, 1fr))" gridTemplateRows="minmax(min-content, max-content)">
               {project.metadata.attachments?.map((attachment, i) => (
@@ -169,6 +176,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
                     cursor="pointer"
                     _hover={{ filter: 'brightness(0.9)' }}
                     onClick={(ev) => {
+                      if (!canEdit) return;
                       ev.stopPropagation();
                       setProject((e) => ({
                         ...e,

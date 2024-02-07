@@ -9,7 +9,7 @@ import { TabSwitch } from '@/components/TabSwitch';
 import { Activities } from './components/Atividades';
 import { GroupRequests } from './components/Pedidos';
 import { GenericButton } from '@/components/Buttons/Generic';
-import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomToast } from '@/_base/hooks';
 import { Planning } from './components/Planejamentos';
 import { Members } from './components/Membros';
 import { addOrder, getGroupById, updateGroup } from '@/_base/services/group';
@@ -27,7 +27,9 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const toast = useCustomToast();
+  const { user } = useAuth();
 
+  const canEdit = user.role === `student` && !!group.student_links.find((e) => e.hub_user_id === user.id);
   const needSave = useMemo<boolean>(() => JSON.stringify(group) !== JSON.stringify(savedGroup), [group, savedGroup]);
 
   const handleSaveGroup = useAsyncCallback(
@@ -71,10 +73,16 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   }, []);
 
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
-    Atividades: <Activities group={group} setGroup={setGroup} />,
-    Planejamentos: <Planning group={group} setGroup={setGroup} />,
+    Atividades: <Activities group={group} setGroup={setGroup} canEdit={canEdit} />,
+    Planejamentos: <Planning group={group} setGroup={setGroup} canEdit={canEdit} />,
     Pedidos: (
-      <GroupRequests handleFinishOrder={handleFinishOrder} handleSave={handleSaveGroup} group={group} handleApproveOrder={handleApproveOrder} />
+      <GroupRequests
+        handleFinishOrder={handleFinishOrder}
+        handleSave={handleSaveGroup}
+        group={group}
+        handleApproveOrder={handleApproveOrder}
+        canEdit={canEdit}
+      />
     ),
     Membros: <Members group={group} />,
   };
@@ -97,6 +105,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
           bg={needSave ? 'primary500' : 'primary700'}
           color="white"
           boxShadow="sm"
+          isDisabled={!canEdit}
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}
         />

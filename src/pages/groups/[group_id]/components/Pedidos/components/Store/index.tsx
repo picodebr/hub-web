@@ -14,6 +14,7 @@ type CustomStoreItem = IStoreComponentItem & { quantity: number };
 interface IProps {
   onChangeView: (view: OrdersPageView) => void;
   onFinishOrder: (data: IHubGroupOrderItem[]) => void;
+  canEdit: boolean;
 }
 
 export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {

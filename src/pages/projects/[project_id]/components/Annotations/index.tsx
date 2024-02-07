@@ -15,9 +15,10 @@ interface IProps {
   project: IProject;
   onAddAnnotation: (data: IAddProjectAnnotationParams) => void;
   onRemoveAnnotation: (id: string) => void;
+  canEdit: boolean;
 }
 
-export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemoveAnnotation }) => {
+export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemoveAnnotation, canEdit }) => {
   const [newAnnotation, setNewAnnotation] = useState('');
   const [annotationIdToRemove, setAnnotationIdToRemove] = useState('');
 
@@ -31,7 +32,14 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
   return (
     <Flex w="100%" overflow="auto" direction="column" gap="24px" pr="0.25rem">
       <Flex direction="column">
-        <TextAreaInput value={newAnnotation} onInputChange={setNewAnnotation} rows={8} bg="white" placeholder="Faça uma anotação" />
+        <TextAreaInput
+          isDisabled={!canEdit}
+          value={newAnnotation}
+          onInputChange={setNewAnnotation}
+          rows={8}
+          bg="white"
+          placeholder="Faça uma anotação"
+        />
         <Flex w="100%" justify="flex-end" marginTop="4px" gap="8px" pt="8px">
           <GenericButton
             label="Anexar arquivo"
@@ -40,6 +48,7 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
             bg="primary600"
             color="white"
             gap="8px"
+            isDisabled={!canEdit}
             leftIcon={<FaPaperclip size="20px" />}
             _hover={{
               filter: 'brightness(0.9)',
@@ -53,6 +62,7 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
             bg="primary300"
             color="white"
             gap="8px"
+            isDisabled={!canEdit}
             onClick={handleSend}
             leftIcon={<FiSend size="20px" />}
             _hover={{

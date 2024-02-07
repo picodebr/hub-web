@@ -11,9 +11,10 @@ import { PlanningPageView } from './components/interfaces';
 interface IProps {
   group: IHubGroup;
   setGroup: Dispatch<SetStateAction<IHubGroup>>;
+  canEdit: boolean;
 }
 
-export const Planning: React.FC<IProps> = ({ group, setGroup }) => {
+export const Planning: React.FC<IProps> = ({ group, setGroup, canEdit }) => {
   const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>([]);
   const [pageView, setPageView] = useState<PlanningPageView>();
 
@@ -34,7 +35,7 @@ export const Planning: React.FC<IProps> = ({ group, setGroup }) => {
   const PlanningElement: Record<PlanningPageView, React.ReactElement> = {
     Gantt: <Gantt />,
     Orçamentos: <Bill />,
-    Kanban: <Kanban initialData={kanbanList} onChange={handleUpdateKanbanList} group={group} />,
+    Kanban: <Kanban initialData={kanbanList} onChange={handleUpdateKanbanList} group={group} canEdit={canEdit} />,
   };
 
   return (

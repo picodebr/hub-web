@@ -16,7 +16,7 @@ import { Materials } from './components/Materials';
 import { Annotations } from './components/Annotations';
 import { Groups } from './components/Groups';
 import { GenericButton } from '@/components/Buttons/Generic';
-import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomToast } from '@/_base/hooks';
 import { getPresignedUrl } from '@/_base/services/upload';
 import { IUpdateProjectParams } from '@/_base/interfaces/project';
 import { IHubGroup } from '@/_base/interfaces/group';
@@ -34,7 +34,9 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const [files, setFiles] = useState<File[]>([]);
 
   const toast = useCustomToast();
+  const { user } = useAuth();
 
+  const canEdit = user.id === hubProject.user_id;
   const needSave = useMemo<boolean>(() => JSON.stringify(project) !== JSON.stringify(savedProject) || !!files.length, [project, savedProject, files]);
 
   const handleSave = useAsyncCallback(async () => {
@@ -93,10 +95,10 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   }, []);
 
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
-    Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} />,
-    Materiais: <Materials project={project} setProject={setProject} />,
-    Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} />,
-    Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} />,
+    Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} canEdit={canEdit} />,
+    Materiais: <Materials project={project} setProject={setProject} canEdit={canEdit} />,
+    Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} />,
+    Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} />,
   };
 
   return (
@@ -116,6 +118,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
           bg={needSave ? 'primary500' : 'primary700'}
           color="white"
           boxShadow="sm"
+          isDisabled={!canEdit}
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}
         />

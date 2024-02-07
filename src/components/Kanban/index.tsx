@@ -39,9 +39,10 @@ interface IProps {
   initialData: KanbanColumnData[];
   onChange: (data: KanbanColumnData[]) => void;
   group?: IHubGroup;
+  canEdit?: boolean;
 }
 
-export const Kanban: React.FC<IProps> = ({ initialData, onChange, group }) => {
+export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit = true }) => {
   const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>(initialData);
   const [itemToRemove, setItemToRemove] = useState<KanbanItemType | null>(null);
 
@@ -129,9 +130,9 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group }) => {
 
   return (
     <Flex flex="1" overflow="hidden" userSelect="none" gap="1.5rem" mb="-1rem" pb="1rem">
-      <DragDropContext onDragEnd={onDragEnd}>
+      <DragDropContext onDragEnd={canEdit ? onDragEnd : () => ({})}>
         {kanbanList.map((column, index) => (
-          <KanbanColumn key={column.type} column={column} group={group} index={index} onItemClick={setData} />
+          <KanbanColumn key={column.type} column={column} group={group} index={index} onItemClick={setData} canEdit={canEdit} />
         ))}
       </DragDropContext>
 
@@ -141,6 +142,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group }) => {
         onConfirm={() => submit(handleUpdateKanbanList)}
         onCancel={() => setData({} as any)}
         onClose={() => setData({} as any)}
+        disableOkButton={!canEdit}
         size="2xl"
       >
         {!!data.id && (
@@ -158,7 +160,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group }) => {
               _hover={{
                 borderColor: `primary500`,
               }}
-              onClick={() => setItemToRemove(data)}
+              onClick={() => canEdit && setItemToRemove(data)}
             >
               <FaRegTrashCan fontSize="1rem" />
             </Flex>
@@ -167,6 +169,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group }) => {
         <Flex direction="column" gap="1rem" flex="1">
           <Flex gap="1rem" align="flex-end">
             <TextInput
+              isDisabled={!canEdit}
               flex="1"
               label="Título"
               placeholder="Informe o título da tarefa"
@@ -176,6 +179,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group }) => {
               onInputChange={(value) => onInputChange('title', value)}
             />
             <DateInput
+              isDisabled={!canEdit}
               label="Data limite"
               value={formatDateInput(data.end_date)}
               error={errors.end_date}
@@ -192,6 +196,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group }) => {
           </Flex>
           <TextAreaInput
             label="Descrição da tarefa"
+            isDisabled={!canEdit}
             placeholder="Informe a descrição da tarefa"
             _placeholder={{ fontSize: '14px' }}
             error={errors.content}
@@ -206,7 +211,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group }) => {
                   <Text fontWeight="500">Cor de fundo</Text>
                   <ColorPicker onChange={(value) => onInputChange('bgcolor', value)} enableInput={false} color={data?.bgcolor} />
                 </Flex>
-                <Menu closeOnSelect={false} placement="bottom">
+                <Menu closeOnSelect={false} placement="bottom" isOpen={canEdit ? undefined : false}>
                   <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white" flex="1">
                     Atribuido à
                   </MenuButton>

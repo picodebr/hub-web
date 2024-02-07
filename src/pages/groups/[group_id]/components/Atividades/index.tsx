@@ -12,9 +12,10 @@ const Editor = dynamic<EditorProps>(() => import('react-draft-wysiwyg').then((mo
 interface IProps {
   group: IHubGroup;
   setGroup: Dispatch<SetStateAction<IHubGroup>>;
+  canEdit: boolean;
 }
 
-export const Activities: React.FC<IProps> = ({ group, setGroup }) => {
+export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit }) => {
   const [openEditor, setOpenEditor] = useState(false);
   const [editorValue, setEditorValue] = useState<EditorState>(EditorState.createEmpty());
   const [contentIsMounted, setContentIsMounted] = useState(false);
@@ -28,6 +29,8 @@ export const Activities: React.FC<IProps> = ({ group, setGroup }) => {
   }, []);
 
   useUpdateEffect(() => {
+    if (!canEdit) return;
+
     if (contentIsMounted)
       setGroup((g) => ({ ...g, metadata: { ...g.metadata, annotation: JSON.stringify(convertToRaw(editorValue.getCurrentContent())) } }));
     else setContentIsMounted(true);
