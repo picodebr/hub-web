@@ -6,6 +6,7 @@ export interface IPageProps {
   pageTitle?: string;
   headerLabel?: string;
   showBackButton?: boolean;
+  backButtonPath?: string;
   isOpen: boolean;
   stopTour: () => void;
 }

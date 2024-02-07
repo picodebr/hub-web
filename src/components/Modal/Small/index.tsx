@@ -59,7 +59,6 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
             px="1.5rem"
             border="none"
             fontWeight="500"
-            fontSize="1rem"
             label={okText || 'Confirmar'}
             onClick={() => {
               onConfirm();

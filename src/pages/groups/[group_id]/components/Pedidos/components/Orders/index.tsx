@@ -1,19 +1,22 @@
-import { SmallModal } from '@/components/Modal/Small';
-import { Avatar, Badge, Button, Flex, Text } from '@chakra-ui/react';
-import { FaPlus } from 'react-icons/fa6';
-import { OrdersPageView } from '../..';
-import { IHubGroup, IHubGroupOrder } from '@/_base/interfaces/group';
 import moment from 'moment';
 import { useState } from 'react';
+import { FaPlus } from 'react-icons/fa6';
+import { Avatar, Badge, Flex, Text } from '@chakra-ui/react';
+
+import { SmallModal } from '@/components/Modal/Small';
+import { OrdersPageView } from '../..';
+import { IHubGroup, IHubGroupOrder } from '@/_base/interfaces/group';
 import { useAuth } from '@/_base/hooks';
+import { GenericButton } from '@/components/Buttons/Generic';
 
 interface IProps {
   onChangeView: (view: OrdersPageView) => void;
   onApproveOrder: (order: IHubGroupOrder) => void;
+  canEdit: boolean;
   group: IHubGroup;
 }
 
-export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder }) => {
+export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, canEdit }) => {
   const [order, setOrder] = useState<IHubGroupOrder | null>(null);
 
   const { user } = useAuth();
@@ -26,7 +29,7 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder }
   };
 
   return (
-    <Flex direction="column" gap="1.5rem" overflow="auto">
+    <Flex direction="column" gap="1.5rem" overflow="auto" userSelect="none">
       <Flex align="center" justify="flex-end" h="fit-content">
         <Flex
           bgColor="white"
@@ -38,14 +41,13 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder }
           align="center"
           gap="8px"
           borderRadius="8px"
-          fontSize="16px"
           fontWeight="600"
           color="gray700"
           boxShadow="sm"
-          cursor="pointer"
+          cursor={canEdit ? 'pointer' : 'not-allowed'}
           transition="all 0.1s"
-          _hover={{ filter: `brightness(0.92)` }}
-          onClick={() => onChangeView(`store`)}
+          _hover={canEdit ? { filter: `brightness(0.92)` } : undefined}
+          onClick={() => canEdit && onChangeView(`store`)}
         >
           <FaPlus />
           Novo Pedido
@@ -70,15 +72,7 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder }
             .flatMap((data) => data.metadata.orders?.map((o) => ({ ...o, student: data.user })) || [])
             .filter((data) => !data.approved_at)
             .map((order) => (
-              <Flex
-                key={order.id}
-                w="100%"
-                overflow="auto"
-                direction="column"
-                _hover={{
-                  boxShadow: `md`,
-                }}
-              >
+              <Flex key={order.id} w="100%" overflow="auto" direction="column">
                 <Flex w="100%" justify="space-between" align="center">
                   <Flex align="center" gap="12px" w="14rem">
                     <Avatar
@@ -95,12 +89,21 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder }
                   <Flex w={user.role === `teacher` ? undefined : '12rem'} justify="flex-end" gap="0.75rem">
                     {user.role === `teacher` ? (
                       <>
-                        <Button bg="success600" color="white" onClick={() => setOrder(order)}>
-                          Aprovar
-                        </Button>
-                        <Button bg="white" color="gray700" border="1px" borderColor="gray300">
-                          Recusar
-                        </Button>
+                        <GenericButton
+                          label="Aprovar"
+                          bg="success600"
+                          color="white"
+                          onClick={() => setOrder(order)}
+                          _hover={{ filter: `brightness(0.9)` }}
+                        />
+                        <GenericButton
+                          label="Recusar"
+                          bg="white"
+                          color="gray700"
+                          border="1px"
+                          borderColor="gray300"
+                          _hover={{ filter: `brightness(0.9)` }}
+                        />
                       </>
                     ) : (
                       <Badge bg="yellow.300" color="yellow.700">
@@ -131,7 +134,19 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder }
             .flatMap((data) => data.metadata.orders?.map((o) => ({ ...o, student: data.user })) || [])
             .filter((data) => !!data.approved_at)
             .map((order) => (
-              <Flex key={order.id} w="100%" h="auto" justify="space-between" align="center">
+              <Flex
+                key={order.id}
+                w="100%"
+                h="auto"
+                justify="space-between"
+                align="center"
+                p="0.25rem 0.5rem"
+                borderRadius="5px"
+                cursor="pointer"
+                transition="all 0.1s"
+                _hover={{ bg: `gray200` }}
+                onClick={() => setOrder(order)}
+              >
                 <Flex align="center" gap="12px" w="14rem">
                   <Avatar size="sm" src="https://www.makerhero.com/wp-content/uploads/2017/07/1AC01-9-1-min.jpeg"></Avatar>
                   <Text color="gray700" fontWeight="500">
@@ -152,11 +167,11 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder }
       )}
       <SmallModal
         size="lg"
-        title="Aprovar Pedido"
+        title={!order?.approved_at ? 'Aprovar Pedido' : `Pedido aprovado em ${moment(order.approved_at).format(`DD/MM/YYYY`)}`}
         show={!!order}
-        onConfirm={handleApprove}
-        okText="Aprovar"
-        onCancel={() => setOrder(null)}
+        onConfirm={() => (!order?.approved_at ? handleApprove() : setOrder(null))}
+        okText={!order?.approved_at ? 'Aprovar' : 'OK'}
+        onCancel={!order?.approved_at ? () => setOrder(null) : undefined}
         topIcon={'checked'}
       >
         <Flex direction="column">

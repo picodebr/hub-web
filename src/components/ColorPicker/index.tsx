@@ -29,6 +29,7 @@ export const ColorPicker: React.FC<IColorPickerProps> = ({
   enableInput = true,
   color = DEFAULT_COLOR,
   wrapText = false,
+  isDisabled = false,
 }) => {
   const [selectedColor, setSelectedColor] = useState(color);
 
@@ -68,11 +69,12 @@ export const ColorPicker: React.FC<IColorPickerProps> = ({
         </Text>
       )}
       <Flex h="fit-content" w="fit-content">
-        <Popover variant="picker">
+        <Popover variant="picker" isOpen={!isDisabled ? undefined : false}>
           <PopoverTrigger>
             <Flex align="center" justify="center" gap="0.5rem">
               <Tooltip label={hoverLabel}>
                 <Button
+                  isDisabled={isDisabled}
                   aria-label={selectedColor}
                   background={selectedColor}
                   height="2rem"

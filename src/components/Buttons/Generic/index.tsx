@@ -87,7 +87,8 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
       borderRadius="8px"
       border={getBtnBorder()}
       letterSpacing={0.5}
-      padding="0.625rem 1rem"
+      padding="0.6rem 1rem"
+      fontSize="15px"
       _loading={{
         background: '#4A181E !important',
         color: 'white !important',

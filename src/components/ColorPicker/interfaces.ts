@@ -5,4 +5,5 @@ export interface IColorPickerProps {
   hoverLabel?: string;
   wrapText?: boolean;
   enableInput?: boolean;
+  isDisabled?: boolean;
 }

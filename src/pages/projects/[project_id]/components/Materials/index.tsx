@@ -9,8 +9,9 @@ import { InputValueType } from '@/_base/interfaces/shared';
 interface IProps {
   project: IProject;
   setProject: Dispatch<SetStateAction<IProject>>;
+  canEdit: boolean;
 }
-export const Materials: React.FC<IProps> = ({ project, setProject }) => {
+export const Materials: React.FC<IProps> = ({ project, setProject, canEdit }) => {
   const [newMaterial, setNewMaterial] = useState<InputValueType<string>>({ value: '' });
 
   const handleAddMaterial = () => {
@@ -36,6 +37,7 @@ export const Materials: React.FC<IProps> = ({ project, setProject }) => {
           value={newMaterial.value}
           error={newMaterial.error}
           onChange={(e) => setNewMaterial({ value: e.target.value })}
+          isDisabled={!canEdit}
         />
         <Flex
           w="40px"
@@ -48,7 +50,7 @@ export const Materials: React.FC<IProps> = ({ project, setProject }) => {
           cursor="pointer"
           borderRadius="10px"
           _hover={{ filter: 'brightness(0.95)' }}
-          onClick={handleAddMaterial}
+          onClick={() => canEdit && handleAddMaterial()}
         >
           <FiPlus size="20px" />
         </Flex>
@@ -67,7 +69,7 @@ export const Materials: React.FC<IProps> = ({ project, setProject }) => {
           {project.metadata.tools?.map((tool) => (
             <Flex p="20px" gap="6px" borderBottom="1px" borderColor="gray300" fontSize="14px" fontWeight="500" justify="space-between">
               {tool}
-              <Flex cursor="pointer" _hover={{ filter: 'brightness(0.8)' }} onClick={() => handleRemoveMaterial(tool)}>
+              <Flex cursor="pointer" _hover={{ filter: 'brightness(0.8)' }} onClick={() => canEdit && handleRemoveMaterial(tool)}>
                 <FiTrash color="red" />
               </Flex>
             </Flex>

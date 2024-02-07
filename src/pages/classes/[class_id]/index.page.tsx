@@ -12,7 +12,6 @@ import { GetServerSideProps } from 'next';
 import { ReactNode, useState } from 'react';
 import { CiUser } from 'react-icons/ci';
 
-import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager, formatShortName, statusLabelMapper } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
 import { getClassData } from '@/_base/services/class';
@@ -70,7 +69,7 @@ interface IProps {
 type ModalStep = 'creation_type' | 'man_project_name' | 'man_task_quantity' | 'man_task_naming';
 
 const Class: React.FC<IProps> = ({ hubClass }) => {
-  const [pageView, setPageView] = useState<ClassPageView>('Alunos');
+  const [pageView, setPageView] = useState<ClassPageView>('Projetos');
   const [newProject, setNewProject] = useState<IProject | null>(null);
   const [modalStep, setModalStep] = useState<ModalStep>('creation_type');
   const [newProjectSteps, setNewProjectSteps] = useState<IHubProjectStep[]>([]);
@@ -177,7 +176,7 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
         <ProjectTable
           rows={dataProjects}
           onRowClick={(e) => router.push(`/projects/${e.id}`)}
-          columnSizes={[{ field: 'user_avatar', width: '2rem' }]}
+          columnSizes={[{ field: 'name', width: '100%' }]}
           columns={[
             { label: 'Nome do projeto', field: 'name' },
             {
@@ -321,9 +320,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
     cookieManager.updateToken(req);
     const hubClass = await getClassData(`${query.class_id}`);
 
-    const user = await validateSession();
-
-    return { props: { selectedPage, pageTitle: hubClass.display_name, user, hubClass } };
+    return { props: { selectedPage, pageTitle: hubClass.display_name, hubClass } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
