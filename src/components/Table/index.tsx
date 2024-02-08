@@ -35,8 +35,12 @@ export function HubTable<T>({ columns, rows, onRowClick, columnSizes = [] }: IHu
         <Tbody>
           {rows.map((row, i) => (
             <Tr key={JSON.stringify({ i })} cursor="pointer" _hover={{ bg: 'gray50' }} onClick={() => onRowClick(row)}>
-              {columns.map((column, i) => (
-                <Td key={JSON.stringify({ i })}>{(row as any)[column.field] || ''}</Td>
+              {columns.map((column, i, arr) => (
+                <Td key={JSON.stringify({ i })}>
+                  <Flex flex="1" align="center" justify={i ? (i === arr.length - 1 ? `flex-end` : `center`) : `flex-start`}>
+                    {(row as any)[column.field] || ''}
+                  </Flex>
+                </Td>
               ))}
             </Tr>
           ))}

@@ -1,60 +1,41 @@
 import {
   Avatar,
   Box,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   NumberDecrementStepper,
   NumberIncrementStepper,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
   Tooltip,
+  Flex,
+  Text,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
-import { ReactNode, useState } from 'react';
-import { CiUser } from 'react-icons/ci';
-
-import { logError, cookieManager, formatShortName, statusLabelMapper } from '@/_base/utils';
-import { Flex, Text } from '@chakra-ui/react';
-import { getClassData } from '@/_base/services/class';
-
-import { TabSwitch } from '@/components/TabSwitch';
-import { ClassPageView, classPageViews } from './interfaces';
+import { ReactNode, useMemo, useState } from 'react';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
-import { HubTable } from '@/components/Table';
-import { useAsyncCallback, useAuth, useCustomRouter } from '@/_base/hooks';
-import { Badge } from 'rsuite';
-import moment from 'moment';
 import { IoMdArrowUp } from 'react-icons/io';
 import { FiCalendar, FiFileText } from 'react-icons/fi';
+import { CiUser } from 'react-icons/ci';
+import { Badge } from 'rsuite';
+import moment from 'moment';
+
+import { logError, cookieManager, formatShortName, statusLabelMapper } from '@/_base/utils';
+import { getClassData } from '@/_base/services/class';
+import { TabSwitch } from '@/components/TabSwitch';
+import { ClassPageView, classPageViews } from './interfaces';
+import { HubTable } from '@/components/Table';
+import { useAsyncCallback, useAuth, useCustomRouter } from '@/_base/hooks';
 import { IHubClass } from '@/_base/interfaces/class';
 import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
-import { addProject } from '@/_base/services/project';
+import { addProject, updateProject } from '@/_base/services/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
-
-const makeRowTable = (data: IProject): ProjectTableType => ({
-  id: data.id,
-  user_avatar: (
-    <Avatar name={formatShortName(data.educator.name)} src={data.educator.avatar || undefined} title={data.educator.name} h="40px" w="40px" />
-  ) as any,
-  name: (
-    <Flex direction="column">
-      <Text color="gray800">{data.title}</Text>
-    </Flex>
-  ),
-  status: (
-    <Badge
-      color={data.status === 'running' ? 'green' : data.status === 'stopped' ? 'red' : 'blue'}
-      content={statusLabelMapper[data.status || 'stopped']}
-    />
-  ),
-  created_at: (
-    <Flex gap="8px" align="center">
-      <FiCalendar />
-      <Text fontWeight="500">{moment(data.created_at).format('DD/MM/YYYY')}</Text>
-    </Flex>
-  ),
-});
+import { HubStatus, hubStatuses } from '@/_base/interfaces/shared';
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -73,10 +54,78 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
   const [newProject, setNewProject] = useState<IProject | null>(null);
   const [modalStep, setModalStep] = useState<ModalStep>('creation_type');
   const [newProjectSteps, setNewProjectSteps] = useState<IHubProjectStep[]>([]);
-  const [dataProjects, setDataProjects] = useState<ProjectTableType[]>(hubClass.projects.map((project) => makeRowTable(project)));
+  const [projects, setProjects] = useState<IProject[]>(hubClass.projects);
 
   const router = useCustomRouter();
   const { user } = useAuth();
+
+  const handleUpdateProjectStatus = useAsyncCallback(async (id: string, status: HubStatus) => {
+    await updateProject({ id, status });
+    setProjects((e) => e.map((p) => (p.id === id ? { ...p, status } : p)));
+  }, []);
+
+  const dataProjects = useMemo<ProjectTableType[]>(
+    () =>
+      projects.map((project) => ({
+        id: project.id,
+        user_avatar: (
+          <Avatar
+            name={formatShortName(project.educator.name)}
+            src={project.educator.avatar || undefined}
+            title={project.educator.name}
+            h="40px"
+            w="40px"
+          />
+        ) as any,
+        name: (
+          <Flex direction="column">
+            <Text color="gray800">{project.title}</Text>
+          </Flex>
+        ),
+        status: (
+          <Menu>
+            <MenuButton
+              onClick={(e) => e.stopPropagation()}
+              p="0.35rem 1rem"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              disabled={project.user_id !== user.id}
+            >
+              <Badge
+                style={{ padding: `0.25rem 0.5rem`, whiteSpace: `nowrap` }}
+                color={project.status === 'running' ? 'green' : project.status === 'stopped' ? 'red' : 'blue'}
+                content={statusLabelMapper[project.status || 'stopped']}
+              />
+            </MenuButton>
+            <MenuList borderColor="gray300" boxShadow="md">
+              {hubStatuses.map((status) => (
+                <MenuItem
+                  key={status}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUpdateProjectStatus(project.id, status);
+                  }}
+                >
+                  <Badge
+                    style={{ padding: `0.25rem 0.5rem` }}
+                    color={status === 'running' ? 'green' : status === 'stopped' ? 'red' : 'blue'}
+                    content={statusLabelMapper[status || 'stopped']}
+                  />
+                </MenuItem>
+              ))}
+            </MenuList>
+          </Menu>
+        ),
+        created_at: (
+          <Flex gap="8px" align="center">
+            <FiCalendar />
+            <Text fontWeight="500">{moment(project.created_at).format('DD/MM/YYYY')}</Text>
+          </Flex>
+        ),
+      })),
+    [projects],
+  );
 
   const handleCreateProject = useAsyncCallback(async () => {
     if (!newProject) return;
@@ -88,7 +137,7 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
       metadata: { steps: newProjectSteps },
     });
     project.educator = user;
-    setDataProjects((e) => [makeRowTable(project), ...e]);
+    setProjects((e) => [project, ...e]);
 
     setModalStep('creation_type');
     setNewProjectSteps([]);

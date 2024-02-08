@@ -81,14 +81,7 @@ const HubSupport: React.FC<IFileInputProps> = () => {
   return (
     <Flex flex="1" direction="column" gap="1.85rem">
       <Flex w="100%" justify="flex-end">
-        <GenericButton
-          label="Reportar Erro"
-          bgColor="white"
-          btntype="outline"
-          borderColor="gray300"
-          leftIcon={<FiPlus />}
-          onClick={() => setNewReport({})}
-        />
+        <GenericButton label="Reportar Erro" borderColor="gray300" leftIcon={<FiPlus />} onClick={() => setNewReport({})} />
       </Flex>
       <HubTable
         rows={reports}

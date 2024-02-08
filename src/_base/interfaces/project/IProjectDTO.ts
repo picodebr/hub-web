@@ -1,3 +1,4 @@
+import { HubStatus } from '../shared';
 import { IProjectMetadata } from './IProjectMetadata';
 
 export interface IAddProjectParams {
@@ -9,7 +10,8 @@ export interface IAddProjectParams {
 
 export interface IUpdateProjectParams {
   id: string;
-  title: string;
+  title?: string;
   description?: string | null;
-  metadata: IProjectMetadata;
+  metadata?: IProjectMetadata;
+  status?: HubStatus;
 }
