@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { FiClock, FiPlus } from 'react-icons/fi';
+import { FiPlus } from 'react-icons/fi';
 
-import { Badge, Flex, Select, Text } from '@chakra-ui/react';
+import { Flex, Select, Text } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { cookieManager, logError } from '@/_base/utils';
 import { validateSession } from '@/_base/services/auth';
@@ -14,8 +14,7 @@ import { ReportPageView, reportPageViews } from './[report_id]/interface';
 
 import { Upload } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
-
-type MenuItemType = { name: string; ref?: any };
+import { useSelectedSchool } from '@/components/Page/components/Header';
 
 interface IFileInputProps {
   onChange: (files: File[]) => void;
@@ -23,10 +22,10 @@ interface IFileInputProps {
   type?: 'image' | 'video';
 }
 
-const HubSupport: React.FC<IFileInputProps> = ({ type, onChange }) => {
+const HubSupport: React.FC<IFileInputProps> = () => {
   const [newReport, setNewReport] = useState<Record<string, string> | null>(null);
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [pageView, setPageView] = useState<ReportPageView>('Kits / Placas');
+  const { school } = useSelectedSchool();
 
   const PageElement: Record<ReportPageView, React.ReactElement> = {
     'Kits / Placas': (
@@ -77,52 +76,15 @@ const HubSupport: React.FC<IFileInputProps> = ({ type, onChange }) => {
   const router = useCustomRouter();
   const toast = useCustomToast();
 
-  const students = [
-    {
-      id: '1',
-      subject: <Text color="primary500">Kits / Placas</Text>,
-      status: (
-        <Badge bg="green.300" color="green.700">
-          Resolvido
-        </Badge>
-      ),
-      term: (
-        <Flex fontWeight="500" align="center" ml="1rem">
-          -
-        </Flex>
-      ),
-    },
-    {
-      id: '2',
-      subject: <Text color="primary500">Livro</Text>,
-      status: (
-        <Badge bg="orange.300" color="orange.700">
-          {' '}
-          Em Andamento
-        </Badge>
-      ),
-      term: (
-        <Flex gap="0.35rem" ml="-1rem" fontWeight="500" align="center">
-          <FiClock /> 30 horas
-        </Flex>
-      ),
-    },
-  ];
+  const reports: Record<string, any>[] = [];
 
   return (
     <Flex flex="1" direction="column" gap="1.85rem">
       <Flex w="100%" justify="flex-end">
-        <GenericButton
-          label="Reportar Erro"
-          bgColor="white"
-          btntype="outline"
-          borderColor="gray300"
-          leftIcon={<FiPlus />}
-          onClick={() => setNewReport({})}
-        />
+        <GenericButton label="Reportar Erro" borderColor="gray300" leftIcon={<FiPlus />} onClick={() => setNewReport({})} />
       </Flex>
       <HubTable
-        rows={students}
+        rows={reports}
         onRowClick={(e) => router.push(`/reports/${e.id}`)}
         columns={[
           { label: 'Erro Reportado', field: 'subject' },
@@ -145,11 +107,11 @@ const HubSupport: React.FC<IFileInputProps> = ({ type, onChange }) => {
         <Flex direction="column" flex="1">
           <Flex mb="4px">
             <Text fontWeight="500" color="primary700">
-              Rede de Escola (do usuário abrindo o chamado)
+              {school?.display_name}
             </Text>
           </Flex>
           <Flex mb="4px">
-            <Text>Escola (do usuário abrindo o chamado)</Text>
+            <Text>{school?.display_name}</Text>
           </Flex>
           <Flex marginBottom="8px">
             <Select placeholder="Assunto" value={pageView} onChange={(e) => setPageView(e.target.value as ReportPageView)}>
@@ -187,8 +149,6 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     return { redirect: { destination: '/login', permanent: false } };
   }
 };
-
-type FileType = Parameters<any>[0];
 
 const UploadInput: React.FC = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([

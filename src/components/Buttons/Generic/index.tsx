@@ -94,7 +94,7 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
         color: 'white !important',
         opacity: 0.5,
       }}
-      _hover={btntype ? { background: getBtnColorHover(), color: getBtnTextColorHover() } : { background: 'primary900', color: 'white' }}
+      _hover={btntype ? { background: getBtnColorHover(), color: getBtnTextColorHover() } : { filter: `brightness(0.9)` }}
       {...otherProps}
     >
       {label}

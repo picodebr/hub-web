@@ -108,7 +108,6 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
                             hairColor: [avatarOptions.hairColor] as any,
                             mouth: [avatarOptions.mouth] as any,
                           }).toDataUriSync()}
-                          alt="anderson viado"
                           mr="12px"
                         />
                       </MenuItem>
@@ -346,25 +345,6 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
               )}
             </Grid>
           </Flex>
-        </Flex>
-      </Flex>
-      <Flex
-        bgColor="white"
-        flexDirection="column"
-        borderRadius="10px"
-        boxShadow="md"
-        w="100%"
-        h="fit-content"
-        padding="1.25rem"
-        gap="1.25rem"
-        textAlign="left"
-        display="column"
-        justify="space-between"
-        color="gray600"
-      >
-        <Flex display="flex" justify="space-between" direction="row">
-          <Text>Suporte Picode</Text>
-          <FiHelpCircle color="#D0D5DD" />
         </Flex>
       </Flex>
     </Flex>

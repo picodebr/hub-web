@@ -104,6 +104,14 @@ const SignUp: React.FC = () => {
         return;
       }
 
+      if (!usernameChecker(data.username)) {
+        setErrors((e) => ({
+          ...e,
+          username: 'O nome de usuário pode conter somente letras, números e os caracteres especiais ( - ) e ( _ )',
+        }));
+        return;
+      }
+
       setSubmitLoading(true);
       const [emailResponse, usernameResponse] = await Promise.all([checkEmail(data.email || ''), checkUsername(data.username)]);
 
@@ -115,13 +123,6 @@ const SignUp: React.FC = () => {
       if (!usernameResponse.is_valid) {
         setErrors((e) => ({ ...e, username: 'Nome de usuário já cadastrado' }));
         return;
-      }
-
-      if (!usernameChecker(data.username)) {
-        setErrors((e) => ({
-          ...e,
-          username: 'O nome de usuário pode conter somente letras maiúsculas e minúsculas, números e os caracteres especiais - e _',
-        }));
       }
 
       const signupData = { ...data };
