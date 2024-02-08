@@ -40,7 +40,7 @@ export const UserTypeStep: React.FC<IProps> = ({ onUserTypeChange }) => {
           onClick={() => onUserTypeChange('student')}
         >
           <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
-          <Image src="/icons/icone-estudante.webp" w="100px" alignSelf="center" />
+          <Image src="/icons/icone-estudante.png" w="150px" alignSelf="center" />
           <Flex h="28px" bg="primary300" color="gray900" align="center" justify="center" fontWeight="500">
             Aluno
           </Flex>
@@ -57,7 +57,7 @@ export const UserTypeStep: React.FC<IProps> = ({ onUserTypeChange }) => {
           onClick={() => onUserTypeChange('teacher')}
         >
           <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
-          <Img src="/icons/icone-professor.webp" w="100px" alignSelf="center" />
+          <Img src="/icons/icone-professor.png" w="150px" alignSelf="center" />
           <Flex h="28px" bg="primary400" color="gray800" align="center" justify="center" fontWeight="500">
             Professor
           </Flex>
