@@ -8,11 +8,11 @@
 
 [ ] - Vídeo de boas-vindas (já mandei o link tem tempo aqui no grupo)
 
-[ ] - Inverter a ordem dos livros na biblioteca, deixando o G5 no começo (G3, G4, G5, 1º...9º) e mudar o nome de "Ano G5" para "G5"
+[x] - Inverter a ordem dos livros na biblioteca, deixando o G5 no começo (G3, G4, G5, 1º...9º) e mudar o nome de "Ano G5" para "G5"
 
 [x] - Na tela de reportar erro, tá bugado, aparecendo info interna ("Nome da escola do usuário" ao invés de realmente aparecer o nome da escola)
 
-[ ] - Zerar os reports dos usuários (para mim, usuário, está aparecendo report do Coc Paulínia, fictício)
+[x] - Zerar os reports dos usuários (para mim, usuário, está aparecendo report do Coc Paulínia, fictício)
 
 [ ] - Ajustar os erros da tela de cadastro (explicar e sinalizar onde tá dando erro - no teste com o prof aqui só acusou erro e não disse onde, e era um . que estava no usuário dele) (REGEX
 

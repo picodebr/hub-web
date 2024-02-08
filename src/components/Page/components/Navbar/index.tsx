@@ -1,25 +1,35 @@
-import { Flex, Icon, Image, Img, Text, useColorMode } from '@chakra-ui/react';
+import { Flex, Icon, Image, Spinner, Text, useColorMode } from '@chakra-ui/react';
+import NextImage from 'next/image';
 import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
 import { Tour, TourProps } from 'antd';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
-import { cookieManager, formatShortName } from '@/_base/utils';
+import { formatShortName } from '@/_base/utils';
 import { INavbarProps, MenuItemType } from './interfaces';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { Uploader } from 'rsuite';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
-import { createAvatar } from '@dicebear/core';
-import { IAvatarOptions } from '@/pages/profile/components/interfaces';
-import { adventurer } from '@dicebear/collection';
 
-export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour }) => {
-  const [userAvatar, setUserAvatar] = useState(``);
-  const [tempAvatar, setTempAvatar] = useState(``);
+import { useAvatar, useProfile } from './hooks';
+
+export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stopTour }) => {
+  const router = useCustomRouter();
+  const { colorMode } = useColorMode();
+  const { avatar, setAvatar } = useAvatar();
+  const { user, setUser } = useProfile();
+
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    if (_user) setUser({ ...user, ..._user });
+    setAvatar(_user?.avatar || user.avatar);
+  }, [_user]);
+
   const studentMenuItems: Array<MenuItemType> = [
     {
       name: 'Home',
@@ -78,9 +88,6 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     { name: 'Eventos', page: 'events', icon: FiList, ref: useRef(), tourDescription: `Clique aqui para ver mais informações sobre nossos eventos.` },
   ];
 
-  const router = useCustomRouter();
-  const { colorMode } = useColorMode();
-  // const { isOpen, stopTour } = useHubTour().navbar;
   const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
 
   const headerTourSteps: TourProps['steps'] = menuItems.map((e) => ({
@@ -115,37 +122,17 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
 
   const handleUploadAvatar = useCallback(async (file?: File) => {
     if (file) {
+      setIsUpdating(true);
       const response = await getPresignedUrl(file.type, 'avatars');
       await uploadFile(response.link, file);
 
-      const updatedUser = await updateProfile({ avatar: response.path });
-      setUserAvatar(updatedUser.avatar || ``);
+      setTimeout(async () => {
+        const updatedUser = await updateProfile({ avatar: response.path });
+        setAvatar(updatedUser.avatar || ``);
+        setIsUpdating(false);
+      }, 1000);
     }
   }, []);
-
-  useEffect(() => {
-    const avatarOptions = cookieManager.getCookie(`avatar`, true) as IAvatarOptions;
-    if (!avatarOptions) return;
-
-    const rawAvatar = createAvatar(adventurer, {
-      size: 200,
-      skinColor: [avatarOptions.skinColor] as any,
-      earrings: [avatarOptions.earrings] as any,
-      eyebrows: [avatarOptions.eyebrows] as any,
-      eyes: [avatarOptions.eyes] as any,
-      glassesProbability: avatarOptions.glassesProbability,
-      glasses: [avatarOptions.glasses] as any,
-      hair: [avatarOptions.hair] as any,
-      hairColor: [avatarOptions.hairColor] as any,
-      mouth: [avatarOptions.mouth] as any,
-    });
-    setTempAvatar(rawAvatar.toDataUriSync());
-  }, []);
-
-  const avatar = useMemo(
-    () => (userAvatar || user?.role === `student` ? tempAvatar || user?.avatar : user?.avatar) || '/avatars/default.jpeg',
-    [tempAvatar, user],
-  );
 
   return (
     <Flex
@@ -163,6 +150,38 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
     >
       <Flex direction="column" gap="1rem">
         <Flex bg={colorMode === 'light' ? 'primary900' : 'primary400'} h="102px" position="relative" borderRadius="10px" minH="102px">
+          <Flex
+            title="Trocar foto de perfil"
+            position="absolute"
+            borderRadius="50%"
+            bg="gray300"
+            bottom="-2rem"
+            w="6rem"
+            h="6rem"
+            left="50%"
+            transform="translate(-50%, 0)"
+            boxShadow=" 0px 4px 6px -2px"
+            overflow="hidden"
+            border="4px"
+            borderColor="white"
+          >
+            <NextImage loader={() => avatar} src={avatar} width={100} height={100} alt="" style={{ opacity: isUpdating ? `0.4` : `1` }} />
+          </Flex>
+          {isUpdating && (
+            <Flex
+              position="absolute"
+              borderRadius="50%"
+              bottom="-2rem"
+              w="6rem"
+              h="6rem"
+              left="50%"
+              transform="translate(-50%, 0)"
+              align="center"
+              justify="center"
+            >
+              <Spinner size="xl" />
+            </Flex>
+          )}
           <Uploader
             autoUpload={true}
             accept={`img/*`}
@@ -174,24 +193,20 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user, isOpen, stopTour })
             }}
             toggleAs={(e) => (
               <Flex
-                title="Trocar foto de perfil"
-                position="absolute"
+                border="1px"
+                borderColor="gray300"
                 borderRadius="50%"
-                bg="gray300"
-                bottom="-2rem"
-                w="6rem"
-                h="6rem"
-                left="50%"
+                p="0.25rem"
+                bg="white"
+                position="absolute"
+                left="calc(50% + 2.5rem)"
                 transform="translate(-50%, 0)"
-                boxShadow=" 0px 4px 6px -2px"
-                overflow="hidden"
-                border="4px"
-                borderColor="white"
                 cursor={'pointer'}
                 _hover={{ filter: `brightness(0.9)` }}
+                bottom="-1.5rem"
                 onClick={() => e.onClick(e)}
               >
-                <Img src={avatar} w="100%" h="100%" />
+                <FiEdit2 size="1rem" color="#98A2B3" />
               </Flex>
             )}
           />
