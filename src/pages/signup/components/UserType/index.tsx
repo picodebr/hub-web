@@ -1,6 +1,8 @@
-import { Flex, Link, Text } from '@chakra-ui/react';
-
+import { Flex, Image, Img, Link, Text } from '@chakra-ui/react';
 import { HubUserType } from '@/_base/interfaces/user';
+
+import Professor from '../../../../../public/icons/icone-professor.webp';
+import Aluno from '../../../../../public/icons/icone-estudante.webp';
 
 interface IProps {
   onUserTypeChange: (type: HubUserType) => void;
@@ -30,7 +32,7 @@ export const UserTypeStep: React.FC<IProps> = ({ onUserTypeChange }) => {
           direction="column"
           h="178px"
           w="170px"
-          bg="gray100"
+          bg="primary300"
           borderRadius="14px"
           overflow="hidden"
           cursor="pointer"
@@ -38,7 +40,8 @@ export const UserTypeStep: React.FC<IProps> = ({ onUserTypeChange }) => {
           onClick={() => onUserTypeChange('student')}
         >
           <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
-          <Flex h="28px" bg="primary300" color="gray900" align="center" justify="center">
+          <Image src="/icons/icone-estudante.webp" w="100px" alignSelf="center" />
+          <Flex h="28px" bg="primary300" color="gray900" align="center" justify="center" fontWeight="500">
             Aluno
           </Flex>
         </Flex>
@@ -46,7 +49,7 @@ export const UserTypeStep: React.FC<IProps> = ({ onUserTypeChange }) => {
           direction="column"
           h="178px"
           w="170px"
-          bg="gray100"
+          bg="primary400"
           borderRadius="14px"
           overflow="hidden"
           cursor="pointer"
@@ -54,7 +57,8 @@ export const UserTypeStep: React.FC<IProps> = ({ onUserTypeChange }) => {
           onClick={() => onUserTypeChange('teacher')}
         >
           <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
-          <Flex h="28px" bg="primary400" color="gray800" align="center" justify="center">
+          <Img src="/icons/icone-professor.webp" w="100px" alignSelf="center" />
+          <Flex h="28px" bg="primary400" color="gray800" align="center" justify="center" fontWeight="500">
             Professor
           </Flex>
         </Flex>
