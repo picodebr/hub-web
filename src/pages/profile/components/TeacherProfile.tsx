@@ -1,9 +1,8 @@
 import moment from 'moment';
-
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Text, useColorMode } from '@chakra-ui/react';
 import { FiFileText, FiHelpCircle } from 'react-icons/fi';
 import { IoChevronForward } from 'react-icons/io5';
-import { MdOutlinePlayCircleFilled } from 'react-icons/md';
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Text, useColorMode } from '@chakra-ui/react';
+
 import { IProfileComponentProps } from './interfaces';
 import { useCustomRouter, useHubTour } from '@/_base/hooks';
 
@@ -93,9 +92,9 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
             </Flex>
           </Flex>
           <Flex flex="1" align="center" gap="0.75rem" w="100%" pb="1.25rem">
-            <Flex w="100%" h="100%" borderRadius="6px" bg="lightgray" align="center" justify="center" fontSize="3rem">
-              <MdOutlinePlayCircleFilled />
-            </Flex>
+            <video width="100%" height="100%" controls preload="true" style={{ maxHeight: `230px`, borderRadius: `10px` }}>
+              <source src="https://picode-public.s3.amazonaws.com/hub-videos/Apresenta%C3%A7%C3%A3o+professores+com+intro+.mp4" type="video/mp4" />
+            </video>
           </Flex>
         </Flex>
       </Flex>

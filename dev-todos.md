@@ -4,21 +4,23 @@
 
 [ ] - Buscar na web imagens para adicionar na primeira tela do cadastro (aluno / professor)
 
+[ ] - Guia rápido (Pensar no passo a passo de cada guia
+
+[ ] - Adicionar Gantt e Orçamentos
+
 [x] - Ícone
 
-[ ] - Vídeo de boas-vindas (já mandei o link tem tempo aqui no grupo)
+[x] - Vídeo de boas-vindas (já mandei o link tem tempo aqui no grupo)
 
-[ ] - Inverter a ordem dos livros na biblioteca, deixando o G5 no começo (G3, G4, G5, 1º...9º) e mudar o nome de "Ano G5" para "G5"
+[x] - Inverter a ordem dos livros na biblioteca, deixando o G5 no começo (G3, G4, G5, 1º...9º) e mudar o nome de "Ano G5" para "G5"
 
 [x] - Na tela de reportar erro, tá bugado, aparecendo info interna ("Nome da escola do usuário" ao invés de realmente aparecer o nome da escola)
 
-[ ] - Zerar os reports dos usuários (para mim, usuário, está aparecendo report do Coc Paulínia, fictício)
+[x] - Zerar os reports dos usuários (para mim, usuário, está aparecendo report do Coc Paulínia, fictício)
 
-[ ] - Ajustar os erros da tela de cadastro (explicar e sinalizar onde tá dando erro - no teste com o prof aqui só acusou erro e não disse onde, e era um . que estava no usuário dele) (REGEX
+[x] - Ajustar os erros da tela de cadastro (explicar e sinalizar onde tá dando erro - no teste com o prof aqui só acusou erro e não disse onde, e era um . que estava no usuário dele)
 
 [x] - Botão de "Suporte PiCode" logo abaixo do avatar pode tirar, já que não é clicável e nem útil
-
-[ ] - Adicionar Gantt e Orçamentos
 
 ---
 
@@ -34,13 +36,15 @@
 
 [x] - No kanban, quando um card for para a coluna "Feito", aparecer algum símbolo de "check" ao lado do card
 
-[ ] - Avatar não está salvando e nem ficando no ícone (plataforma no ar, é importante isso funcionar)
+[x] - Avatar não está salvando e nem ficando no ícone (plataforma no ar, é importante isso funcionar)
+
+[x] - Status dos projetos (como iniciar/pausar?)
 
 [ ] - Finalizar suporte
 
 [ ] - Guia rápido
 
-[ ] - Status dos projetos (como iniciar/pausar?)
+[ ] - ⁠CODE (na dos alunos e dos profs)
 
 [ ] - ⁠Pensar em como o dinheiro “volta” para o aluno, ao finalizar o projeto e devolver o componente para o prof (ou talvez uma “recompra” num preço menor, algo do tipo)
 
@@ -58,11 +62,7 @@ _Coisas para acrescentar no CODE:_
 
 [ ] - Função de “compartilhar” o projeto (entre colegas e com o prof - se mandar para os colegas da turma, eles já recebem o projeto na pasta “Compartilhados Comigo”; se mandar para o prof, o prof já recebe isso como uma atividade do grupo e pode dar um “ok” ou “reprovado”, algo do tipo
 
-[ ] - Turmas / grupos / alunos / criar e gerenciar projetos
-
-[ ] - ⁠CODE (na dos alunos e dos profs)
-
-[ ] - Suporte
+[x] - Turmas / grupos / alunos / criar e gerenciar projetos
 
 [x] - Biblioteca (aluno, prof e docs complementares)
 
