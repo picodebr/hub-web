@@ -1,9 +1,9 @@
-type SchemaErrorType = 'REQUIRED_FIELD' | 'INVALID_FIELD' | 'EMAIL' | 'MININUM_LENGTH' | 'CODE_ERROR';
+type SchemaErrorType = 'REQUIRED_FIELD' | 'INVALID_FIELD' | 'EMAIL' | 'MININUM_LENGTH_SIX' | 'CODE_ERROR';
 
 export const zodSchemaErrors: Record<SchemaErrorType, string> = {
   REQUIRED_FIELD: 'Campo obrigatório',
   INVALID_FIELD: 'Campo inválido',
   EMAIL: 'E-mail inválido',
-  MININUM_LENGTH: 'Mínimo de 6 caracteres',
+  MININUM_LENGTH_SIX: 'Mínimo de 6 caracteres',
   CODE_ERROR: 'Código inválido',
 };
