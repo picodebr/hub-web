@@ -1,5 +1,5 @@
 export interface IReportPageProps {}
 
-export const reportPageViews = <const>['Kits / Placas', 'Plataforma', 'Biblioteca', 'Outros'];
+export const hubReportTypes = <const>['Kits / Placas', 'Plataforma', 'Biblioteca', 'Outros'];
 
-export type ReportPageView = (typeof reportPageViews)[number];
+export type HubReportType = (typeof hubReportTypes)[number];
