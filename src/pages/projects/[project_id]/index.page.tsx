@@ -57,7 +57,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
         ),
       );
 
-      dto.metadata.attachments = [...(dto.metadata.attachments || []), ...fileData.map((e) => e.path)];
+      (dto.metadata as any).attachments = [...(dto.metadata?.attachments || []), ...fileData.map((e) => e.path)];
     }
 
     const updatedProject = await updateProject(dto);

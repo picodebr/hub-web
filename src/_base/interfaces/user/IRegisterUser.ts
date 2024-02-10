@@ -36,11 +36,11 @@ export const registerUserSchema: ZodCustomSchema<IRegisterUser> = z.object({
     .trim()
     .min(4, { message: zodSchemaErrors.CODE_ERROR })
     .max(4, { message: zodSchemaErrors.CODE_ERROR }),
-  name: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim().min(6, { message: zodSchemaErrors.MININUM_LENGTH }),
+  name: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim().min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
   email: z.string().email().optional(),
-  username: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim().min(6, { message: zodSchemaErrors.MININUM_LENGTH }),
-  password: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(6, { message: zodSchemaErrors.MININUM_LENGTH }),
-  password_confirmation: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(6, { message: zodSchemaErrors.MININUM_LENGTH }),
+  username: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim().min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
+  password: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
+  password_confirmation: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
   birthdate: z.date({ required_error: zodSchemaErrors.REQUIRED_FIELD }).max(new Date(), { message: zodSchemaErrors.INVALID_FIELD }),
   user_type: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }),
   school_codes: z.array(z.string()).optional().default([]),

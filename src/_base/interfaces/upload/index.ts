@@ -6,5 +6,5 @@ export interface IPreSignedUploadResponse {
   host: string;
 }
 
-export const bucketFolders = <const>['avatars', 'videos', 'books', 'courses', 'groups', 'comments', 'user_projects'];
+export const bucketFolders = <const>['avatars', 'videos', 'books', 'courses', 'groups', 'comments', 'user_projects', 'reports'];
 export type BucketFolders = (typeof bucketFolders)[number];

@@ -9,6 +9,7 @@ export interface IModalProps extends Partial<ModalProps> {
   cancelText?: string;
   disableOkButton?: boolean;
   disableCancelButton?: boolean;
+  isLoading?: boolean;
   overlay?: ModalOverlayProps;
   topIcon?: ModalTopIconType | React.ReactElement;
 }

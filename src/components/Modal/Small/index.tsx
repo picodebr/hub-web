@@ -25,6 +25,7 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
   disableOkButton = false,
   overlay = {},
   topIcon,
+  isLoading,
   ...rest
 }) => {
   return (
@@ -64,6 +65,7 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
               onConfirm();
             }}
             isDisabled={disableOkButton}
+            isLoading={isLoading}
           />
         </ModalFooter>
       </ModalContent>

@@ -1,121 +1,230 @@
 import { useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 
-import { Flex, Select, Text } from '@chakra-ui/react';
+import { Flex, Select, Text, Tooltip } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { cookieManager, logError } from '@/_base/utils';
 import { validateSession } from '@/_base/services/auth';
 import { HubTable } from '@/components/Table';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { SmallModal } from '@/components/Modal/Small';
-import { useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useCustomRouter, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
-import { ReportPageView, reportPageViews } from './[report_id]/interface';
+import { HubReportType, hubReportTypes } from './[report_id]/interface';
 
 import { Upload } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
 import { useSelectedSchool } from '@/components/Page/components/Header';
+import { EMPTY_CREATE_REPORT_DATA, ICreateHubReportParams, IHubReport, reportSchema } from '@/_base/interfaces/report';
+import { createReport, listReports } from '@/_base/services/report';
+import { Badge } from 'rsuite';
+import moment from 'moment';
+import { IoMdArrowUp } from 'react-icons/io';
+import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 
-interface IFileInputProps {
-  onChange: (files: File[]) => void;
-  fileUrl?: string;
-  type?: 'image' | 'video';
+interface IProps {
+  reports: IHubReport[];
 }
 
-const HubSupport: React.FC<IFileInputProps> = () => {
-  const [newReport, setNewReport] = useState<Record<string, string> | null>(null);
-  const [pageView, setPageView] = useState<ReportPageView>('Kits / Placas');
-  const { school } = useSelectedSchool();
+const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [reports, setReports] = useState<IHubReport[]>(_reports);
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [pageView, setPageView] = useState<HubReportType | `Assunto`>('Assunto');
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
-  const PageElement: Record<ReportPageView, React.ReactElement> = {
+  const { school } = useSelectedSchool();
+  const router = useCustomRouter();
+  const toast = useCustomToast();
+  const { data, errors, onInputChange, setData, setErrors, submit } = useInputHandler<ICreateHubReportParams>({
+    data: EMPTY_CREATE_REPORT_DATA,
+    schema: reportSchema,
+  });
+
+  const handleCreateReport = useAsyncCallback(
+    async () => {
+      setIsLoading(true);
+      if (fileList.length) {
+        const presignedUrls = await Promise.all(
+          fileList.map((file) => getPresignedUrl(file.type || `image/png`, 'reports').then((d) => ({ ...d, file }))),
+        );
+        await Promise.all(presignedUrls.map((response) => uploadFile(response.link, response.file.originFileObj as File)));
+
+        data.files = presignedUrls.map((response) => response.path);
+      }
+      data.metadata.school_name = school?.display_name || ``;
+      const newReport = await createReport(data);
+      setReports((e) => [newReport, ...e]);
+      toast({ status: 'success', description: 'Erro reportado com sucesso!' });
+      clearData();
+    },
+    [],
+    true,
+    () => {
+      setIsLoading(false);
+    },
+  );
+
+  const handleChangeContext = (context: HubReportType) => {
+    const initialData = { ...EMPTY_CREATE_REPORT_DATA, context };
+    if (context === `Plataforma`) initialData.subject = `Plataforma`;
+
+    setPageView(context);
+    setErrors({} as any);
+    setData(initialData);
+  };
+
+  const clearData = () => {
+    setData(EMPTY_CREATE_REPORT_DATA);
+    setOpenModal(false);
+    setErrors({} as any);
+  };
+
+  const PageElement: Record<HubReportType, React.ReactElement> = {
     'Kits / Placas': (
       <Flex>
         <Flex w="100%" flex="1" direction="column">
-          <TextAreaInput label="Qual componente?" placeholder="Digite aqui..." />
-          <TextAreaInput label="Descreva o problema" placeholder="Digite aqui..." />
+          <TextAreaInput
+            label="Qual componente?"
+            placeholder="Digite aqui..."
+            value={data.subject}
+            error={errors.subject}
+            onInputChange={(value) => onInputChange(`subject`, value)}
+          />
+          <TextAreaInput
+            label="Descreva o problema"
+            placeholder="Digite aqui..."
+            value={data.text}
+            error={errors.text}
+            onInputChange={(value) => onInputChange(`text`, value)}
+          />
           <Text fontSize="13.5px" fontWeight="500" color="gray700">
             Anexe imagens do problema
           </Text>
-          <UploadInput />
+          <UploadInput onFilesChange={setFileList} />
         </Flex>
       </Flex>
     ),
     Plataforma: (
       <Flex>
         <Flex w="100%" flex="1" direction="column">
-          <TextAreaInput label="Descreva o problema" placeholder="Digite aqui..." />
+          <TextAreaInput
+            label="Descreva o problema"
+            placeholder="Digite aqui..."
+            value={data.text}
+            error={errors.text}
+            onInputChange={(value) => onInputChange(`text`, value)}
+          />
           <Text fontSize="13.5px" fontWeight="500" color="gray700">
             Anexe capturas de tela do problema
           </Text>
-          <UploadInput />
+          <UploadInput onFilesChange={setFileList} />
         </Flex>
       </Flex>
     ),
     Biblioteca: (
       <Flex w="100%" flex="1" direction="column">
-        <TextAreaInput label="Qual livro?" placeholder="Digite aqui..." />
-        <TextAreaInput label="Descreva o problema" placeholder="Digite aqui..." />
+        <TextAreaInput
+          label="Qual livro?"
+          placeholder="Digite aqui..."
+          value={data.subject}
+          error={errors.subject}
+          onInputChange={(value) => onInputChange(`subject`, value)}
+        />
+        <TextAreaInput
+          label="Descreva o problema"
+          placeholder="Digite aqui..."
+          value={data.text}
+          error={errors.text}
+          onInputChange={(value) => onInputChange(`text`, value)}
+        />
         <Text fontSize="13.5px" fontWeight="500" color="gray700">
           Anexe imagens do problema
         </Text>
-        <UploadInput />
+        <UploadInput onFilesChange={setFileList} />
       </Flex>
     ),
     Outros: (
       <Flex w="100%" flex="1" direction="column">
-        <TextAreaInput label="Com o que você precisa de suporte?" placeholder="Digite aqui..." />
-        <TextAreaInput label="Descreva o problema" placeholder="Digite aqui..." />
+        <TextAreaInput
+          label="Com o que você precisa de suporte?"
+          placeholder="Digite aqui..."
+          value={data.subject}
+          error={errors.subject}
+          onInputChange={(value) => onInputChange(`subject`, value)}
+        />
+        <TextAreaInput
+          label="Descreva o problema"
+          placeholder="Digite aqui..."
+          value={data.text}
+          error={errors.text}
+          onInputChange={(value) => onInputChange(`text`, value)}
+        />
         <Text fontSize="13.5px" fontWeight="500" color="gray700">
           Anexe arquivos do problema
         </Text>
-        <UploadInput />
+        <UploadInput onFilesChange={setFileList} />
       </Flex>
     ),
   };
 
-  const router = useCustomRouter();
-  const toast = useCustomToast();
-
-  const reports: Record<string, any>[] = [];
-
   return (
     <Flex flex="1" direction="column" gap="1.85rem">
       <Flex w="100%" justify="flex-end">
-        <GenericButton label="Reportar Erro" borderColor="gray300" leftIcon={<FiPlus />} onClick={() => setNewReport({})} />
+        <GenericButton label="Reportar Erro" borderColor="gray300" leftIcon={<FiPlus />} onClick={() => setOpenModal(true)} />
       </Flex>
       <HubTable
-        rows={reports}
+        rows={reports.map((r) => ({
+          ...r,
+          status: (
+            <Badge
+              style={{ padding: `0.25rem 0.5rem`, whiteSpace: `nowrap` }}
+              color={r.status === 'finished' ? 'green' : 'orange'}
+              content={r.status === 'finished' ? `Resolvido` : `Em andamento`}
+            />
+          ),
+          limit_date: <Text fontWeight="500">{r.limit_date ? moment(r.limit_date).format('DD/MM/YYYY') : `-- --`}</Text>,
+        }))}
         onRowClick={(e) => router.push(`/reports/${e.id}`)}
+        columnSizes={[{ field: 'subject', width: '100%' }]}
         columns={[
           { label: 'Erro Reportado', field: 'subject' },
-          { label: 'Status', field: 'status' },
-          { label: 'Prazo', field: 'term' },
+          {
+            label: (
+              <Tooltip label="Status">
+                <Flex justify="center" gap="8px" align="center">
+                  <Text color="gray600" fontSize="16px">
+                    Status
+                  </Text>
+                  <IoMdArrowUp fontSize="14px" />
+                </Flex>
+              </Tooltip>
+            ),
+            field: 'status',
+          },
+          { label: 'Prazo', field: 'limit_date' },
         ]}
       />
       <SmallModal
         size="2xl"
         title="Reportar erro"
-        show={!!newReport}
-        onConfirm={() => {
-          setNewReport(null);
-          toast({ status: 'success', description: 'Erro reportado com sucesso!' });
-        }}
-        onCancel={() => setNewReport(null)}
+        show={!!openModal}
+        onConfirm={() => submit(handleCreateReport)}
+        onCancel={clearData}
         topIcon="warning"
         okText="Reportar"
+        isLoading={isLoading}
       >
-        <Flex direction="column" flex="1">
+        <Flex direction="column" flex="1" minH="12rem">
           <Flex mb="4px">
             <Text fontWeight="500" color="primary700">
               {school?.display_name}
             </Text>
           </Flex>
-          <Flex mb="4px">
-            <Text>{school?.display_name}</Text>
-          </Flex>
+
           <Flex marginBottom="8px">
-            <Select placeholder="Assunto" value={pageView} onChange={(e) => setPageView(e.target.value as ReportPageView)}>
-              {reportPageViews.map((view) => (
+            <Select placeholder="Assunto" value={pageView} onChange={(e) => handleChangeContext(e.target.value as HubReportType)}>
+              {hubReportTypes.map((view) => (
                 <option key={view} value={view}>
                   {view}
                 </option>
@@ -123,7 +232,7 @@ const HubSupport: React.FC<IFileInputProps> = () => {
             </Select>
           </Flex>
           <Flex direction="column" flex="1">
-            {PageElement[pageView]}
+            {PageElement[pageView as HubReportType]}
           </Flex>
         </Flex>
       </SmallModal>
@@ -139,9 +248,11 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
+    const reports = await listReports();
+
     await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Suporte', showBackButton: false } };
+    return { props: { selectedPage, pageTitle: 'Suporte', reports, showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
@@ -150,18 +261,16 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   }
 };
 
-const UploadInput: React.FC = () => {
-  const [fileList, setFileList] = useState<UploadFile[]>([
-    // {
-    //   uid: '-1',
-    //   name: 'image.png',
-    //   status: 'done',
-    //   url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
-    // },
-  ]);
+interface IUploadInputProps {
+  onFilesChange: (data: UploadFile[]) => void;
+}
+
+const UploadInput: React.FC<IUploadInputProps> = ({ onFilesChange }) => {
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   const onChange: UploadProps['onChange'] = ({ fileList: newFileList }) => {
     setFileList(newFileList);
+    onFilesChange(newFileList);
   };
 
   const onPreview = async (file: UploadFile) => {
@@ -181,13 +290,7 @@ const UploadInput: React.FC = () => {
 
   return (
     <Flex w="100%" direction="column" gap="4px" mt="8px">
-      <Upload
-        action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
-        listType="picture-card"
-        fileList={fileList}
-        onChange={onChange}
-        onPreview={onPreview}
-      >
+      <Upload listType="picture-card" fileList={fileList} onChange={onChange} onPreview={onPreview} accept="image/*">
         {fileList.length < 5 && '+ Upload'}
       </Upload>
     </Flex>
