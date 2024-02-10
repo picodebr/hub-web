@@ -2,7 +2,7 @@
 
 [Ana Sichieri](https://github.com/haruzlnha)
 
-[ ] - Buscar na web imagens para adicionar na primeira tela do cadastro (aluno / professor)
+[x] - Buscar na web imagens para adicionar na primeira tela do cadastro (aluno / professor)
 
 [ ] - Guia rápido (Pensar no passo a passo de cada guia
 
