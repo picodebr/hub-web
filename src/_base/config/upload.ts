@@ -1,0 +1,6 @@
+export const uploadConfig = {
+  BOOTLOADER_START_DELAY: 500, // ms
+  DEFAULT_BAUD_RATE: 115200, // bps
+  MESSAGE_VISIBILITY_TIME: 2000, // ms
+  MAXIMUM_UPLOAD_TIME: 1000, // ms
+};

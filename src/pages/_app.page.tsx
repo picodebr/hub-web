@@ -9,6 +9,10 @@ import { LoadingProvider, useLoading } from '@/_base/hooks/Loading';
 import { Page } from '@/_base/hooks/Page';
 import { cookieManager } from '@/_base/utils';
 import { globalTheme } from '@/styles/global';
+import { StyledGlobal } from '@/styles/StyledGlobal';
+import { BlocklyProvider, PlatformProvider } from '@/_base/hooks';
+import { ThemeProvider } from 'styled-components';
+import { themes } from '@/styles/themes';
 
 export default function App({ Component, pageProps }: AppProps) {
   const token = cookieManager.getToken();
@@ -17,17 +21,24 @@ export default function App({ Component, pageProps }: AppProps) {
   const { setLoadingConfig } = useLoading();
 
   return (
-    <GoogleOAuthProvider clientId="47490597990-gfmoh1pha85b9qi3b19fg3t75ebb0rm2.apps.googleusercontent.com">
-      <ChakraProvider theme={globalTheme}>
-        <LoadingProvider changeSignal={{}}>
-          <CustomRouterProvider>
-            <Page {...pageProps} setLoadingConfig={setLoadingConfig}>
-              <Component {...pageProps} />
-              <CSSReset />
-            </Page>
-          </CustomRouterProvider>
-        </LoadingProvider>
-      </ChakraProvider>
-    </GoogleOAuthProvider>
+    <PlatformProvider>
+      <ThemeProvider theme={themes.light}>
+        <StyledGlobal />
+        <GoogleOAuthProvider clientId="47490597990-gfmoh1pha85b9qi3b19fg3t75ebb0rm2.apps.googleusercontent.com">
+          <ChakraProvider theme={globalTheme}>
+            <LoadingProvider changeSignal={{}}>
+              <CustomRouterProvider>
+                <BlocklyProvider>
+                  <Page {...pageProps} setLoadingConfig={setLoadingConfig}>
+                    <Component {...pageProps} />
+                    <CSSReset />
+                  </Page>
+                </BlocklyProvider>
+              </CustomRouterProvider>
+            </LoadingProvider>
+          </ChakraProvider>
+        </GoogleOAuthProvider>
+      </ThemeProvider>
+    </PlatformProvider>
   );
 }
