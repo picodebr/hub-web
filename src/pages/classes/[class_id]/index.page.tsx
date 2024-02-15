@@ -13,9 +13,10 @@ import {
   Tooltip,
   Flex,
   Text,
+  Skeleton,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { IoMdArrowUp } from 'react-icons/io';
 import { FiCalendar, FiFileText } from 'react-icons/fi';
@@ -28,7 +29,7 @@ import { getClassData } from '@/_base/services/class';
 import { TabSwitch } from '@/components/TabSwitch';
 import { ClassPageView, classPageViews } from './interfaces';
 import { HubTable } from '@/components/Table';
-import { useAsyncCallback, useAuth, useCustomRouter } from '@/_base/hooks';
+import { useAsyncCallback, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { IHubClass } from '@/_base/interfaces/class';
 import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
 import { SmallModal } from '@/components/Modal/Small';
@@ -36,6 +37,8 @@ import { TextInput } from '@/components/Inputs/Text';
 import { addProject, updateProject } from '@/_base/services/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { HubStatus, hubStatuses } from '@/_base/interfaces/shared';
+import { validateSession } from '@/_base/services/auth';
+import { IHubUser } from '@/_base/interfaces/user';
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -44,29 +47,47 @@ type ProjectTableType = { id: string; user_avatar: ReactNode; name: ReactNode; s
 const ProjectTable = HubTable<ProjectTableType>;
 
 interface IProps {
-  hubClass: IHubClass;
+  classId: string;
+  user: IHubUser;
 }
 
 type ModalStep = 'creation_type' | 'man_project_name' | 'man_task_quantity' | 'man_task_naming';
 
-const Class: React.FC<IProps> = ({ hubClass }) => {
+const Class: React.FC<IProps> = ({ classId, user }) => {
   const [pageView, setPageView] = useState<ClassPageView>('Projetos');
   const [newProject, setNewProject] = useState<IProject | null>(null);
   const [modalStep, setModalStep] = useState<ModalStep>('creation_type');
   const [newProjectSteps, setNewProjectSteps] = useState<IHubProjectStep[]>([]);
-  const [projects, setProjects] = useState<IProject[]>(hubClass.projects);
+  const [projects, setProjects] = useState<IProject[]>();
+  const [hubClass, setHubClass] = useState<IHubClass | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useCustomRouter();
-  const { user } = useAuth();
+  const toast = useCustomToast();
+
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const hubClassData = await getClassData(classId);
+        setHubClass(hubClassData);
+        setProjects(hubClassData.projects);
+      } catch {
+        toast({ status: `error`, description: `Não foi possível exibir detalhes da turma` });
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
   const handleUpdateProjectStatus = useAsyncCallback(async (id: string, status: HubStatus) => {
     await updateProject({ id, status });
-    setProjects((e) => e.map((p) => (p.id === id ? { ...p, status } : p)));
+    setProjects((e) => e?.map((p) => (p.id === id ? { ...p, status } : p)));
   }, []);
 
   const dataProjects = useMemo<ProjectTableType[]>(
     () =>
-      projects.map((project) => ({
+      projects?.map((project) => ({
         id: project.id,
         user_avatar: (
           <Avatar
@@ -123,7 +144,7 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
             <Text fontWeight="500">{moment(project.created_at).format('DD/MM/YYYY')}</Text>
           </Flex>
         ),
-      })),
+      })) || [],
     [projects],
   );
 
@@ -132,44 +153,45 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
 
     const project = await addProject({
       title: newProject.title,
-      class_id: hubClass.id,
+      class_id: hubClass?.id || ``,
       description: newProject.description,
       metadata: { steps: newProjectSteps },
     });
     project.educator = user;
-    setProjects((e) => [project, ...e]);
+    setProjects((e) => [project, ...(e || [])]);
 
     setModalStep('creation_type');
     setNewProjectSteps([]);
     setNewProject(null);
   }, []);
 
-  const students: StudentTableType[] = hubClass.students.map((student) => ({
-    id: student.id,
-    name: (
-      <Flex direction="column">
-        <Text color="gray800">{student.name}</Text>
-        <Text color="gray500">@{student.username}</Text>
-      </Flex>
-    ),
-    avatar: (<Avatar name={formatShortName(student.name, true)} title={student.name} h="40px" w="40px" />) as any,
-    engagement: (
-      <Flex align="center" gap="0.25rem">
-        <Text fontWeight="500">0</Text>
-        <Box borderRadius="50%" color="primary700" fontSize="1.75rem">
-          <IoArrowUpCircleOutline />
-        </Box>
-      </Flex>
-    ),
-    xp: (
-      <Flex align="center" gap="0.25rem">
-        <Text fontWeight="500">0</Text>
-        <Box borderRadius="50%" color="primary300" fontSize="1.75rem">
-          <IoArrowUpCircleOutline />
-        </Box>
-      </Flex>
-    ),
-  }));
+  const students: StudentTableType[] =
+    hubClass?.students.map((student) => ({
+      id: student.id,
+      name: (
+        <Flex direction="column">
+          <Text color="gray800">{student.name}</Text>
+          <Text color="gray500">@{student.username}</Text>
+        </Flex>
+      ),
+      avatar: (<Avatar name={formatShortName(student.name, true)} title={student.name} h="40px" w="40px" />) as any,
+      engagement: (
+        <Flex align="center" gap="0.25rem">
+          <Text fontWeight="500">0</Text>
+          <Box borderRadius="50%" color="primary700" fontSize="1.75rem">
+            <IoArrowUpCircleOutline />
+          </Box>
+        </Flex>
+      ),
+      xp: (
+        <Flex align="center" gap="0.25rem">
+          <Text fontWeight="500">0</Text>
+          <Box borderRadius="50%" color="primary300" fontSize="1.75rem">
+            <IoArrowUpCircleOutline />
+          </Box>
+        </Flex>
+      ),
+    })) || [];
 
   return (
     <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
@@ -200,6 +222,7 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
           </Flex>
         )}
       </Flex>
+
       {pageView === 'Alunos' ? (
         <StudentTable
           rows={students}
@@ -258,6 +281,8 @@ const Class: React.FC<IProps> = ({ hubClass }) => {
           ]}
         />
       )}
+      {isLoading && <Skeleton isLoaded={false} h="4.5rem" w="100%" />}
+
       <SmallModal
         title="Método de criação do projeto"
         show={!!newProject && modalStep === 'creation_type'}
@@ -367,9 +392,10 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
 
   try {
     cookieManager.updateToken(req);
-    const hubClass = await getClassData(`${query.class_id}`);
+    const pageTitle = `${query._p || `Turma`}`;
+    const user = await validateSession();
 
-    return { props: { selectedPage, pageTitle: hubClass.display_name, hubClass } };
+    return { props: { selectedPage, pageTitle, user, classId: `${query.class_id}` } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

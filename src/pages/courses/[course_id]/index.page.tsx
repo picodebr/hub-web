@@ -1,93 +1,108 @@
 import { GetServerSideProps } from 'next';
 
-import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
-import { Flex, Progress, Text } from '@chakra-ui/react';
-import { FiLock } from 'react-icons/fi';
-import { useCustomRouter } from '@/_base/hooks';
-import { CommingSoon } from '@/components/CommingSoon';
+import { Flex, Progress, Skeleton, Text } from '@chakra-ui/react';
+import { useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useEffect, useState } from 'react';
+import { IHubModule } from '@/_base/interfaces/module';
+import { getCourseActivity, listModules } from '@/_base/services/course';
+import { isUuid } from 'uuidv4';
 
-const Courses: React.FC = () => {
+interface IProps {
+  courseId: string;
+}
+
+const Course: React.FC<IProps> = ({ courseId }) => {
+  const [modules, setModules] = useState<(IHubModule & { finished_lessons: number })[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const toast = useCustomToast();
   const router = useCustomRouter();
-  return (
-    <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
-      <CommingSoon />
 
-      <Flex
-        bgColor="white"
-        direction="column"
-        borderRadius="12px"
-        boxShadow="md"
-        w="100%"
-        h="360px"
-        padding="20px 0"
-        gap="20px"
-        textAlign="left"
-        whiteSpace="nowrap"
-        borderBottom="1px solid gray300"
-      >
-        <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" color="gray600">
-          Módulos
-        </Text>
-        <Flex direction="column" p="20px" fontWeight="700" color="gray700" gap="12px">
-          <Flex
-            cursor="pointer"
-            borderBottom="1px"
-            borderColor="gray100"
-            paddingBottom="12px"
-            display="flex"
-            justify="space-between"
-            onClick={() => router.push(`/courses/3/1`)}
-          >
-            Programação 1
-            <Flex w="320px" gap="12px" align="center">
-              <Progress value={70} rounded={8} flex="1" min={0} max={100} size="md" />
-              <Text fontWeight="500" align="center" fontSize="14px">
-                70%
-              </Text>
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const [{ results }, activity] = await Promise.all([listModules(courseId), getCourseActivity(courseId)]);
+        setModules(
+          results.map((r) => ({
+            ...r,
+            finished_lessons: activity.metadata?.find((m) => m.entity_id === r.id)?.lessons.filter((l) => !!l.finished_at)?.length || 0,
+          })),
+        );
+      } catch {
+        toast({ status: `error`, description: `Não foi possível listar os módulos disponíveis no momento` });
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  return (
+    <Flex
+      flex="1"
+      bgColor="white"
+      direction="column"
+      borderRadius="12px"
+      padding="20px 0"
+      gap="20px"
+      textAlign="left"
+      whiteSpace="nowrap"
+      borderBottom="1px solid gray300"
+      userSelect="none"
+      overflow="hidden"
+    >
+      <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" color="gray600">
+        Módulos
+      </Text>
+      <Flex direction="column" p="0.35rem 1rem" fontWeight="700" color="gray700" gap="6px" overflow="hidden auto">
+        <Skeleton isLoaded={!isLoading} h="2.75rem">
+          {modules.map((mod) => (
+            <Flex
+              key={mod.id}
+              cursor="pointer"
+              p="12px 8px"
+              gap="1rem"
+              display="flex"
+              justify="space-between"
+              onClick={() => router.push(`/courses/${mod.hub_course_id}/${mod.id}?_p=${mod.title}`)}
+              _hover={{ bg: `gray50` }}
+              _notLast={{ borderBottom: '1px', borderColor: 'gray100', borderRadius: `4px 4px 0 0` }}
+              _last={{ borderRadius: `4px` }}
+              _first={{ borderRadius: `4px` }}
+            >
+              <Flex gap="8px" align="center">
+                <Text noOfLines={1}>{mod.title}</Text>
+                {/* <FiLock color="#13277A" /> */}
+              </Flex>
+              <Flex w="320px" gap="12px" align="center">
+                <Progress value={mod.finished_lessons} rounded={8} flex="1" min={0} max={mod.lessons.length || 1} size="md" />
+                <Text fontWeight="500" align="center" fontSize="14px">
+                  {`${mod.finished_lessons}/${mod.lessons.length}`}
+                </Text>
+              </Flex>
             </Flex>
-          </Flex>
-          <Flex gap="8px" align="center" borderBottom="1px" borderColor="gray100" paddingBottom="12px" display="flex" justify="space-between">
-            <Flex gap="8px" align="center">
-              Programação 2
-              <FiLock color="#13277A" />
-            </Flex>
-            <Flex w="320px" gap="12px" align="center">
-              <Progress value={0} rounded={8} flex="1" min={0} max={100} size="md" />
-              <Text fontWeight="500" align="center" fontSize="14px">
-                0%
-              </Text>
-            </Flex>
-          </Flex>
-          <Flex gap="8px" align="center" display="flex" justify="space-between">
-            <Flex gap="8px" align="center">
-              Programação 3
-              <FiLock color="#13277A" />
-            </Flex>
-            <Flex w="320px" gap="12px" align="center">
-              <Progress value={0} rounded={8} flex="1" min={0} max={100} size="md" />
-              <Text fontWeight="500" align="center" fontSize="14px">
-                0%
-              </Text>
-            </Flex>
-          </Flex>
-        </Flex>
+          ))}
+        </Skeleton>
       </Flex>
     </Flex>
   );
 };
 
-export default Courses;
+export default Course;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
   const selectedPage = 'courses';
 
   try {
     cookieManager.updateToken(req);
 
-    await validateSession();
+    const courseId = `${query.course_id}`;
+    const pageTitle = `${query._p || 'Curso'}`;
 
-    return { props: { selectedPage, pageTitle: 'Curso tal' } };
+    if (!courseId || !isUuid(courseId)) throw new Error('Invalid course');
+
+    return { props: { selectedPage, pageTitle, courseId } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

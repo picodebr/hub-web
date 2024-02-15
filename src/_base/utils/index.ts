@@ -13,6 +13,7 @@ export * from './getFilenameFromUrl';
 export * from './getOriginFromUrl';
 export * from './getScrollInfo';
 export * from './getValidationError';
+export * from './lessonTypeInfoMapper';
 export * from './isColorLight';
 export * from './isProduction';
 export * from './KeyValueManager';
