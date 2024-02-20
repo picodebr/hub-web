@@ -1,0 +1,75 @@
+export const arduinoConstants = {
+  // Logical states
+  LOW: 0,
+  HIGH: 1,
+
+  // Arduino pins
+  A0: 14,
+  A1: 15,
+  A2: 16,
+  A3: 17,
+  A4: 18,
+  A5: 19,
+  A6: 20,
+  A7: 21,
+};
+
+export const learnBotConstants = {
+  // Limits values
+  TOTAL_PINS: 22,
+  MAX_ANALOG_INPUT: 1023,
+  MAX_ANALOG_OUTPUT: 255,
+  MAX_BUZZER_FREQUENCY: 14_000, // Hz
+  MAX_DELAY_MS: 24 * 60 * 60 * 1000, // 1 day
+  MAX_ANALOG_VOLTAGE_MV: 5000, // 5v
+  MAX_TEMPERATURE_VOLTAGE_VM: 1480, // 1.48V @ 150°C
+  MAX_LDR_ANALOG_VALUE: 1020,
+  MIN_LDR_ANALOG_VALUE: 5,
+  MAX_ULTRASONIC_DISTANCE_CM: 30,
+  MIN_ULTRASONIC_DISTANCE_CM: 0,
+  MAX_SERVO_ANGLE: 180,
+  MIN_SERVO_ANGLE: 0,
+
+  // Pinout info
+  NO_PIN: -1,
+
+  // Default IO values
+  DEFAULT_INPUT_VALUE: 0,
+  DEFAULT_OUTPUT_VALUE: 0,
+
+  // Outputs pinout
+  BUZZER_PIN: 3,
+  DC_MOTOR_0_PIN: 5,
+  DC_MOTOR_1_PIN: 6,
+  LED_0_PIN: 9,
+  LED_1_PIN: 10,
+  LED_2_PIN: 11,
+  LED_3_PIN: 12,
+  LED_4_PIN: 13,
+
+  // Output possible pinout
+  SERVO_PIN_A: 3,
+  SERVO_PIN_B: 11,
+  DC_MOTOR_0_PIN_A: 9,
+  DC_MOTOR_0_PIN_B: 10,
+  DC_MOTOR_1_PIN_A: 4,
+  DC_MOTOR_1_PIN_B: 12,
+  ULTRASONIC_PIN_A: 7,
+  ULTRASONIC_PIN_B: 8,
+
+  // Inputs pinout
+  LDR_PIN: 16, // A2
+  TEMPERATURE_PIN: 17, // A3
+  BUTTON_0_PIN: 21,
+  BUTTON_1_PIN: 21,
+  BUTTON_2_PIN: 21,
+  BUTTON_3_PIN: 21,
+  BUTTON_4_PIN: 2,
+  BUTTONS_0_UP_TO_3_PIN: 21,
+
+  // Button mapping values
+  BUTTON_0_ANALOG_VALUE: 511,
+  BUTTON_1_ANALOG_VALUE: 340,
+  BUTTON_2_ANALOG_VALUE: 254,
+  BUTTON_3_ANALOG_VALUE: 203,
+};

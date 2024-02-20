@@ -5,8 +5,10 @@ import { FiMoreVertical } from 'react-icons/fi';
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
 import { Flex, Link, Text } from '@chakra-ui/react';
+import { useCustomRouter } from '@/_base/hooks';
 
 const Project: React.FC = () => {
+  const router = useCustomRouter();
   return (
     <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
       <Flex align="center" justify="flex-end" h="fit-content">
@@ -42,6 +44,10 @@ const Project: React.FC = () => {
         color="primary700"
         gap="16px"
         fontSize="18px"
+        cursor="pointer"
+        transition="all 0.1s"
+        _hover={{ filter: `brightness(0.9)` }}
+        onClick={() => router.push(`/code/example`)}
       >
         <FaRegFolder fontSize="29px" />
         <Text fontWeight="700">Exemplos</Text>

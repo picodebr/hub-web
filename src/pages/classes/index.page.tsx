@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import { FiEdit2, FiMoreVertical, FiUsers } from 'react-icons/fi';
 
-import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager, formatClassGrade } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
 import { useAsyncCallback } from '@/_base/hooks';
@@ -118,11 +117,16 @@ const Classes: React.FC = () => {
               maxH="5.5rem"
             >
               <Flex flex="1" gap="1rem">
-                <Link href={`/classes/${hubClass.id}`} transition="color 0.1s" color="#21E080" _hover={{ color: '#36c27c' }}>
+                <Link
+                  href={`/classes/${hubClass.id}?_p=${hubClass.display_name}`}
+                  transition="color 0.1s"
+                  color="#21E080"
+                  _hover={{ color: '#36c27c' }}
+                >
                   <FiUsers fontSize="40px" />
                 </Link>
                 <Flex display="column" justify="space-between">
-                  <Link href={`/classes/${hubClass.id}`}>
+                  <Link href={`/classes/${hubClass.id}?_p=${hubClass.display_name}`}>
                     <Text fontWeight="700" transition="color 0.1s" _hover={{ color: 'indigo600' }}>
                       {formatClassGrade(hubClass.grade)} - {hubClass.display_name}
                     </Text>
@@ -210,9 +214,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
-    const user = await validateSession();
-
-    return { props: { selectedPage, pageTitle: 'Minhas turmas', user } };
+    return { props: { selectedPage, pageTitle: 'Minhas turmas' } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

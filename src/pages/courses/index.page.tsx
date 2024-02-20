@@ -1,49 +1,55 @@
+import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { Flex, Progress, Text } from '@chakra-ui/react';
+import { Flex, Grid, Progress, Skeleton, Text } from '@chakra-ui/react';
 
-import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager } from '@/_base/utils';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
-
-interface ICourse {
-  id: string;
-  img: string;
-  name: string;
-  percent: number;
-}
-
-const mockCourses: ICourse[] = [
-  {
-    id: '1',
-    img: 'https://assets-global.website-files.com/616d40df2ab95b424def1e10/64678e4b202d786e594d520f_isaac-ilustra-maker.png',
-    name: 'Programação',
-    percent: 0,
-  },
-  {
-    id: '2',
-    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR8Q-QYyvLg4l4rvvnacVU7RcU2ey4UDd-h0bfNicuIdyeGGP1y9QcCXdGyXewfsDcHRU&usqp=CAU',
-    name: 'Introdução à tecnologia',
-    percent: 0,
-  },
-  {
-    id: '3',
-    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXAufehYrBgkUrORvN8CDV57WpOm78xRofbwauRh2eqBqJAtvybMR7ExidQIkVJfpRntg&usqp=CAU',
-    name: 'Matemática',
-    percent: 0,
-  },
-];
+import { IHubCourse, IHubCourseActivity } from '@/_base/interfaces/course';
+import { listCourses } from '@/_base/services/course';
+import { useCustomToast } from '@/_base/hooks';
 
 const Courses: React.FC = () => {
+  const [courses, setCourses] = useState<IHubCourse[]>([]);
+  const [coursesActivity, setCoursesActivity] = useState<IHubCourseActivity[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   const router = useCustomRouter();
+  const toast = useCustomToast();
+
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const { results, activities } = await listCourses();
+        setCourses(results);
+        setCoursesActivity(activities);
+      } catch {
+        toast({ status: `error`, description: `Não foi possível listar os cursos disponíveis no momento` });
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  const getProgress = useCallback(
+    (course: IHubCourse) => {
+      const total = course.modules.flatMap((m) => m.lessons).length;
+      const finished = coursesActivity
+        .filter((activity) => activity.hub_course_id === course.id)
+        .flatMap((c) => (c.metadata || []).flatMap((m) => m.lessons))
+        .filter((lesson) => !!lesson.finished_at).length;
+
+      return Math.min(Math.ceil((finished / (total || 1)) * 100), 100);
+    },
+    [coursesActivity],
+  );
 
   return (
     <Flex
+      flex="1"
       bgColor="white"
       direction="column"
       borderRadius="12px"
-      boxShadow="md"
-      w="100%"
-      h="360px"
       padding="20px 0"
       gap="20px"
       textAlign="left"
@@ -56,30 +62,49 @@ const Courses: React.FC = () => {
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
         Meus cursos
       </Text>
-      <Flex gap="2rem" padding="0 20px">
-        {mockCourses.map((course) => (
-          <Flex
-            key={course.id}
-            direction="column"
-            h="100%"
-            w="156px"
-            gap="0.5rem"
-            overflow="hidden"
-            cursor="pointer"
-            _hover={{ filter: 'brightness(0.95)' }}
-            onClick={() => router.push(`/courses/${course.id}`)}
-          >
-            <Flex backgroundImage={course.img} backgroundSize="cover" backgroundPosition="center" h="203px" w="156px" borderRadius="3px" />
-            <Text>{course.name}</Text>
-            <Flex align="center" gap="1rem">
-              <Progress size="sm" colorScheme="green" value={course.percent} rounded={8} flex="1" min={0} max={100} />
-              <Text w="fit-content" fontSize="12px">
-                {course.percent}%
-              </Text>
+      <Skeleton isLoaded={!isLoading} m="0 2rem" rounded={8} h="250px" w="175px">
+        <Grid
+          gap="1.5rem"
+          gridTemplateColumns="repeat(auto-fill, minmax(175px, 1fr))"
+          gridTemplateRows="minmax(min-content, max-content)"
+          borderRadius="md"
+          flex="1"
+        >
+          {courses.map((course) => (
+            <Flex
+              key={course.id}
+              direction="column"
+              h="100%"
+              w="175px"
+              overflow="hidden"
+              cursor="pointer"
+              _hover={{ filter: 'brightness(0.95)' }}
+              onClick={() => router.push(`/courses/${course.id}?_p=${course.title}`)}
+              bg="gray50"
+              border="1px"
+              borderColor="gray200"
+              borderRadius="6px"
+            >
+              <Flex
+                backgroundImage={course.thumbnail || `/logo/pi-logo-dark.svg`}
+                backgroundSize="cover"
+                backgroundPosition="center"
+                h="203px"
+                borderRadius="6px 6px 0 0 "
+              />
+              <Flex direction="column" padding="0.5rem">
+                <Text noOfLines={1}>{course.title}</Text>
+                <Flex align="center" gap="1rem">
+                  <Progress size="sm" colorScheme="green" value={getProgress(course)} rounded={8} flex="1" min={0} max={100} />
+                  <Text w="fit-content" fontSize="12px">
+                    {getProgress(course)}%
+                  </Text>
+                </Flex>
+              </Flex>
             </Flex>
-          </Flex>
-        ))}
-      </Flex>
+          ))}
+        </Grid>
+      </Skeleton>
     </Flex>
   );
 };
@@ -91,8 +116,6 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
   try {
     cookieManager.updateToken(req);
-
-    await validateSession();
 
     return { props: { selectedPage, pageTitle: 'Meus cursos', showBackButton: false } };
   } catch (err: any) {
