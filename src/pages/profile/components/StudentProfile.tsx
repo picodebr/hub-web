@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FiHelpCircle } from 'react-icons/fi';
 import { IoIosArrowDown } from 'react-icons/io';
 import { Flex, Img, Text, useUpdateEffect } from '@chakra-ui/react';
 import { Result, ResultConvertOptions, createAvatar } from '@dicebear/core';
@@ -38,8 +37,8 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   }, [avatarOptions]);
 
   useUpdateEffect(() => {
-    cookieManager.setCookie(`avatar:uri`, avatar, undefined, false);
-    cookieManager.setCookie(`avatar`, JSON.stringify(avatarOptions));
+    cookieManager.setCookie(`${user.id}:avatar:uri`, avatar, undefined, false);
+    cookieManager.setCookie(`${user.id}:avatar`, JSON.stringify(avatarOptions));
     if (user.role === `student`) setUser({ ...user, avatar });
   }, [avatarOptions]);
 
@@ -48,7 +47,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   }, [avatar]);
 
   useEffect(() => {
-    const avatarTemp = cookieManager.getCookie(`avatar`, true) as IAvatarOptions;
+    const avatarTemp = cookieManager.getCookie(`${user.id}:avatar`, true) as IAvatarOptions;
     if (avatarTemp?.skinColor) setAvatarOptions(avatarTemp);
   }, []);
 

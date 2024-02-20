@@ -186,8 +186,8 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
         </Flex>
 
         <Flex direction="column" h="10rem">
-          <Flex pt="24px" pb="24px" w="100%" justify="flex-end" align="center" gap="4px">
-            <Image src="/icons/cash.svg" width="60px" />
+          <Flex pt="24px" pb="24px" w="100%" justify="flex-end" align="center" gap="0.5rem">
+            <Image src="/icons/coin.svg" height="40px" />
             <Text fontSize="50px" fontWeight="700" color="primary900">
               {cart.reduce((acc, { price, quantity }) => (acc += price * quantity), 0)}
             </Text>
