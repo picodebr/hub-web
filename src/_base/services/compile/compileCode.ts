@@ -10,6 +10,6 @@ interface IParams {
 type FuncType = (params: IParams) => Promise<ICompiledCode>;
 
 export const compileCode: FuncType = async (params) => {
-  const response = await api.post('/compile', params);
+  const response = await api.post('/code/compile', params);
   return response.data;
 };

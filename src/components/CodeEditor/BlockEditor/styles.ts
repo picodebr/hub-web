@@ -55,6 +55,9 @@ export const Container = styled.div`
   background-color: ${(props) => props.theme.colors.pageBackground};
   color: ${(props) => props.theme.colors.text};
   height: 100%;
+  border: 1px solid #ccc;
+  border-radius: 1rem;
+  overflow: hidden;
 
   @media (max-width: ${(props) => props.theme.breakingPoints.mobile}px) {
     height: calc(100vh - ${(props) => props.theme.dimensions.mobileHeader}px);

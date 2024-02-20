@@ -46,6 +46,7 @@ import { EditorModeModal } from '@/components/Modal/EditorModeModal';
 import { IHubUser } from '@/_base/interfaces/user';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { Flex } from '@chakra-ui/react';
+import { CodeEventMenu } from './components/CodeEventMenu';
 
 const getDefaultSourceCode = (project: IProject | null) =>
   project?.source_code ||
@@ -98,6 +99,14 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
   const [showSerialMonitor, setShowSerialMonitor] = useState(false);
   const [showSimulatorModal, setShowSimulatorModal] = useState(false);
   const simulatorCodeHandlerRef = useRef<SimulatorCodeHandler>();
+
+  const [allowUpload, setAllowUpload] = useState(true);
+  const [isProjectOwner, setIsProjectOwner] = useState(true);
+  const [isTextMode, setIsTextMode] = useState(false);
+
+  useEffect(() => {
+    setIsTextMode(!!(project?.source_code?.mode === 'text'));
+  }, [project]);
 
   useEffect(() => {
     const messageHandler: EventListener = (event) => {
@@ -197,7 +206,10 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
   }, []);
 
   useEffect(() => {
+    console.log(`supportSerialAPI`, supportSerialAPI());
+
     if (!supportSerialAPI() || !compiledCode) return () => ({});
+    console.log(`OK`);
 
     const connect = async () => {
       try {
@@ -205,8 +217,11 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
           { baudRate: uploadConfig.DEFAULT_BAUD_RATE },
           usbVendorIds.map((usbVendorId) => ({ usbVendorId })),
         );
+        console.log(`ready_to_upload`);
+
         setAppStatus('ready_to_upload');
-      } catch {
+      } catch (err: any) {
+        console.log(err);
         setAppStatus('connection_failed');
       }
     };
@@ -497,12 +512,24 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
     [folders],
   );
 
+  useEffect(() => {
+    headerEvents.on('ownerchange', (value) => setIsProjectOwner(value));
+    headerEvents.on('permissionchange', (value) => setAllowUpload(value));
+    headerEvents.on('codemode', (value) => setIsTextMode(value === 'text'));
+  }, []);
+
   return (
     <Flex direction="column" flex="1">
+      <CodeEventMenu
+        onClick={(type) => headerEvents.emit(type)}
+        allowUpload={allowUpload}
+        isProjectOwner={isProjectOwner}
+        isSignedIn={true}
+        isTextMode={isTextMode}
+      />
       <CodeEditor sourceCodeRef={sourceCodeRef} board={board} onSourceCodeChange={handleSourceCodeChange} editorErrors={editorErrors} />
-      {/* <StatusModal status={appStatus} /> */}
-      {/* <SignInSignUpModal show={showFormModal} onClose={handleSignIn} modalStyle="modal" /> */}
-      {/* <GenericModal
+      <StatusModal status={appStatus} />
+      <GenericModal
         title={isDefaultProject || (project && project?.user_id === user?.id) ? 'Salvar projeto' : 'Duplicar projeto'}
         confirmButtonTitle={isDefaultProject || (project && project?.user_id === user?.id) ? 'Criar' : 'Duplicar'}
         show={openProjectModal}
@@ -533,10 +560,10 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
         iframeUrl={iframeUrl}
         onCloseModal={setShowSimulatorModal}
         onSourceCodeChange={handleSourceCodeChange}
-      /> */}
-      {/* <SimulationCodeModal show={showCodeModal} onClose={handleCodeModalClose} />
-      <SerialMonitor show={showSerialMonitor} onClose={handleSerialMonitorClose} usbFilters={usbFilters} /> */}
-      {/* <EditorModeModal show={showEditorModeModal} onClose={handleEditorModalClose} /> */}
+      />
+      <SimulationCodeModal show={showCodeModal} onClose={handleCodeModalClose} />
+      <SerialMonitor show={showSerialMonitor} onClose={handleSerialMonitorClose} usbFilters={usbFilters} />
+      <EditorModeModal show={showEditorModeModal} onClose={handleEditorModalClose} />
     </Flex>
   );
 };
