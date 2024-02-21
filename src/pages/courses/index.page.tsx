@@ -35,7 +35,7 @@ const Courses: React.FC = () => {
     (course: IHubCourse) => {
       const total = course.modules.flatMap((m) => m.lessons).length;
       const finished = coursesActivity
-        .filter((activity) => activity.hub_course_id === course.id)
+        ?.filter((activity) => activity.hub_course_id === course.id)
         .flatMap((c) => (c.metadata || []).flatMap((m) => m.lessons))
         .filter((lesson) => !!lesson.finished_at).length;
 

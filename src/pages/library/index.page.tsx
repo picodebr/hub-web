@@ -38,7 +38,12 @@ const Books: React.FC<IProps> = ({ bookCategories }) => {
   );
 
   return !Object.keys(booksByGrade).length ? (
-    <EmptyPageData />
+    <Flex>
+      <TabSwitch
+        tabs={bookCategories.map((cat) => ({ isSelected: selectedCategory.id === cat.id, key: cat.id, label: cat.display_name }))}
+        onSwitch={handleCategoryView}
+      />
+    </Flex>
   ) : (
     <Flex w="100%" h="100%" direction="column" gap="24px" overflow="hidden auto">
       {!!bookCategories?.length && user.role !== `student` && (
@@ -145,7 +150,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     cookieManager.updateToken(req);
     const { results } = await listBookCategories();
 
-    return { props: { selectedPage, pageTitle: 'Meus livros', bookCategories: results } };
+    return { props: { selectedPage, pageTitle: 'Meus livros', bookCategories: results, showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
