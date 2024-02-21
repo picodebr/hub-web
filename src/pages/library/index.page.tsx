@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next';
 import { useMemo, useState } from 'react';
 import { Flex, Link, Text, Accordion, AccordionItem, AccordionButton, AccordionIcon, AccordionPanel, Grid } from '@chakra-ui/react';
 
-import { logError, cookieManager, formatClassGrade } from '@/_base/utils';
+import { logError, cookieManager, formatClassGrade, sortGrades } from '@/_base/utils';
 import { TabSwitch } from '@/components/TabSwitch';
 import { listBookCategories } from '@/_base/services/book';
 import { IHubBook, IHubBookCategory } from '@/_base/interfaces/book';
@@ -38,7 +38,12 @@ const Books: React.FC<IProps> = ({ bookCategories }) => {
   );
 
   return !Object.keys(booksByGrade).length ? (
-    <EmptyPageData />
+    <Flex>
+      <TabSwitch
+        tabs={bookCategories.map((cat) => ({ isSelected: selectedCategory.id === cat.id, key: cat.id, label: cat.display_name }))}
+        onSwitch={handleCategoryView}
+      />
+    </Flex>
   ) : (
     <Flex w="100%" h="100%" direction="column" gap="24px" overflow="hidden auto">
       {!!bookCategories?.length && user.role !== `student` && (
@@ -91,45 +96,43 @@ const Books: React.FC<IProps> = ({ bookCategories }) => {
       ) : (
         // </Flex>
         <Accordion borderColor="gray300" w="100%" h="100%" gridGap={5} allowMultiple>
-          {Object.keys(booksByGrade)
-            .sort((a, b) => (isNaN(Number(a)) ? (isNaN(parseInt(a, 10)) ? -1 : parseInt(a, 10) - parseInt(b, 10) || 1) : Number(a) - Number(b)))
-            .map((grade) => (
-              <AccordionItem bgColor="white" key={grade} borderRadius="12px" border="1px" borderColor="gray300" mb="1rem">
-                <AccordionButton borderRadius="md" h="64px" justifyContent="space-between">
-                  <Text>{formatClassGrade(grade)}</Text>
-                  <AccordionIcon />
-                </AccordionButton>
-                <AccordionPanel>
-                  <Flex gap="2rem" pt="0.5rem">
-                    {booksByGrade[grade]?.map((book) => (
-                      <Link key={book.id} target="_blank" href={book.file}>
+          {sortGrades(Object.keys(booksByGrade)).map((grade) => (
+            <AccordionItem bgColor="white" key={grade} borderRadius="12px" border="1px" borderColor="gray300" mb="1rem">
+              <AccordionButton borderRadius="md" h="64px" justifyContent="space-between">
+                <Text>{formatClassGrade(grade)}</Text>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel>
+                <Flex gap="2rem" pt="0.5rem">
+                  {booksByGrade[grade]?.map((book) => (
+                    <Link key={book.id} target="_blank" href={book.file}>
+                      <Flex
+                        direction="column"
+                        h="100%"
+                        w="156px"
+                        gap="0.5rem"
+                        overflow="hidden"
+                        cursor="pointer"
+                        _hover={{ filter: 'brightness(0.95)' }}
+                      >
                         <Flex
-                          direction="column"
-                          h="100%"
+                          backgroundImage={book.thumbnail || `/images/book.svg`}
+                          backgroundSize="cover"
+                          backgroundPosition="center"
+                          h="203px"
                           w="156px"
-                          gap="0.5rem"
-                          overflow="hidden"
-                          cursor="pointer"
-                          _hover={{ filter: 'brightness(0.95)' }}
-                        >
-                          <Flex
-                            backgroundImage={book.thumbnail || `/images/book.svg`}
-                            backgroundSize="cover"
-                            backgroundPosition="center"
-                            h="203px"
-                            w="156px"
-                            borderRadius="4px"
-                          />
-                          <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
-                            {book.title}
-                          </Text>
-                        </Flex>
-                      </Link>
-                    ))}
-                  </Flex>
-                </AccordionPanel>
-              </AccordionItem>
-            ))}
+                          borderRadius="4px"
+                        />
+                        <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
+                          {book.title}
+                        </Text>
+                      </Flex>
+                    </Link>
+                  ))}
+                </Flex>
+              </AccordionPanel>
+            </AccordionItem>
+          ))}
         </Accordion>
       )}
     </Flex>
@@ -145,7 +148,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     cookieManager.updateToken(req);
     const { results } = await listBookCategories();
 
-    return { props: { selectedPage, pageTitle: 'Meus livros', bookCategories: results } };
+    return { props: { selectedPage, pageTitle: 'Meus livros', bookCategories: results, showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
