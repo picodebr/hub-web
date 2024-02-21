@@ -128,7 +128,7 @@ const Classes: React.FC = () => {
                 <Flex display="column" justify="space-between">
                   <Link href={`/classes/${hubClass.id}?_p=${hubClass.display_name}`}>
                     <Text fontWeight="700" transition="color 0.1s" _hover={{ color: 'indigo600' }}>
-                      {formatClassGrade(hubClass.grade)} - {hubClass.display_name}
+                      {hubClass.display_name}
                     </Text>
                   </Link>
                   <AvatarList users={hubClass.students} max={10} />
