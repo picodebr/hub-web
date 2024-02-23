@@ -52,10 +52,8 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
   useEffect(() => {
     const target = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0];
 
-    if (target) {
-      setSchool(target);
-    }
-  }, []);
+    if (target) setSchool(target);
+  }, [user]);
 
   return (
     <Flex

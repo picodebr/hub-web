@@ -14,6 +14,7 @@ import {
   Flex,
   Text,
   Skeleton,
+  Image,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
@@ -99,8 +100,11 @@ const Class: React.FC<IProps> = ({ classId, user }) => {
           />
         ) as any,
         name: (
-          <Flex direction="column">
-            <Text color="gray800">{project.title}</Text>
+          <Flex align="center" gap="1rem">
+            {!!project.project_id && <Image src="/logo/pi-logo-dark.svg" maxH="1.5rem" minH="1.5rem" title="Projeto da PiCode" />}
+            <Text color="gray800" fontWeight={project.project_id ? `500` : `400`}>
+              {project.title}
+            </Text>
           </Flex>
         ),
         status: (
@@ -227,7 +231,10 @@ const Class: React.FC<IProps> = ({ classId, user }) => {
         <StudentTable
           rows={students}
           onRowClick={(e) => router.push(`/students/${e.id}`)}
-          columnSizes={[{ field: 'avatar', width: '2rem' }]}
+          columnSizes={[
+            { field: 'avatar', width: '2rem' },
+            { field: 'xp', width: '2rem' },
+          ]}
           columns={[
             {
               label: (

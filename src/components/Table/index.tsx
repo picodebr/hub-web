@@ -17,12 +17,13 @@ export function HubTable<T>({ columns, rows, onRowClick, columnSizes = [] }: IHu
       <Table variant="simple">
         <Thead>
           <Tr w="fit-content !important">
-            {columns.map((column) => (
+            {columns.map((column, i, arr) => (
               <Th
                 key={column.field as string}
                 fontFamily={`'Inter' - sans-serif`}
                 textTransform="none"
                 fontSize="16px"
+                justifyContent={i ? (i === arr.length - 1 ? `flex-end` : `flex-start`) : `flex-start`}
                 fontWeight="400"
                 py="1.25rem"
                 w={columnSizes.find((e) => e.field === column.field)?.width || 'fit-content'}
@@ -37,7 +38,7 @@ export function HubTable<T>({ columns, rows, onRowClick, columnSizes = [] }: IHu
             <Tr key={JSON.stringify({ i })} cursor="pointer" _hover={{ bg: 'gray50' }} onClick={() => onRowClick(row)}>
               {columns.map((column, i, arr) => (
                 <Td key={JSON.stringify({ i })}>
-                  <Flex flex="1" align="center" justify={i ? (i === arr.length - 1 ? `flex-end` : `center`) : `flex-start`}>
+                  <Flex flex="1" align="center" justify={i ? (i === arr.length - 1 ? `flex-end` : `flex-start`) : `flex-start`}>
                     {(row as any)[column.field] || ''}
                   </Flex>
                 </Td>
