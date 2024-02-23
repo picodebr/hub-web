@@ -76,7 +76,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
           </Skeleton>
         </Flex>
       </Flex>
-      <Flex direction="column" flex="1" p={{ base: `1rem`, xl: '1rem' }} gap={{ base: `1rem`, xl: '1rem' }}>
+      <Flex direction="column" flex="1" p={{ base: `1rem`, xl: '1rem' }} gap={{ base: `1rem`, xl: '1rem' }} overflow="hidden">
         <Flex direction="column" gap="0.5rem">
           <Skeleton isLoaded={!isLoading} minH="1.35rem">
             <Text fontSize="1rem">{lesson?.video?.title}</Text>
@@ -92,7 +92,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
               preload="true"
               autoPlay
               controlsList="nodownload"
-              // onEnded={handleSubmitLesson}
+              poster={lesson.video.thumbnail}
               onTimeUpdate={(e) =>
                 ((e.target as any).currentTime / (e.target as any).duration) * 100 > 90 && !lessonIsFinished && handleSubmitLesson()
               }
