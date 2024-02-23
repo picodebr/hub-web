@@ -214,7 +214,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
-    return { props: { selectedPage, pageTitle: 'Minhas turmas' } };
+    return { props: { selectedPage, pageTitle: 'Minhas turmas', showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
