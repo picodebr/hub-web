@@ -76,7 +76,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
           </Skeleton>
           <Skeleton isLoaded={!isLoading} maxW="30%">
             {hubModule?.description && (
-              <Text noOfLines={1} color="gray500">
+              <Text noOfLines={4} color="gray500">
                 {hubModule.description}
               </Text>
             )}
