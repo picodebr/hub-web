@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { FaPaperclip } from 'react-icons/fa';
 import { FiSend, FiTrash } from 'react-icons/fi';
 import { Flex, Img, Text } from '@chakra-ui/react';
 import moment from 'moment';
@@ -41,7 +40,7 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
           placeholder="Faça uma anotação"
         />
         <Flex w="100%" justify="flex-end" marginTop="4px" gap="8px" pt="8px">
-          <GenericButton
+          {/* <GenericButton
             label="Anexar arquivo"
             w="fit-content"
             h="44px"
@@ -53,7 +52,7 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
             _hover={{
               filter: 'brightness(0.9)',
             }}
-          />
+          /> */}
 
           <GenericButton
             label="Enviar"

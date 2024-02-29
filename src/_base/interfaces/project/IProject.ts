@@ -1,3 +1,4 @@
+import { IHubClass } from '../class';
 import { IHubGlobalComment } from '../globalComment';
 import { IHubGroup } from '../group';
 import { HubStatus } from '../shared';
@@ -18,6 +19,7 @@ export interface IProject {
   groups: IHubGroup[];
   annotations: IHubGlobalComment[];
   educator: IHubUser;
+  hub_class: IHubClass;
 }
 
 export const EMPTY_PROJECT_DATA: IProject = {
@@ -34,4 +36,5 @@ export const EMPTY_PROJECT_DATA: IProject = {
   groups: [],
   annotations: [],
   educator: {} as any,
+  hub_class: {} as any,
 };
