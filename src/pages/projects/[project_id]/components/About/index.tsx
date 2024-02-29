@@ -63,14 +63,18 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
             <Text fontSize="14px" fontWeight="500">
               Nome do projeto
             </Text>
-            <EditableTextInput isDisabled={!canEdit} value={project.title || ''} onInputChange={(title) => setProject((e) => ({ ...e, title }))} />
+            <EditableTextInput
+              isDisabled={!canEdit || !!project.project_id}
+              value={project.title || ''}
+              onInputChange={(title) => setProject((e) => ({ ...e, title }))}
+            />
           </Flex>
           <Flex pb={4} direction="column" gap="6px">
             <Text fontSize="14px" fontWeight="500">
               Objetivo
             </Text>
             <EditableTextInput
-              isDisabled={!canEdit}
+              isDisabled={!canEdit || !!project.project_id}
               value={project.description || ''}
               onInputChange={(description) => setProject((e) => ({ ...e, description }))}
             />
@@ -78,7 +82,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
         </Flex>
         <Flex gap="0px" direction="column">
           <Flex w="100%" h="42px" bg="primary300" p="12px" color="white" borderTopRadius="10px" fontWeight="500" align="center">
-            Etapas
+            {project.hub_class?.grade.startsWith(`G`) ? 'Aulas' : 'Etapas'}
           </Flex>
           <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderBottomRadius="10px" border="1px" borderColor="gray300">
             {project.metadata?.steps?.map((step) => (
@@ -114,25 +118,25 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
           >
             Habilidades BNCC
             <Flex
-              onClick={() => canEdit && setShowModal(true)}
-              border="1px"
+              onClick={() => canEdit && !project.project_id && setShowModal(true)}
+              border={canEdit && !project.project_id ? '1px' : undefined}
               borderColor="white"
               borderRadius="4px"
               p="2px"
-              cursor="pointer"
+              cursor={canEdit && !project.project_id ? 'pointer' : undefined}
               _hover={{ filter: 'brightness(0.8)' }}
             >
-              <FiEdit2 color="white" fontSize="16px" />
+              {canEdit && !project.project_id && <FiEdit2 color="white" fontSize="16px" />}
             </Flex>
           </Flex>
           <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderBottomRadius="10px" border="1px" borderColor="gray300">
             {project.metadata.bncc?.map((bncc) => (
-              <Flex key={bncc.tag} pb={4} direction="column" gap="6px">
+              <Flex key={bncc} pb={4} direction="column" gap="6px">
                 <Text fontSize="14px" fontWeight="500">
-                  {bncc.subject}
+                  {bnccSkills.find((e) => e.tag === bncc)?.subject || ``}
                 </Text>
                 <Flex p="8px" border="1px" borderColor="gray300" borderRadius="8px">
-                  {`${bncc.tag} - ${bncc.title}`}
+                  {`${bncc} - ${bnccSkills.find((e) => e.tag === bncc)?.title || ''}`}
                 </Flex>
               </Flex>
             ))}
@@ -232,7 +236,8 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
           rowSelection={{
             type: `checkbox`,
             selectedRowKeys: (project.metadata.bncc || ([] as any)).map((e: any) => e.tag),
-            onChange: (keys) => setProject((e) => ({ ...e, metadata: { ...e.metadata, bncc: bnccSkills.filter((e) => keys.includes(e.tag)) } })),
+            onChange: (keys) =>
+              setProject((e) => ({ ...e, metadata: { ...e.metadata, bncc: bnccSkills.filter((e) => keys.includes(e.tag)).map((e) => e.tag) } })),
           }}
           columns={columns}
           dataSource={dataSource}

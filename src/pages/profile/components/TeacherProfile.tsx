@@ -1,27 +1,68 @@
 import moment from 'moment';
 import { FiFileText, FiHelpCircle } from 'react-icons/fi';
 import { IoChevronForward } from 'react-icons/io5';
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Text, useColorMode } from '@chakra-ui/react';
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Flex, Text, useColorMode } from '@chakra-ui/react';
 
 import { IProfileComponentProps } from './interfaces';
 import { useCustomRouter, useHubTour } from '@/_base/hooks';
 
-type GuideType = { label: string; action: () => void };
+type GuideType = { label: string; instructions: string };
 
 export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) => {
   const { colorMode } = useColorMode();
   const router = useCustomRouter();
   const { navbar } = useHubTour();
 
+  // const guides: GuideType[] = [
+  //   { action: () => navbar.startTour(), label: 'Como navegar pela plataforma?' },
+  //   { action: () => navbar.startTour(), label: 'Como abrir o livro na plataforma?' },
+  //   { action: () => navbar.startTour(), label: 'Como criar um novo projeto?' },
+  //   { action: () => navbar.startTour(), label: 'Como acessar minhas turmas?' },
+  //   { action: () => navbar.startTour(), label: 'O que fazer se meu aluno esquecer a senha?' },
+  //   { action: () => navbar.startTour(), label: 'Como começar um novo curso?' },
+  //   { action: () => navbar.startTour(), label: 'Como entrar em contato com o suporte da PiCode?' },
+  //   { action: () => navbar.startTour(), label: 'Como pedir um novo produto através da loja?' },
+  // ];
+
   const guides: GuideType[] = [
-    { action: () => navbar.startTour(), label: 'Como navegar pela plataforma?' },
-    { action: () => navbar.startTour(), label: 'Como abrir o livro na plataforma?' },
-    { action: () => navbar.startTour(), label: 'Como criar um novo projeto?' },
-    { action: () => navbar.startTour(), label: 'Como acessar minhas turmas?' },
-    { action: () => navbar.startTour(), label: 'O que fazer se meu aluno esquecer a senha?' },
-    { action: () => navbar.startTour(), label: 'Como começar um novo curso?' },
-    { action: () => navbar.startTour(), label: 'Como entrar em contato com o suporte da PiCode?' },
-    { action: () => navbar.startTour(), label: 'Como pedir um novo produto através da loja?' },
+    {
+      label: 'Como navegar pela plataforma?',
+      instructions: 'Você pode navegar pela plataforma utilizando o menu à esquerda, selecionando a sessão que deseja ver.',
+    },
+    {
+      label: 'Como abrir o livro na plataforma?',
+      instructions:
+        'Para abrir um livro pela plataforma, basta entrar na sessão "Biblioteca" e selecionar no menu superior o tipo do livro (Professor ou Aluno), logo após será possível selecionar o ano e então aparecerá os livros da opção correspondente',
+    },
+    {
+      label: 'Como criar um novo projeto?',
+      instructions:
+        'Para criar um novo projeto, basta entrar em "Turmas", após selecionar a turma que deseja criar o projeto, você conseguirá criar um novo projeto na aba "Projetos" na aba superior',
+    },
+    {
+      label: 'Como acessar minhas turmas?',
+      instructions:
+        'Para acessar suas turmas, certifique-se que está na escola correta (caso lecione em mais de uma), e então selecione "Turmas" no menu à esquerda para visualizar suas turmas',
+    },
+    {
+      label: 'O que fazer se meu aluno esquecer a senha?',
+      instructions:
+        'Caso algum aluno esquecer sua própria senha, ele pode solicitar a recuperação através da plataforma e o seu professor pode fazer a liberação e alteração de senha através da notificação enviada por email após a solicitação do aluno.',
+    },
+    {
+      label: 'Como começar um novo curso?',
+      instructions: 'Basta selecionar no menu à esquerda a sessão "Cursos", selecionar o curso, o módulo e então a lição.',
+    },
+    {
+      label: 'Como entrar em contato com o suporte da PiCode?',
+      instructions:
+        'A plataforma tem duas opções de canal de contato, estando logado ou não. Sem estar logado em sua conta, você pode solicitar ajuda preenchendo o formulário que aparece na tela de login após clicar no botão "Não estou conseguindo acessar", Caso você esteja conectado em sua conta, você pode solicitar suporte através da sessão do menu à esquerda: "Suporte".',
+    },
+    {
+      label: 'Como pedir um novo produto através da loja?',
+      instructions:
+        'Os alunos só poderão comprar os itens que estiverem disponíveis aos professores, essa compra é feita quando o grupo estiver criado e já vinculado á um projeto',
+    },
   ];
 
   return (
@@ -47,10 +88,10 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
           </Flex>
           <Flex direction="column" flex="1" overflow="hidden auto">
             {guides.map((guide) => (
-              <Flex key={guide.label} w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
+              <Flex w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
                 <Flex
-                  onClick={() => guide.action()}
                   align="center"
+                  direction="column"
                   gap="12px"
                   w="100%"
                   p="10px 4px"
@@ -61,10 +102,18 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
                 >
                   <Flex align="center" justify="center" gap="12px" w="100%">
                     <FiHelpCircle fontSize="24px" color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
-                    <Flex w="100%" fontWeight="500" color="gray700">
-                      {guide.label}
-                    </Flex>
-                    <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
+                    <Accordion allowMultiple w="100%" fontWeight="500" color="gray700">
+                      <AccordionItem border="none">
+                        <h2>
+                          <AccordionButton justifyContent="space-between">
+                            <Box>{guide.label}</Box>
+                            <AccordionIcon />
+                            {/* <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} /> */}
+                          </AccordionButton>
+                        </h2>
+                        <AccordionPanel fontWeight="400">{guide.instructions}</AccordionPanel>
+                      </AccordionItem>
+                    </Accordion>
                   </Flex>
                 </Flex>
               </Flex>

@@ -19,8 +19,8 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useAuth, useCustomToast } from '@/_base/hooks';
 import { getPresignedUrl } from '@/_base/services/upload';
 import { IUpdateProjectParams } from '@/_base/interfaces/project';
-import { IHubGroup } from '@/_base/interfaces/group';
-import { acceptGroup, removeGroup } from '@/_base/services/group';
+import { ICreateHubGroupParams, IHubGroup } from '@/_base/interfaces/group';
+import { acceptGroup, addGroupToProject, removeGroup } from '@/_base/services/group';
 
 interface IProps {
   project: IProject;
@@ -94,11 +94,18 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
     }
   }, []);
 
+  const handleAddGroup = useAsyncCallback(async (data: ICreateHubGroupParams) => {
+    const newGroup = await addGroupToProject(data);
+    setProject((p) => ({ ...p, groups: [newGroup, ...p.groups] }));
+    setSavedProject((p) => ({ ...p, groups: [newGroup, ...p.groups] }));
+    toast({ status: `success`, description: `Grupo adicionado` });
+  }, []);
+
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} canEdit={canEdit} />,
     Materiais: <Materials project={project} setProject={setProject} canEdit={canEdit} />,
     Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} />,
-    Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} />,
+    Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} />,
   };
 
   return (

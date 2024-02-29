@@ -20,17 +20,18 @@ import { GetServerSideProps } from 'next';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { IoMdArrowUp } from 'react-icons/io';
+import { FaPlus } from 'react-icons/fa6';
 import { FiCalendar, FiFileText } from 'react-icons/fi';
 import { CiUser } from 'react-icons/ci';
 import { Badge } from 'rsuite';
 import moment from 'moment';
 
-import { logError, cookieManager, formatShortName, statusLabelMapper } from '@/_base/utils';
+import { formatShortName, statusLabelMapper } from '@/_base/utils';
 import { getClassData } from '@/_base/services/class';
 import { TabSwitch } from '@/components/TabSwitch';
 import { ClassPageView, classPageViews } from './interfaces';
 import { HubTable } from '@/components/Table';
-import { useAsyncCallback, useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { IHubClass } from '@/_base/interfaces/class';
 import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
 import { SmallModal } from '@/components/Modal/Small';
@@ -38,8 +39,6 @@ import { TextInput } from '@/components/Inputs/Text';
 import { addProject, updateProject } from '@/_base/services/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { HubStatus, hubStatuses } from '@/_base/interfaces/shared';
-import { validateSession } from '@/_base/services/auth';
-import { IHubUser } from '@/_base/interfaces/user';
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -49,22 +48,23 @@ const ProjectTable = HubTable<ProjectTableType>;
 
 interface IProps {
   classId: string;
-  user: IHubUser;
 }
 
 type ModalStep = 'creation_type' | 'man_project_name' | 'man_task_quantity' | 'man_task_naming';
 
-const Class: React.FC<IProps> = ({ classId, user }) => {
+const Class: React.FC<IProps> = ({ classId }) => {
   const [pageView, setPageView] = useState<ClassPageView>('Projetos');
   const [newProject, setNewProject] = useState<IProject | null>(null);
   const [modalStep, setModalStep] = useState<ModalStep>('creation_type');
   const [newProjectSteps, setNewProjectSteps] = useState<IHubProjectStep[]>([]);
   const [projects, setProjects] = useState<IProject[]>();
+  const [factoryProjectToStart, setFactoryProjectToStart] = useState<IProject | null>(null);
   const [hubClass, setHubClass] = useState<IHubClass | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useCustomRouter();
   const toast = useCustomToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     (async () => {
@@ -82,8 +82,9 @@ const Class: React.FC<IProps> = ({ classId, user }) => {
   }, []);
 
   const handleUpdateProjectStatus = useAsyncCallback(async (id: string, status: HubStatus) => {
-    await updateProject({ id, status });
-    setProjects((e) => e?.map((p) => (p.id === id ? { ...p, status } : p)));
+    const updated = await updateProject({ id, status });
+    setProjects((e) => e?.map((p) => (p.id === id ? { ...p, ...updated } : p)));
+    setFactoryProjectToStart(null);
   }, []);
 
   const dataProjects = useMemo<ProjectTableType[]>(
@@ -91,13 +92,70 @@ const Class: React.FC<IProps> = ({ classId, user }) => {
       projects?.map((project) => ({
         id: project.id,
         user_avatar: (
-          <Avatar
-            name={formatShortName(project.educator.name)}
-            src={project.educator.avatar || undefined}
-            title={project.educator.name}
-            h="40px"
-            w="40px"
-          />
+          <Flex position="relative">
+            {!project.educator.id && project.project_id ? (
+              <>
+                <Flex
+                  color="primary300"
+                  bg="#ffffff55"
+                  borderRadius="50%"
+                  border="1px"
+                  borderColor="gray200"
+                  h="40px"
+                  w="40px"
+                  justify="center"
+                  align="center"
+                >
+                  <Image src="/logo/pi-logo-dark.svg" maxH="1.65rem" minH="1.65rem" title="Projeto da PiCode" />
+                </Flex>
+                <Flex
+                  position="absolute"
+                  color="primary300"
+                  right="-5px"
+                  bottom="-5px"
+                  border="1px"
+                  bg="white"
+                  borderRadius="4px"
+                  p="0.15rem"
+                  transition="0.1s"
+                  _hover={{ borderColor: 'primary300', bg: 'primary300', color: 'white' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFactoryProjectToStart(project);
+                  }}
+                >
+                  <FaPlus />
+                </Flex>
+              </>
+            ) : (
+              <Avatar
+                name={formatShortName(project.educator.name || ``)}
+                src={project.educator.avatar || ``}
+                title={project.educator.name}
+                h="40px"
+                w="40px"
+                border="1px"
+                borderColor="gray200 !important"
+              />
+            )}
+            {project.educator?.id && project.project_id && (
+              <Flex
+                position="absolute"
+                color="primary300"
+                right="-1.4rem"
+                bg="#ffffff55"
+                borderRadius="50%"
+                border="1px"
+                borderColor="gray200"
+                h="40px"
+                w="40px"
+                justify="center"
+                align="center"
+              >
+                <Image src="/logo/pi-logo-dark.svg" maxH="1.65rem" minH="1.65rem" title="Projeto da PiCode" />
+              </Flex>
+            )}
+          </Flex>
         ) as any,
         name: (
           <Flex align="center" gap="1rem">
@@ -306,6 +364,7 @@ const Class: React.FC<IProps> = ({ classId, user }) => {
           </Text>
         </Flex>
       </SmallModal>
+
       <SmallModal
         title="Criação manual do projeto"
         show={!!newProject && modalStep === 'man_project_name'}
@@ -333,6 +392,7 @@ const Class: React.FC<IProps> = ({ classId, user }) => {
           />
         </Flex>
       </SmallModal>
+
       <SmallModal
         title="Configuração das etapas do projeto"
         show={!!newProject && modalStep === 'man_task_quantity'}
@@ -360,6 +420,7 @@ const Class: React.FC<IProps> = ({ classId, user }) => {
           </NumberInput>
         </Flex>
       </SmallModal>
+
       <SmallModal
         title="Nomes das etapas do projeto"
         show={!!newProject && modalStep === 'man_task_naming'}
@@ -388,25 +449,34 @@ const Class: React.FC<IProps> = ({ classId, user }) => {
           </Flex>
         </Flex>
       </SmallModal>
+
+      <SmallModal
+        title="Iniciar projeto PiCode"
+        show={!!factoryProjectToStart}
+        onCancel={() => setFactoryProjectToStart(null)}
+        onConfirm={() => handleUpdateProjectStatus(factoryProjectToStart?.id || ``, `running`)}
+        okText="Iniciar o projeto"
+        topIcon="checked"
+      >
+        <Flex direction="column" gap="1rem">
+          <Text color="gray500" fontSize="16px">
+            Você está prestes a iniciar um projeto de fábrica da PiCode.
+          </Text>
+          <Text color="gray500" fontSize="16px">
+            É de sua resposabilidade realizar o projeto com a turma até o fim, mantendo a <b>consistência</b> e <b>boas práticas</b>.
+          </Text>
+        </Flex>
+      </SmallModal>
     </Flex>
   );
 };
 
 export default Class;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
+export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const selectedPage = 'classes';
 
-  try {
-    cookieManager.updateToken(req);
-    const pageTitle = `${query._p || `Turma`}`;
-    const user = await validateSession();
+  const pageTitle = `${query._p || `Turma`}`;
 
-    return { props: { selectedPage, pageTitle, user, classId: `${query.class_id}` } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle, classId: `${query.class_id}` } };
 };
