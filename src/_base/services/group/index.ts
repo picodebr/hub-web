@@ -1,5 +1,6 @@
 export * from './acceptGroup';
 export * from './addOrder';
+export * from './addGroupToProject';
 export * from './createGroup';
 export * from './getGroupById';
 export * from './listAvailableUsersForGroupByProject';

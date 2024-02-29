@@ -1,22 +1,31 @@
-import { Flex, Link, Text } from '@chakra-ui/react';
+import { Button, Flex, Link, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Text } from '@chakra-ui/react';
 import moment from 'moment';
 
 import { IProject } from '@/_base/interfaces/project';
 import { FiUsers } from 'react-icons/fi';
 import { useState } from 'react';
-import { IHubGroup } from '@/_base/interfaces/group';
+import { EMPTY_HUB_GROUP_DATA, ICreateHubGroupParams, IHubGroup, createHubGroupSchema } from '@/_base/interfaces/group';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { AvatarList } from '@/components/AvatarList';
 import { SmallModal } from '@/components/Modal/Small';
+import { useInputHandler } from '@/_base/hooks';
+import { TextInput } from '@/components/Inputs/Text';
+import { IoChevronDownCircleOutline } from 'react-icons/io5';
 
 interface IProps {
   project: IProject;
-  onPendingGroupAction: (group: IHubGroup, accept: boolean) => void;
   canEdit: boolean;
+  onPendingGroupAction: (group: IHubGroup, accept: boolean) => void;
+  handleAddGroup: (data: ICreateHubGroupParams) => void;
 }
 
-export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit }) => {
+export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup }) => {
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
+
+  const { errors, onInputChange, data, submit, setData } = useInputHandler<ICreateHubGroupParams>({
+    data: EMPTY_HUB_GROUP_DATA,
+    schema: createHubGroupSchema,
+  });
 
   const handleConfirmAction = () => {
     if (!targetGroup) return;
@@ -24,8 +33,25 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
     setTargetGroup(null);
   };
 
+  const onAddGroup = () => {
+    handleAddGroup(data);
+    setData(EMPTY_HUB_GROUP_DATA);
+  };
+
   return (
     <Flex w="100%" h="100%" direction="column" gap="24px" overflow="hidden auto" margin="auto">
+      {project.hub_class?.grade.startsWith(`G`) && (
+        <Flex justify="flex-end" align="center">
+          <GenericButton
+            label="Cadastrar grupo"
+            size="sm"
+            color="white"
+            isDisabled={!canEdit}
+            _hover={{ filter: `brightness(0.9)` }}
+            onClick={() => setData((e) => ({ ...(e || ({} as any)), hub_project_class_id: project.id }))}
+          />
+        </Flex>
+      )}
       {project.groups
         .filter((group) => !group.approved_at)
         .map((group) => (
@@ -102,6 +128,66 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
           <Text fontWeight="500" color="gray600">
             {targetGroup?.accept ? 'Aprovar' : 'Recusar'} o grupo <b>{targetGroup?.display_name}</b> ?
           </Text>
+        </Flex>
+      </SmallModal>
+
+      <SmallModal
+        title="Cadastrar Grupo"
+        show={!!data.hub_project_class_id}
+        onConfirm={() => submit(onAddGroup)}
+        okText="Criar"
+        onCancel={() => setData(EMPTY_HUB_GROUP_DATA)}
+        disableOkButton={!data.users?.length || !data.hub_project_class_id || !data.display_name}
+        topIcon={'checked'}
+      >
+        <Flex direction="column" minW="350px" gap="1rem">
+          <TextInput
+            placeholder="Informe o nome do grupo"
+            _placeholder={{ fontSize: '14px' }}
+            value={data?.display_name}
+            onInputChange={(v) => onInputChange('display_name', v)}
+            error={errors.display_name}
+          />
+
+          <Menu closeOnSelect={false} placement="right">
+            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
+              Selecione os membros do grupo
+            </MenuButton>
+            <MenuList borderColor="gray300" boxShadow="md">
+              <MenuOptionGroup type="checkbox">
+                {project.hub_class?.students?.length ? (
+                  project.hub_class.students.map((student) => (
+                    <MenuItemOption
+                      key={student.id}
+                      value={student.id}
+                      onClick={() =>
+                        onInputChange(
+                          `users`,
+                          data.users?.find((id) => id === student.id)
+                            ? data.users?.filter((id) => id !== student.id)
+                            : [...(data?.users || []), student.id],
+                        )
+                      }
+                    >
+                      {student.name}
+                    </MenuItemOption>
+                  ))
+                ) : (
+                  <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
+                )}
+              </MenuOptionGroup>
+            </MenuList>
+          </Menu>
+          <Flex align="center" gap="0.5rem">
+            <Text fontSize="15px" fontWeight="500">
+              Membros:
+            </Text>
+            <AvatarList
+              users={project.hub_class?.students?.filter((e) => data.users?.includes(e.id)) || []}
+              max={10}
+              emptyMessage="Nenhum membro adicionado"
+            />
+          </Flex>
         </Flex>
       </SmallModal>
     </Flex>
