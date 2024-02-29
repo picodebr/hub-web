@@ -13,6 +13,7 @@ import { FileInput } from '@/components/Inputs/File';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { TbFileText } from 'react-icons/tb';
 import { FiTrash } from 'react-icons/fi';
+import { isLowestGrade } from '@/_base/utils';
 
 interface DataType {
   key: React.Key;
@@ -82,7 +83,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
         </Flex>
         <Flex gap="0px" direction="column">
           <Flex w="100%" h="42px" bg="primary300" p="12px" color="white" borderTopRadius="10px" fontWeight="500" align="center">
-            {project.hub_class?.grade.startsWith(`G`) ? 'Aulas' : 'Etapas'}
+            {isLowestGrade(project.hub_class?.grade || ``) ? 'Aulas' : 'Etapas'}
           </Flex>
           <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderBottomRadius="10px" border="1px" borderColor="gray300">
             {project.metadata?.steps?.map((step) => (

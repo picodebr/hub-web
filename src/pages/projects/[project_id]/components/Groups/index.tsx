@@ -11,6 +11,7 @@ import { SmallModal } from '@/components/Modal/Small';
 import { useInputHandler } from '@/_base/hooks';
 import { TextInput } from '@/components/Inputs/Text';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
+import { isLowestGrade } from '@/_base/utils';
 
 interface IProps {
   project: IProject;
@@ -40,7 +41,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
 
   return (
     <Flex w="100%" h="100%" direction="column" gap="24px" overflow="hidden auto" margin="auto">
-      {project.hub_class?.grade.startsWith(`G`) && (
+      {isLowestGrade(project.hub_class?.grade || ``) && (
         <Flex justify="flex-end" align="center">
           <GenericButton
             label="Cadastrar grupo"
@@ -149,11 +150,11 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
             error={errors.display_name}
           />
 
-          <Menu closeOnSelect={false} placement="right">
+          <Menu closeOnSelect={false} placement="right" preventOverflow={true}>
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               Selecione os membros do grupo
             </MenuButton>
-            <MenuList borderColor="gray300" boxShadow="md">
+            <MenuList borderColor="gray300" boxShadow="md" maxH="350px" overflow="auto">
               <MenuOptionGroup type="checkbox">
                 {project.hub_class?.students?.length ? (
                   project.hub_class.students.map((student) => (
