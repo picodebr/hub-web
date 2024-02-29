@@ -15,6 +15,7 @@ export * from './getScrollInfo';
 export * from './getValidationError';
 export * from './lessonTypeInfoMapper';
 export * from './isColorLight';
+export * from './isLowestGrade';
 export * from './isProduction';
 export * from './KeyValueManager';
 export * from './logError';
