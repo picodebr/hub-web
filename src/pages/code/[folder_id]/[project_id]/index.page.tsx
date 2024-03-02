@@ -4,13 +4,13 @@ import { GetServerSideProps } from 'next';
 import * as Yup from 'yup';
 import { Container } from './styles';
 
-import { Simulator } from '../../../components/Simulator';
-import { SimulatorCodeHandler } from '../../../components/Simulator/interfaces';
-import { scratchState } from '../../../components/scratch/ScratchState';
-import { CodeEditor } from '../../../components/CodeEditor';
-import { ICodeEditorError } from '../../../components/CodeEditor/interfaces';
-import { useCustomRouter, useCustomToast, useLoading } from '../../../_base/hooks';
-import { IProject, IProjectSourceCode } from '@/_base/interfaces/codeProject/IProject';
+import { Simulator } from '../../../../components/Simulator';
+import { SimulatorCodeHandler } from '../../../../components/Simulator/interfaces';
+import { scratchState } from '../../../../components/scratch/ScratchState';
+import { CodeEditor } from '../../../../components/CodeEditor';
+import { ICodeEditorError } from '../../../../components/CodeEditor/interfaces';
+import { useCustomRouter, useCustomToast, useLoading } from '../../../../_base/hooks';
+import { ICodeProject, IProjectSourceCode } from '@/_base/interfaces/codeProject/IProject';
 import { IProjectFolder, IProjectFolderListingItem } from '@/_base/interfaces/codeFolder/IProjectFolder';
 import { supportedBoards } from '@/_base/interfaces/boards/supported';
 import { usbVendorIds } from '@/_base/config/usbVendorIds';
@@ -33,10 +33,8 @@ import { uploadConfig } from '@/_base/config/upload';
 import { compileCode } from '@/_base/services/compile/compileCode';
 import { ICreateProjectParams } from '@/_base/interfaces/codeProject/ICreateProjectParams';
 import { dimensions } from '@/styles/global';
-import { createProjectFolder } from '@/_base/services/projectFolder/createProjectFolder';
-import { createProject } from '@/_base/services/codeProject/createProject';
-import { updateProject } from '@/_base/services/codeProject/updateProject';
-import { listProjectFolders } from '@/_base/services/projectFolder/listProjectFolders';
+import { createCodeProjectFolder } from '@/_base/services/codeProjectFolder';
+import { createCodeProject, updateCodeProject } from '@/_base/services/codeProject';
 import { StatusModal } from '@/components/Modal/Status';
 import { GenericModal } from '@/components/Modal/GenericModal';
 import { Project } from './components/Project';
@@ -48,7 +46,7 @@ import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { Flex } from '@chakra-ui/react';
 import { CodeEventMenu } from './components/CodeEventMenu';
 
-const getDefaultSourceCode = (project: IProject | null) =>
+const getDefaultSourceCode = (project: ICodeProject | null) =>
   project?.source_code ||
   ({
     code: '',
@@ -59,14 +57,23 @@ const getDefaultSourceCode = (project: IProject | null) =>
 
 interface IProps {
   user: IHubUser | null;
-  project: IProject | null;
+  project: ICodeProject | null;
   folder: IProjectFolder | null;
   folders: IProjectFolderListingItem[];
   isDefaultProject: boolean;
   iframeUrl: string;
+  projectId: string;
+  folderId: string;
 }
 
-const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folder, folders: _folders, isDefaultProject, iframeUrl }) => {
+const Code: React.FC<IProps> = ({
+  user: _user = null,
+  project: _project = null,
+  folder: _folder = null,
+  folders: _folders = [],
+  isDefaultProject,
+  iframeUrl,
+}) => {
   const sourceCodeRef = useRef(getDefaultSourceCode(_project));
   const board = useMemo(() => supportedBoards[0], []);
   const usbFilters = useMemo(() => usbVendorIds.map((usbVendorId) => ({ usbVendorId })), []);
@@ -79,7 +86,7 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
   const [newFolderName, setNewFolderName] = useState('');
 
   const [user, setUser] = useState<IHubUser | null>(_user);
-  const [project, setProject] = useState<IProject | null>(_project);
+  const [project, setProject] = useState<ICodeProject | null>(_project);
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [showEditorModeModal, setShowEditorModeModal] = useState(false);
 
@@ -342,7 +349,7 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
             params.snapshot = path;
           }
 
-          const currentFolder = folder || (await createProjectFolder({ name: newFolderName }));
+          const currentFolder = folder || (await createCodeProjectFolder({ name: newFolderName }));
 
           if (!folder) {
             setFolder(currentFolder);
@@ -351,7 +358,7 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
                 id: currentFolder.id,
                 name: currentFolder.name,
                 projects_count: 0,
-              },
+              } as any,
               ...f,
             ]);
           }
@@ -361,8 +368,8 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
           const isNewProject = !project || project.user_id !== user?.id;
 
           const updatedProject = isNewProject
-            ? await createProject(params)
-            : await updateProject({
+            ? await createCodeProject(params)
+            : await updateCodeProject({
                 ...params,
                 id: project.id,
               });
@@ -476,8 +483,6 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
     user,
   ]);
 
-  useMemo(() => setLoadingConfig((e) => ({ ...e, isLoading: true })), []);
-
   useEffect(() => {
     const desc = setTimeout(() => setLoadingConfig((e) => ({ ...e, isLoading: false })), 500);
     return () => clearTimeout(desc);
@@ -570,27 +575,21 @@ const Code: React.FC<IProps> = ({ user: _user, project: _project, folder: _folde
 
 export default Code;
 
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  try {
-    cookieManager.updateToken(req);
+export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
+  cookieManager.updateToken(req);
 
-    const user = null;
-    const project = null;
-    const folder = null;
-    const folders: any[] = [];
+  const projectId = query.project_id || ``;
+  const folderId = query.folder_id || ``;
+  const pageTitle = query._p || `Novo Projeto`;
 
-    return {
-      props: {
-        selectedPage: 'code',
-        user,
-        project,
-        folder,
-        folders,
-        isDefaultProject: true,
-        iframeUrl: process.env.NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL || '',
-      },
-    };
-  } catch {
-    return { redirect: { destination: '/code/example', permanent: false } };
-  }
+  return {
+    props: {
+      selectedPage: 'code',
+      pageTitle,
+      projectId,
+      folderId,
+      isDefaultProject: projectId === `example` || !projectId,
+      iframeUrl: process.env.NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL || '',
+    },
+  };
 };

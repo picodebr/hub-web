@@ -16,6 +16,7 @@ import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
 
 import { useAvatar, useProfile } from './hooks';
+import { BsMotherboard } from 'react-icons/bs';
 
 export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stopTour }) => {
   const router = useCustomRouter();
@@ -42,7 +43,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
     { name: 'Loja', page: 'store', icon: FiShoppingBag, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Biblioteca', page: 'library', icon: FiFileText, ref: useRef(), tourDescription: `Aqui é onde fica todo o material gráfico da PiCode.` },
     { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    // { name: 'Meus Projetos', page: 'code', icon: FiFolder, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Meus Projetos', page: 'code', icon: BsMotherboard, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Meus Grupos', page: 'groups', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
   ];
@@ -63,6 +64,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
       tourDescription: `Aqui é onde fica todo o conteúdo de aprendizagem e capacitação Maker.`,
     },
     { name: 'Turmas', page: 'classes', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para ver visualizar ou adicionar uma turma.` },
+    { name: 'Meus Projetos', page: 'code', icon: BsMotherboard, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     {
       name: 'Loja',
       page: 'store',
@@ -76,6 +78,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
       page: 'community',
       icon: FaRegSmile,
       ref: useRef(),
+
       tourDescription: `Nossa comunidade exclusiva para alunos e professores Maker`,
     },
     {

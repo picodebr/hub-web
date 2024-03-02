@@ -1,8 +1,8 @@
-import { ILearnBotElementLayout } from '../../components/LearnBotSimulator/interfaces';
+import { ILearnBotElementLayout } from '@/components/LearnBotSimulator/interfaces';
 
 export const sourceCodeModes = <const>['block', 'text'];
 
-export type SourceCodeMode = typeof sourceCodeModes[number];
+export type SourceCodeMode = (typeof sourceCodeModes)[number];
 
 export interface IProjectSourceCode {
   variables: string[];
@@ -11,7 +11,7 @@ export interface IProjectSourceCode {
   simulation_elements_layout: ILearnBotElementLayout[];
 }
 
-export interface IProject {
+export interface ICodeProject {
   id: string;
   folder_id: string;
   name: string;
