@@ -3,7 +3,7 @@ import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
 
 type FuncType = (id: string) => Promise<IProjectFolder>;
 
-export const getProjectFolder: FuncType = async (id) => {
-  const { data } = await api.get(`project_folder/${id}`);
+export const getCodeProjectFolder: FuncType = async (id) => {
+  const { data } = await api.get(`code/folder/${id}`);
   return data;
 };
