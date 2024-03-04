@@ -58,6 +58,8 @@ export const Container = styled.div`
   border: 1px solid #ccc;
   border-radius: 1rem;
   overflow: hidden;
+  position: relative;
+
 
   @media (max-width: ${(props) => props.theme.breakingPoints.mobile}px) {
     height: calc(100vh - ${(props) => props.theme.dimensions.mobileHeader}px);

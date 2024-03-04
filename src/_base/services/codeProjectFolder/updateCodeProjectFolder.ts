@@ -4,7 +4,7 @@ import { IUpdateProjectFolderParams } from '@/_base/interfaces/codeFolder/IUpdat
 
 type FuncType = (params: IUpdateProjectFolderParams) => Promise<IProjectFolder>;
 
-export const updateProjectFolder: FuncType = async ({ id, ...params }) => {
-  const { data } = await api.patch(`project_folder/${id}`, params);
+export const updateCodeProjectFolder: FuncType = async ({ id, ...params }) => {
+  const { data } = await api.patch(`code/folder/${id}`, params);
   return data;
 };
