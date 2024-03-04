@@ -93,7 +93,7 @@ const CodeFolders: React.FC = () => {
   const getLastActivityFromFolder = (folder: IProjectFolder): string => {
     if (!folder.projects?.length) return folder.created_at;
 
-    const lastActivity = folder.projects.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime())[0];
+    const lastActivity = folder.projects.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
 
     return lastActivity.updated_at;
   };

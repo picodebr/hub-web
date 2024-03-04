@@ -2,16 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { GetServerSideProps } from 'next';
 import * as Yup from 'yup';
-import { Container } from './styles';
 
 import { Simulator } from '../../../../components/Simulator';
 import { SimulatorCodeHandler } from '../../../../components/Simulator/interfaces';
-import { scratchState } from '../../../../components/scratch/ScratchState';
 import { CodeEditor } from '../../../../components/CodeEditor';
 import { ICodeEditorError } from '../../../../components/CodeEditor/interfaces';
-import { useCustomRouter, useCustomToast, useLoading } from '../../../../_base/hooks';
+import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast, useLoading } from '../../../../_base/hooks';
 import { ICodeProject, IProjectSourceCode } from '@/_base/interfaces/codeProject/IProject';
-import { IProjectFolder, IProjectFolderListingItem } from '@/_base/interfaces/codeFolder/IProjectFolder';
 import { supportedBoards } from '@/_base/interfaces/boards/supported';
 import { usbVendorIds } from '@/_base/config/usbVendorIds';
 import {
@@ -33,18 +30,18 @@ import { uploadConfig } from '@/_base/config/upload';
 import { compileCode } from '@/_base/services/compile/compileCode';
 import { ICreateProjectParams } from '@/_base/interfaces/codeProject/ICreateProjectParams';
 import { dimensions } from '@/styles/global';
-import { createCodeProjectFolder } from '@/_base/services/codeProjectFolder';
-import { createCodeProject, updateCodeProject } from '@/_base/services/codeProject';
+import { createCodeProject, getCodeProject, updateCodeProject } from '@/_base/services/codeProject';
 import { StatusModal } from '@/components/Modal/Status';
-import { GenericModal } from '@/components/Modal/GenericModal';
-import { Project } from './components/Project';
 import { SimulationCodeModal } from '@/components/Modal/SimulationCodeModal';
 import { SerialMonitor } from '@/components/Modal/SerialMonitor';
 import { EditorModeModal } from '@/components/Modal/EditorModeModal';
 import { IHubUser } from '@/_base/interfaces/user';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
-import { Flex } from '@chakra-ui/react';
+import { Flex, Text } from '@chakra-ui/react';
 import { CodeEventMenu } from './components/CodeEventMenu';
+import { isUuid } from 'uuidv4';
+import { SmallModal } from '@/components/Modal/Small';
+import { TextInput } from '@/components/Inputs/Text';
 
 const getDefaultSourceCode = (project: ICodeProject | null) =>
   project?.source_code ||
@@ -56,24 +53,14 @@ const getDefaultSourceCode = (project: ICodeProject | null) =>
   } as IProjectSourceCode);
 
 interface IProps {
-  user: IHubUser | null;
   project: ICodeProject | null;
-  folder: IProjectFolder | null;
-  folders: IProjectFolderListingItem[];
   isDefaultProject: boolean;
   iframeUrl: string;
   projectId: string;
   folderId: string;
 }
 
-const Code: React.FC<IProps> = ({
-  user: _user = null,
-  project: _project = null,
-  folder: _folder = null,
-  folders: _folders = [],
-  isDefaultProject,
-  iframeUrl,
-}) => {
+const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, iframeUrl, folderId }) => {
   const sourceCodeRef = useRef(getDefaultSourceCode(_project));
   const board = useMemo(() => supportedBoards[0], []);
   const usbFilters = useMemo(() => usbVendorIds.map((usbVendorId) => ({ usbVendorId })), []);
@@ -81,20 +68,16 @@ const Code: React.FC<IProps> = ({
   const router = useCustomRouter();
   const toast = useCustomToast();
 
-  const [folder, setFolder] = useState<IProjectFolder | null>(_folder);
-  const [folders, setFolders] = useState<IProjectFolderListingItem[]>(_folders);
-  const [newFolderName, setNewFolderName] = useState('');
-
-  const [user, setUser] = useState<IHubUser | null>(_user);
+  const { user, setUser } = useAuth();
   const [project, setProject] = useState<ICodeProject | null>(_project);
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [showEditorModeModal, setShowEditorModeModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const serial = useMemo(() => new SerialConnection(), []);
   const [appStatus, setAppStatus] = useState<AppStatus>('starting');
   const [compiledCode, setCompiledCode] = useState<ICompiledCode>();
 
-  const [showFormModal, setShowFormModal] = useState(false);
   const [openProjectModal, setOpenProjectModal] = useState(false);
 
   const [projectName, setProjectName] = useState(_project?.name || '');
@@ -108,7 +91,6 @@ const Code: React.FC<IProps> = ({
   const simulatorCodeHandlerRef = useRef<SimulatorCodeHandler>();
 
   const [allowUpload, setAllowUpload] = useState(true);
-  const [isProjectOwner, setIsProjectOwner] = useState(true);
   const [isTextMode, setIsTextMode] = useState(false);
 
   useEffect(() => {
@@ -213,10 +195,7 @@ const Code: React.FC<IProps> = ({
   }, []);
 
   useEffect(() => {
-    console.log(`supportSerialAPI`, supportSerialAPI());
-
     if (!supportSerialAPI() || !compiledCode) return () => ({});
-    console.log(`OK`);
 
     const connect = async () => {
       try {
@@ -224,11 +203,11 @@ const Code: React.FC<IProps> = ({
           { baudRate: uploadConfig.DEFAULT_BAUD_RATE },
           usbVendorIds.map((usbVendorId) => ({ usbVendorId })),
         );
-        console.log(`ready_to_upload`);
 
         setAppStatus('ready_to_upload');
       } catch (err: any) {
-        console.log(err);
+        // eslint-disable-next-line no-console
+        console.error(err);
         setAppStatus('connection_failed');
       }
     };
@@ -308,111 +287,68 @@ const Code: React.FC<IProps> = ({
     compile();
   }, [handleCompilation, postMessage]);
 
-  const projectPromiseHandler = useCallback(
-    (params: ICreateProjectParams) =>
-      // eslint-disable-next-line no-async-promise-executor
-      new Promise<void>(async (resolve, reject) => {
-        try {
-          const schema = Yup.object().shape({
-            name: Yup.string().required('Insira o nome do projeto'),
-            private: Yup.boolean(),
-          });
+  const handleProjectSubmit = useAsyncCallback(
+    async (params: ICreateProjectParams) => {
+      try {
+        setIsLoading(true);
+        const schema = Yup.object().shape({
+          name: Yup.string().required('Insira o nome do projeto'),
+          private: Yup.boolean(),
+        });
 
-          await schema.validate(params, {
-            abortEarly: false,
-          });
+        await schema.validate(params, {
+          abortEarly: false,
+        });
 
-          const element = document.querySelector('#blocklyDiv') as HTMLElement;
-          const mimetype = 'image/png';
+        const element = document.querySelector('#blocklyDiv') as HTMLElement;
+        const mimetype = 'image/png';
 
-          if (!folder && !newFolderName) {
-            toast({
-              status: 'error',
-              description: 'Selecione uma pasta para continuar',
-            });
-            return;
-          }
+        if (element && params.source_code.mode === 'block') {
+          const [canvas, { link, path }] = await Promise.all([
+            html2canvas(element, {
+              x: 380,
+              width: window.innerWidth - 380,
+              height: window.innerHeight - parseInt(dimensions.header.height),
+              backgroundColor: '#fff',
+            }),
+            getPresignedUrl(mimetype, `code-snapshots`),
+          ]);
 
-          if (element && params.source_code.mode === 'block') {
-            const [canvas, { link, path }] = await Promise.all([
-              html2canvas(element, {
-                x: 380,
-                width: window.innerWidth - 380,
-                height: window.innerHeight - parseInt(dimensions.header.height),
-                backgroundColor: '#fff',
-              }),
-              getPresignedUrl(mimetype),
-            ]);
+          canvas.toBlob(async (blob: any) => blob && (await uploadFile(link, blob)), mimetype, 1.0);
 
-            canvas.toBlob(async (blob: any) => blob && (await uploadFile(link, blob)), mimetype, 1.0);
-
-            params.snapshot = path;
-          }
-
-          const currentFolder = folder || (await createCodeProjectFolder({ name: newFolderName }));
-
-          if (!folder) {
-            setFolder(currentFolder);
-            setFolders((f) => [
-              {
-                id: currentFolder.id,
-                name: currentFolder.name,
-                projects_count: 0,
-              } as any,
-              ...f,
-            ]);
-          }
-
-          params.folder_id = currentFolder.id;
-
-          const isNewProject = !project || project.user_id !== user?.id;
-
-          const updatedProject = isNewProject
-            ? await createCodeProject(params)
-            : await updateCodeProject({
-                ...params,
-                id: project.id,
-              });
-
-          setProject(updatedProject);
-          setProjectName('');
-          setProjectNameError('');
-          setPrivateProject(false);
-          setOpenProjectModal(false);
-          resolve();
-          if (isNewProject) router.push(`/code/${updatedProject.id}?folder_id=${updatedProject.folder_id}`);
-        } catch (err) {
-          if (err instanceof Yup.ValidationError) {
-            const error = getValidationError(err);
-
-            setProjectNameError(error.name);
-          }
-
-          showErrorToClient(err, toast);
-          reject(err);
+          params.snapshot = path;
         }
-      }),
-    [toast, project, folder, newFolderName, user?.id, router],
-  );
 
-  const handleProjectSubmit = useCallback(
-    (params: ICreateProjectParams) => {
-      if (scratchState.workspace.scrollCenter) scratchState.workspace.scrollCenter();
+        params.folder_id = folderId;
 
-      toast({
-        status: 'loading',
-        description: `Salvando o projeto`,
-        // promiseOptions: {
-        //   messages: {
-        //     loading: 'Salvando o projeto',
-        //     error: 'Erro ao salvar o projeto',
-        //     success: 'Projeto salvo',
-        //   },
-        //   promise: projectPromiseHandler(params),
-        // },
-      });
+        const updatedProject = !project
+          ? await createCodeProject(params)
+          : await updateCodeProject({
+              ...params,
+              id: project.id,
+            });
+
+        setProject(updatedProject);
+        setProjectName('');
+        setProjectNameError('');
+        setPrivateProject(false);
+        setOpenProjectModal(false);
+
+        if (!project) router.push(`/code/${folderId}/${updatedProject.id}?_p=${updatedProject.name}`);
+        else toast({ description: `Salvo com sucesso`, status: `success`, position: `top` });
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const error = getValidationError(err);
+
+          setProjectNameError(error.name);
+        }
+
+        showErrorToClient(err, toast);
+      } finally {
+        setIsLoading(false);
+      }
     },
-    [toast, projectPromiseHandler],
+    [toast, project, user?.id, router],
   );
 
   useEffect(() => {
@@ -426,18 +362,13 @@ const Code: React.FC<IProps> = ({
     restoreInitialState();
   }, [appStatus]);
 
-  const handleDuplicate = useCallback(() => (user ? setOpenProjectModal(true) : setShowFormModal(true)), [user]);
+  const handleDuplicate = useCallback(() => alert(`not_implemented`), [user]);
 
   const handleSimulation = () => {
-    setShowCodeModal(true);
+    setShowSimulatorModal(true);
   };
 
   const handleSave = useCallback(() => {
-    if (!user) {
-      setShowFormModal(true);
-      return;
-    }
-
     if (!project) {
       setOpenProjectModal(true);
       return;
@@ -447,9 +378,9 @@ const Code: React.FC<IProps> = ({
       private: project.private,
       name: project.name,
       source_code: sourceCodeRef.current,
-      folder_id: folder?.id || '',
+      folder_id: folderId,
     });
-  }, [handleProjectSubmit, project, user, folder]);
+  }, [handleProjectSubmit, project, user]);
 
   useEffect(() => {
     headerEvents.addListener('upload', handleUpload);
@@ -507,18 +438,7 @@ const Code: React.FC<IProps> = ({
 
   const handleSerialMonitorClose = useCallback(() => setShowSerialMonitor(false), []);
 
-  const handleFolderChange = useCallback(
-    (value: string) => {
-      const selectedFolder = folders.find((f) => f.id === value);
-
-      if (selectedFolder) setFolder({ ...selectedFolder, projects: [] });
-      else setNewFolderName(value);
-    },
-    [folders],
-  );
-
   useEffect(() => {
-    headerEvents.on('ownerchange', (value) => setIsProjectOwner(value));
     headerEvents.on('permissionchange', (value) => setAllowUpload(value));
     headerEvents.on('codemode', (value) => setIsTextMode(value === 'text'));
   }, []);
@@ -528,36 +448,41 @@ const Code: React.FC<IProps> = ({
       <CodeEventMenu
         onClick={(type) => headerEvents.emit(type)}
         allowUpload={allowUpload}
-        isProjectOwner={isProjectOwner}
+        isProjectOwner={true}
         isSignedIn={true}
         isTextMode={isTextMode}
       />
       <CodeEditor sourceCodeRef={sourceCodeRef} board={board} onSourceCodeChange={handleSourceCodeChange} editorErrors={editorErrors} />
       <StatusModal status={appStatus} />
-      <GenericModal
-        title={isDefaultProject || (project && project?.user_id === user?.id) ? 'Salvar projeto' : 'Duplicar projeto'}
-        confirmButtonTitle={isDefaultProject || (project && project?.user_id === user?.id) ? 'Criar' : 'Duplicar'}
+      <SmallModal
+        isLoading={isLoading}
+        topIcon="checked"
+        title="Salvar projeto"
+        okText="Salvar"
         show={openProjectModal}
         onClose={() => setOpenProjectModal(false)}
-        onSave={() =>
+        onConfirm={() =>
           handleProjectSubmit({
             private: privateProject,
             name: projectName,
             source_code: sourceCodeRef.current,
-            folder_id: folder?.id || '',
+            folder_id: folderId,
           })
         }
       >
-        <Project
-          name={{ value: projectName, error: projectNameError }}
-          privateProject={privateProject}
-          setName={setProjectName}
-          setPrivate={setPrivateProject}
-          folders={folders}
-          folder={_folder}
-          onChangeFolder={handleFolderChange}
-        />
-      </GenericModal>
+        <Flex direction="column" gap="1rem" mt="1rem">
+          <Text fontSize="1rem" fontWeight="500" color="gray600">
+            Defina um nome para o projeto
+          </Text>
+          <TextInput
+            placeholder="Nome do projeto"
+            fontSize="15px"
+            value={projectName}
+            error={projectNameError}
+            onInputChange={(name) => setProjectName(name)}
+          />
+        </Flex>
+      </SmallModal>
       <Simulator
         showModal={showSimulatorModal}
         sourceCodeRef={sourceCodeRef}
@@ -581,13 +506,21 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
   const projectId = query.project_id || ``;
   const folderId = query.folder_id || ``;
   const pageTitle = query._p || `Novo Projeto`;
+  let project = null;
+
+  try {
+    project = await getCodeProject(`${projectId}`);
+  } catch {
+    project = null;
+  }
 
   return {
     props: {
       selectedPage: 'code',
       pageTitle,
-      projectId,
+      projectId: isUuid(`${projectId}`) ? projectId : null,
       folderId,
+      project,
       isDefaultProject: projectId === `example` || !projectId,
       iframeUrl: process.env.NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL || '',
     },
