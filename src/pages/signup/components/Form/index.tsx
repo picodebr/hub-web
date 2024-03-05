@@ -45,6 +45,7 @@ export const FormStep: React.FC<IProps> = ({
         direction="column"
         width="100%"
         gap="12px"
+        overflow="hidden auto"
       >
         <TextInput
           label="Nome Completo"
