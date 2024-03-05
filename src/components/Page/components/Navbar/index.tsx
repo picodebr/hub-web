@@ -17,6 +17,7 @@ import { updateProfile } from '@/_base/services/user';
 
 import { useAvatar, useProfile } from './hooks';
 import { BsMotherboard } from 'react-icons/bs';
+import { GiCardboardBox } from 'react-icons/gi';
 
 export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stopTour }) => {
   const router = useCustomRouter();
@@ -65,6 +66,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
     },
     { name: 'Turmas', page: 'classes', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para ver visualizar ou adicionar uma turma.` },
     { name: 'Meus Projetos', page: 'code', icon: BsMotherboard, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Estoque', page: 'stock', icon: GiCardboardBox, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     {
       name: 'Loja',
       page: 'store',
