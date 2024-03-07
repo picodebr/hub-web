@@ -4,25 +4,36 @@ import { FiShoppingCart, FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
 import { useState } from 'react';
-import { IStoreComponentItem } from '@/_base/interfaces/store';
-import { storeComponentList } from '@/_base/utils/storeComponentList';
 import { BsArrowLeft } from 'react-icons/bs';
 import { IHubGroupOrderItem } from '@/_base/interfaces/group';
 import { SmallModal } from '@/components/Modal/Small';
+import { IStockMaker, IStoreMakerItem } from '@/_base/interfaces/storeMaker';
+import { useCustomToast } from '@/_base/hooks';
 
-type CustomStoreItem = IStoreComponentItem & { quantity: number };
+type CustomStoreItem = IStoreMakerItem & { quantity: number };
 interface IProps {
   onChangeView: (view: OrdersPageView) => void;
   onFinishOrder: (data: IHubGroupOrderItem[]) => void;
   canEdit: boolean;
+  storeMakerList: IStockMaker[];
 }
 
-export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
+export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList }) => {
   const [cart, setCart] = useState<CustomStoreItem[]>([]);
   const [orderPayload, setOrderPayload] = useState<IHubGroupOrderItem[] | null>(null);
 
-  const addItemInCart = (item: IStoreComponentItem) => {
+  const storeMakerList = storeList.map((e) => e.store_item);
+
+  const toast = useCustomToast();
+
+  const addItemInCart = (item: IStoreMakerItem) => {
     const targetItemInCard = cart.find((e) => e.id === item.id);
+    const targetStock = storeList.find((e) => e.store_maker_item_id === item.id);
+
+    if ((targetItemInCard?.quantity || 0) + 1 > (targetStock?.quantity || 0)) {
+      toast({ description: `Limite do estoque atingido`, status: `error` });
+      return;
+    }
 
     if (targetItemInCard)
       setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)));
@@ -53,7 +64,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
           flex="1"
           overflow="hidden auto"
         >
-          {storeComponentList.map((item) => (
+          {storeMakerList.map((item) => (
             <Flex key={item.id} position="relative" w="fit-content" h="fit-content">
               <Flex
                 position="absolute"
@@ -90,13 +101,13 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
                 borderRadius="md"
                 overflow="hidden"
               >
-                <Image src={item.image} style={{ maxHeight: `10rem`, width: `100%` }} />
+                <Image src={item.picture} style={{ maxHeight: `10rem`, width: `100%` }} />
                 <Flex display="flex" justify="space-between" align="center" gap="9px" minH="3.5rem" maxH="3.5rem" w="100%">
                   <Text noOfLines={2} px="0.5rem" flex="1">
                     {item.name}
                   </Text>
                   <Flex display="flex" align="center" justify="center" gap="0.25rem" pr="0.5rem">
-                    <Image src="/icons/cash.svg" />
+                    <Image src="/icons/coin.svg" />
                     <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
                       {item.price}
                     </Text>
@@ -127,7 +138,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
         <Flex direction="column" overflow="auto" flex="1" h="calc(100% - 17rem)" gap="0.75rem" py="0.75rem">
           {cart.map((item) => (
             <Flex key={item.id} gap="12px" border="1px" borderColor="gray300" borderRadius="md" padding=".25rem">
-              <Flex w="40px" h="40px" bgImage={item.image} bgSize="cover" bgPosition="center" />
+              <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
               <Flex w="97.5px" display="column" align="center" justify="center" gap="9px" fontWeight="500" fontSize="14px" color="gray700">
                 {item.name}
                 <Flex display="flex" align="center" gap="9px" h="18px">
@@ -189,12 +200,13 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
           <Flex pt="24px" pb="24px" w="100%" justify="flex-end" align="center" gap="0.5rem">
             <Image src="/icons/coin.svg" height="40px" />
             <Text fontSize="50px" fontWeight="700" color="primary900">
-              {cart.reduce((acc, { price, quantity }) => (acc += price * quantity), 0)}
+              {cart.reduce((acc, { price, quantity }) => (acc += Number(price) * quantity), 0)}
             </Text>
           </Flex>
           <Flex direction="column" gap="1.35rem">
             <Flex
-              cursor="pointer"
+              userSelect="none"
+              cursor={cart.length ? 'pointer' : 'not-allowed'}
               color="white"
               bgColor="primary600"
               p="0.5rem"
@@ -202,14 +214,16 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder }) => {
               align="center"
               borderRadius="8px"
               fontWeight="600"
+              opacity={cart.length ? `1` : `0.8`}
               _hover={{ filter: `brightness(0.9)` }}
               onClick={() =>
+                !!cart.length &&
                 setOrderPayload(
                   cart.map((e) => ({
                     id: e.id,
                     name: e.name,
-                    description: e.description,
-                    image: e.image,
+                    description: e.description || ``,
+                    image: e.picture,
                     price: `${e.price}`,
                     quantity: e.quantity,
                   })),

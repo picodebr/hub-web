@@ -253,7 +253,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Meus projetos', showBackButton: false } };
+    return { props: { selectedPage, pageTitle: 'Meus códigos', showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

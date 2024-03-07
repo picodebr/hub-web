@@ -1,66 +1,116 @@
 import { GetServerSideProps } from 'next';
-import { useState } from 'react';
-import { Flex, Text, Img } from '@chakra-ui/react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Flex, Text, Img, Skeleton, Divider } from '@chakra-ui/react';
 
 import { logError, cookieManager } from '@/_base/utils';
-import { FaMinus, FaPlus } from 'react-icons/fa';
-
-interface IProducts {
-  id: string;
-  img: string;
-  name: string;
-  quantity: number;
-}
-
-const mockProducts: IProducts[] = [
-  {
-    id: '1',
-    img: 'https://www.makerhero.com/wp-content/uploads/2017/07/1AC01-9-1-min.jpeg',
-    name: 'Arduíno',
-    quantity: 1,
-  },
-  {
-    id: '2',
-    img: 'https://www.tecnotronics.com.br/wp-content/uploads/2017/03/a122_a.jpg',
-    name: 'Jumper',
-    quantity: 1,
-  },
-  {
-    id: '3',
-    img: 'https://cdn.awsli.com.br/600x700/468/468162/produto/1941435412328b077d.jpg',
-    name: 'LED Difuso',
-    quantity: 1,
-  },
-];
+import { FaMinus, FaPlus, FaSave } from 'react-icons/fa';
+import { getStockMaker, updateStockMaker } from '@/_base/services/storeMaker';
+import { IStockMaker } from '@/_base/interfaces/storeMaker';
+import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
+import { useSelectedSchool } from '@/components/Page/components/Header';
+import { PlusButton } from '@/components/Buttons/Plus';
 
 const Stock: React.FC = () => {
-  const [cart, setCart] = useState<IProducts[]>([]);
+  const [unSavedstock, setUnsavedStock] = useState<IStockMaker[]>([]);
+  const [stock, setStock] = useState<IStockMaker[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const toast = useCustomToast();
+  const { school } = useSelectedSchool();
+
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const results = await getStockMaker(school?.hub_school_id || ``);
+        setStock(results);
+        setUnsavedStock(results);
+      } catch {
+        toast({ status: `error`, description: `Não foi possível listar o estoque` });
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  const needSave = useMemo(() => JSON.stringify(unSavedstock) !== JSON.stringify(stock), [unSavedstock, stock]);
+
+  const handleSave = useAsyncCallback(
+    async () => {
+      setIsLoading(true);
+
+      await updateStockMaker({ items: stock.map((s) => ({ id: s.id, quantity: s.quantity })) });
+      setUnsavedStock(stock);
+    },
+    [stock],
+    true,
+    () => setIsLoading(false),
+  );
+
+  const onChangeQuantity = useCallback((item: IStockMaker) => {
+    setStock((e) => e.map((s) => (s.id === item.id ? item : s)));
+  }, []);
+
   return (
-    <Flex w="100%" h="100%" direction="row" gap="8px">
-      {mockProducts.map((product) => (
-        <Flex
-          key={product.id}
-          w="300px"
-          h="300px"
-          borderRadius="8px"
-          bgColor="white"
-          boxShadow="md"
-          border="1px"
-          borderColor="gray100"
-          direction="column"
-          p="20px"
-        >
-          <Img src={product.img} w="200px" alignSelf="center" justifySelf="center" />
-          <Text>{product.name}</Text>
-          <Flex display="flex" justify="space-between" align="center">
-            <FaMinus fontSize="10px" color="gray300" cursor="pointer" onClick={() => product.quantity - 1} />
-            <Text fontSize="14px" fontWeight="500" color="gray500">
-              1
-            </Text>
-            <FaPlus cursor="pointer" fontSize="10px" color="gray300" onClick={() => product.quantity + 1} />
-          </Flex>
-        </Flex>
-      ))}
+    <Flex direction="column" flex="1" overflow="hidden" gap="1rem" userSelect="none">
+      <PlusButton label="Salvar" rightIcon={<FaSave />} alignSelf="flex-end" warning={needSave} onClick={handleSave} isLoading={isLoading} />
+      <Skeleton
+        display="grid"
+        overflow="hidden auto"
+        isLoaded={!isLoading}
+        gap="1rem"
+        gridTemplateColumns="repeat(auto-fill, minmax(240px, 1fr))"
+        gridTemplateRows="minmax(min-content, max-content)"
+        borderRadius="md"
+        pb="1rem"
+        flex="1"
+      >
+        {stock
+          .sort((a, b) => a.store_item.name?.localeCompare(b.store_item.name, undefined, { sensitivity: 'base' }))
+          .map((stock) => (
+            <Flex
+              key={stock.id}
+              borderRadius="8px"
+              bgColor="white"
+              boxShadow="md"
+              border="1px"
+              borderColor="gray100"
+              direction="column"
+              p="20px"
+              justify="space-between"
+              gap="0.5rem"
+            >
+              <Img src={stock.store_item.picture} h="180px" alignSelf="center" justifySelf="center" />
+              <Flex direction="column" gap="0.75rem" w="100%">
+                <Text>{stock.store_item.name}</Text>
+                <Divider />
+                <Flex justify="space-between" align="center" w="100%" color="gray500">
+                  <Flex
+                    fontSize="12px"
+                    cursor="pointer"
+                    onClick={() => onChangeQuantity({ ...stock, quantity: stock.quantity - 1 })}
+                    transition="all 0.1s"
+                    _hover={{ transform: `scale(1.15)` }}
+                  >
+                    <FaMinus />
+                  </Flex>
+                  <Text fontSize="14px" fontWeight="500" color="gray500">
+                    {stock.quantity}
+                  </Text>
+                  <Flex
+                    fontSize="12px"
+                    cursor="pointer"
+                    onClick={() => onChangeQuantity({ ...stock, quantity: stock.quantity + 1 })}
+                    transition="all 0.1s"
+                    _hover={{ transform: `scale(1.15)` }}
+                  >
+                    <FaPlus />
+                  </Flex>
+                </Flex>
+              </Flex>
+            </Flex>
+          ))}
+      </Skeleton>
     </Flex>
   );
 };
