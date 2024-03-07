@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next';
 import { MdWarning } from 'react-icons/md';
 import { Flex } from '@chakra-ui/react';
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { logError, cookieManager } from '@/_base/utils';
 import { ProjectPageView, projectPageViews } from './interfaces';
@@ -15,6 +15,9 @@ import { Members } from './components/Membros';
 import { addOrder, getGroupById, updateGroup } from '@/_base/services/group';
 import { IHubGroup, IHubGroupMetadata, IHubGroupOrder, IHubGroupOrderItem } from '@/_base/interfaces/group';
 import { acceptOrder } from '@/_base/services/group/acceptOrder';
+import { getStockMaker } from '@/_base/services/storeMaker';
+import { useSelectedSchool } from '@/components/Page/components/Header';
+import { IStockMaker } from '@/_base/interfaces/storeMaker';
 
 interface IProps {
   group: IHubGroup;
@@ -28,6 +31,22 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
 
   const toast = useCustomToast();
   const { user } = useAuth();
+
+  const [stock, setStock] = useState<IStockMaker[]>([]);
+
+  const { school } = useSelectedSchool();
+
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const results = await getStockMaker(school?.hub_school_id || ``);
+        setStock(results.filter((e) => e.quantity));
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
   const canEdit = user.role === `student` && !!group.student_links.find((e) => e.hub_user_id === user.id);
   const needSave = useMemo<boolean>(() => JSON.stringify(group) !== JSON.stringify(savedGroup), [group, savedGroup]);
@@ -82,6 +101,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
         group={group}
         handleApproveOrder={handleApproveOrder}
         canEdit={canEdit}
+        storeMakerList={stock}
       />
     ),
     Membros: <Members group={group} />,
