@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IoIosArrowDown } from 'react-icons/io';
-import { Avatar, Flex, Img, Skeleton, Text, useUpdateEffect } from '@chakra-ui/react';
+import { Avatar, Flex, Img, Text, useUpdateEffect } from '@chakra-ui/react';
 import { Result, ResultConvertOptions, createAvatar } from '@dicebear/core';
 import { adventurer } from '@dicebear/collection';
 import { Button } from '@chakra-ui/react';
@@ -12,17 +12,11 @@ import { IAvatarOptions, IProfileComponentProps } from './interfaces';
 import { defaultAvatarOptions } from './utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { useAuth, useCustomRouter } from '@/_base/hooks';
-import { IHubUser } from '@/_base/interfaces/user';
-
-interface IProps {
-  user: IHubUser;
-}
 
 export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({ skinColor: `ccc` });
   const [rawAvatar, setRawAvatar] = useState<(Result & ResultConvertOptions) | null>(null);
   const { setUser } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
   const router = useCustomRouter();
 
   const avatar = useMemo(() => {
@@ -354,32 +348,20 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
             </Flex>
           </Flex>
         </Flex>
-        <Flex
-          bgColor="white"
-          direction="column"
-          borderRadius="10px"
-          boxShadow="md"
-          w="100%"
-          h="fit-content"
-          padding="20px"
-          gap="20px"
-          textAlign="left"
-          display="column"
-          justify="center"
-        >
-          <Text w="100%" borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
+        <Flex bgColor="white" direction="column" borderRadius="10px" boxShadow="md" w="100%" padding="20px" gap="20px" justify="space-between">
+          <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
             Seu ranking global
           </Text>
-          <Skeleton display="flex" isLoaded={!isLoading} p="20px" w="100%" justifyContent="space-between">
-            <Flex gap="8px" align="center">
+          <Flex p="20px">
+            <Flex gap="8px" align="center" flex="1">
               <Avatar size="sm" src="#" />
               <Text>{user.username}</Text>
             </Flex>
             <Text align="center" fontWeight="600">
               #12
             </Text>
-          </Skeleton>
-          <Flex w="100%" direction="column" gap="10px">
+          </Flex>
+          <Flex direction="column" gap="10px" flex="1" justify="flex-end">
             <Text>Suba seu ranking jogando os desafios diários!</Text>
             <Button onClick={() => router.push('/challenge')}>Jogar agora!</Button>
           </Flex>

@@ -90,18 +90,10 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
                     {user.role === `teacher` ? (
                       <>
                         <GenericButton
-                          label="Aprovar"
+                          label="Visualizar"
                           bg="success600"
                           color="white"
                           onClick={() => setOrder(order)}
-                          _hover={{ filter: `brightness(0.9)` }}
-                        />
-                        <GenericButton
-                          label="Recusar"
-                          bg="white"
-                          color="gray700"
-                          border="1px"
-                          borderColor="gray300"
                           _hover={{ filter: `brightness(0.9)` }}
                         />
                       </>

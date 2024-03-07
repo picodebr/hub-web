@@ -1,23 +1,21 @@
 import { Flex, Icon, Image, Spinner, Text, useColorMode } from '@chakra-ui/react';
 import NextImage from 'next/image';
-import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
+import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiInbox, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
 import { Tour, TourProps } from 'antd';
+import { BsMotherboard } from 'react-icons/bs';
+import { Uploader } from 'rsuite';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
 import { formatShortName } from '@/_base/utils';
 import { INavbarProps, MenuItemType } from './interfaces';
 import { GenericButton } from '@/components/Buttons/Generic';
-import { Uploader } from 'rsuite';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
-
 import { useAvatar, useProfile } from './hooks';
-import { BsMotherboard } from 'react-icons/bs';
-import { GiCardboardBox } from 'react-icons/gi';
 
 export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stopTour }) => {
   const router = useCustomRouter();
@@ -66,7 +64,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
     },
     { name: 'Turmas', page: 'classes', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para ver visualizar ou adicionar uma turma.` },
     { name: 'Meus Códigos', page: 'code', icon: BsMotherboard, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    // { name: 'Estoque', page: 'stock', icon: GiCardboardBox, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    { name: 'Estoque Maker', page: 'stock', icon: FiInbox, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     {
       name: 'Loja',
       page: 'store',
@@ -170,7 +168,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
             border="4px"
             borderColor="white"
           >
-            <NextImage loader={() => avatar} src={avatar} width={100} height={100} alt="" style={{ opacity: isUpdating ? `0.4` : `1` }} />
+            <NextImage loader={() => avatar} src={avatar} width={100} height={100} alt="" style={{ opacity: isUpdating ? `0.4` : `1` }} priority />
           </Flex>
           {isUpdating && (
             <Flex
