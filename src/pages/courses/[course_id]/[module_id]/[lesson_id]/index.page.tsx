@@ -89,7 +89,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
           {!!lesson?.video && (
             <video
               controls
-              preload="true"
+              preload="none"
               autoPlay
               controlsList="nodownload"
               poster={lesson.video.thumbnail}
