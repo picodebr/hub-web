@@ -5,6 +5,7 @@ export * from './deepCopy';
 export * from './delay';
 export * from './documentFormatter';
 export * from './formatClassGrade';
+export * from './formatCoin';
 export * from './formatDateInput';
 export * from './formatShortName';
 export * from './getBlockly';

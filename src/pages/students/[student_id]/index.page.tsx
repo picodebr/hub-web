@@ -1,17 +1,39 @@
 import { GetServerSideProps } from 'next';
 
-import { logError, cookieManager, formatShortName } from '@/_base/utils';
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Img, Text, useColorMode } from '@chakra-ui/react';
+import { logError, cookieManager, formatShortName, formatCoin } from '@/_base/utils';
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Img, Text, Tooltip, useColorMode } from '@chakra-ui/react';
 import { FiUsers } from 'react-icons/fi';
 import { getStudent } from '@/_base/services/user';
 import { IHubUser } from '@/_base/interfaces/user';
+import { CoinIcon } from '@/components/Logo';
+import { FaPlus, FaMinus } from 'react-icons/fa6';
+import { useState } from 'react';
+import { SmallModal } from '@/components/Modal/Small';
+import { NumberScaleInput } from '@/components/Inputs/NumberScale';
+import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
+import { updateStudentData } from '@/_base/services/student/updateStudentData';
 
 interface IProps {
   student: IHubUser;
 }
 
-const StudentPage: React.FC<IProps> = ({ student }) => {
+const StudentPage: React.FC<IProps> = ({ student: _student }) => {
   const { colorMode } = useColorMode();
+  const [addCoinValue, setAddCoinValue] = useState<string | null>(null);
+  const [removeCoinValue, setRemoveCoinValue] = useState<string | null>(null);
+  const [student, setStudent] = useState<IHubUser>(_student);
+
+  const toast = useCustomToast();
+
+  const handleUpdateStudent = useAsyncCallback(async (coins: number) => {
+    const toastMessage = `Moedas ${coins > (student.metadata.coins || 0) ? 'creditadas' : 'descontadas'} com sucesso!`;
+    const updatedStudent = await updateStudentData(student.id, coins);
+    setStudent((e) => ({ ...e, ...updatedStudent }));
+    setAddCoinValue(null);
+    setRemoveCoinValue(null);
+    toast({ status: `success`, description: toastMessage });
+  }, []);
+
   return (
     <Flex direction="column" w="100%" h="100%" overflow="auto">
       <Flex bg={colorMode === 'light' ? 'primary900' : 'primary400'} h="102px" position="relative" borderRadius="10px" minH="102px" gap="-24px">
@@ -33,8 +55,7 @@ const StudentPage: React.FC<IProps> = ({ student }) => {
         </Flex>
       </Flex>
       <Flex border="1px" borderColor="gray300" borderRadius="10px" bg="white" padding="40px" gap="32px">
-        {/* Left Content */}
-        <Flex direction="column" gap="32px" flex="1">
+        <Flex gap="32px" flex="1" align="center" justify="space-between">
           <Flex h="fit-content" display="flex" direction="column" justify="end">
             <Text fontSize="18px" fontWeight="600" color="primary500">
               {student.name}
@@ -46,18 +67,43 @@ const StudentPage: React.FC<IProps> = ({ student }) => {
               {student.bio || `.`}
             </Text>
           </Flex>
-          {/* <Flex direction="row" align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
-            <Text>0</Text>
-            <Text>5</Text>
+          <Flex direction="column" align="center" gap="0.5rem">
+            <Flex align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
+              <CoinIcon />
+              <Text fontSize="1rem">{formatCoin(student.metadata.coins)}</Text>
+            </Flex>
+            <Flex gap="1rem" pl="0.5rem">
+              <Tooltip label="Descontar moedas">
+                <Flex
+                  border="1px"
+                  borderColor="gray200"
+                  cursor="pointer"
+                  p="0.35rem"
+                  borderRadius="50%"
+                  transition="all 0.1s"
+                  _hover={{ boxShadow: `sm`, borderColor: `gray300` }}
+                  onClick={() => setRemoveCoinValue(`0`)}
+                >
+                  <FaMinus />
+                </Flex>
+              </Tooltip>
+              <Tooltip label="Creditar moedas">
+                <Flex
+                  border="1px"
+                  borderColor="gray200"
+                  cursor="pointer"
+                  p="0.35rem"
+                  borderRadius="50%"
+                  transition="all 0.1s"
+                  _hover={{ boxShadow: `sm`, borderColor: `gray300` }}
+                  onClick={() => setAddCoinValue(`0`)}
+                >
+                  <FaPlus />
+                </Flex>
+              </Tooltip>
+            </Flex>
           </Flex>
-          <Flex direction="row" align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
-            <Progress value={0} rounded={8} flex="1" min={0} max={5} size="sm" w="50%" />
-          </Flex> */}
         </Flex>
-        {/* Right Content */}
-        {/* <Flex border="1px" borderRadius="8px" borderColor="primary300" justifyContent="center">
-          <Text>Engajamento</Text>
-        </Flex> */}
       </Flex>
       <Accordion allowMultiple bg="white" border="1px" borderColor="gray300" borderRadius="10px" margin="24px 0 0 0">
         <AccordionItem border="none" borderRadius="10px">
@@ -69,7 +115,7 @@ const StudentPage: React.FC<IProps> = ({ student }) => {
           </AccordionButton>
           <AccordionPanel padding="20px">
             {student.groups.map((group) => (
-              <Flex key={group.id} direction="row" gap="16px" align="center">
+              <Flex key={group.id} direction="row" gap="16px" align="center" _notLast={{ mb: `1rem` }}>
                 <FiUsers fontSize="40px" color="#21E080" />
                 <Flex display="column" justify="space-between">
                   <Text fontWeight="700" fontSize="18px" color="primary700">
@@ -141,6 +187,24 @@ const StudentPage: React.FC<IProps> = ({ student }) => {
           </AccordionPanel>
         </AccordionItem>
       </Accordion>
+      <SmallModal
+        title="Creditar moedas"
+        show={addCoinValue !== null}
+        onConfirm={() => handleUpdateStudent(Number(addCoinValue) + (student.metadata.coins || 0))}
+        onCancel={() => setAddCoinValue(null)}
+        topIcon="checked"
+      >
+        <NumberScaleInput value={addCoinValue || ``} onInputChange={setAddCoinValue} />
+      </SmallModal>
+      <SmallModal
+        title="Descontar moedas"
+        show={removeCoinValue !== null}
+        onConfirm={() => handleUpdateStudent((student.metadata.coins || 0) - Number(removeCoinValue))}
+        onCancel={() => setRemoveCoinValue(null)}
+        topIcon="warning"
+      >
+        <NumberScaleInput value={removeCoinValue || ``} onInputChange={setRemoveCoinValue} max={student.metadata.coins || 0} />
+      </SmallModal>
     </Flex>
   );
 };
