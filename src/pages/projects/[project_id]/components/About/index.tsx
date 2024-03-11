@@ -61,7 +61,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
       <Flex direction="column" gap="24px" overflow="auto">
         <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300">
           <Flex pb={4} direction="column" gap="6px">
-            <Text fontSize="14px" fontWeight="500">
+            <Text fontSize="14px" fontWeight="500" color="gray800">
               Nome do projeto
             </Text>
             <EditableTextInput
@@ -71,7 +71,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
             />
           </Flex>
           <Flex pb={4} direction="column" gap="6px">
-            <Text fontSize="14px" fontWeight="500">
+            <Text fontSize="14px" fontWeight="500" color="gray800">
               Objetivo
             </Text>
             <EditableTextInput
@@ -88,7 +88,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
           <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderBottomRadius="10px" border="1px" borderColor="gray300">
             {project.metadata?.steps?.map((step) => (
               <Flex key={step.title} pb={4} direction="column" gap="6px">
-                <Text fontSize="14px" fontWeight="500">
+                <Text fontSize="14px" fontWeight="500" color="gray800">
                   {step.title}
                 </Text>
                 <EditableTextInput
@@ -133,7 +133,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
           <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderBottomRadius="10px" border="1px" borderColor="gray300">
             {project.metadata.bncc?.map((bncc) => (
               <Flex key={bncc} pb={4} direction="column" gap="6px">
-                <Text fontSize="14px" fontWeight="500">
+                <Text fontSize="14px" fontWeight="500" color="gray800">
                   {bnccSkills.find((e) => e.tag === bncc)?.subject || ``}
                 </Text>
                 <Flex p="8px" border="1px" borderColor="gray300" borderRadius="8px">
