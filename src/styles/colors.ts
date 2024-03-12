@@ -235,7 +235,7 @@ export const dark: typeof light = {
   gray500: '#98A2B3',
   gray600: '#D0D5DD',
   gray700: '#FCFCFD',
-  gray800: '#1D2939',
+  gray800: '#FFFFFF',
   gray900: '#FFF',
   pink25: '#FEF6FB',
   pink50: '#FDF2FA',
