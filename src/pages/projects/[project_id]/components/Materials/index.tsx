@@ -33,6 +33,7 @@ export const Materials: React.FC<IProps> = ({ project, setProject, canEdit }) =>
         <TextInput
           bg="white"
           p="0.5rem"
+          color="gray800"
           placeholder="Adicione um material"
           value={newMaterial.value}
           error={newMaterial.error}
@@ -58,11 +59,11 @@ export const Materials: React.FC<IProps> = ({ project, setProject, canEdit }) =>
       <Flex direction="column" gap="24px" w="100%">
         <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300">
           <Flex pb={4} gap="6px" w="100%" justify="space-between" borderBottom="1px" borderColor="gray300">
-            <Flex fontSize="14px" fontWeight="500" align="center" gap="8px">
+            <Flex fontSize="14px" fontWeight="500" align="center" gap="8px" color="gray800">
               Nome
               <FaArrowUp size="10px" color="#98A2B3" />
             </Flex>
-            <Text fontSize="14px" fontWeight="500">
+            <Text fontSize="14px" fontWeight="500" color="gray800">
               Ação
             </Text>
           </Flex>

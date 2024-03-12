@@ -4,7 +4,7 @@ import { Progress } from 'antd';
 import { Flex, Skeleton, Text } from '@chakra-ui/react';
 import { PiSealCheckFill } from 'react-icons/pi';
 
-import { logError, cookieManager, lessonTypeInfoMapper } from '@/_base/utils';
+import { lessonTypeInfoMapper } from '@/_base/utils';
 import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { IHubModule, IHubModuleLesson } from '@/_base/interfaces/module';
 import { getCourseActivity, listModuleLessons } from '@/_base/services/course';
@@ -151,21 +151,12 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
 
 export default Module;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
+export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const selectedPage = 'courses';
 
-  try {
-    cookieManager.updateToken(req);
+  const courseId = `${query.course_id}`;
+  const moduleId = `${query.module_id}`;
+  const pageTitle = `${query._p || 'Módulo'}`;
 
-    const courseId = `${query.course_id}`;
-    const moduleId = `${query.module_id}`;
-    const pageTitle = `${query._p || 'Módulo'}`;
-
-    return { props: { selectedPage, courseId, moduleId, pageTitle } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, courseId, moduleId, pageTitle } };
 };

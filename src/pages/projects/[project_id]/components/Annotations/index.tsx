@@ -37,6 +37,7 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
           onInputChange={setNewAnnotation}
           rows={8}
           bg="white"
+          color="gray800"
           placeholder="Faça uma anotação"
         />
         <Flex w="100%" justify="flex-end" marginTop="4px" gap="8px" pt="8px">

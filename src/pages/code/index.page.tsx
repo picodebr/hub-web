@@ -2,8 +2,6 @@ import { GetServerSideProps } from 'next';
 import { FaPlus, FaRegFolder } from 'react-icons/fa';
 import { FiEdit3, FiMoreVertical, FiTrash } from 'react-icons/fi';
 
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
 import { Flex, Menu, MenuButton, MenuItem, MenuList, Skeleton, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useCustomRouter, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { PlusButton } from '@/components/Buttons/Plus';
@@ -245,19 +243,8 @@ const CodeFolders: React.FC = () => {
 
 export default CodeFolders;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'code';
 
-  try {
-    cookieManager.updateToken(req);
-
-    await validateSession();
-
-    return { props: { selectedPage, pageTitle: 'Meus códigos', showBackButton: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Meus códigos', showBackButton: false } };
 };

@@ -86,6 +86,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
   try {
     cookieManager.updateToken(req);
 
+    // TODO: add in use effect
     const report = await showReport(`${query.report_id}`);
 
     return { props: { selectedPage, pageTitle: `Chamado ${report.readable_id}`, report } };

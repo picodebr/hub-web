@@ -143,6 +143,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
   try {
     cookieManager.updateToken(req);
 
+    // TODO: add in use effect
     const [project, bnccSkills] = await Promise.all([getProject(`${query.project_id}`), getBnccSkills()]);
 
     return { props: { selectedPage, headerLabel: project.title, pageTitle: project.title, project, bnccSkills } };

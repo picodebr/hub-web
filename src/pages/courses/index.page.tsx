@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { Flex, Grid, Progress, Skeleton, Text } from '@chakra-ui/react';
 
-import { logError, cookieManager } from '@/_base/utils';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { IHubCourse, IHubCourseActivity } from '@/_base/interfaces/course';
 import { listCourses } from '@/_base/services/course';
@@ -111,17 +110,8 @@ const Courses: React.FC = () => {
 
 export default Courses;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'courses';
 
-  try {
-    cookieManager.updateToken(req);
-
-    return { props: { selectedPage, pageTitle: 'Meus cursos', showBackButton: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Meus cursos', showBackButton: false } };
 };

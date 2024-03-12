@@ -3,8 +3,6 @@ import { GetServerSideProps } from 'next';
 import { Button, Flex, Text } from '@chakra-ui/react';
 import { FaHeart, FaRegClock, FaRegHeart } from 'react-icons/fa';
 
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
 import { CommingSoon } from '@/components/CommingSoon';
 
 const Challenge: React.FC = () => {
@@ -75,19 +73,8 @@ const Challenge: React.FC = () => {
 
 export default Challenge;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'challenge';
 
-  try {
-    cookieManager.updateToken(req);
-
-    await validateSession();
-
-    return { props: { selectedPage, pageTitle: 'Desafio Diário', showBackButton: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Desafio Diário', showBackButton: false } };
 };

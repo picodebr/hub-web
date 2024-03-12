@@ -219,6 +219,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
 
     const studentId = `${query.student_id}`;
 
+    // TODO: add in use effect
     const student = await getStudent(studentId);
 
     return { props: { selectedPage, pageTitle: formatShortName(student.name, true), student } };
