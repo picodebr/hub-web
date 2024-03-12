@@ -5,8 +5,6 @@ import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
 
 import { Flex, Image, Text, Checkbox } from '@chakra-ui/react';
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
 import { CommingSoon } from '@/components/CommingSoon';
 
 interface IProducts {
@@ -263,19 +261,8 @@ const Store: React.FC = () => {
 
 export default Store;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'store';
 
-  try {
-    cookieManager.updateToken(req);
-
-    await validateSession();
-
-    return { props: { selectedPage, pageTitle: 'Loja', showBackButton: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Loja', showBackButton: false } };
 };

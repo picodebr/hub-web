@@ -1,6 +1,3 @@
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
-import { Logo } from '@/components/Logo';
 import { Flex, Image, Link, Text } from '@chakra-ui/react';
 import { Checkbox } from '@chakra-ui/react';
 
@@ -241,19 +238,8 @@ const CoinStore: React.FC = () => {
 
 export default CoinStore;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'coinstore';
 
-  try {
-    cookieManager.updateToken(req);
-
-    await validateSession();
-
-    return { props: { selectedPage, pageTitle: 'Loja de Moedas', showBackButton: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Loja de Moedas', showBackButton: false } };
 };

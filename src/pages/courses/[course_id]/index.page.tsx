@@ -1,12 +1,10 @@
 import { GetServerSideProps } from 'next';
 
-import { logError, cookieManager } from '@/_base/utils';
 import { Flex, Progress, Skeleton, Text } from '@chakra-ui/react';
 import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { useEffect, useState } from 'react';
 import { IHubModule } from '@/_base/interfaces/module';
 import { getCourseActivity, listModules } from '@/_base/services/course';
-import { isUuid } from 'uuidv4';
 
 interface IProps {
   courseId: string;
@@ -91,22 +89,11 @@ const Course: React.FC<IProps> = ({ courseId }) => {
 
 export default Course;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
+export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const selectedPage = 'courses';
 
-  try {
-    cookieManager.updateToken(req);
+  const courseId = `${query.course_id}`;
+  const pageTitle = `${query._p || 'Curso'}`;
 
-    const courseId = `${query.course_id}`;
-    const pageTitle = `${query._p || 'Curso'}`;
-
-    if (!courseId || !isUuid(courseId)) throw new Error('Invalid course');
-
-    return { props: { selectedPage, pageTitle, courseId } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle, courseId } };
 };

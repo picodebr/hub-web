@@ -8,8 +8,6 @@ import { TbThumbUpFilled } from 'react-icons/tb';
 import { IoMdHeart } from 'react-icons/io';
 import { RiUserStarFill } from 'react-icons/ri';
 
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
 import { CommingSoon } from '@/components/CommingSoon';
 
 const Community: React.FC = () => {
@@ -156,19 +154,8 @@ const Community: React.FC = () => {
 
 export default Community;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'community';
 
-  try {
-    cookieManager.updateToken(req);
-
-    await validateSession();
-
-    return { props: { selectedPage, pageTitle: 'Comunidade PiCode', showBackButton: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Comunidade PiCode', showBackButton: false } };
 };

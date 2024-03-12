@@ -143,6 +143,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
   try {
     cookieManager.updateToken(req);
 
+    // TODO: add in use effect
     const group = await getGroupById(`${query.group_id}`);
 
     return { props: { selectedPage, pageTitle: group.display_name, group } };

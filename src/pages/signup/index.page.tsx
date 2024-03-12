@@ -6,8 +6,7 @@ import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 import { HubUserType } from '@/_base/interfaces/user/HubUserType';
 import IRegisterUser, { EMPTY_REGISTER_USER_DATA, registerUserSchema } from '@/_base/interfaces/user/IRegisterUser';
-import { validateSession } from '@/_base/services/auth';
-import { logError, cookieManager } from '@/_base/utils';
+import { cookieManager } from '@/_base/utils';
 import { Logo } from '@/components/Logo';
 import { IGoogleUserData } from '@/_base/interfaces/auth/IGoogleUserData';
 import { checkEmail, checkPrimaryCode, checkUsername, signup } from '@/_base/services/user';
@@ -199,19 +198,10 @@ const SignUp: React.FC = () => {
 
 export default SignUp;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   const selectedPage = 'signup';
 
-  try {
-    cookieManager.updateToken(req);
+  cookieManager.forceTokenExpires(res);
 
-    await validateSession();
-
-    return { redirect: { destination: '/profile', permanent: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { props: { selectedPage, pageTitle: 'Cadastro' } };
-  }
+  return { props: { selectedPage, pageTitle: 'Cadastro' } };
 };

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import { FiEdit2, FiMoreVertical, FiUsers } from 'react-icons/fi';
 
-import { logError, cookieManager, formatClassGrade } from '@/_base/utils';
+import { formatClassGrade } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
 import { useAsyncCallback } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
@@ -208,17 +208,8 @@ const Classes: React.FC = () => {
 
 export default Classes;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'classes';
 
-  try {
-    cookieManager.updateToken(req);
-
-    return { props: { selectedPage, pageTitle: 'Minhas turmas', showBackButton: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Minhas turmas', showBackButton: false } };
 };

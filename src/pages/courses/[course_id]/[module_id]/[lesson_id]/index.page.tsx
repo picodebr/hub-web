@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { PiSealCheckFill } from 'react-icons/pi';
 import { GetServerSideProps } from 'next';
 
-import { logError, cookieManager } from '@/_base/utils';
 import { useCustomToast } from '@/_base/hooks';
 import { IHubModuleLesson } from '@/_base/interfaces/module';
 import { getCourseActivity, getModuleLesson, sendModuleLesson } from '@/_base/services/course';
@@ -108,22 +107,13 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
 
 export default Lesson;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
+export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const selectedPage = 'courses';
 
-  try {
-    cookieManager.updateToken(req);
+  const courseId = `${query.course_id}`;
+  const moduleId = `${query.module_id}`;
+  const lessonId = `${query.lesson_id}`;
+  const pageTitle = `${query._p || 'Atividade'}`;
 
-    const courseId = `${query.course_id}`;
-    const moduleId = `${query.module_id}`;
-    const lessonId = `${query.lesson_id}`;
-    const pageTitle = `${query._p || 'Atividade'}`;
-
-    return { props: { selectedPage, courseId, moduleId, lessonId, pageTitle } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, courseId, moduleId, lessonId, pageTitle } };
 };

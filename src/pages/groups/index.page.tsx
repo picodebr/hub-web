@@ -224,6 +224,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
+    // TODO: add in use effect
     const myGroups = await listStudentGroups();
     return { props: { selectedPage, pageTitle: 'Meus Grupos', myGroups } };
   } catch (err: any) {

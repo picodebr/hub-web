@@ -235,6 +235,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
   try {
     cookieManager.updateToken(req);
+    // TODO: add in use effect
     const [{ results }, { results: videoCategories }] = await Promise.all([listBookCategories(), listVideoCategories()]);
 
     return { props: { selectedPage, pageTitle: 'Meus livros', videoCategories, bookCategories: results, showBackButton: false } };
