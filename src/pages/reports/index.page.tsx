@@ -248,6 +248,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
+    // TODO: add in use effect
     const reports = await listReports();
 
     await validateSession();

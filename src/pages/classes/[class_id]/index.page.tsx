@@ -202,8 +202,10 @@ const Class: React.FC<IProps> = ({ classId }) => {
         ),
         created_at: (
           <Flex gap="8px" align="center">
-            <FiCalendar />
-            <Text fontWeight="500">{moment(project.created_at).format('DD/MM/YYYY')}</Text>
+            <FiCalendar color="gray800" />
+            <Text color="gray800" fontWeight="500">
+              {moment(project.created_at).format('DD/MM/YYYY')}
+            </Text>
           </Flex>
         ),
       })) || [],
@@ -264,6 +266,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
         />
         {pageView === 'Projetos' && (
           <Flex
+            color="gray800"
             minH="52px"
             maxH="52px"
             border="1px"

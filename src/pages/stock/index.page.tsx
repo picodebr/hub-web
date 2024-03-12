@@ -2,7 +2,6 @@ import { GetServerSideProps } from 'next';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Flex, Text, Img, Skeleton, Divider } from '@chakra-ui/react';
 
-import { logError, cookieManager } from '@/_base/utils';
 import { FaMinus, FaPlus, FaSave } from 'react-icons/fa';
 import { getStockMaker, updateStockMaker } from '@/_base/services/storeMaker';
 import { IStockMaker } from '@/_base/interfaces/storeMaker';
@@ -117,17 +116,8 @@ const Stock: React.FC = () => {
 
 export default Stock;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'stock';
 
-  try {
-    cookieManager.updateToken(req);
-
-    return { props: { selectedPage, pageTitle: 'Estoque', showBackButton: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Estoque', showBackButton: false } };
 };

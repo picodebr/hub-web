@@ -99,7 +99,7 @@ const Lesson: React.FC<IProps> = ({ user }) => {
             </Text>
           </Flex>
         </Flex>
-        {isMounted && <Kanban initialData={kanbanList} onChange={handleUpdateKanbanList} />}
+        {/* {isMounted && <Kanban initialData={kanbanList} onChange={handleUpdateKanbanList} />} */}
       </Flex>
     </Flex>
   );
