@@ -131,16 +131,30 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
             </Flex>
           </Flex>
           <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderBottomRadius="10px" border="1px" borderColor="gray300">
-            {project.metadata.bncc?.map((bncc) => (
-              <Flex key={bncc} pb={4} direction="column" gap="6px">
-                <Text fontSize="14px" fontWeight="500" color="gray800">
-                  {bnccSkills.find((e) => e.tag === bncc)?.subject || ``}
-                </Text>
-                <Flex p="8px" border="1px" borderColor="gray300" borderRadius="8px">
-                  {`${bncc} - ${bnccSkills.find((e) => e.tag === bncc)?.title || ''}`}
+            {project.metadata.bncc
+              ?.reduce(
+                (acc, bncc) => {
+                  const subject = bnccSkills.find((e) => e.tag === bncc)?.subject || ``;
+                  const target = acc.find((e) => e.subject === subject);
+                  const listItem = `${bncc} - ${bnccSkills.find((e) => e.tag === bncc)?.title || ''}`;
+                  if (target) target.list.push(listItem);
+                  else acc.push({ subject, list: [listItem] });
+                  return acc;
+                },
+                [] as Array<{ subject: string; list: string[] }>,
+              )
+              .map((bncc) => (
+                <Flex key={bncc.subject} pb={4} direction="column" gap="6px">
+                  <Text fontSize="14px" fontWeight="500" color="gray800">
+                    {bncc.subject}
+                  </Text>
+                  <Flex p="8px" border="1px" borderColor="gray300" borderRadius="8px" color="gray800" direction="column" gap="6px">
+                    {bncc.list.map((e) => (
+                      <Flex key={e}>{e}</Flex>
+                    ))}
+                  </Flex>
                 </Flex>
-              </Flex>
-            ))}
+              ))}
           </Flex>
         </Flex>
         <Flex gap="0px" direction="column">

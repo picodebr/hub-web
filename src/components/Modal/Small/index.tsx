@@ -39,7 +39,7 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
         ) : (
           topIcon || null
         )}
-        <ModalHeader fontSize="1rem" p="0.5rem 1rem">
+        <ModalHeader fontSize="1rem" p="0.5rem 1rem" color="gray800">
           {title}
         </ModalHeader>
         {!!onCancel && <ModalCloseButton isDisabled={disableCancelButton} mt="0.25rem" />}

@@ -50,7 +50,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
       <Flex p="1rem" gap="0.75rem" borderBottom="1px" borderColor="gray300" justify="center">
         <Flex direction="column" gap="0.75rem" flex="1">
           <Skeleton isLoaded={!isLoading} maxW="30%" display="flex" alignItems="center" gap="0.25rem">
-            <Text noOfLines={1} fontWeight="500" fontSize="1rem">
+            <Text noOfLines={1} fontWeight="500" fontSize="1rem" color="gray800">
               {lesson?.title || `Módulo vazio`}
             </Text>
             {lessonIsFinished && (
@@ -69,7 +69,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
         </Flex>
         <Flex gap="0.5rem" align="center" h="fit-content">
           <Skeleton isLoaded={!isLoading} h="1.35rem">
-            <Text noOfLines={1} color="gray400" fontSize="14px">
+            <Text noOfLines={1} color="gray800" fontSize="14px">
               {lesson?.module.title}
             </Text>
           </Skeleton>

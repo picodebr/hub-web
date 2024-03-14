@@ -17,6 +17,7 @@ export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', pl
         )}
         <Input
           placeholder={placeholder}
+          _placeholder={{ color: 'gray800' }}
           value={value}
           onChange={(e) => onInputChange && onInputChange(e.target.value)}
           border="none"
