@@ -9,6 +9,10 @@ import { IHubGroupOrderItem } from '@/_base/interfaces/group';
 import { SmallModal } from '@/components/Modal/Small';
 import { IStockMaker, IStoreMakerItem } from '@/_base/interfaces/storeMaker';
 import { useCustomToast } from '@/_base/hooks';
+import { Avatar } from '@chakra-ui/react';
+import { PiWarningCircleLight } from 'react-icons/pi';
+import { Tooltip } from '@chakra-ui/react';
+import { FaArrowRightLong } from 'react-icons/fa6';
 
 type CustomStoreItem = IStoreMakerItem & { quantity: number };
 interface IProps {
@@ -268,7 +272,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
         </Flex>
       </Flex>
       <SmallModal
-        title="Finalizar pedido?"
+        title="Finalizar pedido"
         show={!!orderPayload}
         onConfirm={() => {
           if (!orderPayload) return;
@@ -278,7 +282,59 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
         }}
         onCancel={() => setOrderPayload(null)}
       >
-        <Flex>Tem certeza de todos os itens?</Flex>
+        <Flex mb="8px">Descontar o valor dos participantes do grupo?</Flex>
+        <Flex direction="column" gap="6px">
+          <Flex w="100%" justify="space-between">
+            <Flex gap="8px">
+              <Avatar size="sm" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
+              <Flex align="center">Anderson Félix</Flex>
+            </Flex>
+            <Flex align="center" fontWeight="600" color="green" gap="4px">
+              10
+              <FaArrowRightLong color="green" />
+              <Text color="gray800">4</Text>
+              <Image src="/icons/coin.svg" />
+            </Flex>
+          </Flex>
+          <Flex w="100%" justify="space-between">
+            <Flex gap="8px">
+              <Avatar size="sm" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
+              <Flex align="center" gap="4px">
+                Ana Sichieri
+                <Tooltip label="Esse usuário não possui coins o suficiente para a compra, por isso ficará com o saldo negativado" hasArrow>
+                  <span>
+                    <PiWarningCircleLight color="red" />
+                  </span>
+                </Tooltip>
+              </Flex>
+            </Flex>
+            <Flex align="center" fontWeight="600" color="red" gap="4px">
+              3
+              <FaArrowRightLong color="red" />
+              <Text color="red">-3</Text>
+              <Image src="/icons/coin.svg" />
+            </Flex>
+          </Flex>
+          <Flex w="100%" justify="space-between">
+            <Flex gap="8px">
+              <Avatar size="sm" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
+              <Flex align="center">Lucas Piovani</Flex>
+            </Flex>
+            <Flex align="center" fontWeight="600" color="green" gap="4px">
+              22
+              <FaArrowRightLong color="green" />
+              <Text color="gray800">16</Text>
+              <Image src="/icons/coin.svg" />
+            </Flex>
+          </Flex>
+          <Flex w="100%" justify="space-between" mt="8px">
+            Valor total:
+            <Flex fontWeight="600">
+              18
+              <Image src="/icons/coin.svg" />
+            </Flex>
+          </Flex>
+        </Flex>
       </SmallModal>
     </Flex>
   );
