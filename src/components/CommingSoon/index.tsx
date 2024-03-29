@@ -27,7 +27,7 @@ export const CommingSoon: React.FC = () => {
         transition="0.12s"
         _hover={{ boxShadow: `lg` }}
       >
-        <Text>Disponível em breve...</Text>
+        <Text color="gray800">Disponível em breve...</Text>
         <FaTools fontSize="1.5rem" />
       </Flex>
     </Flex>

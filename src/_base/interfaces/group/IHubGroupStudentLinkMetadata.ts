@@ -1,5 +1,1 @@
-import { IHubGroupOrder } from './IHubGroupOrder';
-
-export interface IHubGroupStudentLinkMetadata {
-  orders?: IHubGroupOrder[];
-}
+export interface IHubGroupStudentLinkMetadata {}

@@ -57,7 +57,7 @@ export const PasswordInput: React.FC<IInputProps & IPasswordProps> = ({
   }, [passwordStrong]);
 
   return (
-    <Flex direction="column" color="text.light">
+    <Flex direction="column">
       {!!label && (
         <Text color="gray700" fontSize="13.5px" pb="0.25rem" fontWeight="500">
           {label}
@@ -74,7 +74,6 @@ export const PasswordInput: React.FC<IInputProps & IPasswordProps> = ({
           borderRadius="8px"
           isInvalid={!!error}
           variant="unstyled"
-          fontSize="16px"
         />
         <Flex color="gray300" align="center" fontSize="1.2rem" p="0 6px 0 2px" cursor="pointer" onClick={() => setShowPass((e) => !e)}>
           {showPass ? <BsEyeSlash /> : <BsEye />}

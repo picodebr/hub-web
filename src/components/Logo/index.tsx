@@ -5,6 +5,7 @@ export const Logo: React.FC<ILogoProps> = ({ size = 'md' }) => {
   const { colorMode } = useColorMode();
 
   const sizeMapper = {
+    xs: '1.3rem',
     sm: '2rem',
     md: '2.875rem',
     lg: '4rem',
