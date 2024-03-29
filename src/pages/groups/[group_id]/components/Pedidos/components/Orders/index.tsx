@@ -12,11 +12,12 @@ import { GenericButton } from '@/components/Buttons/Generic';
 interface IProps {
   onChangeView: (view: OrdersPageView) => void;
   onApproveOrder: (order: IHubGroupOrder) => void;
+  onRejectOrder: (order: IHubGroupOrder) => void;
   canEdit: boolean;
   group: IHubGroup;
 }
 
-export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, canEdit }) => {
+export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, canEdit, onRejectOrder }) => {
   const [order, setOrder] = useState<IHubGroupOrder | null>(null);
 
   const { user } = useAuth();
@@ -25,6 +26,13 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
     if (!order) return;
 
     onApproveOrder(order);
+    setOrder(null);
+  };
+
+  const handleReject = () => {
+    if (!order) return;
+
+    if (user.id === group.hub_user_id) onRejectOrder(order);
     setOrder(null);
   };
 
@@ -54,9 +62,7 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
         </Flex>
       </Flex>
 
-      {!!group.student_links
-        .flatMap((data) => data.metadata.orders?.map((o) => ({ ...o, student: data.user })) || [])
-        .filter((data) => !data.approved_at).length && (
+      {!!group.orders.filter((data) => !data.approved_at && !data.metadata.denied_at).length && (
         <Flex
           direction="column"
           borderRadius="10px"
@@ -68,40 +74,32 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
           gap="1rem"
           bgColor="warning25"
         >
-          {group.student_links
-            .flatMap((data) => data.metadata.orders?.map((o) => ({ ...o, student: data.user })) || [])
-            .filter((data) => !data.approved_at)
+          {group.orders
+            .filter((data) => !data.approved_at && !data.metadata.denied_at)
             .map((order) => (
-              <Flex key={order.id} w="100%" overflow="auto" direction="column">
+              <Flex key={order.id} w="100%" overflow="auto" direction="column" py="0.25rem">
                 <Flex w="100%" justify="space-between" align="center">
                   <Flex align="center" gap="12px" w="14rem">
                     <Avatar
                       size="sm"
                       src="https://images.tcdn.com.br/img/img_prod/650361/10x_cabo_jumper_macho_x_femea_10_cm_de_20_unidades_cada_200_jumpers_no_total_1757_1_20200903185441.jpg"
                     ></Avatar>
-                    <Text color="warning700" fontWeight="500">
-                      Solicitação de compra
-                    </Text>
+                    <Badge bg="yellow.300" color="warning700">
+                      {`Pedido ${order.readable_id}: Aguardando aprovação`}
+                    </Badge>
                   </Flex>
                   <Flex color="warning500" fontSize="14px" flex="1" justify="center">
                     {moment(order.created_at).format(`DD/MM/YYYY`)}
                   </Flex>
                   <Flex w={user.role === `teacher` ? undefined : '12rem'} justify="flex-end" gap="0.75rem">
-                    {user.role === `teacher` ? (
-                      <>
-                        <GenericButton
-                          label="Visualizar"
-                          bg="success600"
-                          color="white"
-                          onClick={() => setOrder(order)}
-                          _hover={{ filter: `brightness(0.9)` }}
-                        />
-                      </>
-                    ) : (
-                      <Badge bg="yellow.300" color="yellow.700">
-                        Aguardando aprovação
-                      </Badge>
-                    )}
+                    <GenericButton
+                      label="Visualizar"
+                      size="sm"
+                      bg="success600"
+                      color="white"
+                      onClick={() => setOrder(order)}
+                      _hover={{ filter: `brightness(0.9)` }}
+                    />
                   </Flex>
                 </Flex>
               </Flex>
@@ -109,7 +107,7 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
         </Flex>
       )}
 
-      {!!group.student_links.flatMap((data) => data.metadata.orders || []).filter((data) => !!data.approved_at)?.length && (
+      {!!group.orders.filter((data) => !!data.approved_at)?.length && (
         <Flex
           w="100%"
           h="auto"
@@ -122,8 +120,7 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
           borderColor="gray300"
           gap="1rem"
         >
-          {group.student_links
-            .flatMap((data) => data.metadata.orders?.map((o) => ({ ...o, student: data.user })) || [])
+          {group.orders
             .filter((data) => !!data.approved_at)
             .map((order) => (
               <Flex
@@ -161,18 +158,21 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
         size="lg"
         title={!order?.approved_at ? 'Aprovar Pedido' : `Pedido aprovado em ${moment(order.approved_at).format(`DD/MM/YYYY`)}`}
         show={!!order}
+        disableOkButton={!order?.approved_at && (user.role !== `teacher` || group.hub_user_id !== user.id)}
         onConfirm={() => (!order?.approved_at ? handleApprove() : setOrder(null))}
         okText={!order?.approved_at ? 'Aprovar' : 'OK'}
-        onCancel={!order?.approved_at ? () => setOrder(null) : undefined}
+        cancelText={!order?.approved_at && user.id === group.hub_user_id ? 'Rejeitar' : undefined}
+        onCancel={!order?.approved_at ? () => handleReject() : undefined}
         topIcon={'checked'}
+        onCloseModal={() => setOrder(null)}
       >
         <Flex direction="column">
           {(order as any)?.student?.name && <Text mb="1rem">Feito por {(order as any).student?.name}</Text>}
           {order?.items.map((item) => (
             <Flex key={item.id} align="center" gap="0.35rem" borderBottom="1px" borderColor="gray200">
               <Text>{item.quantity}</Text>
-              <Text flex="1">{item.name}</Text>
-              <Text>R$ {item.price}</Text>
+              <Text flex="1">{item.store_item.name}</Text>
+              <Text>R$ {item.store_item.price}</Text>
             </Flex>
           ))}
         </Flex>

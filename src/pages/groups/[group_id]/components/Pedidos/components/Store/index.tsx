@@ -1,30 +1,31 @@
-import { Flex, Grid, Text, Image } from '@chakra-ui/react';
+import { Flex, Grid, Text, Image, Accordion, AccordionItem, AccordionButton, AccordionIcon, AccordionPanel } from '@chakra-ui/react';
 import { OrdersPageView } from '../..';
 import { FiShoppingCart, FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { BsArrowLeft } from 'react-icons/bs';
-import { IHubGroupOrderItem } from '@/_base/interfaces/group';
+import { IHubGroup } from '@/_base/interfaces/group';
 import { SmallModal } from '@/components/Modal/Small';
 import { IStockMaker, IStoreMakerItem } from '@/_base/interfaces/storeMaker';
 import { useCustomToast } from '@/_base/hooks';
 import { Avatar } from '@chakra-ui/react';
-import { PiWarningCircleLight } from 'react-icons/pi';
-import { Tooltip } from '@chakra-ui/react';
 import { FaArrowRightLong } from 'react-icons/fa6';
+import { formatCoin, formatShortName } from '@/_base/utils';
+import { CoinIcon } from '@/components/Logo';
 
 type CustomStoreItem = IStoreMakerItem & { quantity: number };
 interface IProps {
   onChangeView: (view: OrdersPageView) => void;
-  onFinishOrder: (data: IHubGroupOrderItem[]) => void;
+  onFinishOrder: (data: { id: string; quantity: number }[]) => void;
   canEdit: boolean;
   storeMakerList: IStockMaker[];
+  group: IHubGroup;
 }
 
-export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList }) => {
+export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList, group }) => {
   const [cart, setCart] = useState<CustomStoreItem[]>([]);
-  const [orderPayload, setOrderPayload] = useState<IHubGroupOrderItem[] | null>(null);
+  const [orderPayload, setOrderPayload] = useState<{ id: string; quantity: number }[] | null>(null);
 
   const storeMakerList = storeList.map((e) => e.store_item);
 
@@ -43,6 +44,10 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
       setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)));
     else setCart((e) => [...e, { ...item, quantity: 1 }]);
   };
+
+  const totalPrice = useMemo(() => cart.reduce((acc, { price, quantity }) => (acc += Number(price) * quantity), 0), [cart]);
+
+  const haveMemberWithNegativeBalance = !!group.students.find((e) => (e.metadata.coins || 0) < 0);
 
   return (
     <Flex overflow="hidden" gap="1rem" flex="1">
@@ -131,80 +136,120 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
         borderRadius="10px"
         border="1px"
         overflow="hidden"
+        justify="space-between"
         borderColor="gray200"
-        p="20px"
+        p="1rem"
         h="100%"
       >
-        <Flex display="flex" justify="space-between" w="100%" borderBottom="1px" borderColor="gray300" h="4rem" fontSize="14px" color="gray500">
-          <Text>Item</Text>
-          <Text>Quantidade</Text>
-        </Flex>
-        <Flex direction="column" overflow="auto" flex="1" h="calc(100% - 17rem)" gap="0.75rem" py="0.75rem">
-          {cart.map((item) => (
-            <Flex key={item.id} gap="12px" border="1px" borderColor="gray300" borderRadius="md" padding=".25rem">
-              <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
-              <Flex w="97.5px" display="column" align="center" justify="center" gap="9px" fontWeight="500" fontSize="14px" color="gray700">
-                {item.name}
-                <Flex display="flex" align="center" gap="9px" h="18px">
-                  <Image src="/icons/cash.svg" />
-                  <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
-                    {item.price}
-                  </Text>
+        <Flex direction="column" overflow="hidden" flex="1" h="calc(100% - 10.2rem)">
+          <Accordion allowMultiple mb="0.75rem">
+            <AccordionItem border="none" borderBottom="1px" borderColor="gray300" pb="0.25rem">
+              <AccordionButton p="0.25rem">
+                <Flex w="100%" fontSize="15px" gap="0.5rem" align="center" justify="space-between">
+                  <Text>Saldo do grupo</Text>
+                  <Flex align="center" gap="0.35rem">
+                    <CoinIcon size="xs" />
+                    <Text>
+                      {formatCoin(
+                        group.students.reduce((total, student) => total + ((student.metadata.coins || 0) > 0 ? student.metadata.coins || 0 : 0), 0),
+                      )}
+                    </Text>
+                  </Flex>
                 </Flex>
-              </Flex>
-              <Flex display="flex" justify="center" align="center">
-                <Flex w="97.5px" h="40px" display="flex" justify="space-between" align="center">
-                  <FaMinus
-                    fontSize="10px"
-                    color="gray300"
-                    onClick={() =>
-                      setCart((e) =>
-                        item.quantity > 1
-                          ? e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity - 1 } : cartItem))
-                          : e.filter((cartItem) => cartItem.id !== item.id),
-                      )
-                    }
-                  />
-                  <Text fontSize="14px" fontWeight="500" color="gray500">
-                    {item.quantity}
-                  </Text>
-                  <FaPlus
+
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel pb={4} w="100%">
+                <Flex direction="column" gap="0.35rem" pt="0.25rem">
+                  {group.students.map((student) => (
+                    <Flex key={student.id} align="center" gap="0.35rem" w="100%">
+                      <Avatar src={student.avatar || undefined} size="xs" />
+                      <Text color="gray700" fontSize="13px" fontWeight="500">
+                        {formatShortName(student.name, true)}
+                      </Text>
+                      <Flex
+                        align="center"
+                        justify="flex-end"
+                        flex="1"
+                        color={formatCoin(student.metadata.coins).startsWith(`-`) ? `primary500` : undefined}
+                      >
+                        <Text>{formatCoin(student.metadata.coins)}</Text>
+                      </Flex>
+                    </Flex>
+                  ))}
+                </Flex>
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
+
+          <Flex direction="column" overflow="hidden auto" gap="0.75rem" py="0.35rem">
+            {cart.map((item) => (
+              <Flex key={item.id} gap="12px" border="1px" borderColor="gray300" borderRadius="md" padding=".25rem">
+                <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
+                <Flex w="97.5px" display="column" align="center" justify="center" gap="9px" fontWeight="500" fontSize="14px" color="gray700">
+                  {item.name}
+                  <Flex display="flex" align="center" gap="9px" h="18px">
+                    <Image src="/icons/cash.svg" />
+                    <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
+                      {item.price}
+                    </Text>
+                  </Flex>
+                </Flex>
+                <Flex display="flex" justify="center" align="center">
+                  <Flex w="97.5px" h="40px" display="flex" justify="space-between" align="center">
+                    <FaMinus
+                      fontSize="10px"
+                      color="gray300"
+                      onClick={() =>
+                        setCart((e) =>
+                          item.quantity > 1
+                            ? e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity - 1 } : cartItem))
+                            : e.filter((cartItem) => cartItem.id !== item.id),
+                        )
+                      }
+                    />
+                    <Text fontSize="14px" fontWeight="500" color="gray500">
+                      {item.quantity}
+                    </Text>
+                    <FaPlus
+                      cursor="pointer"
+                      fontSize="10px"
+                      color="gray300"
+                      onClick={() =>
+                        setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)))
+                      }
+                    />
+                  </Flex>
+                </Flex>
+                <Flex display="flex" justify="center" align="center">
+                  <Flex
+                    bgColor="error100"
+                    w="25px"
+                    h="25px"
+                    borderRadius="10px"
+                    color="error800"
+                    display="flex"
+                    justify="center"
+                    align="center"
+                    fontSize="14px"
                     cursor="pointer"
-                    fontSize="10px"
-                    color="gray300"
-                    onClick={() =>
-                      setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)))
-                    }
-                  />
+                    _hover={{ filter: `brightness(0.9)` }}
+                    onClick={() => setCart((e) => e.filter((cartItem) => cartItem.id !== item.id))}
+                  >
+                    <FiTrash />
+                  </Flex>
                 </Flex>
               </Flex>
-              <Flex display="flex" justify="center" align="center">
-                <Flex
-                  bgColor="error100"
-                  w="25px"
-                  h="25px"
-                  borderRadius="10px"
-                  color="error800"
-                  display="flex"
-                  justify="center"
-                  align="center"
-                  fontSize="14px"
-                  cursor="pointer"
-                  _hover={{ filter: `brightness(0.9)` }}
-                  onClick={() => setCart((e) => e.filter((cartItem) => cartItem.id !== item.id))}
-                >
-                  <FiTrash />
-                </Flex>
-              </Flex>
-            </Flex>
-          ))}
+            ))}
+          </Flex>
         </Flex>
 
-        <Flex direction="column" h="10rem">
-          <Flex pt="24px" pb="24px" w="100%" justify="flex-end" align="center" gap="0.5rem">
+        <Flex direction="column">
+          <Flex w="100%" justify="flex-end" align="center" gap="0.5rem" py="0.5rem">
+            <Text fontSize="20px">Total</Text>
             <Image src="/icons/coin.svg" height="40px" />
-            <Text fontSize="50px" fontWeight="700" color="primary900">
-              {cart.reduce((acc, { price, quantity }) => (acc += Number(price) * quantity), 0)}
+            <Text fontSize="40px" fontWeight="700" color="primary900">
+              {totalPrice}
             </Text>
           </Flex>
           <Flex direction="column" gap="1.35rem">
@@ -225,10 +270,6 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                 setOrderPayload(
                   cart.map((e) => ({
                     id: e.id,
-                    name: e.name,
-                    description: e.description || ``,
-                    image: e.picture,
-                    price: `${e.price}`,
                     quantity: e.quantity,
                   })),
                 )
@@ -271,7 +312,10 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
           </Flex>
         </Flex>
       </Flex>
+
       <SmallModal
+        size="xl"
+        topIcon="checked"
         title="Finalizar pedido"
         show={!!orderPayload}
         onConfirm={() => {
@@ -281,56 +325,46 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
           onChangeView(`orders`);
         }}
         onCancel={() => setOrderPayload(null)}
+        disableOkButton={haveMemberWithNegativeBalance}
       >
-        <Flex mb="8px">Descontar o valor dos participantes do grupo?</Flex>
-        <Flex direction="column" gap="6px">
-          <Flex w="100%" justify="space-between">
-            <Flex gap="8px">
-              <Avatar size="sm" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
-              <Flex align="center">Anderson Félix</Flex>
-            </Flex>
-            <Flex align="center" fontWeight="600" color="green" gap="4px">
-              10
-              <FaArrowRightLong color="green" />
-              <Text color="gray800">4</Text>
-              <Image src="/icons/coin.svg" />
-            </Flex>
-          </Flex>
-          <Flex w="100%" justify="space-between">
-            <Flex gap="8px">
-              <Avatar size="sm" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
-              <Flex align="center" gap="4px">
-                Ana Sichieri
-                <Tooltip label="Esse usuário não possui coins o suficiente para a compra, por isso ficará com o saldo negativado" hasArrow>
-                  <span>
-                    <PiWarningCircleLight color="red" />
-                  </span>
-                </Tooltip>
+        <Flex direction="column" gap="0.5rem">
+          {haveMemberWithNegativeBalance ? (
+            <>
+              <Text>
+                Um ou mais membros do grupo possuem saldo negativo, volte para finalizar o pedido quando todos membros estiverem com saldo positivo.
+              </Text>
+              <Text>Lembrando que você pode fazer uma doação aos membros caso possua saldo suficiente.</Text>
+            </>
+          ) : (
+            <>
+              <Text>{`O total da compra ficou em ${formatCoin(totalPrice)}`}</Text>
+              <Text>{`Sendo assim, o valor de ${formatCoin(
+                totalPrice / group.students.length,
+              )} será descontado de cada participante do grupo.`}</Text>
+            </>
+          )}
+          <Flex direction="column" gap="6px" m="0.5rem 0 1rem">
+            {group.students.map((student) => (
+              <Flex key={student.id} w="100%" justify="space-between">
+                <Flex gap="8px">
+                  <Avatar size="sm" name={student.name} src={student.avatar || ``} />
+                  <Flex align="center">{student.name}</Flex>
+                </Flex>
+                <Flex align="center" fontWeight="600" color={(student.metadata.coins || 0) > 0 ? 'green' : 'red'} gap="6px">
+                  <Text>{formatCoin(student.metadata.coins)}</Text>
+                  <FaArrowRightLong color="green" />
+                  <Text color={(student.metadata.coins || 0) - totalPrice / group.students.length > 0 ? 'gray800' : 'red'}>
+                    {formatCoin((student.metadata.coins || 0) - totalPrice / group.students.length)}
+                  </Text>
+                  <Image src="/icons/coin.svg" />
+                </Flex>
               </Flex>
-            </Flex>
-            <Flex align="center" fontWeight="600" color="red" gap="4px">
-              3
-              <FaArrowRightLong color="red" />
-              <Text color="red">-3</Text>
-              <Image src="/icons/coin.svg" />
-            </Flex>
-          </Flex>
-          <Flex w="100%" justify="space-between">
-            <Flex gap="8px">
-              <Avatar size="sm" name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
-              <Flex align="center">Lucas Piovani</Flex>
-            </Flex>
-            <Flex align="center" fontWeight="600" color="green" gap="4px">
-              22
-              <FaArrowRightLong color="green" />
-              <Text color="gray800">16</Text>
-              <Image src="/icons/coin.svg" />
-            </Flex>
+            ))}
           </Flex>
           <Flex w="100%" justify="space-between" mt="8px">
             Valor total:
             <Flex fontWeight="600">
-              18
+              {formatCoin(totalPrice)}
               <Image src="/icons/coin.svg" />
             </Flex>
           </Flex>

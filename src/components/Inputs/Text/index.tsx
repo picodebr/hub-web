@@ -3,7 +3,7 @@ import { IInputProps } from '../interfaces';
 
 export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', placeholder, label, error, rightElement, leftElement, ...rest }) => {
   return (
-    <Flex direction="column" color="gray600" w="100%">
+    <Flex direction="column" w="100%">
       {!!label && (
         <Text color="gray700" fontSize="13.5px" fontWeight="500" pb="0.25rem">
           {label}
@@ -17,7 +17,6 @@ export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', pl
         )}
         <Input
           placeholder={placeholder}
-          _placeholder={{ color: 'gray800' }}
           value={value}
           onChange={(e) => onInputChange && onInputChange(e.target.value)}
           border="none"
@@ -25,7 +24,6 @@ export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', pl
           borderRadius="8px"
           isInvalid={!!error}
           variant="unstyled"
-          fontSize="16px"
           {...rest}
         />
         {!!rightElement && (
