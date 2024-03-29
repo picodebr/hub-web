@@ -47,7 +47,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
 
   const totalPrice = useMemo(() => cart.reduce((acc, { price, quantity }) => (acc += Number(price) * quantity), 0), [cart]);
 
-  const haveMemberWithNegativeBalance = !!group.students.find((e) => (e.metadata.coins || 0) < 0);
+  const haveMemberWithNegativeBalance = !!group.students.find((e) => (e.metadata.coins || 0) <= 0);
 
   return (
     <Flex overflow="hidden" gap="1rem" flex="1">
@@ -331,7 +331,8 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
           {haveMemberWithNegativeBalance ? (
             <>
               <Text>
-                Um ou mais membros do grupo possuem saldo negativo, volte para finalizar o pedido quando todos membros estiverem com saldo positivo.
+                Um ou mais membros do grupo possuem saldo negativo ou zerado, volte para finalizar o pedido quando todos membros estiverem com saldo
+                positivo.
               </Text>
               <Text>Lembrando que você pode fazer uma doação aos membros caso possua saldo suficiente.</Text>
             </>
