@@ -26,11 +26,13 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
   overlay = {},
   topIcon,
   isLoading,
+  onCloseModal,
+  showCloseButton = true,
   ...rest
 }) => {
   return (
-    <ChakraModal {...rest} isOpen={show} onClose={() => onCancel && onCancel()} scrollBehavior="inside">
-      <ModalOverlay {...overlay} />
+    <ChakraModal {...rest} isOpen={show} onClose={() => (onCloseModal ? onCloseModal() : onCancel && onCancel())} scrollBehavior="inside">
+      <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(2px)" {...overlay} />
       <ModalContent w={!rest.size ? 'fit-content' : undefined} zIndex="9998">
         {typeof topIcon === 'string' ? (
           <Box m="1rem 0 0 1rem">
@@ -39,10 +41,10 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
         ) : (
           topIcon || null
         )}
-        <ModalHeader fontSize="1rem" p="0.5rem 1rem">
+        <ModalHeader fontSize="1rem" p="0.5rem 1rem" color="gray800">
           {title}
         </ModalHeader>
-        {!!onCancel && <ModalCloseButton isDisabled={disableCancelButton} mt="0.25rem" />}
+        {(!!onCancel || !!onCloseModal) && showCloseButton && <ModalCloseButton isDisabled={disableCancelButton} mt="0.25rem" />}
         <ModalBody>{children}</ModalBody>
 
         <ModalFooter p="1rem" justifyContent="center" gap="1rem">

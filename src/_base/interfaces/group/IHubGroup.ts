@@ -2,6 +2,7 @@ import { IProject } from '../project';
 import { IHubUser } from '../user';
 import { IHubGroupStudentLink } from './IHubGroupStudentLink';
 import { IHubGroupMetadata } from './IHubGroupMetadata';
+import { IHubGroupOrder } from './IHubGroupOrder';
 
 export interface IHubGroup {
   id: string;
@@ -16,4 +17,5 @@ export interface IHubGroup {
   educator: IHubUser | null;
   project: IProject | null;
   student_links: IHubGroupStudentLink[];
+  orders: IHubGroupOrder[];
 }

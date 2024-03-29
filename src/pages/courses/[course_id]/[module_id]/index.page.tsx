@@ -102,7 +102,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
           lesson.id ? (
             <Flex
               key={lesson.id + i}
-              bg="gray100"
+              bg="gray50"
               minH="4.5rem"
               maxH="4.5rem"
               padding="0.5rem 1rem"
@@ -114,7 +114,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
             >
               <Flex direction="column" justify="space-between" pb="0.15rem">
                 <Flex gap="0.5rem" align="center">
-                  <Text fontWeight="500">{`${i + 1}. ${lesson.title}`}</Text>
+                  <Text fontWeight="500" color="gray800">{`${i + 1}. ${lesson.title}`}</Text>
                   {lesson.finished && (
                     <Flex color="primary300">
                       <PiSealCheckFill fontSize="1.2rem" filter="brightness(0.93)" />
@@ -131,6 +131,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
                 <GenericButton
                   label={finishedLessons.find((l) => l.entity_id === lesson.id) ? 'Ver novamente' : 'Iniciar'}
                   bg="primary700"
+                  color="gray800"
                   leftIcon={lessonTypeInfoMapper[lesson.lesson_type].icon({ fontSize: `1.15rem` })}
                   onClick={() => router.push(`/courses/${courseId}/${moduleId}/${lesson.id}?_p=${lesson.title}`)}
                 />

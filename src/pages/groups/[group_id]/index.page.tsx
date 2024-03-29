@@ -12,12 +12,13 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useAuth, useCustomToast } from '@/_base/hooks';
 import { Planning } from './components/Planejamentos';
 import { Members } from './components/Membros';
-import { addOrder, getGroupById, updateGroup } from '@/_base/services/group';
-import { IHubGroup, IHubGroupMetadata, IHubGroupOrder, IHubGroupOrderItem } from '@/_base/interfaces/group';
-import { acceptOrder } from '@/_base/services/group/acceptOrder';
+import { acceptOrder, rejectOrder, addOrder, getGroupById, updateGroup } from '@/_base/services/group';
+import { IHubGroup, IHubGroupMetadata, IHubGroupOrder } from '@/_base/interfaces/group';
 import { getStockMaker } from '@/_base/services/storeMaker';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { IStockMaker } from '@/_base/interfaces/storeMaker';
+import { IHubUser } from '@/_base/interfaces/user';
+import { makeDonation } from '@/_base/services/student/makeDonation';
 
 interface IProps {
   group: IHubGroup;
@@ -30,13 +31,14 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const toast = useCustomToast();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const [stock, setStock] = useState<IStockMaker[]>([]);
 
   const { school } = useSelectedSchool();
 
   useEffect(() => {
+    if (!school) return;
     (async () => {
       setIsLoading(true);
       try {
@@ -46,7 +48,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [school]);
 
   const canEdit = user.role === `student` && !!group.student_links.find((e) => e.hub_user_id === user.id);
   const needSave = useMemo<boolean>(() => JSON.stringify(group) !== JSON.stringify(savedGroup), [group, savedGroup]);
@@ -67,29 +69,68 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
     },
   );
 
-  const handleFinishOrder = useAsyncCallback(async (metadata: IHubGroupOrderItem[]) => {
-    const data = await addOrder({ group_id: group.id, metadata });
+  const handleFinishOrder = useAsyncCallback(async (items: { id: string; quantity: number }[]) => {
+    const updatedGroup = await addOrder({ group_id: group.id, items });
 
-    setGroup((e) => ({ ...e, student_links: data.student_links }));
-    setSavedGroup((e) => ({ ...e, student_links: data.student_links }));
+    setGroup((e) => ({ ...e, ...updatedGroup }));
+    setSavedGroup((e) => ({ ...e, ...updatedGroup }));
   }, []);
 
   const handleApproveOrder = useAsyncCallback(async (order: IHubGroupOrder) => {
     await acceptOrder({ order_id: order.id, group_id: group.id });
+
     setGroup((e) => {
-      const res = {
-        ...e,
-        student_links: e.student_links.map((s) => ({
-          ...s,
-          metadata: { orders: s.metadata.orders?.map((o) => (o.id === order.id ? { ...o, approved_at: new Date() } : o)) || [] },
-        })),
-      };
+      e.orders = e.orders.map((o) => (o.id === order.id ? { ...o, approved_at: new Date().toISOString(), approved_by: user.id } : o));
+      setSavedGroup(e);
 
-      setSavedGroup(res);
-
-      return res;
+      return e;
     });
   }, []);
+
+  const handleRejectOrder = useAsyncCallback(async (order: IHubGroupOrder) => {
+    await rejectOrder({ order_id: order.id, group_id: group.id });
+
+    setGroup((e) => {
+      e.orders = e.orders.map((o) => (o.id === order.id ? { ...o, metadata: { denied_at: new Date().toISOString() } } : o));
+      setSavedGroup(e);
+
+      return e;
+    });
+  }, []);
+
+  const handleMakeStudentDonation = useAsyncCallback(
+    async (data: { student: IHubUser | null; donation: string }) => {
+      if (!data.student) return;
+      setIsLoading(true);
+      await makeDonation(data.student.id, Number(data.donation));
+
+      const updatedGroup = {
+        ...group,
+        students: group.students.map((student) => ({
+          ...student,
+          metadata: {
+            ...student.metadata,
+            coins:
+              student.id === data.student?.id
+                ? (student.metadata.coins || 0) + Number(data.donation)
+                : student.id === user.id
+                ? (student.metadata.coins || 0) - Number(data.donation)
+                : student.metadata.coins,
+          },
+        })),
+      };
+      setGroup(updatedGroup);
+      setSavedGroup(updatedGroup);
+      setUser({ ...user, metadata: { ...user.metadata, coins: (user.metadata.coins || 0) - Number(data.donation) } });
+
+      toast({ status: 'success', description: 'Doação enviada com sucesso!' });
+    },
+    [],
+    true,
+    () => {
+      setIsLoading(false);
+    },
+  );
 
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Atividades: <Activities group={group} setGroup={setGroup} canEdit={canEdit} />,
@@ -100,11 +141,12 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
         handleSave={handleSaveGroup}
         group={group}
         handleApproveOrder={handleApproveOrder}
+        handleRejectOrder={handleRejectOrder}
         canEdit={canEdit}
         storeMakerList={stock}
       />
     ),
-    Membros: <Members group={group} />,
+    Membros: <Members group={group} onDonation={(data) => handleMakeStudentDonation(data)} user={user} />,
   };
 
   return (
