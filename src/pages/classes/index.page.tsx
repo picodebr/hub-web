@@ -75,7 +75,7 @@ const Classes: React.FC = () => {
   };
 
   return (
-    <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
+    <Flex direction="column" w="100%" h="100%" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden auto">
       <Flex align="center" justify="flex-end" h="fit-content">
         <Flex
           bgColor="white"
