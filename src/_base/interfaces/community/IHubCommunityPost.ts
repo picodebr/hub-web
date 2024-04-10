@@ -1,3 +1,4 @@
+import { IHubUser } from '../user';
 import { IHubCommunityPostMetadata } from './IHubCommunityPostMetadata';
 
 export interface IHubCommunityPost {
@@ -8,4 +9,5 @@ export interface IHubCommunityPost {
   metadata: IHubCommunityPostMetadata;
   created_at: string;
   updated_at: string;
+  user: IHubUser;
 }
