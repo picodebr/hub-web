@@ -17,26 +17,31 @@ export const Wrapper = styled.div<IComponentProps>`
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 1000;
+  z-index: 9999;
   pointer-events: ${(props) => (props.opened ? 'default' : 'none')};
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 0;
+  background-color: ${(props) => (props.opened ? '#00000044' : '')};
 `;
 
 export const Container = styled.div`
   --headerHeight: 5rem;
 
   width: 25rem;
-  padding: 0 0.5rem 0.5rem;
+  height: 100%;
+  max-height: 765px;
+  padding: 0.25rem 0.5rem;
   height: 100%;
 
   background-color: ${(props) => props.theme.colors.serialMonitorBackground};
-  border-radius: 0.25rem 0 0 0.25rem;
+  border-radius: 0.25rem;
   color: ${(props) => props.theme.colors.text};
   transition: all 0.5s;
   transform: translateX(var(--translateX));
   overflow: hidden;
-  border-left: 1px solid ${(props) => props.theme.colors.serialMonitorBorder};
+  border: 1px solid ${(props) => props.theme.colors.serialMonitorBorder};
 
   @media (max-width: ${(props) => props.theme.breakingPoints.mobile}px) {
     height: calc(100% - ${(props) => props.theme.dimensions.mobileHeader}px);

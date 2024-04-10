@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 export const ModalWrapper = styled.div`
   position: fixed;
-  z-index: var(--modal-z-index);
+  z-index: 9999;
   background-color: ${(props) => props.theme.colors.modalMask};
   user-select: none;
 

@@ -31,7 +31,7 @@ export const CodeEventMenu: React.FC<ICodeEventMenuProps> = ({ allowUpload, isTe
           // (type === 'save' && !isProjectOwner) ||
           // (type === 'duplicate' && isProjectOwner) ||
           // (type === 'toText' && isTextMode)
-          type === `simulation` || type === `duplicate` || type === `debug` || (type === `toText` && isTextMode)
+          type === `duplicate` || (type === `toText` && isTextMode)
         }
         disabled={type === 'upload' && !allowUpload}
       />

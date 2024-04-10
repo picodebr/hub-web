@@ -6,8 +6,8 @@ export const Wrapper = styled.div`
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 1000;
-  background-color: ${props => props.theme.colors.modalMask};
+  z-index: 9999;
+  background-color: ${(props) => props.theme.colors.modalMask};
 
   display: flex;
 `;
@@ -17,16 +17,16 @@ const Container = styled.div`
   max-width: calc(50vw - 1rem);
   padding: 2rem 1rem;
 
-  background-color: ${props => props.theme.colors.cardBackground};
+  background-color: ${(props) => props.theme.colors.cardBackground};
   border-radius: 1rem;
-  box-shadow: ${props => props.theme.boxShadow.defaultShadow};
+  box-shadow: ${(props) => props.theme.boxShadow.defaultShadow};
   margin: auto;
-  color: ${props => props.theme.colors.text};
+  color: ${(props) => props.theme.colors.text};
   user-select: none;
 
   animation: ShowAnimation 1s;
 
-  @media (max-width: ${props => props.theme.breakingPoints.mobile}px) {
+  @media (max-width: ${(props) => props.theme.breakingPoints.mobile}px) {
     max-width: calc(100vw - 1rem);
     padding: 1.5rem 0.75rem;
   }
@@ -56,7 +56,7 @@ interface ILogo {
 export const Logo = styled.div<ILogo>`
   height: 5rem;
 
-  background-image: url(${props => props.src});
+  background-image: url(${(props) => props.src});
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -64,7 +64,7 @@ export const Logo = styled.div<ILogo>`
 
 export const NoCodeButton = styled.div`
   font-weight: 500;
-  color: ${props => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.primary};
   cursor: pointer;
   width: fit-content;
   margin-left: auto;
@@ -88,8 +88,8 @@ export const EmailTitle = styled.div`
 
 export const EmailButton = styled.div`
   margin-top: 0.5rem;
-  background-color: ${props => props.theme.colors.primary};
-  color: ${props => props.theme.colors.buttonSecondary};
+  background-color: ${(props) => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.buttonSecondary};
   padding: 0.5rem;
   border-radius: 0.5rem;
   font-weight: 500;
