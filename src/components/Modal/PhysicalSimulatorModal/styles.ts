@@ -10,11 +10,11 @@ export const Container = styled.div`
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: var(--modal-z-index);
+  z-index: 9999;
   pointer-events: none;
 
   &[data-show='true'] {
-    --background-mask-color: ${props => props.theme.colors.modalMask};
+    --background-mask-color: ${(props) => props.theme.colors.modalMask};
     --content-translate-x: 0;
 
     pointer-events: all;
@@ -30,18 +30,18 @@ export const BackgroundMask = styled.div`
 `;
 
 export const Content = styled.div`
-  width: calc(100% - 4rem);
+  width: 100%;
   height: 100%;
   top: 0;
   right: 0;
   position: absolute;
-  background-color: ${props => props.theme.colors.physicalSimulatorBackground};
+  background-color: ${(props) => props.theme.colors.physicalSimulatorBackground};
   box-shadow: -0.25rem 0 1rem rgba(0, 0, 0, 0.35);
 
   transition-duration: var(--transition-duration);
   transform: translateX(var(--content-translate-x));
 
-  @media (max-width: ${props => props.theme.breakingPoints.mobile}px) {
+  @media (max-width: ${(props) => props.theme.breakingPoints.mobile}px) {
     width: calc(100% - 1rem);
   }
 `;
@@ -64,7 +64,7 @@ export const CloseButton = styled.button`
   border: none;
   background-color: transparent;
   transition-duration: 0.25s;
-  color: ${props => props.theme.colors.physicalSimulatorCloseButton};
+  color: ${(props) => props.theme.colors.physicalSimulatorCloseButton};
   z-index: 2;
   cursor: pointer;
 
