@@ -88,7 +88,7 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
           </Flex>
           <Flex direction="column" flex="1" overflow="hidden auto">
             {guides.map((guide) => (
-              <Flex w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
+              <Flex key={guide.label} w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
                 <Flex
                   align="center"
                   direction="column"
