@@ -21,7 +21,7 @@ export const FileInput: React.FC<IFileInputProps> = ({ type, onChange }) => {
           onChange(e.map((file) => file.blobFile as File));
         }}
         toggleAs={(e) => (
-          <Button gap="8px" onClick={() => e.onClick(e)} w="100%">
+          <Button gap="8px" onClick={() => e.onClick(e)} fontSize="14px">
             <FaPaperclip />
             Anexar arquivo
           </Button>

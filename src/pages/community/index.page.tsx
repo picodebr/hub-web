@@ -31,12 +31,15 @@ import { IoMdHeart } from 'react-icons/io';
 import { HiLightBulb } from 'react-icons/hi';
 import { RiUserStarFill } from 'react-icons/ri';
 import { TextInput } from '@/components/Inputs/Text';
+import { SmallModal } from '@/components/Modal/Small';
+import { deleteCommunityPost } from '@/_base/services/community/deleteCommunityPost';
 
 const Community: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [communityPosts, setCommunityPosts] = useState<IHubCommunityPost[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [lastFocusedPostId, setLastFocusedPostId] = useState(``);
+  const [postToRemove, setPostToRemove] = useState<{ id: string; isReply: boolean } | null>(null);
 
   const toast = useCustomToast();
   const { user } = useAuth();
@@ -93,7 +96,6 @@ const Community: React.FC = () => {
       if (!replyDTO.hub_community_post_id) return;
       setLastFocusedPostId(replyDTO.hub_community_post_id);
 
-      setIsLoading(true);
       const replyResponse = await createCommunityPost(replyDTO);
       setCommunityPosts((state) => [
         {
@@ -106,11 +108,25 @@ const Community: React.FC = () => {
     },
     [replyDTO],
     true,
+  );
+
+  const handleRemovePost = useAsyncCallback(
+    async () => {
+      if (!postToRemove?.id) return;
+      if (!postToRemove.isReply) setIsLoading(true);
+      await deleteCommunityPost(postToRemove.id);
+
+      if (!postToRemove.isReply) setCommunityPosts((state) => state.filter((post) => post.id !== postToRemove.id));
+      else setCommunityPosts((state) => state.map((p) => ({ ...p, replies: p.replies.filter((r) => r.id !== postToRemove.id) })));
+      setPostToRemove(null);
+    },
+    [postToRemove],
+    true,
     () => setIsLoading(false),
   );
 
   return (
-    <Flex direction="column" gap="2rem" overflow="hidden">
+    <Flex direction="column" gap="2rem" overflow="hidden auto">
       <Flex
         bgColor="white"
         flexDirection="column"
@@ -119,13 +135,10 @@ const Community: React.FC = () => {
         borderRadius="12px"
         w="100%"
         padding="1rem"
-        gap="20px"
-        maxH="70%"
-        minH="15.5rem"
-        textAlign="left"
+        gap="1rem"
         display="flex"
       >
-        <Flex gap="32px">
+        <Flex gap="1rem">
           <TextAreaInput
             value={postDTO.content}
             onInputChange={(value) => onPostChange('content', value)}
@@ -137,23 +150,20 @@ const Community: React.FC = () => {
           />
           <GenericButton
             label="Enviar"
-            w="113px"
-            h="44px"
             bg="primary300"
             color="white"
-            gap="8px"
             onClick={() => submitPost(handleSentPost)}
-            leftIcon={<FiSend size="20px" />}
+            leftIcon={<FiSend size="18px" />}
             _hover={{
               filter: 'brightness(0.9)',
             }}
           />
         </Flex>
-        <Flex display="flex" direction="column" w="12rem">
+        <Flex display="flex" direction="column" mb="-0.7rem">
           <FileInput onChange={(e) => setFiles((f) => [...e, ...f])} />
         </Flex>
       </Flex>
-      <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" gap="32px" overflow="hidden auto">
+      <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" gap="32px">
         {isLoading && <Skeleton borderRadius="12px" minH="10rem" w="100%"></Skeleton>}
         {!isLoading &&
           communityPosts.map((post) => (
@@ -171,16 +181,31 @@ const Community: React.FC = () => {
               display="flex"
               justify="center"
             >
-              <Flex gap="12px">
-                <Avatar src={post.user.avatar || ''} name={post.user.name} />
-                <Flex direction="column">
-                  <Text fontWeight="600" color="primary500">
-                    {post.user.name}
-                  </Text>
-                  <Text fontSize="14px" color="gray700">
-                    @{post.user.username}
-                  </Text>
+              <Flex>
+                <Flex gap="12px" flex="1">
+                  <Avatar src={post.user.avatar || ''} name={post.user.name} />
+                  <Flex direction="column">
+                    <Text fontWeight="600" color="primary500">
+                      {post.user.name}
+                    </Text>
+                    <Text fontSize="14px" color="gray700">
+                      @{post.user.username}
+                    </Text>
+                  </Flex>
                 </Flex>
+                {post.user.id === user.id && (
+                  <Tooltip label="Excluir">
+                    <Flex
+                      _hover={{ color: `primary500` }}
+                      color="gray500"
+                      cursor="pointer"
+                      fontSize="1.25rem"
+                      onClick={() => setPostToRemove({ id: post.id, isReply: false })}
+                    >
+                      <FiTrash2 />
+                    </Flex>
+                  </Tooltip>
+                )}
               </Flex>
               <Flex fontWeight="500" fontSize="14px">
                 {post.content}
@@ -313,11 +338,20 @@ const Community: React.FC = () => {
                               </Tooltip>
                             </Flex>
 
-                            <Tooltip label="Excluir">
-                              <Flex _hover={{ color: `primary500` }} color="gray500" cursor="pointer">
-                                <FiTrash2 />
-                              </Flex>
-                            </Tooltip>
+                            {postReply.user.id === user.id && (
+                              <Tooltip label="Excluir">
+                                <Flex
+                                  _hover={{ color: `primary500` }}
+                                  color="gray500"
+                                  cursor="pointer"
+                                  fontSize="1.1rem"
+                                  align="center"
+                                  onClick={() => setPostToRemove({ id: postReply.id, isReply: true })}
+                                >
+                                  <FiTrash2 />
+                                </Flex>
+                              </Tooltip>
+                            )}
                           </Flex>
                         </Flex>
                       ))}
@@ -328,6 +362,15 @@ const Community: React.FC = () => {
             </Flex>
           ))}
       </Flex>
+      <SmallModal
+        show={!!postToRemove}
+        topIcon="warning"
+        onConfirm={handleRemovePost}
+        onCancel={() => setPostToRemove(null)}
+        title={`Excluir ${postToRemove?.isReply ? `comentário` : `publicação`}`}
+      >
+        <Text>Tem certeza disso?</Text>
+      </SmallModal>
     </Flex>
   );
 };
