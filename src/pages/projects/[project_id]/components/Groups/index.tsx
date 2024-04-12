@@ -11,7 +11,6 @@ import { SmallModal } from '@/components/Modal/Small';
 import { useInputHandler } from '@/_base/hooks';
 import { TextInput } from '@/components/Inputs/Text';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
-import { isLowestGrade } from '@/_base/utils';
 
 interface IProps {
   project: IProject;
@@ -41,18 +40,16 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
 
   return (
     <Flex w="100%" h="100%" direction="column" gap="24px" overflow="hidden auto" margin="auto">
-      {isLowestGrade(project.hub_class?.grade || ``) && (
-        <Flex justify="flex-end" align="center">
-          <GenericButton
-            label="Cadastrar grupo"
-            size="sm"
-            color="white"
-            isDisabled={!canEdit}
-            _hover={{ filter: `brightness(0.9)` }}
-            onClick={() => setData((e) => ({ ...(e || ({} as any)), hub_project_class_id: project.id }))}
-          />
-        </Flex>
-      )}
+      <Flex justify="flex-end" align="center">
+        <GenericButton
+          label="Cadastrar grupo"
+          size="sm"
+          color="white"
+          isDisabled={!canEdit}
+          _hover={{ filter: `brightness(0.9)` }}
+          onClick={() => setData((e) => ({ ...(e || ({} as any)), hub_project_class_id: project.id }))}
+        />
+      </Flex>
       {project.groups
         .filter((group) => !group.approved_at)
         .map((group) => (
