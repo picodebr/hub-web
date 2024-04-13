@@ -6,7 +6,7 @@ import { IHubCommunityPostMetadata } from './IHubCommunityPostMetadata';
 export interface ICreateHubCommunityPostParams {
   content: string;
   hub_community_post_id?: string;
-  metadata?: IHubCommunityPostMetadata;
+  metadata?: Partial<IHubCommunityPostMetadata>;
 }
 
 export const EMPTY_CREATE_POST_DATA: ICreateHubCommunityPostParams = {

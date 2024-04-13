@@ -8,41 +8,45 @@ import {
   Box,
   Button,
   Flex,
-  Grid,
-  Link,
   Skeleton,
   Text,
   Tooltip,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
-import mimetype from 'mime';
 import { useEffect, useState } from 'react';
 
 import { useAsyncCallback, useAuth, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { EMPTY_CREATE_POST_DATA, ICreateHubCommunityPostParams, IHubCommunityPost, communityPostSchema } from '@/_base/interfaces/community';
-import { createCommunityPost, listCommunityPosts } from '@/_base/services/community';
-import { FileInput } from '@/components/Inputs/File';
-import { Divider, Image } from 'antd';
-import { TbFileText, TbThumbUpFilled } from 'react-icons/tb';
+import { createCommunityPost, listCommunityPosts, updateCommunityPostReaction } from '@/_base/services/community';
+import { FileInput, useFileInput } from '@/components/Inputs/File';
+import { Divider } from 'antd';
+import { TbThumbUpFilled } from 'react-icons/tb';
 import { IoMdHeart } from 'react-icons/io';
 import { HiLightBulb } from 'react-icons/hi';
 import { RiUserStarFill } from 'react-icons/ri';
 import { TextInput } from '@/components/Inputs/Text';
 import { SmallModal } from '@/components/Modal/Small';
 import { deleteCommunityPost } from '@/_base/services/community/deleteCommunityPost';
+import { PostReaction, PostReactionKey } from '@/_base/interfaces/community/PostReaction';
+import { IconType } from 'react-icons';
+import moment from 'moment';
+import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
+import { MediaGallery } from '@/components/MediaGallery';
 
 const Community: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [communityPosts, setCommunityPosts] = useState<IHubCommunityPost[]>([]);
+  const [reactions, setReactions] = useState<Record<string, PostReaction>>({});
   const [files, setFiles] = useState<File[]>([]);
   const [lastFocusedPostId, setLastFocusedPostId] = useState(``);
   const [postToRemove, setPostToRemove] = useState<{ id: string; isReply: boolean } | null>(null);
 
   const toast = useCustomToast();
   const { user } = useAuth();
+  const { clearFileList } = useFileInput();
 
   const {
     data: postDTO,
@@ -72,6 +76,16 @@ const Community: React.FC = () => {
         const posts = await listCommunityPosts();
         setLastFocusedPostId(posts[0].id);
         setCommunityPosts(posts);
+        setReactions(
+          posts.reduce(
+            (acc, post) => {
+              acc[post.id] = post.metadata.reactions;
+              post.replies.forEach((reply) => (acc[reply.id] = reply.metadata.reactions));
+              return acc;
+            },
+            {} as Record<string, PostReaction>,
+          ),
+        );
       } catch {
         toast({ status: `error`, description: `Não foi possível exibir os posts` });
       } finally {
@@ -82,10 +96,19 @@ const Community: React.FC = () => {
 
   const handleSentPost = useAsyncCallback(
     async () => {
+      if (files.length) {
+        const presignedUrls = await Promise.all(files.map((file) => getPresignedUrl(file.type, `community_posts`).then((r) => ({ ...r, file }))));
+
+        await Promise.all(presignedUrls.map(({ link, file }) => uploadFile(link, file)));
+
+        postDTO.metadata = { media: presignedUrls.map(({ path, file }) => ({ uri: path, label: file.name })) };
+      }
+
       const postResponse = await createCommunityPost(postDTO);
       setCommunityPosts((state) => [postResponse, ...state]);
       setPostDTO(EMPTY_CREATE_POST_DATA);
       setFiles([]);
+      clearFileList();
     },
     [postDTO],
     true,
@@ -125,6 +148,18 @@ const Community: React.FC = () => {
     () => setIsLoading(false),
   );
 
+  const handleUpdateReaction = useAsyncCallback(
+    async (id: string, reaction: PostReactionKey) => {
+      const updatedPost = await updateCommunityPostReaction({ id, reaction });
+      setReactions((r) => {
+        r[id] = updatedPost.metadata.reactions;
+        return r;
+      });
+    },
+    [],
+    true,
+  );
+
   return (
     <Flex direction="column" gap="2rem" overflow="hidden auto">
       <Flex
@@ -160,8 +195,9 @@ const Community: React.FC = () => {
           />
         </Flex>
         <Flex display="flex" direction="column" mb="-0.7rem">
-          <FileInput onChange={(e) => setFiles((f) => [...e, ...f])} />
+          <FileInput onChange={(e) => setFiles(e)} />
         </Flex>
+        <MediaGallery files={files} />
       </Flex>
       <Flex display="flex" justify="center" flexDirection="row" flexWrap="wrap" gap="32px">
         {isLoading && <Skeleton borderRadius="12px" minH="10rem" w="100%"></Skeleton>}
@@ -210,41 +246,45 @@ const Community: React.FC = () => {
               <Flex fontWeight="500" fontSize="14px">
                 {post.content}
               </Flex>
-              {!!post.metadata.media?.length && (
-                <Grid gap="1rem" gridTemplateColumns="repeat(auto-fill, minmax(200px, 1fr))" gridTemplateRows="minmax(min-content, max-content)">
-                  {postDTO.metadata?.media?.map((media, i) => (
-                    <Flex key={media.uri} borderRadius="md" overflow="hidden" position="relative">
-                      {mimetype.getType(media.uri)?.startsWith('image') ? (
-                        <Image key={`${i + 1}`} src={media.uri} width="100%" height="100%" />
-                      ) : mimetype.getType(media.uri)?.startsWith('video') ? (
-                        <video key={`${i + 1}`} width="100%" height="100%" controls>
-                          <source src={media.uri} />
-                        </video>
-                      ) : (
-                        <Link target="_blank" href={media.uri} w="100%" h="100%">
-                          <Flex
-                            key={`${i + 1}`}
-                            w="100%"
-                            h="100%"
-                            bg="gray300"
-                            overflow="hidden"
-                            direction="column"
-                            align="center"
-                            justify="center"
-                            gap="0.5rem"
-                            fontWeight="500"
-                          >
-                            <TbFileText fontSize="2rem" />
-                            <Text whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
-                              {media.label.length > 20 ? `${media.label.slice(0, 14)}...${media.label.slice(-6)}` : media.label}
-                            </Text>
-                          </Flex>
-                        </Link>
-                      )}
-                    </Flex>
+
+              <MediaGallery media={post.metadata.media} />
+
+              <Flex justify="space-between" align="flex-end" mb="-1.2rem">
+                <Text mb="-0.75rem" fontSize="13px" color="gray400">
+                  {moment(post.updated_at).fromNow()}
+                </Text>
+                <Flex gap="1rem" fontSize="1.35rem">
+                  {reactionsElements.map((reaction) => (
+                    <Tooltip key={reaction.key} label={reaction.label}>
+                      <Box
+                        cursor="pointer"
+                        position="relative"
+                        _hover={{ filter: `brightness(0.8)` }}
+                        onClick={() => handleUpdateReaction(post.id, reaction.key)}
+                      >
+                        <reaction.icon color={reaction.color} />
+                        <Flex
+                          align="center"
+                          justify="center"
+                          position="absolute"
+                          top="0.875rem"
+                          left="0.9rem"
+                          fontSize="11px"
+                          fontWeight="500"
+                          bg={reactions[post.id] && reactions[post.id][reaction.key]?.includes(user.id) ? 'primary700' : 'red.400'}
+                          minW="0.875rem"
+                          h="0.875rem"
+                          color="white"
+                          borderRadius="md"
+                          p="0.1rem 0.15rem"
+                        >
+                          {(reactions[post.id] && reactions[post.id][reaction.key]?.length) || 0}
+                        </Flex>
+                      </Box>
+                    </Tooltip>
                   ))}
-                </Grid>
-              )}
+                </Flex>
+              </Flex>
 
               <Divider />
 
@@ -288,23 +328,23 @@ const Community: React.FC = () => {
                           borderRadius={postReply.user.id !== user.id ? `0 10px 10px 10px` : `10px 0 10px 10px`}
                           overflow="hidden"
                         >
-                          <Flex
-                            p="1rem"
-                            gap="1rem"
-                            bgColor={postReply.user.id === user.id ? `orange200` : undefined}
-                            direction={post.user.id === user.id ? 'row' : 'row-reverse'}
-                          >
+                          <Flex p="0.75rem" gap="0.75rem" bgColor={postReply.user.id === user.id ? `orange200` : undefined}>
                             <Avatar src={postReply.user.avatar || ''} name={postReply.user.name} size="sm" />
                             <Flex direction="column" flex="1">
-                              <Text fontWeight="600" color="primary500">
-                                {postReply.user.name}
-                              </Text>
-                              <Text fontSize="14px" color="gray600">
-                                @{postReply.user.username}
-                              </Text>
+                              <Flex direction="column" flex="1" mt="-0.25rem">
+                                <Text fontWeight="600" color="primary500">
+                                  {postReply.user.name}
+                                </Text>
+                                <Text fontSize="14px" color="gray600">
+                                  @{postReply.user.username}
+                                </Text>
+                              </Flex>
                               <Flex flex="1" py="0.5rem" color="gray800">
                                 <Text fontSize="14px">{postReply.content}</Text>
                               </Flex>
+                              <Text mb="-0.75rem" fontSize="13px" color="gray400" alignSelf="flex-end">
+                                {moment(postReply.updated_at).fromNow()}
+                              </Text>
                             </Flex>
                           </Flex>
                           <Flex
@@ -313,29 +353,40 @@ const Community: React.FC = () => {
                             direction={postReply.user.id === user.id ? `row` : `row-reverse`}
                             bg={postReply.user.id === user.id ? undefined : `gray100`}
                             fontSize="20px"
-                            p="0.5rem"
+                            p="0.5rem 0.875rem 0.875rem 0.5rem"
                           >
-                            <Flex gap="9px">
-                              <Tooltip label="Gostei">
-                                <Box cursor="pointer">
-                                  <TbThumbUpFilled color="#3D7AFF" />
-                                </Box>
-                              </Tooltip>
-                              <Tooltip label="Amei">
-                                <Box cursor="pointer">
-                                  <IoMdHeart color="#FF525C" />
-                                </Box>
-                              </Tooltip>
-                              <Tooltip label="Genial">
-                                <Box cursor="pointer">
-                                  <HiLightBulb color="#F5BA3D" />
-                                </Box>
-                              </Tooltip>
-                              <Tooltip label="Apoio">
-                                <Box cursor="pointer">
-                                  <RiUserStarFill color="#21E080" />
-                                </Box>
-                              </Tooltip>
+                            <Flex gap="1rem">
+                              {reactionsElements.map((reaction) => (
+                                <Tooltip key={reaction.key} label={reaction.label}>
+                                  <Box
+                                    cursor="pointer"
+                                    position="relative"
+                                    _hover={{ filter: `brightness(0.8)` }}
+                                    onClick={() => handleUpdateReaction(postReply.id, reaction.key)}
+                                  >
+                                    <reaction.icon color={reaction.color} />
+                                    <Flex
+                                      align="center"
+                                      justify="center"
+                                      position="absolute"
+                                      top="0.875rem"
+                                      left="0.9rem"
+                                      fontSize="11px"
+                                      fontWeight="500"
+                                      bg={
+                                        reactions[postReply.id] && reactions[postReply.id][reaction.key]?.includes(user.id) ? 'primary700' : 'red.400'
+                                      }
+                                      minW="0.875rem"
+                                      h="0.875rem"
+                                      color="white"
+                                      borderRadius="md"
+                                      p="0.1rem 0.15rem"
+                                    >
+                                      {(reactions[postReply.id] && reactions[postReply.id][reaction.key]?.length) || 0}
+                                    </Flex>
+                                  </Box>
+                                </Tooltip>
+                              ))}
                             </Flex>
 
                             {postReply.user.id === user.id && (
@@ -377,8 +428,15 @@ const Community: React.FC = () => {
 
 export default Community;
 
+const reactionsElements: Array<{ key: PostReactionKey; label: string; icon: IconType; color: string }> = [
+  { key: `like`, label: `Gostei`, color: `#3D7AFF`, icon: TbThumbUpFilled },
+  { key: `love`, label: `Amei`, color: `#FF525C`, icon: IoMdHeart },
+  { key: `insightful`, label: `Genial`, color: `#F5BA3D`, icon: HiLightBulb },
+  { key: `aid`, label: `Apoio`, color: `#21E080`, icon: RiUserStarFill },
+];
+
 export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'community';
 
-  return { props: { selectedPage, pageTitle: 'Comunidade PiCode', showBackButton: false } };
+  return { props: { selectedPage, pageTitle: 'Comunidade', showBackButton: false } };
 };
