@@ -38,6 +38,7 @@ import { MediaGallery } from '@/components/MediaGallery';
 
 const Community: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [communityPosts, setCommunityPosts] = useState<IHubCommunityPost[]>([]);
   const [reactions, setReactions] = useState<Record<string, PostReaction>>({});
   const [files, setFiles] = useState<File[]>([]);
@@ -96,6 +97,8 @@ const Community: React.FC = () => {
 
   const handleSentPost = useAsyncCallback(
     async () => {
+      setIsSending(true);
+
       if (files.length) {
         const presignedUrls = await Promise.all(files.map((file) => getPresignedUrl(file.type, `community_posts`).then((r) => ({ ...r, file }))));
 
@@ -112,6 +115,7 @@ const Community: React.FC = () => {
     },
     [postDTO],
     true,
+    () => setIsSending(false),
   );
 
   const handleSentReply = useAsyncCallback(
@@ -186,6 +190,7 @@ const Community: React.FC = () => {
           <GenericButton
             label="Enviar"
             bg="primary300"
+            isLoading={isSending}
             color="white"
             onClick={() => submitPost(handleSentPost)}
             leftIcon={<FiSend size="18px" />}
