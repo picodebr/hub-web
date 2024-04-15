@@ -74,7 +74,7 @@ const Community: React.FC = () => {
       setIsLoading(true);
       try {
         const posts = await listCommunityPosts();
-        setLastFocusedPostId(posts[0].id);
+        setLastFocusedPostId(posts[0]?.id);
         setCommunityPosts(posts);
         setReactions(
           posts.reduce(
