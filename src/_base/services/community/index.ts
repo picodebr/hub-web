@@ -1,3 +1,3 @@
 export * from './createCommunityPost';
 export * from './showCommunityPosts';
-export * from './updateCommunityPost';
+export * from './updateCommunityPostReaction';

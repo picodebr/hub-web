@@ -1,5 +1,6 @@
-import { ICreateHubCommunityPostParams } from './ICreateHubCommunityPostParams';
+import { PostReactionKey } from './PostReaction';
 
-export interface IUpdateHubCommunityPostParams extends Partial<ICreateHubCommunityPostParams> {
+export interface IUpdateHubCommunityPostParams {
   id: string;
+  reaction: PostReactionKey;
 }

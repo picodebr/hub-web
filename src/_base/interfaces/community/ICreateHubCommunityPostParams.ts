@@ -5,10 +5,11 @@ import { IHubCommunityPostMetadata } from './IHubCommunityPostMetadata';
 
 export interface ICreateHubCommunityPostParams {
   content: string;
-  metadata?: IHubCommunityPostMetadata;
+  hub_community_post_id?: string;
+  metadata?: Partial<IHubCommunityPostMetadata>;
 }
 
-export const EMPTY_CREATE_REPORT_DATA: ICreateHubCommunityPostParams = {
+export const EMPTY_CREATE_POST_DATA: ICreateHubCommunityPostParams = {
   content: '',
   metadata: { media: [] },
 };
@@ -16,5 +17,6 @@ export const EMPTY_CREATE_REPORT_DATA: ICreateHubCommunityPostParams = {
 /** Zod schemas */
 export const communityPostSchema: ZodCustomSchema<ICreateHubCommunityPostParams> = z.object({
   content: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(1, { message: zodSchemaErrors.REQUIRED_FIELD }),
+  hub_community_post_id: z.string().uuid().optional(),
   metadata: z.any(),
 });

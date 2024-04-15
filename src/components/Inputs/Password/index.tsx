@@ -84,8 +84,8 @@ export const PasswordInput: React.FC<IInputProps & IPasswordProps> = ({
           <Progress.Line percent={passwordStrong * 25} status={passwordStrong < passStrong ? 'fail' : 'success'} style={{ padding: '0' }} />
           <Popover placement="right">
             <PopoverTrigger>
-              <Flex ml="-1rem" color="gray300" cursor="pointer">
-                <FaRegCircleQuestion />
+              <Flex ml="-1rem" color="primary400" cursor="pointer" transition="all 0.1s" _hover={{ transform: `scale(1.1)` }}>
+                <FaRegCircleQuestion fontSize="1rem" />
               </Flex>
             </PopoverTrigger>
             <PopoverContent border="none" bg="indigo25" color="gray400" fontSize={'14px'}>
