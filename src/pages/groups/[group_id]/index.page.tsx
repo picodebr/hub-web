@@ -38,7 +38,6 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const { school } = useSelectedSchool();
 
   useEffect(() => {
-    if (!school) return;
     (async () => {
       setIsLoading(true);
       try {
