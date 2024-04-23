@@ -132,7 +132,7 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
         onConfirm={() => submit(handleAddGroup)}
         okText="Criar"
         onCancel={() => setOpenModal(false)}
-        disableOkButton={!data.users?.length || !data.hub_project_class_id || !data.display_name}
+        disableOkButton={!data.users?.length || !data.hub_project_class_id || !data.display_name || !selectedProject?.educator}
         topIcon={'checked'}
       >
         <Flex direction="column" minW="350px" gap="1rem">
@@ -191,16 +191,22 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
           {!!selectedProject && (
             <Flex direction="column" gap="0.25rem" bg="gray100" p="0.5rem" borderRadius="md" position="relative">
               <Text alignSelf="flex-end" fontSize="14px" color="gray400" position="absolute">
-                Professor
+                {selectedProject.educator && `Professor`}
               </Text>
               <Flex align="center" gap="0.5rem">
-                <Avatar
-                  name={formatShortName(selectedProject?.educator?.name || '', true)}
-                  title={selectedProject?.educator?.name}
-                  src={selectedProject?.educator?.avatar || undefined}
-                  cursor="pointer"
-                />
-                <Text>{formatShortName(selectedProject?.educator?.name || '', true)}</Text>
+                {selectedProject.educator ? (
+                  <>
+                    <Avatar
+                      name={formatShortName(selectedProject?.educator?.name || '', true)}
+                      title={selectedProject?.educator?.name}
+                      src={selectedProject?.educator?.avatar || undefined}
+                      cursor="pointer"
+                    />
+                    <Text>{formatShortName(selectedProject?.educator?.name || '', true)}</Text>
+                  </>
+                ) : (
+                  <Text color="primary500">Esse projeto não está sendo lecionado por nenhum professor.</Text>
+                )}
               </Flex>
             </Flex>
           )}
