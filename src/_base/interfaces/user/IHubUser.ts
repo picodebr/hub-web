@@ -1,7 +1,7 @@
 import { IHubClass } from '../class';
 import { IHubGroup } from '../group';
 import { HubPermissions } from '../permissions';
-import { IHubUserSchool } from '../school';
+import { IHubSchoolGroup, IHubUserSchool } from '../school';
 import { HubUserRole } from './HubUserRole';
 import { IHubUserMetadata } from './IHubUserMetadata';
 import { IHubUserPreferences } from './IHubUserPreferences';
@@ -22,12 +22,12 @@ export interface IHubUser {
   created_at: Date;
   schools: IHubUserSchool[];
   metadata: IHubUserMetadata;
+  school_group: IHubSchoolGroup;
   hub_class: IHubClass;
   groups: IHubGroup[];
-
 }
 
-export const EMPTY_HUB_USER: IHubUser = {
+export const EMPTY_HUB_USER: Partial<IHubUser> = {
   id: '',
   hub_class_id: '',
   hub_school_group_id: '',
