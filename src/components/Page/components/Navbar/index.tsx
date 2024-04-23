@@ -1,6 +1,6 @@
 import { Flex, Icon, Image, Spinner, Text, useColorMode } from '@chakra-ui/react';
 import NextImage from 'next/image';
-import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiInbox, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
+import { FiEdit2, FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';

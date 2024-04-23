@@ -102,7 +102,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
       {user.role === `student` ? (
         <Grid
           gap="1rem"
-          gridTemplateColumns="repeat(auto-fill, minmax(180px, 1fr))"
+          gridTemplateColumns="repeat(auto-fill, minmax(210px, 1fr))"
           gridTemplateRows="minmax(min-content, max-content)"
           padding="2rem"
           borderRadius="md"
@@ -113,7 +113,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
               <Flex
                 direction="column"
                 h="100%"
-                w="156px"
+                w="210px"
                 gap="0.5rem"
                 overflow="hidden"
                 cursor="pointer"
@@ -122,15 +122,15 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
                 border="1px"
                 borderColor="gray300"
                 borderRadius="md"
+                p="1rem"
               >
                 <Flex
                   backgroundImage={book.thumbnail || `/images/book.svg`}
-                  backgroundSize="cover"
+                  backgroundSize="contain"
                   backgroundPosition="center"
-                  h="203px"
-                  w="156px"
+                  backgroundRepeat="no-repeat"
+                  h="250px"
                   borderRadius="4px"
-                  p="1rem"
                 />
                 <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
                   {book.title}
