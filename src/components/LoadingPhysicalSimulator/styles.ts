@@ -45,9 +45,8 @@ export const ImageContainer = styled.div<IIMageContainer>`
   background-size: contain;
   background-repeat: no-repeat;
 
-  height: 8rem;
-  width: calc(100% - 2rem);
-  margin-bottom: 4rem;
+  height: 19rem;
+  width: 100%;
 `;
 
 export const ProgressWrapper = styled.div`
