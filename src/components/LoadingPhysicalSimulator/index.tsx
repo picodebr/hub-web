@@ -21,7 +21,7 @@ export const LoadingPhysicalSimulator: React.FC<ILoadingPhysicalSimulator> = ({ 
   return (
     <Container data-show={show}>
       <Content>
-        <ImageContainer src="/logo/picode-logo-animated.svg" />
+        <ImageContainer src="/loading/rocket-picode.gif" />
 
         <ProgressWrapper>
           <ProgressBarContainer>
