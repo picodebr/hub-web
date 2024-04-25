@@ -27,6 +27,7 @@ import { IHubBook, IHubBookCategory } from '@/_base/interfaces/book';
 import { useAuth } from '@/_base/hooks';
 import { IHubVideo, IHubVideoCategory } from '@/_base/interfaces/video';
 import { listVideoCategories } from '@/_base/services/video';
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 type BookByGrade = Record<string, IHubBook[]>;
@@ -240,7 +241,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
         </Accordion>
       )}
       <Modal isOpen={!!targetBook} onClose={() => setTargetBook(null)} size="full">
-        <ModalContent display="flex" alignItems="center" bg="#eeefff" position="relative">
+        <ModalContent display="flex" alignItems="center" bg="#eeefff">
           <Document
             file={targetBook?.file}
             onLoadSuccess={({ _pdfInfo }) => {
@@ -261,7 +262,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
             display={isLoading ? `flex` : `none`}
             align="center"
             justify="center"
-            position="absolute"
+            position="fixed"
             bg="#eeefff"
             w="100%"
             h="100%"
@@ -273,7 +274,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
           </Flex>
           <Button
             onClick={() => setTargetBook(null)}
-            position="absolute"
+            position="fixed"
             top="1rem"
             left="1rem"
             zIndex={9999}
@@ -286,7 +287,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
             Voltar
           </Button>
 
-          <Flex gap="0.5rem" position="absolute" align="center" top="1rem" right="1rem" zIndex={9999}>
+          <Flex gap="0.5rem" position="fixed" align="center" top="1rem" right="1rem" zIndex={9999}>
             <Button onClick={() => setScale((s) => Math.min(s - 0.1, 3))} bg="primary700" color="white" colorScheme="blue" p="0">
               <MdOutlineZoomOut fontSize="1.5rem" />
             </Button>
