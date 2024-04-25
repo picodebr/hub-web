@@ -230,7 +230,7 @@ const Community: React.FC = () => {
                       {post.user.name}
                     </Text>
                     <Text fontSize="14px" color="gray700">
-                      @{post.user.username}
+                      {post.user.hub_class?.display_name || post.user.school_group?.display_name || ``}
                     </Text>
                   </Flex>
                 </Flex>
@@ -341,7 +341,7 @@ const Community: React.FC = () => {
                                   {postReply.user.name}
                                 </Text>
                                 <Text fontSize="14px" color="gray600">
-                                  @{postReply.user.username}
+                                  {postReply.user.hub_class?.display_name || postReply.user.school_group?.display_name || ``}
                                 </Text>
                               </Flex>
                               <Flex flex="1" py="0.5rem" color="gray800">

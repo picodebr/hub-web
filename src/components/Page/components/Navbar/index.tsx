@@ -1,6 +1,6 @@
 import { Flex, Icon, Image, Spinner, Text, useColorMode } from '@chakra-ui/react';
 import NextImage from 'next/image';
-import { FiCheckCircle, FiEdit2, FiFileText, FiHeadphones, FiInbox, FiList, FiShoppingBag, FiUsers } from 'react-icons/fi';
+import { FiEdit2, FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
@@ -39,12 +39,12 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
       tourDescription: `Nesta seção, é possível editar suas preferências, visualizar seus certificados e visulizar suas últimas interações na plataforma.`,
     },
     { name: 'Cursos', page: 'courses', icon: FaRegStar, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    { name: 'Loja', page: 'store', icon: FiShoppingBag, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    // { name: 'Loja', page: 'store', icon: FiShoppingBag, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Biblioteca', page: 'library', icon: FiFileText, ref: useRef(), tourDescription: `Aqui é onde fica todo o material gráfico da PiCode.` },
     { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Meus Códigos', page: 'code', icon: BsMotherboard, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Meus Grupos', page: 'groups', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
+    // { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
   ];
 
   const teacherMenuItems: Array<MenuItemType> = [
@@ -65,13 +65,13 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
     { name: 'Turmas', page: 'classes', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para ver visualizar ou adicionar uma turma.` },
     { name: 'Meus Códigos', page: 'code', icon: BsMotherboard, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
     { name: 'Estoque Maker', page: 'stock', icon: FiInbox, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    {
-      name: 'Loja',
-      page: 'store',
-      icon: FiShoppingBag,
-      ref: useRef(),
-      tourDescription: `Nossa loja onde é possível adquirir produtos exclusivos da PiCode!`,
-    },
+    // {
+    //   name: 'Loja',
+    //   page: 'store',
+    //   icon: FiShoppingBag,
+    //   ref: useRef(),
+    //   tourDescription: `Nossa loja onde é possível adquirir produtos exclusivos da PiCode!`,
+    // },
     { name: 'Biblioteca', page: 'library', icon: FiFileText, ref: useRef(), tourDescription: `Aqui é onde fica todo o material gráfico da PiCode.` },
     {
       name: 'Comunidade',
@@ -88,7 +88,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
       ref: useRef(),
       tourDescription: `Tem alguma dúvida ou sugestão? Nosso suporte sempre estará disponível para te ajudar.`,
     },
-    { name: 'Eventos', page: 'events', icon: FiList, ref: useRef(), tourDescription: `Clique aqui para ver mais informações sobre nossos eventos.` },
+    // { name: 'Eventos', page: 'events', icon: FiList, ref: useRef(), tourDescription: `Clique aqui para ver mais informações sobre nossos eventos.` },
   ];
 
   const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
