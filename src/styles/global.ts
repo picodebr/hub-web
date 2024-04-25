@@ -1,6 +1,7 @@
 import { extendTheme } from '@chakra-ui/react';
 import 'rsuite/dist/rsuite-no-reset.min.css';
 import '../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 
 import { dark, light } from './colors';
 
