@@ -1,3 +1,3 @@
 export type FuncType = (grade: string) => string;
 
-export const formatClassGrade: FuncType = (grade: string) => (isNaN(parseInt(grade, 10)) ? `${grade}` : `${grade}º ano`);
+export const formatClassGrade: FuncType = (grade: string) => (isNaN(parseInt(grade, 10)) ? `${grade}` : `${grade}º ANO`);
