@@ -1,8 +1,10 @@
 import { GetServerSideProps } from 'next';
 import { useMemo, useState } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import { BiLeftArrowAlt } from 'react-icons/bi';
+import { MdOutlineZoomIn, MdOutlineZoomOut } from 'react-icons/md';
 import {
   Flex,
-  Link,
   Text,
   Accordion,
   AccordionItem,
@@ -13,6 +15,9 @@ import {
   Modal,
   ModalContent,
   ModalOverlay,
+  Image,
+  Button,
+  Spinner,
 } from '@chakra-ui/react';
 
 import { logError, cookieManager, formatClassGrade, sortGrades } from '@/_base/utils';
@@ -22,6 +27,7 @@ import { IHubBook, IHubBookCategory } from '@/_base/interfaces/book';
 import { useAuth } from '@/_base/hooks';
 import { IHubVideo, IHubVideoCategory } from '@/_base/interfaces/video';
 import { listVideoCategories } from '@/_base/services/video';
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 type BookByGrade = Record<string, IHubBook[]>;
 type VideoByGrade = Record<string, IHubVideo[]>;
@@ -34,6 +40,10 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
   const [bookCategory, setBookCategory] = useState<IHubBookCategory | null>(bookCategories[0]);
   const [videoCategory, setVideoCategory] = useState<IHubVideoCategory | null>(null);
   const [modalVideo, setModalVideo] = useState<IHubVideo | null>(null);
+  const [targetBook, setTargetBook] = useState<IHubBook | null>(null);
+  const [PDFPages, setPDFPages] = useState(0);
+  const [scale, setScale] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { user } = useAuth();
 
@@ -76,6 +86,11 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
     [videoCategory],
   );
 
+  const showBookFile = (book: IHubBook) => {
+    setIsLoading(true);
+    setTargetBook(book);
+  };
+
   return ![...Object.keys(booksByGrade), ...Object.keys(videosByGrade)].length ? (
     <Flex>
       <TabSwitch
@@ -109,34 +124,34 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
           flex="1"
         >
           {booksByGrade[user.hub_class?.grade]?.map((book) => (
-            <Link key={book.id} target="_blank" href={book.file}>
+            <Flex
+              key={book.id}
+              direction="column"
+              h="100%"
+              w="210px"
+              gap="0.5rem"
+              overflow="hidden"
+              cursor="pointer"
+              _hover={{ filter: 'brightness(0.95)' }}
+              bg="white"
+              border="1px"
+              borderColor="gray300"
+              borderRadius="md"
+              p="1rem"
+              onClick={() => showBookFile(book)}
+            >
               <Flex
-                direction="column"
-                h="100%"
-                w="210px"
-                gap="0.5rem"
-                overflow="hidden"
-                cursor="pointer"
-                _hover={{ filter: 'brightness(0.95)' }}
-                bg="white"
-                border="1px"
-                borderColor="gray300"
-                borderRadius="md"
-                p="1rem"
-              >
-                <Flex
-                  backgroundImage={book.thumbnail || `/images/book.svg`}
-                  backgroundSize="contain"
-                  backgroundPosition="center"
-                  backgroundRepeat="no-repeat"
-                  h="250px"
-                  borderRadius="4px"
-                />
-                <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
-                  {book.title}
-                </Text>
-              </Flex>
-            </Link>
+                backgroundImage={book.thumbnail || `/images/book.svg`}
+                backgroundSize="contain"
+                backgroundPosition="center"
+                backgroundRepeat="no-repeat"
+                h="250px"
+                borderRadius="4px"
+              />
+              <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
+                {book.title}
+              </Text>
+            </Flex>
           ))}
         </Grid>
       ) : (
@@ -186,29 +201,29 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
               <AccordionPanel>
                 <Flex gap="2rem" pt="0.5rem">
                   {booksByGrade[grade]?.map((book) => (
-                    <Link key={book.id} target="_blank" href={book.file}>
+                    <Flex
+                      key={book.id}
+                      direction="column"
+                      h="100%"
+                      w="156px"
+                      gap="0.5rem"
+                      overflow="hidden"
+                      cursor="pointer"
+                      _hover={{ filter: 'brightness(0.95)' }}
+                      onClick={() => showBookFile(book)}
+                    >
                       <Flex
-                        direction="column"
-                        h="100%"
+                        backgroundImage={book.thumbnail || `/images/book.svg`}
+                        backgroundSize="cover"
+                        backgroundPosition="center"
+                        h="203px"
                         w="156px"
-                        gap="0.5rem"
-                        overflow="hidden"
-                        cursor="pointer"
-                        _hover={{ filter: 'brightness(0.95)' }}
-                      >
-                        <Flex
-                          backgroundImage={book.thumbnail || `/images/book.svg`}
-                          backgroundSize="cover"
-                          backgroundPosition="center"
-                          h="203px"
-                          w="156px"
-                          borderRadius="4px"
-                        />
-                        <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
-                          {book.title}
-                        </Text>
-                      </Flex>
-                    </Link>
+                        borderRadius="4px"
+                      />
+                      <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
+                        {book.title}
+                      </Text>
+                    </Flex>
                   ))}
                 </Flex>
               </AccordionPanel>
@@ -224,6 +239,65 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
           </Modal>
         </Accordion>
       )}
+      <Modal isOpen={!!targetBook} onClose={() => setTargetBook(null)} size="full">
+        <ModalContent display="flex" alignItems="center" bg="#eeefff" position="relative">
+          <Document
+            file={targetBook?.file}
+            onLoadSuccess={({ _pdfInfo }) => {
+              setIsLoading(false);
+              setPDFPages(_pdfInfo.numPages);
+            }}
+            onLoadError={(err) => {
+              // eslint-disable-next-line no-console
+              console.error(err);
+              setIsLoading(false);
+            }}
+          >
+            {Array.from({ length: PDFPages }).map((_, i) => (
+              <Page key={i} pageNumber={i + 1} height={900} renderTextLayer={false} loading={isLoading} scale={scale} />
+            ))}
+          </Document>
+          <Flex
+            display={isLoading ? `flex` : `none`}
+            align="center"
+            justify="center"
+            position="absolute"
+            bg="#eeefff"
+            w="100%"
+            h="100%"
+            zIndex={9999}
+            direction="column"
+          >
+            <Image src="/loading/rocket-picode.gif" h="19rem" />
+            <Spinner size="lg" />
+          </Flex>
+          <Button
+            onClick={() => setTargetBook(null)}
+            position="absolute"
+            top="1rem"
+            left="1rem"
+            zIndex={9999}
+            bg="primary700"
+            color="white"
+            colorScheme="blue"
+            p="1rem 1rem 1rem 0.5rem"
+            leftIcon={<BiLeftArrowAlt fontSize="1.5rem" />}
+          >
+            Voltar
+          </Button>
+
+          <Flex gap="0.5rem" position="absolute" align="center" top="1rem" right="1rem" zIndex={9999}>
+            <Button onClick={() => setScale((s) => Math.min(s - 0.1, 3))} bg="primary700" color="white" colorScheme="blue" p="0">
+              <MdOutlineZoomOut fontSize="1.5rem" />
+            </Button>
+            <Text fontWeight="500">{Math.round(scale * 100)}%</Text>
+
+            <Button onClick={() => setScale((s) => Math.max(s + 0.1, 0))} bg="primary700" color="white" colorScheme="blue" p="0">
+              <MdOutlineZoomIn fontSize="1.5rem" />
+            </Button>
+          </Flex>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 };
