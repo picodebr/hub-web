@@ -1,4 +1,5 @@
-export * from './addClass';
+export * from './addClasses';
 export * from './getClassData';
-export * from './listClasses';
+export * from './listMyClasses';
+export * from './listAllClasses';
 export * from './removeClass';
