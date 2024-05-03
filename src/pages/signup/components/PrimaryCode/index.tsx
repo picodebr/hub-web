@@ -12,14 +12,14 @@ import { HubUserType } from '@/_base/interfaces/user';
 
 interface IProps {
   primaryCode: InputValueType<string>;
-  captcha: IReCAPTCHAData;
+  captcha?: IReCAPTCHAData;
   userType?: HubUserType;
   setPrimaryCode: Dispatch<SetStateAction<InputValueType<string>>>;
-  setCaptcha: Dispatch<SetStateAction<IReCAPTCHAData>>;
+  setCaptcha?: Dispatch<SetStateAction<IReCAPTCHAData>>;
   setStep: Dispatch<SetStateAction<SignUpPageStepsType>>;
 }
-
-export const PrimaryCodeStep: React.FC<IProps> = ({ setPrimaryCode, primaryCode, captcha, userType, setCaptcha, setStep }) => {
+// captcha, setCaptcha
+export const PrimaryCodeStep: React.FC<IProps> = ({ setPrimaryCode, primaryCode, userType, setStep }) => {
   return (
     <Flex direction="column" h="100%" justify="space-between" align="center" gap="2rem">
       <Flex padding="12px 0 0 0" width="100%" color="gray300" pt="1.5rem" gap="8px" cursor="pointer" onClick={() => setStep('USER_TYPE')}>
@@ -39,7 +39,7 @@ export const PrimaryCodeStep: React.FC<IProps> = ({ setPrimaryCode, primaryCode,
           onChange={() => setPrimaryCode((e) => ({ ...e, error: '' }))}
         />
       </Flex>
-      <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
+      {/* <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} /> */}
 
       <GenericButton
         label="Avançar"
