@@ -141,26 +141,32 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
     <Flex
       direction="column"
       bg="white"
-      minW={dimensions.navbar.width}
-      maxW={dimensions.navbar.width}
-      gap="1rem"
+      minW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
+      maxW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
+      gap={{ base: `0.6rem`, xl: '1rem' }}
       overflow="hidden"
       userSelect="none"
       borderRadius="10px"
       border="1px"
       borderColor="gray300"
-      margin="1.5rem"
+      margin={{ base: '1rem', xl: '1.5rem' }}
     >
-      <Flex direction="column" gap="1rem">
-        <Flex bg={colorMode === 'light' ? 'primary900' : 'primary400'} h="102px" position="relative" borderRadius="10px" minH="102px">
+      <Flex direction="column" gap={{ base: '0.5rem', xl: '1rem' }}>
+        <Flex
+          bg={colorMode === 'light' ? 'primary900' : 'primary400'}
+          h={{ base: `85px`, xl: '102px' }}
+          position="relative"
+          borderRadius="10px"
+          minH={{ base: `85px`, xl: '102px' }}
+        >
           <Flex
             title="Trocar foto de perfil"
             position="absolute"
             borderRadius="50%"
             bg="gray300"
-            bottom="-2rem"
-            w="6rem"
-            h="6rem"
+            bottom={{ base: `-1.2rem`, xl: '-2rem' }}
+            w={{ base: `4.75rem`, xl: '6rem' }}
+            h={{ base: `4.75rem`, xl: '6rem' }}
             left="50%"
             transform="translate(-50%, 0)"
             boxShadow=" 0px 4px 6px -2px"
@@ -174,9 +180,9 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
             <Flex
               position="absolute"
               borderRadius="50%"
-              bottom="-2rem"
-              w="6rem"
-              h="6rem"
+              bottom={{ base: `-1.2rem`, xl: '-2rem' }}
+              w={{ base: `4.75rem`, xl: '6rem' }}
+              h={{ base: `4.75rem`, xl: '6rem' }}
               left="50%"
               transform="translate(-50%, 0)"
               align="center"
@@ -202,7 +208,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
                 p="0.25rem"
                 bg="white"
                 position="absolute"
-                left="calc(50% + 2.5rem)"
+                left={{ base: `calc(50% + 1.75rem)`, xl: 'calc(50% + 2.5rem)' }}
                 transform="translate(-50%, 0)"
                 cursor={'pointer'}
                 _hover={{ filter: `brightness(0.9)` }}
@@ -216,8 +222,8 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
         </Flex>
 
         {/* Informações */}
-        <Flex bg="white" display="column" padding="0 2.5rem" gap="0.5rem" h="fit-content" mt="1.5rem">
-          <Flex fontSize="18px" fontWeight="600" flex="1 0 0" color="primary900" justify="space-between" align="center">
+        <Flex bg="white" display="column" padding={{ base: `0 1.5rem`, xl: '0 2.5rem' }} gap="0.5rem" h="fit-content" mt="1.5rem">
+          <Flex fontSize={{ base: `16px`, xl: '18px' }} fontWeight="600" flex="1 0 0" color="primary900" justify="space-between" align="center">
             {formatShortName(user?.name || '', true)}
             <Flex cursor="pointer" transition="all 0.12s" _hover={{ filter: 'brightness(0.7)' }} onClick={() => router.push('/profile?opened=true')}>
               <FiEdit2 size="1rem" color="#98A2B3" />
@@ -232,37 +238,43 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
         </Flex>
 
         {/* Ranking */}
-        <Flex bg="white" display="column" padding="0 2.5rem" gap="0.5rem" h="fit-content">
-          {/* <Flex align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
-            <Text w="fit-content">0</Text>
-            <Text w="fit-content">5</Text>
-          </Flex>
-          <Progress value={0} rounded={8} flex="1" min={0} max={5} /> */}
-          <Flex fontWeight="600" color="white" borderColor="primary600" bg="primary400" justify="center" borderRadius="10px" w="100%">
+        <Flex bg="white" display="column" p={{ base: `0 1.5rem`, xl: '0 2.5rem' }} gap="0.5rem" h="fit-content">
+          <Flex
+            fontWeight="600"
+            p={{ base: '0.5rem', xl: '1rem 0.5rem' }}
+            gap="1.25rem"
+            color="white"
+            borderColor="primary600"
+            bg="primary400"
+            borderRadius="10px"
+            justify="center"
+            align="center"
+            w="100%"
+          >
             {user?.role === 'student' ? (
               <>
-                <Flex align="center" justify="center" padding="1rem 0.5rem">
+                <Flex align="center" justify="center" gap="0.45rem">
                   <Image src="/icons/coin.svg" />
-                  <Text marginLeft="6px">0</Text>
+                  <Text>0</Text>
                 </Flex>
-                <Flex align="center" justify="center" padding="1rem 0.5rem" onClick={() => router.push('/ranking')}>
+                <Flex align="center" justify="center" gap="0.45rem" onClick={() => router.push('/ranking')}>
                   <Image src="/icons/medal.svg" />
-                  <Text marginLeft="6px">#0</Text>
+                  <Text>#0</Text>
                 </Flex>
-                <Flex align="center" justify="center" padding="1rem 0.5rem">
+                <Flex align="center" justify="center" gap="0.45rem">
                   <Image src="/icons/cash.svg" />
-                  <Text marginLeft="6px">0</Text>
+                  <Text>0</Text>
                 </Flex>
               </>
             ) : (
               <>
-                <Flex align="center" justify="center" padding="1rem 0.5rem">
+                <Flex align="center" justify="center" gap="0.45rem">
                   <Image src="/icons/coin.svg" />
-                  <Text marginLeft="6px">0</Text>
+                  <Text>0</Text>
                 </Flex>
-                <Flex cursor="pointer" align="center" justify="center" padding="1rem 0.5rem" onClick={() => router.push('/store')}>
+                <Flex cursor="pointer" align="center" gap="0.45rem" justify="center" onClick={() => router.push('/store')}>
                   <Image src="/icons/cash.svg" />
-                  <Text marginLeft="6px">0</Text>
+                  <Text>0</Text>
                 </Flex>
               </>
             )}
@@ -273,12 +285,12 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
       {/* Menu */}
       <Flex
         margin="0 1.25rem 0 0"
-        padding="0.5rem 1.25rem 0.5rem 2.5rem "
+        p={{ base: '0.5rem 0.25rem 0.5rem 1.5rem', xl: '0.5rem 1.25rem 0.5rem 2.5rem' }}
         direction="column"
         gap="0.5rem"
         overflow="hidden auto"
         align="flex-end"
-        mb="2rem"
+        mb={{ base: `1rem`, xl: '2rem' }}
       >
         {menuItems.map((item) => (
           <Flex key={item.name} ref={item.ref as any} w="100%" direction="column" fontWeight="600">
@@ -287,6 +299,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
               padding="10px 18px"
               transition="all 0.15s"
               borderRadius="lg"
+              fontSize={{ base: `14px`, xl: '15px' }}
               cursor="pointer"
               _hover={{ outline: '1px solid #3356B7' }}
               bg={page === item.page ? 'primary50' : 'primary50'}

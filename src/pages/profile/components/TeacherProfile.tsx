@@ -1,28 +1,15 @@
 import moment from 'moment';
 import { FiFileText, FiHelpCircle } from 'react-icons/fi';
-import { IoChevronForward } from 'react-icons/io5';
 import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Flex, Text, useColorMode } from '@chakra-ui/react';
 
 import { IProfileComponentProps } from './interfaces';
-import { useCustomRouter, useHubTour } from '@/_base/hooks';
+import { useCustomRouter } from '@/_base/hooks';
 
 type GuideType = { label: string; instructions: string };
 
 export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) => {
   const { colorMode } = useColorMode();
   const router = useCustomRouter();
-  const { navbar } = useHubTour();
-
-  // const guides: GuideType[] = [
-  //   { action: () => navbar.startTour(), label: 'Como navegar pela plataforma?' },
-  //   { action: () => navbar.startTour(), label: 'Como abrir o livro na plataforma?' },
-  //   { action: () => navbar.startTour(), label: 'Como criar um novo projeto?' },
-  //   { action: () => navbar.startTour(), label: 'Como acessar minhas turmas?' },
-  //   { action: () => navbar.startTour(), label: 'O que fazer se meu aluno esquecer a senha?' },
-  //   { action: () => navbar.startTour(), label: 'Como começar um novo curso?' },
-  //   { action: () => navbar.startTour(), label: 'Como entrar em contato com o suporte da PiCode?' },
-  //   { action: () => navbar.startTour(), label: 'Como pedir um novo produto através da loja?' },
-  // ];
 
   const guides: GuideType[] = [
     {
@@ -67,46 +54,36 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
 
   return (
     <Flex w="100%" display="flex" direction="column" gap="24px">
-      <Flex w="100%" h="fit-content" gap="32px" maxH="330px" minH="330px">
+      <Flex w="100%" h="fit-content" gap="32px" maxH={{ base: '280px', xl: '330px' }} minH={{ base: '280px', xl: '330px' }}>
         <Flex
           bg="white"
-          p="20px"
+          p={{ base: `14px`, xl: '20px' }}
           w="100%"
           h="100%"
           display="flex"
           justify="column"
           direction="column"
-          gap="20px"
+          gap={{ base: `10px`, xl: '20px' }}
           borderRadius="10px"
           boxShadow="md"
           overflow="hidden"
         >
           <Flex direction="column" w="100%" borderBottom="1px" borderColor="gray300" justify="center">
-            <Flex marginBottom="20px" fontSize="14px" color="gray600">
+            <Flex mb={{ base: '8px', xl: '20px' }} fontSize="14px" color="gray600">
               Guia Rápido
             </Flex>
           </Flex>
           <Flex direction="column" flex="1" overflow="hidden auto">
             {guides.map((guide) => (
               <Flex key={guide.label} w="100%" _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}>
-                <Flex
-                  align="center"
-                  direction="column"
-                  gap="12px"
-                  w="100%"
-                  p="10px 4px"
-                  m="7px 0"
-                  borderRadius="md"
-                  cursor="pointer"
-                  _hover={{ bg: `gray100` }}
-                >
+                <Flex align="center" direction="column" gap="12px" w="100%" m="7px 0" borderRadius="md" cursor="pointer">
                   <Flex align="center" justify="center" gap="12px" w="100%">
                     <FiHelpCircle fontSize="24px" color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} />
                     <Accordion allowMultiple w="100%" fontWeight="500" color="gray700">
                       <AccordionItem border="none">
                         <h2>
                           <AccordionButton justifyContent="space-between">
-                            <Box>{guide.label}</Box>
+                            <Box fontSize={{ base: `15px`, xl: '16px' }}>{guide.label}</Box>
                             <AccordionIcon />
                             {/* <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} /> */}
                           </AccordionButton>
@@ -123,20 +100,20 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
 
         <Flex
           bg="white"
-          p="1.25rem 1.25rem 0px 1.25rem"
+          p={{ base: `14px`, xl: '20px' }}
           w="100%"
           h="100%"
           display="flex"
           justify="column"
           direction="column"
-          gap="1.25rem"
+          gap={{ base: `10px`, xl: '20px' }}
           borderRadius="10px"
           marginBottom="1.25rem"
           boxShadow="md"
           overflow="hidden"
         >
           <Flex direction="column" w="100%" h="fit-content" borderBottom="1px" borderColor="gray300" justify="center">
-            <Flex fontSize="0.875rem" color="gray600" marginBottom="1.25rem">
+            <Flex fontSize="0.875rem" color="gray600" mb={{ base: '8px', xl: '20px' }}>
               Boas vindas à PiCode 🚀
             </Flex>
           </Flex>
@@ -163,7 +140,7 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
         <Accordion allowMultiple>
           <AccordionItem border="none">
             <AccordionButton borderRadius="md">
-              <Text flex="1" textAlign="left" padding="0.85rem 0.5rem">
+              <Text flex="1" textAlign="left" p="0.65rem 0.5rem" fontSize={{ base: `15px`, xl: '16px' }}>
                 Projetos
               </Text>
               <AccordionIcon />
