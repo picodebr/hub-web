@@ -7,7 +7,7 @@ type UseAvatarHookType = { avatar: string; setAvatar: (avatar?: string | null) =
 type UseProfileHookType = { user: IHubUser; setUser: (user: IHubUser) => void };
 
 export const useProfile = create<UseProfileHookType>((set) => ({
-  user: EMPTY_HUB_USER,
+  user: EMPTY_HUB_USER as any,
   setUser: (data: IHubUser) => set(() => ({ user: data })),
 }));
 

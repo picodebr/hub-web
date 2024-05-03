@@ -42,18 +42,20 @@ export const RedefinePass: React.FC<IRedefinePassProps> = ({ user }) => {
     <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} closeOnOverlayClick={false} closeOnEsc={false} isCentered autoFocus>
       <ModalOverlay />
       <ModalContent bg="white" p="0.75rem" maxH="100%" overflow="hidden auto">
-        <ModalHeader opacity="0.9">
-          <Flex gap="0.35rem">
-            <Text fontWeight="500" opacity="0.8">
-              Olá,
+        <ModalHeader opacity="0.9" display="flex" maxH="12rem">
+          <Flex direction="column" gap="1.5rem">
+            <Flex gap="0.35rem">
+              <Text fontWeight="500" opacity="0.8">
+                Olá,
+              </Text>
+              <Text>{user?.name?.split(` `)[0] || `PiCoder`}!</Text>
+            </Flex>
+            <Text fontWeight="500" opacity="0.8" fontSize="18px">
+              Vamos redefinir sua senha?
             </Text>
-            <Text>{user?.name?.split(` `)[0] || `PiCoder`}!</Text>
           </Flex>
-          <Text fontWeight="500" opacity="0.8">
-            Vamos redefinir sua senha?
-          </Text>
+          <Image src="/images/redefine-pass.png" border="1px" borderColor="gray200" borderRadius="md" m="1rem" w="12rem" alignSelf="center" />
         </ModalHeader>
-        <Image src="/images/redefine-pass.png" border="1px" borderColor="gray200" borderRadius="md" m="1rem" w="15rem" alignSelf="center" />
         <Flex direction="column" p="1rem">
           <PasswordInput
             label="Senha"
