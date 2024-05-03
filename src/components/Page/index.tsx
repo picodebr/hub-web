@@ -44,7 +44,14 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
           <Flex flex="1" overflow="hidden">
             <Navbar page={selectedPage} user={user} isOpen={isOpen} stopTour={stopTour} />
             <RedefinePass user={user} />
-            <Flex flex="1" height="100%" overflow="hidden" direction="column" position="relative" p="1.5rem 1.5rem 1.5rem 0">
+            <Flex
+              flex="1"
+              height="100%"
+              overflow="hidden"
+              direction="column"
+              position="relative"
+              p={{ base: '1rem 1rem 1rem 0', xl: '1.5rem 1.5rem 1.5rem 0' }}
+            >
               {showBackButton && (
                 <Flex
                   userSelect="none"

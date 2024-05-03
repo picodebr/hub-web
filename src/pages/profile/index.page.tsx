@@ -82,7 +82,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
         <Accordion allowMultiple>
           <AccordionItem border="none" borderRadius="10px">
             <AccordionButton className="my-data-btn" borderRadius="md">
-              <Text flex="1" textAlign="left" padding="0.85rem 0.5rem">
+              <Text flex="1" textAlign="left" padding="0.65rem 0.35rem" fontSize={{ base: `15px`, xl: '16px' }}>
                 Meus dados
               </Text>
               <AccordionIcon />
@@ -156,7 +156,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
         <Accordion allowMultiple w="100%">
           <AccordionItem border="none">
             <AccordionButton borderRadius="md">
-              <Text flex="1" textAlign="left" padding="0.85rem 0.5rem">
+              <Text flex="1" textAlign="left" padding="0.65rem 0.35rem" fontSize={{ base: `15px`, xl: '16px' }}>
                 Certificados
               </Text>
               <AccordionIcon />
