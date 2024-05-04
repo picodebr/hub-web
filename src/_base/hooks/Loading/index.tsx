@@ -6,7 +6,7 @@ import { useAuth } from '../Auth';
 import { Logo } from '@/components/Logo';
 import { formatShortName } from '@/_base/utils';
 
-const defaultConfig: ILoadingConfig = { isLoading: true, type: 'spinner' };
+const defaultConfig: ILoadingConfig = { isLoading: false, type: 'spinner' };
 
 const LoadingContext = createContext<ILoadingContext>({
   loadingConfig: { ...defaultConfig },
