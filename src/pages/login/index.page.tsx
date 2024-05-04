@@ -21,7 +21,7 @@ import { api } from '@/_base/classes/api';
 const LoginPage: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [keepLogged, setKeepLogged] = useState(false);
-  const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
+  // const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
 
   const { errors, onInputChange, data, submit } = useInputHandler<IAuthRequest>({ schema: authSchema });
   const { setLoadingConfig } = useLoading();
@@ -34,10 +34,10 @@ const LoginPage: React.FC = () => {
       // Prevent the user to click on the button more than one time
       setSubmitLoading(true);
 
-      if (!captcha.token) {
-        setCaptcha((e) => ({ ...e, error: 'Captcha obrigatório' }));
-        return;
-      } else setCaptcha((e) => ({ ...e, error: undefined }));
+      // if (!captcha.token) {
+      //   setCaptcha((e) => ({ ...e, error: 'Captcha obrigatório' }));
+      //   return;
+      // } else setCaptcha((e) => ({ ...e, error: undefined }));
 
       const { user, access_token } = googleAccessToken
         ? await googleLogin(googleAccessToken)
@@ -65,7 +65,7 @@ const LoginPage: React.FC = () => {
         }, 2000),
       );
     },
-    [router, captcha],
+    [router],
     false,
     () => setSubmitLoading(false),
   );
@@ -151,7 +151,7 @@ const LoginPage: React.FC = () => {
           />
         </Flex>
 
-        <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
+        {/* <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} /> */}
 
         <GenericButton btntype="primary" label="Entrar" onClick={() => submit(handleLogin)} isLoading={submitLoading} marginTop="8px" w="100%" />
       </Flex>

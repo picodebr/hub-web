@@ -30,7 +30,7 @@ const SizeMapper: Record<SignUpPageStepsType, string> = {
 const SignUp: React.FC = () => {
   const [step, setStep] = useState<SignUpPageStepsType>('USER_TYPE');
   const [userType, setUserType] = useState<HubUserType>();
-  const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
+  // const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
   const [primaryCode, setPrimaryCode] = useState<InputValueType<string>>({ value: '' });
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isGoogleSignin, setIsGoogleSignin] = useState(false);
@@ -52,9 +52,9 @@ const SignUp: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (captcha.token && primaryCode.value) (async () => await handleCheckCode(primaryCode.value || ''))();
-  }, [captcha.token, primaryCode.value]);
+  // useEffect(() => {
+  //   if (captcha.token && primaryCode.value) (async () => await handleCheckCode(primaryCode.value || ''))();
+  // }, [captcha.token, primaryCode.value]);
 
   const canSubmit = useMemo(
     () => passwordIsValid && !Object.values(Object.assign(EMPTY_REGISTER_USER_DATA, { ...data, email: '_' })).filter((e) => !e).length,
@@ -139,7 +139,7 @@ const SignUp: React.FC = () => {
 
   const handleUserTypeChange = (type: HubUserType) => {
     setUserType(type);
-    setCaptcha({ token: null });
+    // setCaptcha({ token: null });
     setPrimaryCode({ value: '' });
     setData((e) => ({ ...e, user_type: type }));
     setStep('PRIMARY_CODE');
@@ -149,10 +149,10 @@ const SignUp: React.FC = () => {
     USER_TYPE: <UserTypeStep onUserTypeChange={handleUserTypeChange} />,
     PRIMARY_CODE: (
       <PrimaryCodeStep
-        captcha={captcha}
+        // captcha={captcha}
         primaryCode={primaryCode}
         userType={userType}
-        setCaptcha={setCaptcha}
+        // setCaptcha={setCaptcha}
         setPrimaryCode={setPrimaryCode}
         setStep={setStep}
       />
