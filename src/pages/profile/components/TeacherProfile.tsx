@@ -54,7 +54,14 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
 
   return (
     <Flex w="100%" display="flex" direction="column" gap="24px">
-      <Flex w="100%" h="fit-content" gap="32px" maxH={{ base: '280px', xl: '330px' }} minH={{ base: '280px', xl: '330px' }}>
+      <Flex
+        direction={{ base: `column`, md: 'row' }}
+        w="100%"
+        h="fit-content"
+        gap="32px"
+        maxH={{ base: '280px', xl: '330px' }}
+        minH={{ base: '280px', xl: '330px' }}
+      >
         <Flex
           bg="white"
           p={{ base: `14px`, xl: '20px' }}
@@ -111,6 +118,7 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
           marginBottom="1.25rem"
           boxShadow="md"
           overflow="hidden"
+          className="only-desktop"
         >
           <Flex direction="column" w="100%" h="fit-content" borderBottom="1px" borderColor="gray300" justify="center">
             <Flex fontSize="0.875rem" color="gray600" mb={{ base: '8px', xl: '20px' }}>

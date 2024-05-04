@@ -1,4 +1,4 @@
-export const defaultAvatarOptions = {
+export const defaultAvatarOptions: Record<string, any> = {
   skinColor: ['9e5622', '763900', 'ecad80', 'f2d3b1'],
   earrings: ['variant01', 'variant02', 'variant03', 'variant05', 'variant05', 'variant06'],
   hair: [
@@ -129,3 +129,13 @@ export const defaultAvatarOptions = {
     'variant30',
   ],
 };
+
+export const customAvatarOptions: Array<{ key: string; title: string }> = [
+  { key: `skinColor`, title: `Cor da pele` },
+  { key: `hair`, title: `Cabelos` },
+  { key: `hairColor`, title: `Cor do Cabelo` },
+  { key: `eyes`, title: `Olhos` },
+  { key: `eyebrows`, title: `Sobrancelhas` },
+  { key: `mouth`, title: `Bocas` },
+  { key: `glasses`, title: `Óculos` },
+];

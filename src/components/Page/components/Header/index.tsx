@@ -10,10 +10,14 @@ import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
 import { IHubUserSchool } from '@/_base/interfaces/school';
+import { MenuItemType } from '../../interfaces';
+import { MobileMenu } from '../MobileMenu';
 
 interface IProps {
   user?: IHubUser;
   headerLabel?: string;
+  menuItems: MenuItemType[];
+  page: string;
 }
 
 type TargetSchoolHookType = { school: IHubUserSchool | null; setSchool: (school: IHubUserSchool) => void };
@@ -28,7 +32,7 @@ export const useSelectedSchool = create<TargetSchoolHookType>(
   ) as any,
 );
 
-export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
+export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
 
@@ -62,7 +66,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
       w="100%"
       alignItems="center"
       justifyContent="space-between"
-      padding="0 2rem"
+      padding={{ base: '0 1rem', lg: '0 2rem' }}
       borderRadius="0 0 0.4rem 0.4rem"
       borderColor="primary"
       bg="white"
@@ -70,7 +74,8 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
       boxShadow="md"
       position="relative"
     >
-      <Logo size="md" />
+      <Logo size="md" className="only-desktop" />
+      <MobileMenu menuItems={menuItems} page={page} />
       {!!headerLabel && (
         <Flex position="absolute" top="50%" left="50%" transform="translate(-50%, -50%)">
           <Tooltip label={`Projeto: ${headerLabel}`}>
@@ -98,7 +103,13 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
           </Flex>
         </Tooltip>
         <Tooltip label="Sair">
-          <Flex cursor="pointer" transition="0.12s" _hover={{ filter: 'brightness(0.7)' }} onClick={() => router.push('/logout')}>
+          <Flex
+            cursor="pointer"
+            transition="0.12s"
+            _hover={{ filter: 'brightness(0.7)' }}
+            onClick={() => router.push('/logout')}
+            className="only-desktop"
+          >
             <FiLogOut color="#FDA29B" />
           </Flex>
         </Tooltip>

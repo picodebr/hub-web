@@ -10,7 +10,6 @@ export const CodeInput: React.FC<ICodeInputProps> = ({ onFill, onChange, error, 
 
   useEffect(() => {
     if (code.length === codeLength && onFill) onFill(code);
-    console.log('code: ', code.length);
     if (onChange) onChange(code);
   }, [code]);
 

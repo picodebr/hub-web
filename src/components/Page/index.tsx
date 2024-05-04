@@ -1,14 +1,17 @@
 import { PropsWithChildren } from 'react';
 import { FiChevronLeft } from 'react-icons/fi';
 import { useRouter } from 'next/router';
+import { FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
+import { FaRegSmile, FaRegStar } from 'react-icons/fa';
+import { RiHome2Line } from 'react-icons/ri';
+import { BsMotherboard } from 'react-icons/bs';
 
 import { IPageProps } from '@/_base/hooks/Page/interfaces';
 import { Flex, Text, useColorMode } from '@chakra-ui/react';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 import { RedefinePass } from './components/RedefinePass';
-
-const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
+import { MenuItemType } from './interfaces';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   selectedPage,
@@ -16,12 +19,12 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   children,
   headerLabel,
   showBackButton = true,
-  isOpen = false,
   backButtonPath,
-  stopTour,
 }) => {
   const { colorMode } = useColorMode();
   const router = useRouter();
+
+  const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
 
   return (
     <Flex
@@ -40,9 +43,9 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
         children
       ) : (
         <>
-          <Header user={user} headerLabel={headerLabel} />
+          <Header user={user} headerLabel={headerLabel} menuItems={menuItems} page={selectedPage} />
           <Flex flex="1" overflow="hidden">
-            <Navbar page={selectedPage} user={user} isOpen={isOpen} stopTour={stopTour} />
+            <Navbar page={selectedPage} user={user} menuItems={menuItems} />
             <RedefinePass user={user} />
             <Flex
               flex="1"
@@ -50,7 +53,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               overflow="hidden"
               direction="column"
               position="relative"
-              p={{ base: '1rem 1rem 1rem 0', xl: '1.5rem 1.5rem 1.5rem 0' }}
+              p={{ base: `1rem`, lg: '1rem 1rem 1rem 0', xl: '1.5rem 1.5rem 1.5rem 0' }}
             >
               {showBackButton && (
                 <Flex
@@ -74,3 +77,28 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
     </Flex>
   );
 };
+
+const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
+const studentMenuItems: Array<MenuItemType> = [
+  { name: 'Home', page: 'profile', icon: RiHome2Line },
+  { name: 'Cursos', page: 'courses', icon: FaRegStar },
+  // { name: 'Loja', page: 'store', icon: FiShoppingBag,  },
+  { name: 'Biblioteca', page: 'library', icon: FiFileText },
+  { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
+  { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
+  { name: 'Meus Grupos', page: 'groups', icon: FiUsers },
+  // { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle,  },
+];
+
+const teacherMenuItems: Array<MenuItemType> = [
+  { name: 'Home', page: 'profile', icon: RiHome2Line },
+  { name: 'Cursos', page: 'courses', icon: FaRegStar },
+  { name: 'Turmas', page: 'classes', icon: FiUsers },
+  { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
+  { name: 'Estoque Maker', page: 'stock', icon: FiInbox },
+  // { name: 'Loja', page: 'store', icon: FiShoppingBag },
+  { name: 'Biblioteca', page: 'library', icon: FiFileText },
+  { name: 'Comunidade', page: 'community', icon: FaRegSmile },
+  { name: 'Suporte', page: 'reports', icon: FiHeadphones },
+  // { name: 'Eventos', page: 'events', icon: FiList, },
+];

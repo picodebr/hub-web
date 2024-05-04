@@ -125,10 +125,6 @@ const Profile: React.FC<IProps> = ({ user }) => {
                   isDisabled
                 />
               </Flex>
-              {/* <Flex pb={5} direction="column">
-                <Text>Endereço (opcional)</Text>
-                <EditableTextInput placeholder="Informe seu endereço" />
-              </Flex> */}
               <Flex direction="column">
                 <Text>Data de Nascimento</Text>
                 <DateInput
