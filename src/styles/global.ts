@@ -59,7 +59,8 @@ export const globalTheme = extendTheme((props) => {
     },
     breakpoints: {
       base: '0px',
-      sm: '320px',
+      xs: '485px',
+      sm: '618px',
       md: '768px',
       lg: '1020px',
       xl: '1367px',

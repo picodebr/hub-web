@@ -129,7 +129,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
   const cancelRef = useRef<any>();
 
   return (
-    <Flex flex="1" overflow="hidden" userSelect="none" gap="1.5rem" mb="-1rem" pb="1rem">
+    <Flex flex="1" overflow={{ base: 'auto hidden', md: 'hidden' }} userSelect="none" gap="1.5rem" mb="-1rem" pb="1rem">
       <DragDropContext onDragEnd={canEdit ? onDragEnd : () => ({})}>
         {kanbanList.map((column, index) => (
           <KanbanColumn key={column.type} column={column} group={group} index={index} onItemClick={setData} canEdit={canEdit} />
