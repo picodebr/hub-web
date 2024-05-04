@@ -219,7 +219,7 @@ export const MobileMenu: React.FC<INavbarProps> = ({ page, user: _user, menuItem
           <DrawerFooter justifyContent="flex-start">
             <Flex
               cursor="pointer"
-              bg="#FDA29B"
+              bg="#F97066"
               color="white"
               align="center"
               gap="1rem"

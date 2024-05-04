@@ -108,15 +108,21 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
           <Text w="100%" borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
             Seu avatar
           </Text>
-          <Flex justify="space-between">
+          <Flex justify="space-between" direction={{ base: 'column', sm: 'row' }}>
             <Flex direction="column" p="20px" justify="space-between" align="center">
-              <Img src={avatarURI} w="200px" h="200px" alt="Avatar" />
+              <Img src={avatarURI} w={{ base: '170px', sm: '200px' }} h={{ base: '170px', sm: '200px' }} alt="Avatar" />
               <GenericButton label="Download" w="fit-content" btntype="outline" size="xs" onClick={() => !!rawAvatar && downloadAvatar()} />
             </Flex>
-            <Flex gap="8px" overflow="visible" align="center">
-              <Grid templateColumns="repeat(2, 1fr)" templateRows="repeat(4, 1fr)" gap={3}>
+            <Flex gap="8px" overflow="visible" align="center" justify="center">
+              <Grid
+                templateColumns={{ base: 'repeat(auto-fill, minmax(9rem, 1fr))', sm: 'repeat(2, 1fr)' }}
+                templateRows={{ base: 'minmax(min-content, max-content)', sm: 'repeat(4, 1fr)' }}
+                w="100%"
+                margin="auto"
+                gap={3}
+              >
                 {customAvatarOptions.map((opt) => (
-                  <GridItem w="100%" key={opt.key}>
+                  <Flex w="100%" key={opt.key} align="center" justify="center">
                     <Menu>
                       <MenuButton as={Button} rightIcon={<IoIosArrowDown />} w="9.35rem" h="2rem" fontSize="15px" fontWeight="500">
                         {opt.title}
@@ -167,7 +173,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
                         </Grid>
                       </MenuList>
                     </Menu>
-                  </GridItem>
+                  </Flex>
                 ))}
 
                 <GridItem w="100%">

@@ -150,7 +150,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
 
   return (
     <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflow="hidden" mb="-1rem" pb="1rem">
-      <Flex justify="space-between">
+      <Flex justify="space-between" gap="1rem">
         <TabSwitch
           tabs={projectPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
           onSwitch={(view) => setPageView(view as any)}
