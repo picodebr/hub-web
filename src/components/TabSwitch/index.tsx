@@ -18,6 +18,19 @@ export const TabSwitch: React.FC<ITabSwitchProps> = ({ tabs, onSwitch, currentTa
       gap="0.65rem"
       userSelect="none"
       direction={direction}
+      overflow="auto hidden"
+      sx={{
+        '&::-webkit-scrollbar': {
+          height: '3px',
+        },
+        '&::-webkit-scrollbar-track': {
+          margin: '0 1rem',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: '#C1DCFF',
+          borderRadius: '24px',
+        },
+      }}
     >
       {tabs.map((tab) => (
         <Flex

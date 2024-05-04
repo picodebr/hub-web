@@ -6,7 +6,7 @@ import { useAuth } from '../Auth';
 import { Logo } from '@/components/Logo';
 import { formatShortName } from '@/_base/utils';
 
-const defaultConfig: ILoadingConfig = { isLoading: false, type: 'spinner' };
+const defaultConfig: ILoadingConfig = { isLoading: true, type: 'spinner' };
 
 const LoadingContext = createContext<ILoadingContext>({
   loadingConfig: { ...defaultConfig },
@@ -65,24 +65,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         {loadingConfig.type === 'spinner' && (
           <Slide direction="bottom" in={loadingConfig.isLoading} style={{ zIndex: 10, justifyContent: 'flex-end', display: 'flex' }}>
             <Flex>
-              <Image
-                src="/loading/rocket-picode.gif"
-                h="12rem"
-                m="0 1rem -1.5rem 0"
-                // css={`
-                //   animation: letterRotation 1s linear infinite;
-
-                //   @keyframes letterRotation {
-                //     from {
-                //       transform: rotateZ(0deg);
-                //     }
-
-                //     to {
-                //       transform: rotateZ(360deg);
-                //     }
-                //   }
-                // `}
-              />
+              <Image src="/loading/rocket-picode.gif" h="12rem" m={{ base: '0 0 -2.5rem', sm: '0 1rem -1.5rem 0' }} />
             </Flex>
           </Slide>
         )}
@@ -92,8 +75,8 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
             <Flex
               bgColor="white"
               display="flex"
-              w="450px"
-              h="557px"
+              w={{ base: '100%', sm: '450px' }}
+              h={{ base: '100%', sm: '557px' }}
               p="24px"
               direction="column"
               align="center"
