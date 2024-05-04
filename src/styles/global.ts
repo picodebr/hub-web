@@ -26,21 +26,18 @@ export const globalTheme = extendTheme((props) => {
         'html, body': {
           height: '100%',
           width: '100%',
+          '.only-mobile': {
+            '@media (min-width: 1019px)': { display: `none` },
+          },
+          '.only-desktop': {
+            '@media (max-width: 1020px)': { display: `none` },
+          },
         },
         body: {
           background: '#fff',
           fontSize: '15px',
           color: '#3f3f3f',
           opacity: props.disabled ? '0.3' : '1',
-          '@media (max-width: 800px)': {
-            '*': { fontSize: '99% !important' },
-          },
-          '@media (max-width: 700px)': {
-            '*': { fontSize: '98% !important' },
-          },
-          '@media (max-width: 600px)': {
-            '*': { fontSize: '97% !important' },
-          },
         },
         'a:hover': {
           textDecoration: 'none!important',
@@ -64,7 +61,7 @@ export const globalTheme = extendTheme((props) => {
       base: '0px',
       sm: '320px',
       md: '768px',
-      lg: '960px',
+      lg: '1020px',
       xl: '1367px',
       '2xl': '1536px',
     },

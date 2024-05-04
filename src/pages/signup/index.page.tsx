@@ -84,7 +84,7 @@ const SignUp: React.FC = () => {
       }
     },
     [userType],
-    false,
+    true,
   );
 
   const removeSpaceFromString = (str: string) =>

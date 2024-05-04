@@ -24,9 +24,6 @@ export const Simulator: React.FC<ISimulatorProps> = ({ showModal, codeHandlerRef
 
       const parsedData = JSON.parse(e.data);
 
-      // eslint-disable-next-line no-console
-      console.log('[SIMULATOR] << From iframe:', parsedData);
-
       simulator.setState(parsedData);
     };
 

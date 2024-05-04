@@ -1,23 +1,25 @@
 import { Flex, Icon, Image, Spinner, Text, useColorMode } from '@chakra-ui/react';
 import NextImage from 'next/image';
-import { FiEdit2, FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { FaRegSmile, FaRegStar } from 'react-icons/fa';
-import { RiHome2Line } from 'react-icons/ri';
-import { Tour, TourProps } from 'antd';
-import { BsMotherboard } from 'react-icons/bs';
+import { useCallback, useEffect, useState } from 'react';
+import { FiEdit2 } from 'react-icons/fi';
 import { Uploader } from 'rsuite';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
 import { formatShortName } from '@/_base/utils';
-import { INavbarProps, MenuItemType } from './interfaces';
-import { GenericButton } from '@/components/Buttons/Generic';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
-import { useAvatar, useProfile } from './hooks';
+import { useAvatar, useProfile } from '../../hooks';
+import { IHubUser } from '@/_base/interfaces/user';
+import { MenuItemType } from '../../interfaces';
 
-export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stopTour }) => {
+export interface INavbarProps {
+  page: string;
+  user?: IHubUser;
+  menuItems: MenuItemType[];
+}
+
+export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems }) => {
   const router = useCustomRouter();
   const { colorMode } = useColorMode();
   const { avatar, setAvatar } = useAvatar();
@@ -29,99 +31,6 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
     if (_user) setUser({ ...user, ..._user });
     setAvatar(_user?.avatar || user.avatar);
   }, [_user]);
-
-  const studentMenuItems: Array<MenuItemType> = [
-    {
-      name: 'Home',
-      page: 'profile',
-      icon: RiHome2Line,
-      ref: useRef(),
-      tourDescription: `Nesta seção, é possível editar suas preferências, visualizar seus certificados e visulizar suas últimas interações na plataforma.`,
-    },
-    { name: 'Cursos', page: 'courses', icon: FaRegStar, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    // { name: 'Loja', page: 'store', icon: FiShoppingBag, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    { name: 'Biblioteca', page: 'library', icon: FiFileText, ref: useRef(), tourDescription: `Aqui é onde fica todo o material gráfico da PiCode.` },
-    { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    { name: 'Meus Códigos', page: 'code', icon: BsMotherboard, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    { name: 'Meus Grupos', page: 'groups', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    // { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-  ];
-
-  const teacherMenuItems: Array<MenuItemType> = [
-    {
-      name: 'Home',
-      page: 'profile',
-      icon: RiHome2Line,
-      ref: useRef(),
-      tourDescription: `Nesta seção, é possível editar suas preferências, visualizar seus certificados e visulizar suas últimas interações na plataforma.`,
-    },
-    {
-      name: 'Cursos',
-      page: 'courses',
-      icon: FaRegStar,
-      ref: useRef(),
-      tourDescription: `Aqui é onde fica todo o conteúdo de aprendizagem e capacitação Maker.`,
-    },
-    { name: 'Turmas', page: 'classes', icon: FiUsers, ref: useRef(), tourDescription: `Clique aqui para ver visualizar ou adicionar uma turma.` },
-    { name: 'Meus Códigos', page: 'code', icon: BsMotherboard, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    { name: 'Estoque Maker', page: 'stock', icon: FiInbox, ref: useRef(), tourDescription: `Clique aqui para  ver mais informações sobre` },
-    // {
-    //   name: 'Loja',
-    //   page: 'store',
-    //   icon: FiShoppingBag,
-    //   ref: useRef(),
-    //   tourDescription: `Nossa loja onde é possível adquirir produtos exclusivos da PiCode!`,
-    // },
-    { name: 'Biblioteca', page: 'library', icon: FiFileText, ref: useRef(), tourDescription: `Aqui é onde fica todo o material gráfico da PiCode.` },
-    {
-      name: 'Comunidade',
-      page: 'community',
-      icon: FaRegSmile,
-      ref: useRef(),
-
-      tourDescription: `Nossa comunidade exclusiva para alunos e professores Maker`,
-    },
-    {
-      name: 'Suporte',
-      page: 'reports',
-      icon: FiHeadphones,
-      ref: useRef(),
-      tourDescription: `Tem alguma dúvida ou sugestão? Nosso suporte sempre estará disponível para te ajudar.`,
-    },
-    // { name: 'Eventos', page: 'events', icon: FiList, ref: useRef(), tourDescription: `Clique aqui para ver mais informações sobre nossos eventos.` },
-  ];
-
-  const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
-
-  const headerTourSteps: TourProps['steps'] = menuItems.map((e) => ({
-    title: e.name,
-    description: e.tourDescription,
-    target: () => e.ref?.current as any,
-    nextButtonProps: {
-      children: <GenericButton label="Próximo" size="sm" w="100%" />,
-      style: {
-        background: `transparent`,
-        color: `#fff !important`,
-        border: `none`,
-        transition: `all 0`,
-        width: `fit-content`,
-        height: `fit-content`,
-        padding: `0`,
-      },
-    },
-    prevButtonProps: {
-      children: <GenericButton label="Anterior" size="sm" btntype="outline" />,
-      style: {
-        background: `transparent`,
-        color: `#fff !important`,
-        border: `none`,
-        transition: `all 0`,
-        width: `fit-content`,
-        height: `fit-content`,
-        padding: `0`,
-      },
-    },
-  }));
 
   const handleUploadAvatar = useCallback(async (file?: File) => {
     if (file) {
@@ -150,6 +59,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
       border="1px"
       borderColor="gray300"
       margin={{ base: '1rem', xl: '1.5rem' }}
+      display={{ base: `none`, lg: `flex` }}
     >
       <Flex direction="column" gap={{ base: '0.5rem', xl: '1rem' }}>
         <Flex
@@ -312,8 +222,6 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, isOpen, stop
           </Flex>
         ))}
       </Flex>
-
-      <Tour open={isOpen} onClose={() => stopTour()} steps={headerTourSteps} />
     </Flex>
   );
 };
