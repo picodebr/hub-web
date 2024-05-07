@@ -256,7 +256,7 @@ const Community: React.FC = () => {
 
               <Flex justify="space-between" align="flex-end" mb="-1.2rem">
                 <Text mb="-0.75rem" fontSize="13px" color="gray400">
-                  {moment(post.updated_at).fromNow()}
+                  {moment(post.created_at).fromNow()}
                 </Text>
                 <Flex gap="1rem" fontSize="1.35rem">
                   {reactionsElements.map((reaction) => (

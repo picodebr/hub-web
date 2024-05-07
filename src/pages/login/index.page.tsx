@@ -13,9 +13,7 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
-import { AppReCaptcha } from '@/components/ReCaptcha';
 import { IAuthRequest, authSchema } from '@/_base/interfaces/auth';
-import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 import { api } from '@/_base/classes/api';
 
 const LoginPage: React.FC = () => {
@@ -123,7 +121,7 @@ const LoginPage: React.FC = () => {
         </Flex>
 
         <Flex fontSize="13px" gap="0.5rem" align="center" w="100%">
-          <Checkbox onChange={(e) => setKeepLogged(e.target.checked)} />
+          <Checkbox onChange={(e) => setKeepLogged(e.target.checked)} borderColor="gray300" />
           <Text fontWeight="medium" _hover={{ filter: 'brightness(1.5)' }} userSelect="none" color="gray700">
             Mantenha-me contectado
           </Text>
