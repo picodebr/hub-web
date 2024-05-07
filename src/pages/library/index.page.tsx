@@ -27,6 +27,7 @@ import { IHubBook, IHubBookCategory } from '@/_base/interfaces/book';
 import { useAuth } from '@/_base/hooks';
 import { IHubVideo, IHubVideoCategory } from '@/_base/interfaces/video';
 import { listVideoCategories } from '@/_base/services/video';
+import { FiDownload } from 'react-icons/fi';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -287,15 +288,46 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
             Voltar
           </Button>
 
-          <Flex gap="0.5rem" position="fixed" align="center" top="1rem" right="1rem" zIndex={9999}>
-            <Button onClick={() => setScale((s) => Math.min(s - 0.1, 3))} bg="primary700" color="white" colorScheme="blue" p="0">
-              <MdOutlineZoomOut fontSize="1.5rem" />
-            </Button>
-            <Text fontWeight="500">{Math.round(scale * 100)}%</Text>
+          <Flex direction="column" gap="0.5rem" position="fixed" top="1rem" right="1rem" zIndex={9999}>
+            <a href={targetBook?.file} download>
+              <Button bg="primary700" color="white" colorScheme="blue" gap="0.5rem" p="0.5rem 1rem">
+                <FiDownload fontSize="1.5rem" />
+                Baixar livro
+              </Button>
+            </a>
+            <Flex align="center" justify="space-between" gap="0.5rem" w="100%">
+              <Button
+                onClick={() => setScale((s) => Math.min(s - 0.1, 3))}
+                bg="primary700"
+                color="white"
+                colorScheme="blue"
+                h="3rem"
+                w="3rem"
+                fontSize="1.8rem"
+                p="0"
+              >
+                <MdOutlineZoomOut fontSize="1.5rem" />
+              </Button>
+              <Flex direction="column" justify="center">
+                <Text fontWeight="400" lineHeight="14px" fontSize="12px" opacity="0.7">
+                  Zoom
+                </Text>
+                <Text fontWeight="500">{Math.round(scale * 100)}%</Text>
+              </Flex>
 
-            <Button onClick={() => setScale((s) => Math.max(s + 0.1, 0))} bg="primary700" color="white" colorScheme="blue" p="0">
-              <MdOutlineZoomIn fontSize="1.5rem" />
-            </Button>
+              <Button
+                onClick={() => setScale((s) => Math.max(s + 0.1, 0))}
+                bg="primary700"
+                color="white"
+                colorScheme="blue"
+                h="3rem"
+                w="3rem"
+                fontSize="1.8rem"
+                p="0"
+              >
+                <MdOutlineZoomIn fontSize="1.5rem" />
+              </Button>
+            </Flex>
           </Flex>
         </ModalContent>
       </Modal>

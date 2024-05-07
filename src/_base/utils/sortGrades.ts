@@ -2,9 +2,10 @@ type FuncType = (grades: string[]) => string[];
 
 export const sortGrades: FuncType = (grades) => {
   const numbers = grades.filter((grade) => !isNaN(Number(grade)));
-  const others = grades.filter((grade) => !numbers.includes(grade));
+  const EM_grades = grades.filter((grade) => !numbers.includes(grade) && grade.endsWith(`EM`));
+  const others = grades.filter((grade) => !numbers.includes(grade) && !EM_grades.includes(grade));
 
-  return [...sorting(others), ...sorting(numbers)];
+  return [...sorting(others), ...sorting(numbers), ...sorting(EM_grades)];
 };
 
 const sorting: FuncType = (grades) =>
