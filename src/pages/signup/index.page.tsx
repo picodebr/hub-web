@@ -57,7 +57,10 @@ const SignUp: React.FC = () => {
   }, [captcha.token, primaryCode.value]);
 
   const canSubmit = useMemo(
-    () => passwordIsValid && !Object.values(Object.assign(EMPTY_REGISTER_USER_DATA, { ...data, email: '_' })).filter((e) => !e).length,
+    () =>
+      passwordIsValid &&
+      data.password === data.password_confirmation &&
+      !Object.values(Object.assign(EMPTY_REGISTER_USER_DATA, { ...data, email: '_' })).filter((e) => !e).length,
     [passwordIsValid, data],
   );
 
