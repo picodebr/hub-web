@@ -92,6 +92,7 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
 
   const [allowUpload, setAllowUpload] = useState(true);
   const [isTextMode, setIsTextMode] = useState(false);
+  const [mobileView, setMobileView] = useState(false);
 
   useEffect(() => {
     setIsTextMode(!!(project?.source_code?.mode === 'text'));
@@ -443,6 +444,18 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
     headerEvents.on('codemode', (value) => setIsTextMode(value === 'text'));
   }, []);
 
+  useEffect(() => {
+    const ev = () => {
+      setMobileView(window.innerWidth < 800 && window.innerWidth < window.innerHeight);
+    };
+    ev();
+    window.addEventListener(`resize`, ev);
+
+    return () => {
+      window.removeEventListener(`resize`, ev);
+    };
+  }, []);
+
   return (
     <Flex direction="column" flex="1">
       <CodeEventMenu
@@ -494,6 +507,9 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
       <SimulationCodeModal show={showCodeModal} onClose={handleCodeModalClose} />
       <SerialMonitor show={showSerialMonitor} onClose={handleSerialMonitorClose} usbFilters={usbFilters} />
       <EditorModeModal show={showEditorModeModal} onClose={handleEditorModalClose} />
+      <SmallModal topIcon="warning" show={mobileView} onConfirm={() => setMobileView(false)} okText="OK">
+        Nesse dispositivo, a experiência no CODE pode ser melhor se você manter seu celular na horizontal.
+      </SmallModal>
     </Flex>
   );
 };
