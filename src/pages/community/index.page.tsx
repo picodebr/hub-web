@@ -248,7 +248,7 @@ const Community: React.FC = () => {
                   </Tooltip>
                 )}
               </Flex>
-              <Flex fontWeight="500" fontSize="14px">
+              <Flex fontWeight="500" fontSize="14px" color="gray600">
                 {post.content}
               </Flex>
 
@@ -316,8 +316,10 @@ const Community: React.FC = () => {
               <Accordion defaultIndex={lastFocusedPostId === post.id ? [0] : undefined} allowMultiple>
                 <AccordionItem border="none">
                   <AccordionButton gap="0.5rem" w="fit-content" borderRadius="md">
-                    <Text fontSize="13px">Comentários</Text>
-                    <AccordionIcon />
+                    <Text fontSize="13px" color="gray300">
+                      Comentários
+                    </Text>
+                    <AccordionIcon color="gray300" />
                   </AccordionButton>
                   <AccordionPanel>
                     <Flex direction="column" gap="1rem">

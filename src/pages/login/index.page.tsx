@@ -93,6 +93,7 @@ const LoginPage: React.FC = () => {
             label="Nome de Usuário ou E-mail"
             error={errors.identifier}
             value={data?.identifier}
+            color="gray300"
             onInputChange={(v) => onInputChange('identifier', v)}
             leftElement={<FiUser style={{ color: 'gray300' }} />}
             placeholder="Nome de Usuário"
