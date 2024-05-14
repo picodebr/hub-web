@@ -81,7 +81,7 @@ const Stock: React.FC = () => {
             >
               <Img src={stock.store_item.picture} h="180px" alignSelf="center" justifySelf="center" />
               <Flex direction="column" gap="0.75rem" w="100%">
-                <Text>{stock.store_item.name}</Text>
+                <Text color="gray600">{stock.store_item.name}</Text>
                 <Divider />
                 <Flex justify="space-between" align="center" w="100%" color="gray500">
                   <Flex
