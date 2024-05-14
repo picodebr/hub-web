@@ -87,7 +87,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
           <TextAreaInput
             label="Qual componente?"
             placeholder="Digite aqui..."
-            color="gray300"
+            color="gray900"
             value={data.subject}
             error={errors.subject}
             onInputChange={(value) => onInputChange(`subject`, value)}
@@ -95,7 +95,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
           <TextAreaInput
             label="Descreva o problema"
             placeholder="Digite aqui..."
-            color="gray300"
+            color="gray900"
             value={data.text}
             error={errors.text}
             onInputChange={(value) => onInputChange(`text`, value)}
@@ -113,7 +113,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
           <TextAreaInput
             label="Descreva o problema"
             placeholder="Digite aqui..."
-            color="gray300"
+            color="gray900"
             value={data.text}
             error={errors.text}
             onInputChange={(value) => onInputChange(`text`, value)}
@@ -130,7 +130,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
         <TextAreaInput
           label="Qual livro?"
           placeholder="Digite aqui..."
-          color="gray300"
+          color="gray900"
           value={data.subject}
           error={errors.subject}
           onInputChange={(value) => onInputChange(`subject`, value)}
@@ -138,7 +138,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
         <TextAreaInput
           label="Descreva o problema"
           placeholder="Digite aqui..."
-          color="gray300"
+          color="gray900"
           value={data.text}
           error={errors.text}
           onInputChange={(value) => onInputChange(`text`, value)}
@@ -154,7 +154,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
         <TextAreaInput
           label="Com o que você precisa de suporte?"
           placeholder="Digite aqui..."
-          color="gray300"
+          color="gray900"
           value={data.subject}
           error={errors.subject}
           onInputChange={(value) => onInputChange(`subject`, value)}
@@ -162,7 +162,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
         <TextAreaInput
           label="Descreva o problema"
           placeholder="Digite aqui..."
-          color="gray300"
+          color="gray900"
           value={data.text}
           error={errors.text}
           onInputChange={(value) => onInputChange(`text`, value)}

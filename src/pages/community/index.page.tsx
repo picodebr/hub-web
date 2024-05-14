@@ -316,10 +316,10 @@ const Community: React.FC = () => {
               <Accordion defaultIndex={lastFocusedPostId === post.id ? [0] : undefined} allowMultiple>
                 <AccordionItem border="none">
                   <AccordionButton gap="0.5rem" w="fit-content" borderRadius="md">
-                    <Text fontSize="13px" color="gray300">
+                    <Text fontSize="13px" color="gray600">
                       Comentários
                     </Text>
-                    <AccordionIcon color="gray300" />
+                    <AccordionIcon color="gray600" />
                   </AccordionButton>
                   <AccordionPanel>
                     <Flex direction="column" gap="1rem">
