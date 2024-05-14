@@ -60,7 +60,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
                   userSelect="none"
                   cursor="pointer"
                   fontWeight="600"
-                  color="primary700"
+                  color={colorMode === 'light' ? 'primary700' : 'primary300'}
                   onClick={() => (backButtonPath ? router.push(backButtonPath) : router.back())}
                   pb="0.5rem"
                   w="fit-content"

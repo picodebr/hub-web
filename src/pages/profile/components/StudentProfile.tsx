@@ -178,7 +178,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
 
                 <GridItem w="100%">
                   <Flex gap="1rem" align="center" justify="center">
-                    <Text>Usar óculos?</Text>
+                    <Text color="gray300">Usar óculos?</Text>
                     <Switch
                       value={(avatarOptions.glassesProbability || 0) * 100}
                       onChange={(e) => setAvatarOptions((state) => ({ ...state, glassesProbability: Number(e.target.checked) * 100 }))}
@@ -200,20 +200,20 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
           justify="space-between"
           display={{ base: `none`, xl: `flex` }}
         >
-          <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
+          <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" color="gray300">
             Seu ranking global
           </Text>
           <Flex p="20px">
             <Flex gap="8px" align="center" flex="1">
-              <Avatar size="sm" src="#" />
-              <Text>{user.username}</Text>
+              <Avatar src={user.avatar} size="sm" />
+              <Text color="gray300">{user.username}</Text>
             </Flex>
-            <Text align="center" fontWeight="600">
+            <Text align="center" fontWeight="600" color="gray300">
               #12
             </Text>
           </Flex>
           <Flex direction="column" gap="10px" flex="1" justify="flex-end">
-            <Text>Suba seu ranking jogando os desafios diários!</Text>
+            <Text color="gray300">Suba seu ranking jogando os desafios diários!</Text>
             <Button onClick={() => router.push('/challenge')}>Jogar agora!</Button>
           </Flex>
         </Flex>

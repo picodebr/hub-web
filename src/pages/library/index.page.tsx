@@ -150,7 +150,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
                 h="250px"
                 borderRadius="4px"
               />
-              <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
+              <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden" color="gray600">
                 {book.title}
               </Text>
             </Flex>
@@ -161,8 +161,8 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
         <Accordion borderColor="gray300" w="100%" h="100%" gridGap={5} allowMultiple>
           {sortGrades(Object.keys(videosByGrade)).map((grade) => (
             <AccordionItem bgColor="white" key={grade} borderRadius="12px" border="1px" borderColor="gray300" mb="1rem">
-              <AccordionButton borderRadius="md" h="64px" justifyContent="space-between">
-                <Text>{formatClassGrade(grade)}</Text>
+              <AccordionButton borderRadius="md" h="64px" justifyContent="space-between" color="gray600">
+                <Text color="gray600">{formatClassGrade(grade)}</Text>
                 <AccordionIcon />
               </AccordionButton>
               <AccordionPanel>
@@ -185,8 +185,8 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
                     >
                       <Flex bgImage={video.thumbnail} flex="1" bgSize="cover" />
                       <Flex direction="column" gap="0.5rem" h="7rem" p="0 0.65rem 0.65rem" overflow="hidden auto">
-                        <Text>{video.title}</Text>
-                        <Text>{video.description}</Text>
+                        <Text color="gray600">{video.title}</Text>
+                        <Text color="gray600">{video.description}</Text>
                       </Flex>
                     </Flex>
                   ))}
@@ -197,7 +197,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
           {sortGrades(Object.keys(booksByGrade)).map((grade) => (
             <AccordionItem bgColor="white" key={grade} borderRadius="12px" border="1px" borderColor="gray300" mb="1rem">
               <AccordionButton borderRadius="md" h="64px" justifyContent="space-between">
-                <Text>{formatClassGrade(grade)}</Text>
+                <Text color="gray600">{formatClassGrade(grade)}</Text>
                 <AccordionIcon />
               </AccordionButton>
               <AccordionPanel>
@@ -222,7 +222,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
                         w="156px"
                         borderRadius="4px"
                       />
-                      <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden">
+                      <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="nowrap" overflow="hidden" color="gray600">
                         {book.title}
                       </Text>
                     </Flex>
