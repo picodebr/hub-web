@@ -241,8 +241,30 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
           </Modal>
         </Accordion>
       )}
-      <Modal isOpen={!!targetBook} onClose={() => setTargetBook(null)} size="full">
-        <ModalContent display="flex" alignItems="center" bg="#eeefff">
+      <Modal isOpen={!!targetBook} onClose={() => setTargetBook(null)} size="full" scrollBehavior="inside">
+        <ModalContent
+          display="flex"
+          alignItems="center"
+          bg="#eeefff"
+          overflow="hidden auto"
+          sx={{
+            '&::-webkit-scrollbar': {
+              width: '20px',
+            },
+            '&::-webkit-scrollbar-track': {
+              width: '20px',
+              margin: `1rem`,
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'primary900',
+              width: '100px !important',
+              height: `80px`,
+              borderRadius: '9px',
+              border: `1px`,
+              borderColor: `primary700`,
+            },
+          }}
+        >
           <Document
             file={targetBook?.file}
             onLoadSuccess={({ _pdfInfo }) => {
@@ -254,6 +276,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
               console.error(err);
               setIsLoading(false);
             }}
+            className="teste"
           >
             {Array.from({ length: PDFPages }).map((_, i) => (
               <Page key={i} pageNumber={i + 1} height={900} renderTextLayer={false} loading={isLoading} scale={scale} />
@@ -277,7 +300,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
             onClick={() => setTargetBook(null)}
             position="fixed"
             top="1rem"
-            left="1rem"
+            left="2rem"
             zIndex={9999}
             bg="primary700"
             color="white"
@@ -288,7 +311,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
             Voltar
           </Button>
 
-          <Flex direction="column" gap="0.5rem" position="fixed" top="1rem" right="1rem" zIndex={9999}>
+          <Flex direction="column" gap="0.5rem" position="fixed" top="1rem" right="2rem" zIndex={9999}>
             <a href={targetBook?.file} download>
               <Button bg="primary700" color="white" colorScheme="blue" gap="0.5rem" p="0.5rem 1rem">
                 <FiDownload fontSize="1.5rem" />
