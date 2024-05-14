@@ -92,6 +92,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page })
             value={selectedSchool?.value || school?.id}
             size="sm"
             style={{ paddingBottom: 5 }}
+            appearance="subtle"
             searchable={false}
             cleanable={false}
             onChange={(e) => setSelectedSchool(data.find((d) => d.value === e))}
