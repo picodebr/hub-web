@@ -67,7 +67,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user }) => {
                 gap="0.25rem"
                 _hover={student.id !== user.id ? { filter: `brightness(0.9)` } : undefined}
               >
-                <Text fontWeight="600" color={(student.metadata.coins || 0) > 0 ? undefined : 'red'}>
+                <Text fontWeight="600" color={(student.metadata.coins || 0) > 0 ? 'green' : 'red'}>
                   {formatCoin(student.metadata.coins || 0)}
                 </Text>
                 <CoinIcon />

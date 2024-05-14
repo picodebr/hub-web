@@ -87,6 +87,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
           <TextAreaInput
             label="Qual componente?"
             placeholder="Digite aqui..."
+            color="gray300"
             value={data.subject}
             error={errors.subject}
             onInputChange={(value) => onInputChange(`subject`, value)}
@@ -94,6 +95,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
           <TextAreaInput
             label="Descreva o problema"
             placeholder="Digite aqui..."
+            color="gray300"
             value={data.text}
             error={errors.text}
             onInputChange={(value) => onInputChange(`text`, value)}
@@ -111,6 +113,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
           <TextAreaInput
             label="Descreva o problema"
             placeholder="Digite aqui..."
+            color="gray300"
             value={data.text}
             error={errors.text}
             onInputChange={(value) => onInputChange(`text`, value)}
@@ -127,6 +130,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
         <TextAreaInput
           label="Qual livro?"
           placeholder="Digite aqui..."
+          color="gray300"
           value={data.subject}
           error={errors.subject}
           onInputChange={(value) => onInputChange(`subject`, value)}
@@ -134,6 +138,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
         <TextAreaInput
           label="Descreva o problema"
           placeholder="Digite aqui..."
+          color="gray300"
           value={data.text}
           error={errors.text}
           onInputChange={(value) => onInputChange(`text`, value)}
@@ -149,6 +154,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
         <TextAreaInput
           label="Com o que você precisa de suporte?"
           placeholder="Digite aqui..."
+          color="gray300"
           value={data.subject}
           error={errors.subject}
           onInputChange={(value) => onInputChange(`subject`, value)}
@@ -156,6 +162,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
         <TextAreaInput
           label="Descreva o problema"
           placeholder="Digite aqui..."
+          color="gray300"
           value={data.text}
           error={errors.text}
           onInputChange={(value) => onInputChange(`text`, value)}
@@ -223,7 +230,7 @@ const HubSupport: React.FC<IProps> = ({ reports: _reports }) => {
           </Flex>
 
           <Flex marginBottom="8px">
-            <Select placeholder="Assunto" value={pageView} onChange={(e) => handleChangeContext(e.target.value as HubReportType)}>
+            <Select placeholder="Assunto" color="gray600" value={pageView} onChange={(e) => handleChangeContext(e.target.value as HubReportType)}>
               {hubReportTypes.map((view) => (
                 <option key={view} value={view}>
                   {view}

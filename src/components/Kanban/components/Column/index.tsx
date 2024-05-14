@@ -61,7 +61,7 @@ export const KanbanColumn: React.FC<IProps> = ({ column, index, group, onItemCli
               _hover={canEdit ? { boxShadow: 'sm', borderColor: 'gray400' } : undefined}
               onClick={() => canEdit && onItemClick({ ...EMPTY_KANBAN_ITEM, column: column.type })}
             >
-              <Text>Adicionar</Text>
+              <Text color='gray600'>Adicionar</Text>
               <Flex color={`primary${index === 0 ? 700 : index === 1 ? 800 : 300}`}>
                 <FaPlusCircle />
               </Flex>
