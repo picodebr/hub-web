@@ -18,6 +18,7 @@ interface IProps {
   headerLabel?: string;
   menuItems: MenuItemType[];
   page: string;
+  hideOnMobile?: boolean;
 }
 
 type TargetSchoolHookType = { school: IHubUserSchool | null; setSchool: (school: IHubUserSchool) => void };
@@ -32,7 +33,7 @@ export const useSelectedSchool = create<TargetSchoolHookType>(
   ) as any,
 );
 
-export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page }) => {
+export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, hideOnMobile }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
 
@@ -73,6 +74,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page })
       userSelect="none"
       boxShadow="md"
       position="relative"
+      display={{ base: hideOnMobile ? `none` : `flex`, lg: `flex` }}
     >
       <Logo size="md" className="only-desktop" />
       <MobileMenu menuItems={menuItems} page={page} />

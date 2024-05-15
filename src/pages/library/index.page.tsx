@@ -249,19 +249,19 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
           overflow="hidden auto"
           sx={{
             '&::-webkit-scrollbar': {
-              width: '20px',
+              width: '12px',
             },
             '&::-webkit-scrollbar-track': {
               width: '20px',
               margin: `1rem`,
             },
             '&::-webkit-scrollbar-thumb': {
-              background: 'primary900',
+              background: 'primary700',
               width: '100px !important',
               height: `80px`,
               borderRadius: '9px',
-              border: `1px`,
-              borderColor: `primary700`,
+              borderRight: `4px`,
+              borderColor: `#7197ff`,
             },
           }}
         >
