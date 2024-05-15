@@ -29,6 +29,8 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const [savedGroup, setSavedGroup] = useState<IHubGroup>(_group);
   const [pageView, setPageView] = useState<ProjectPageView>('Atividades');
   const [isLoading, setIsLoading] = useState(false);
+  const [storeIsOpened, setStoreIsOpened] = useState(false);
+  const [cartIsOpened, setCartIsOpened] = useState(false);
 
   const toast = useCustomToast();
   const { user, setUser } = useAuth();
@@ -142,6 +144,8 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
         handleApproveOrder={handleApproveOrder}
         handleRejectOrder={handleRejectOrder}
         canEdit={canEdit}
+        setStoreIsOpened={setStoreIsOpened}
+        cartIsOpened={cartIsOpened}
         storeMakerList={stock}
       />
     ),
@@ -150,7 +154,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
 
   return (
     <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflow="hidden" mb="-1rem" pb="1rem">
-      <Flex justify="space-between" gap="1rem">
+      <Flex justify="space-between" gap="1rem" align="center">
         <TabSwitch
           tabs={projectPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
           onSwitch={(view) => setPageView(view as any)}
@@ -158,14 +162,15 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
         />
 
         <GenericButton
-          label="Salvar"
-          onClick={() => handleSaveGroup(group.metadata)}
+          label={pageView === `Pedidos` && storeIsOpened ? `Ver carrinho` : 'Salvar'}
+          onClick={() => (pageView === `Pedidos` && storeIsOpened ? setCartIsOpened((e) => !e) : handleSaveGroup(group.metadata))}
           border="1px"
           borderColor="gray300"
           isLoading={isLoading}
           bg={needSave ? 'primary500' : 'primary700'}
           color="white"
           boxShadow="sm"
+          minW="7rem"
           isDisabled={!canEdit}
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}

@@ -1,6 +1,7 @@
 import styled, { createGlobalStyle } from 'styled-components';
 
 export const BlocklyGlobals = createGlobalStyle`
+
   .scratchCategoryMenu {
     width: ${(props) => props.theme.dimensions.blocksCategoryWidth}px;
   }
@@ -59,7 +60,6 @@ export const Container = styled.div`
   border-radius: 1rem;
   overflow: hidden;
   position: relative;
-
 
   @media (max-width: ${(props) => props.theme.breakingPoints.mobile}px) {
     height: calc(100vh - ${(props) => props.theme.dimensions.mobileHeader}px);
