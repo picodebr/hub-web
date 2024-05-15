@@ -8,6 +8,7 @@ import { IStockMaker } from '@/_base/interfaces/storeMaker';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { PlusButton } from '@/components/Buttons/Plus';
+import { TextInput } from '@/components/Inputs/Text';
 
 const Stock: React.FC = () => {
   const [unSavedstock, setUnsavedStock] = useState<IStockMaker[]>([]);
@@ -94,12 +95,12 @@ const Stock: React.FC = () => {
                     <FaMinus />
                   </Flex>
                   <Flex w="50px">
-                    <Input
-                      onInputChange={() => onChangeQuantity({ ...stock, quantity: stock.quantity + 1 })}
+                    <TextInput
+                      value={stock.quantity?.toString() || ''}
+                      onInputChange={(value) => onChangeQuantity({ ...stock, quantity: Number(value.replace(/\D/g, '')) })}
                       fontSize="14px"
                       fontWeight="500"
                       color="gray500"
-                      placeholder={stock.quantity}
                     />
                   </Flex>
                   <Flex
