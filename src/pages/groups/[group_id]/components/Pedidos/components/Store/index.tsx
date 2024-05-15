@@ -1,9 +1,28 @@
-import { Flex, Grid, Text, Image, Accordion, AccordionItem, AccordionButton, AccordionIcon, AccordionPanel } from '@chakra-ui/react';
+import {
+  Flex,
+  Grid,
+  Text,
+  Image,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionIcon,
+  AccordionPanel,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,
+  useDisclosure,
+  useUpdateEffect,
+} from '@chakra-ui/react';
 import { OrdersPageView } from '../..';
 import { FiShoppingCart, FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BsArrowLeft } from 'react-icons/bs';
 import { IHubGroup } from '@/_base/interfaces/group';
 import { SmallModal } from '@/components/Modal/Small';
@@ -11,8 +30,9 @@ import { IStockMaker, IStoreMakerItem } from '@/_base/interfaces/storeMaker';
 import { useCustomToast } from '@/_base/hooks';
 import { Avatar } from '@chakra-ui/react';
 import { FaArrowRightLong } from 'react-icons/fa6';
-import { formatCoin, formatShortName } from '@/_base/utils';
+import { cookieManager, formatCoin, formatShortName } from '@/_base/utils';
 import { CoinIcon } from '@/components/Logo';
+import { dimensions } from '@/styles/global';
 
 type CustomStoreItem = IStoreMakerItem & { quantity: number };
 interface IProps {
@@ -21,15 +41,25 @@ interface IProps {
   canEdit: boolean;
   storeMakerList: IStockMaker[];
   group: IHubGroup;
+  cartIsOpened: boolean;
 }
 
-export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList, group }) => {
-  const [cart, setCart] = useState<CustomStoreItem[]>([]);
+export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList, group, cartIsOpened }) => {
+  const [cart, setCart] = useState<CustomStoreItem[]>(cookieManager.getCookie(`cart:${group.id}`, true) || []);
   const [orderPayload, setOrderPayload] = useState<{ id: string; quantity: number }[] | null>(null);
 
   const storeMakerList = storeList.map((e) => e.store_item);
 
   const toast = useCustomToast();
+  const { isOpen, onOpen, onClose } = useDisclosure({ defaultIsOpen: cartIsOpened || !!cookieManager.getCookie(`cart:${group.id}`) });
+
+  useUpdateEffect(() => {
+    onOpen();
+  }, [cartIsOpened]);
+
+  useUpdateEffect(() => {
+    cookieManager.setCookie(`cart:${group.id}`, JSON.stringify(cart));
+  }, [cart]);
 
   const addItemInCart = (item: IStoreMakerItem) => {
     const targetItemInCard = cart.find((e) => e.id === item.id);
@@ -43,6 +73,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
     if (targetItemInCard)
       setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)));
     else setCart((e) => [...e, { ...item, quantity: 1 }]);
+    onOpen();
   };
 
   const totalPrice = useMemo(() => cart.reduce((acc, { price, quantity }) => (acc += Number(price) * quantity), 0), [cart]);
@@ -50,7 +81,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
   const haveMemberWithNegativeBalance = !!group.students.find((e) => (e.metadata.coins || 0) <= 0);
 
   return (
-    <Flex overflow="hidden" gap="1rem" flex="1">
+    <Flex overflow="hidden" gap="1rem" flex="1" direction={{ base: `column-reverse`, lg: `row` }}>
       <Flex
         flex="1"
         bgColor="white"
@@ -63,10 +94,12 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
         overflow="hidden auto"
         border="1px"
         borderColor="gray200"
+        transition="ease-in-out 0.3s"
+        marginRight={{ base: 0, lg: isOpen ? '20rem' : 0 }}
       >
         <Grid
           gap="1rem"
-          gridTemplateColumns="repeat(auto-fill, minmax(12rem, 1fr))"
+          gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(10rem, 1fr))', lg: 'repeat(auto-fill, minmax(12rem, 1fr))' }}
           gridTemplateRows="minmax(min-content, max-content)"
           padding="2rem"
           borderRadius="md"
@@ -103,14 +136,14 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                 fontSize="14px"
                 align="center"
                 justify="space-between"
-                height="14.5rem"
-                width="12rem"
+                height={{ base: `12.5rem`, lg: '14.5rem' }}
+                width={{ base: `10rem`, lg: '12rem' }}
                 border="1px"
                 borderColor="gray300"
                 borderRadius="md"
                 overflow="hidden"
               >
-                <Image src={item.picture} style={{ maxHeight: `10rem`, width: `100%` }} />
+                <Image src={item.picture} maxHeight={{ base: `8rem`, lg: `10rem` }} w="100%" />
                 <Flex display="flex" justify="space-between" align="center" gap="9px" minH="3.5rem" maxH="3.5rem" w="100%">
                   <Text noOfLines={2} px="0.5rem" flex="1">
                     {item.name}
@@ -128,61 +161,53 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
         </Grid>
       </Flex>
 
-      <Flex
-        display="column"
-        bg="white"
-        w="340px"
-        gap="2.5rem"
-        borderRadius="10px"
-        border="1px"
-        overflow="hidden"
-        justify="space-between"
-        borderColor="gray200"
-        p="1rem"
-        h="100%"
-      >
-        <Flex direction="column" overflow="hidden" flex="1" h="calc(100% - 10.2rem)">
-          <Accordion allowMultiple mb="0.75rem">
-            <AccordionItem border="none" borderBottom="1px" borderColor="gray300" pb="0.25rem">
-              <AccordionButton p="0.25rem">
-                <Flex w="100%" fontSize="15px" gap="0.5rem" align="center" justify="space-between">
-                  <Text>Saldo do grupo</Text>
-                  <Flex align="center" gap="0.35rem">
-                    <CoinIcon size="xs" />
-                    <Text>
-                      {formatCoin(
-                        group.students.reduce((total, student) => total + ((student.metadata.coins || 0) > 0 ? student.metadata.coins || 0 : 0), 0),
-                      )}
-                    </Text>
-                  </Flex>
-                </Flex>
-
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel pb={4} w="100%">
-                <Flex direction="column" gap="0.35rem" pt="0.25rem">
-                  {group.students.map((student) => (
-                    <Flex key={student.id} align="center" gap="0.35rem" w="100%">
-                      <Avatar src={student.avatar || undefined} size="xs" />
-                      <Text color="gray700" fontSize="13px" fontWeight="500">
-                        {formatShortName(student.name, true)}
+      <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+        <DrawerOverlay bg="transparent" backdropFilter="blur(3px) " />
+        <DrawerContent mt={`calc(${dimensions.header.height} + 1.5rem)`} mb="1.5rem" borderRadius="md" p="0">
+          <DrawerCloseButton />
+          <DrawerHeader display="flex">
+            <Accordion allowMultiple mb="0.75rem" w="100%" mr="1.5rem">
+              <AccordionItem border="none" borderBottom="1px" borderColor="gray300" pb="0.25rem">
+                <AccordionButton p="0.25rem">
+                  <Flex w="100%" fontSize="15px" gap="0.5rem" align="center" justify="space-between">
+                    <Text>Saldo do grupo</Text>
+                    <Flex align="center" gap="0.35rem">
+                      <CoinIcon size="xs" />
+                      <Text>
+                        {formatCoin(
+                          group.students.reduce((total, student) => total + ((student.metadata.coins || 0) > 0 ? student.metadata.coins || 0 : 0), 0),
+                        )}
                       </Text>
-                      <Flex
-                        align="center"
-                        justify="flex-end"
-                        flex="1"
-                        color={formatCoin(student.metadata.coins).startsWith(`-`) ? `primary500` : undefined}
-                      >
-                        <Text>{formatCoin(student.metadata.coins)}</Text>
-                      </Flex>
                     </Flex>
-                  ))}
-                </Flex>
-              </AccordionPanel>
-            </AccordionItem>
-          </Accordion>
+                  </Flex>
 
-          <Flex direction="column" overflow="hidden auto" gap="0.75rem" py="0.35rem">
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb={4} w="100%">
+                  <Flex direction="column" gap="0.35rem" pt="0.25rem">
+                    {group.students.map((student) => (
+                      <Flex key={student.id} align="center" gap="0.35rem" w="100%">
+                        <Avatar src={student.avatar || undefined} size="xs" />
+                        <Text color="gray700" fontSize="13px" fontWeight="500">
+                          {formatShortName(student.name, true)}
+                        </Text>
+                        <Flex
+                          align="center"
+                          justify="flex-end"
+                          flex="1"
+                          color={formatCoin(student.metadata.coins).startsWith(`-`) ? `primary500` : undefined}
+                        >
+                          <Text>{formatCoin(student.metadata.coins)}</Text>
+                        </Flex>
+                      </Flex>
+                    ))}
+                  </Flex>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
+          </DrawerHeader>
+
+          <DrawerBody display="flex" flexDirection="column" overflow="hidden auto" gap="0.75rem" py="0.35rem">
             {cart.map((item) => (
               <Flex key={item.id} gap="12px" border="1px" borderColor="gray300" borderRadius="md" padding=".25rem">
                 <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
@@ -241,77 +266,79 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                 </Flex>
               </Flex>
             ))}
-          </Flex>
-        </Flex>
+          </DrawerBody>
 
-        <Flex direction="column">
-          <Flex w="100%" justify="flex-end" align="center" gap="0.5rem" py="0.5rem">
-            <Text fontSize="20px">Total</Text>
-            <Image src="/icons/coin.svg" height="40px" />
-            <Text fontSize="40px" fontWeight="700" color="primary900">
-              {totalPrice}
-            </Text>
-          </Flex>
-          <Flex direction="column" gap="1.35rem">
-            <Flex
-              userSelect="none"
-              cursor={cart.length ? 'pointer' : 'not-allowed'}
-              color="white"
-              bgColor="primary600"
-              p="0.5rem"
-              justify="center"
-              align="center"
-              borderRadius="8px"
-              fontWeight="600"
-              opacity={cart.length ? `1` : `0.8`}
-              _hover={{ filter: `brightness(0.9)` }}
-              onClick={() =>
-                !!cart.length &&
-                setOrderPayload(
-                  cart.map((e) => ({
-                    id: e.id,
-                    quantity: e.quantity,
-                  })),
-                )
-              }
-            >
-              Solicitar pedido
-            </Flex>
-            <Flex>
-              <Flex
-                color="gray500"
-                justify="center"
-                align="center"
-                gap="0.25rem"
-                w="fit-content"
-                margin="auto"
-                cursor="pointer"
-                fontSize="14px"
-                _hover={{ filter: `brightness(0.5)` }}
-                onClick={() => onChangeView(`orders`)}
-              >
-                <BsArrowLeft />
-                Sair da loja
+          <DrawerFooter justifyContent="flex-start">
+            <Flex direction="column" w="100%">
+              <Flex w="100%" justify="flex-end" align="center" gap="0.5rem" py="0.5rem">
+                <Text fontSize="20px">Total</Text>
+                <Image src="/icons/coin.svg" height="40px" />
+                <Text fontSize="40px" fontWeight="700" color="primary900">
+                  {totalPrice}
+                </Text>
               </Flex>
-              <Flex
-                color="gray500"
-                justify="center"
-                align="center"
-                gap="0.25rem"
-                w="fit-content"
-                margin="auto"
-                cursor="pointer"
-                fontSize="14px"
-                _hover={{ filter: `brightness(0.5)` }}
-                onClick={() => setCart([])}
-              >
-                Limpar carrinho
-                <FaRegTrashCan />
+              <Flex direction="column" gap="1.35rem">
+                <Flex
+                  userSelect="none"
+                  cursor={cart.length ? 'pointer' : 'not-allowed'}
+                  color="white"
+                  bgColor="primary600"
+                  p="0.5rem"
+                  justify="center"
+                  align="center"
+                  borderRadius="8px"
+                  fontWeight="600"
+                  opacity={cart.length ? `1` : `0.8`}
+                  _hover={{ filter: `brightness(0.9)` }}
+                  onClick={() =>
+                    !!cart.length &&
+                    setOrderPayload(
+                      cart.map((e) => ({
+                        id: e.id,
+                        quantity: e.quantity,
+                      })),
+                    )
+                  }
+                >
+                  Solicitar pedido
+                </Flex>
+                <Flex>
+                  <Flex
+                    color="gray500"
+                    justify="center"
+                    align="center"
+                    gap="0.25rem"
+                    w="fit-content"
+                    margin="auto"
+                    cursor="pointer"
+                    fontSize="14px"
+                    _hover={{ filter: `brightness(0.5)` }}
+                    onClick={() => onChangeView(`orders`)}
+                  >
+                    <BsArrowLeft />
+                    Sair da loja
+                  </Flex>
+                  <Flex
+                    color="gray500"
+                    justify="center"
+                    align="center"
+                    gap="0.25rem"
+                    w="fit-content"
+                    margin="auto"
+                    cursor="pointer"
+                    fontSize="14px"
+                    _hover={{ filter: `brightness(0.5)` }}
+                    onClick={() => setCart([])}
+                  >
+                    Limpar carrinho
+                    <FaRegTrashCan />
+                  </Flex>
+                </Flex>
               </Flex>
             </Flex>
-          </Flex>
-        </Flex>
-      </Flex>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       <SmallModal
         size="xl"
