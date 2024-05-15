@@ -20,6 +20,8 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   headerLabel,
   showBackButton = true,
   backButtonPath,
+  hideHeaderOnMobile,
+  fullScreenOnMobile,
 }) => {
   const { colorMode } = useColorMode();
   const router = useRouter();
@@ -43,7 +45,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
         children
       ) : (
         <>
-          <Header user={user} headerLabel={headerLabel} menuItems={menuItems} page={selectedPage} />
+          <Header user={user} headerLabel={headerLabel} menuItems={menuItems} page={selectedPage} hideOnMobile={hideHeaderOnMobile} />
           <Flex flex="1" overflow="hidden">
             <Navbar page={selectedPage} user={user} menuItems={menuItems} />
             <RedefinePass user={user} />
@@ -53,7 +55,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               overflow="hidden"
               direction="column"
               position="relative"
-              p={{ base: `1rem`, lg: '1rem 1rem 1rem 0', xl: '1.5rem 1.5rem 1.5rem 0' }}
+              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem 1rem 1rem 0', xl: '1.5rem 1.5rem 1.5rem 0' }}
             >
               {showBackButton && (
                 <Flex

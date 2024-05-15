@@ -539,6 +539,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
       project,
       isDefaultProject: projectId === `example` || !projectId,
       iframeUrl: process.env.NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL || '',
+      hideHeaderOnMobile: true,
+      fullScreenOnMobile: true,
     },
   };
 };

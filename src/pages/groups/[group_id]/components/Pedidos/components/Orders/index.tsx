@@ -8,6 +8,7 @@ import { OrdersPageView } from '../..';
 import { IHubGroup, IHubGroupOrder } from '@/_base/interfaces/group';
 import { useAuth } from '@/_base/hooks';
 import { GenericButton } from '@/components/Buttons/Generic';
+import { cookieManager } from '@/_base/utils';
 
 interface IProps {
   onChangeView: (view: OrdersPageView) => void;
@@ -58,7 +59,7 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
           onClick={() => canEdit && onChangeView(`store`)}
         >
           <FaPlus />
-          Novo Pedido
+          {cookieManager.getCookie(`cart:${group.id}`) ? `Retomar Pedido` : `Novo Pedido`}
         </Flex>
       </Flex>
 
