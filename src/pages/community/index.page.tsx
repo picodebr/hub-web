@@ -176,6 +176,7 @@ const Community: React.FC = () => {
         padding="1rem"
         gap="1rem"
         display="flex"
+        boxShadow="md"
       >
         <Flex gap="1rem">
           <TextAreaInput

@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Flex, Text, Img, Skeleton, Divider } from '@chakra-ui/react';
+import { Flex, Text, Img, Skeleton, Divider, Input } from '@chakra-ui/react';
 
 import { FaMinus, FaPlus, FaSave } from 'react-icons/fa';
 import { getStockMaker, updateStockMaker } from '@/_base/services/storeMaker';
@@ -93,9 +93,15 @@ const Stock: React.FC = () => {
                   >
                     <FaMinus />
                   </Flex>
-                  <Text fontSize="14px" fontWeight="500" color="gray500">
-                    {stock.quantity}
-                  </Text>
+                  <Flex w="50px">
+                    <Input
+                      onInputChange={() => onChangeQuantity({ ...stock, quantity: stock.quantity + 1 })}
+                      fontSize="14px"
+                      fontWeight="500"
+                      color="gray500"
+                      placeholder={stock.quantity}
+                    />
+                  </Flex>
                   <Flex
                     fontSize="12px"
                     cursor="pointer"

@@ -23,6 +23,7 @@ const ReportPage: React.FC<IProps> = ({ report }) => {
         bg="white"
         border="1px"
         borderColor="gray300"
+        boxShadow="md"
         p="20px"
         h="fit-content"
         position="relative"
