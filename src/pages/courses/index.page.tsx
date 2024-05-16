@@ -56,6 +56,7 @@ const Courses: React.FC = () => {
       borderBottom="1px solid gray300"
       border="1px"
       borderColor="gray300"
+      boxShadow="md"
       color="gray600"
     >
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">

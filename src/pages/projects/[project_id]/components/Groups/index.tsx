@@ -1,5 +1,6 @@
 import { Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Text } from '@chakra-ui/react';
 import moment from 'moment';
+import { motion } from 'framer-motion';
 
 import { IProject } from '@/_base/interfaces/project';
 import { FiUsers } from 'react-icons/fi';
@@ -40,7 +41,14 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
   };
 
   return (
-    <Flex w="100%" h="100%" direction="column" gap="24px" overflow="hidden auto" margin="auto">
+    <motion.div
+      key={'About'}
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -10, opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ display: `flex`, height: `100%`, overflow: `hidden auto`, flexDirection: `column`, gap: `24px`, width: `100%`, margin: `auto` }}
+    >
       <Flex justify="flex-end" align="center">
         <GenericButton
           label="Cadastrar grupo"
@@ -191,6 +199,6 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
           </Flex>
         </Flex>
       </SmallModal>
-    </Flex>
+    </motion.div>
   );
 };

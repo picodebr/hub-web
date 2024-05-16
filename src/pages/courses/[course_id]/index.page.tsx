@@ -49,6 +49,9 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       borderBottom="1px solid gray300"
       userSelect="none"
       overflow="hidden"
+      border="1px"
+      borderColor="gray300"
+      boxShadow="md"
     >
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" color="gray600">
         Módulos
