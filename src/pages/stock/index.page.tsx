@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Flex, Text, Img, Skeleton, Divider } from '@chakra-ui/react';
+import { Flex, Text, Img, Skeleton, Divider, Input } from '@chakra-ui/react';
 
 import { FaMinus, FaPlus, FaSave } from 'react-icons/fa';
 import { getStockMaker, updateStockMaker } from '@/_base/services/storeMaker';
@@ -8,6 +8,7 @@ import { IStockMaker } from '@/_base/interfaces/storeMaker';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { PlusButton } from '@/components/Buttons/Plus';
+import { TextInput } from '@/components/Inputs/Text';
 
 const Stock: React.FC = () => {
   const [unSavedstock, setUnsavedStock] = useState<IStockMaker[]>([]);
@@ -93,9 +94,15 @@ const Stock: React.FC = () => {
                   >
                     <FaMinus />
                   </Flex>
-                  <Text fontSize="14px" fontWeight="500" color="gray500">
-                    {stock.quantity}
-                  </Text>
+                  <Flex w="50px">
+                    <TextInput
+                      value={stock.quantity?.toString() || ''}
+                      onInputChange={(value) => onChangeQuantity({ ...stock, quantity: Number(value.replace(/\D/g, '')) })}
+                      fontSize="14px"
+                      fontWeight="500"
+                      color="gray500"
+                    />
+                  </Flex>
                   <Flex
                     fontSize="12px"
                     cursor="pointer"

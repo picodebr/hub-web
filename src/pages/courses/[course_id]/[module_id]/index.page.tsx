@@ -54,7 +54,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
   }, []);
 
   return (
-    <Flex direction="column" bgColor="white" borderRadius="md" flex="1" border="1px" borderColor="gray300" overflow="hidden">
+    <Flex direction="column" bgColor="white" borderRadius="md" flex="1" border="1px" borderColor="gray300" overflow="hidden" boxShadow="md">
       <Flex p="1rem" gap="1rem" borderBottom="1px" borderColor="gray300" align="center">
         <Skeleton isLoaded={!isLoading}>
           <Flex
