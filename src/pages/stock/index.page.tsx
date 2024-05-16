@@ -101,6 +101,8 @@ const Stock: React.FC = () => {
                       fontSize="14px"
                       fontWeight="500"
                       color="gray500"
+                      p="0"
+                      textAlign="center"
                     />
                   </Flex>
                   <Flex
