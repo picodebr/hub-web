@@ -24,7 +24,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user }) => {
   const [studentDonationData, setStudentDonationData] = useState<IStudentDonation>(EMPTY_DONATION);
 
   return (
-    <Flex direction="column" display="flex" w="100%" h="fit-content" border="1px" borderColor="gray300" borderRadius="10px" bg="white">
+    <Flex direction="column" display="flex" w="100%" h="fit-content" border="1px" borderColor="gray300" borderRadius="10px" bg="white" boxShadow="md">
       <Flex>
         <Text h="58px" w="100%" align="left" p="20px" fontSize="14px" color="gray600" borderBottom="1px" borderColor="gray300">
           Membros do Grupo

@@ -6,17 +6,28 @@ import { Uploader } from 'rsuite';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
-import { formatShortName } from '@/_base/utils';
+import { formatCoin, formatShortName } from '@/_base/utils';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
 import { useAvatar, useProfile } from '../../hooks';
 import { IHubUser } from '@/_base/interfaces/user';
 import { MenuItemType } from '../../interfaces';
+import { IHubGroup } from '@/_base/interfaces/group';
 
 export interface INavbarProps {
   page: string;
   user?: IHubUser;
   menuItems: MenuItemType[];
+}
+
+interface IStudentDonation {
+  student: IHubUser | null;
+  donation: string;
+}
+interface IProps {
+  group: IHubGroup;
+  user: IHubUser;
+  onDonation: (data: IStudentDonation) => void;
 }
 
 export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems }) => {
@@ -58,6 +69,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
       borderRadius="10px"
       border="1px"
       borderColor="gray300"
+      boxShadow="md"
       margin={{ base: '1rem', xl: '1.5rem' }}
       display={{ base: `none`, lg: `flex` }}
     >
@@ -165,7 +177,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
               <>
                 <Flex align="center" justify="center" gap="0.45rem">
                   <Image src="/icons/coin.svg" />
-                  <Text>0</Text>
+                  <Text>{formatCoin(user.metadata.coins || 0)}</Text>
                 </Flex>
                 <Flex align="center" justify="center" gap="0.45rem" onClick={() => router.push('/ranking')}>
                   <Image src="/icons/medal.svg" />

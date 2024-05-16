@@ -4,6 +4,7 @@ import { ColumnsType } from 'antd/es/table';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { FiEdit2 } from 'react-icons/fi';
 import mimetype from 'mime';
+import { motion } from 'framer-motion';
 
 import { EditableTextInput } from '@/components/Inputs/EditableText';
 import { IProject } from '@/_base/interfaces/project';
@@ -58,7 +59,14 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
 
   return (
     <>
-      <Flex direction="column" gap="24px" overflow="auto">
+      <motion.div
+        key={'About'}
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -10, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        style={{ display: `flex`, overflow: `auto`, flexDirection: `column`, gap: `24px` }}
+      >
         <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300">
           <Flex pb={4} direction="column" gap="6px">
             <Text fontSize="14px" fontWeight="500" color="gray800">
@@ -237,7 +245,7 @@ export const About: React.FC<IProps> = ({ project, setProject, bnccSkills, onCha
             </Grid>
           </Flex>
         </Flex>
-      </Flex>
+      </motion.div>
       <SmallModal
         size="6xl"
         title="Habilidades BNCC"

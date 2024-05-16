@@ -1,5 +1,5 @@
 import { PropsWithChildren, useContext, useEffect, useState, createContext } from 'react';
-import { Flex, Image, Slide, Text } from '@chakra-ui/react';
+import { Flex, Image, Slide, Text, useColorMode } from '@chakra-ui/react';
 
 import { ILoadingConfig, ILoadingContext, ILoadingProviderProps } from './interfaces';
 import { useAuth } from '../Auth';
@@ -17,6 +17,7 @@ const LoadingContext = createContext<ILoadingContext>({
 export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>> = ({ children, changeSignal }) => {
   const [loadingConfig, setLoadingConfig] = useState({ ...defaultConfig });
   const [randomMsg, setRandomMsg] = useState('');
+  const { colorMode } = useColorMode();
 
   const { user } = useAuth();
 
@@ -44,15 +45,16 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         width="100vw"
         height="100vh"
         zIndex="9999"
-        bg={loadingConfig.type === 'spinner' ? 'transparent' : 'primary100'}
+        // bg={loadingConfig.type === 'spinner' ? 'transparent' : 'primary100'}
         transition="all 0.35s"
         opacity={loadingConfig.isLoading ? '1' : '0'}
         pointerEvents={loadingConfig.isLoading ? 'auto' : 'none'}
       >
         {loadingConfig.type !== 'spinner' && (
           <>
-            <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
-            <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" />
+            {/* <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
+            <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" /> */}
+            <Image src={`/patterns/bg-${colorMode}.svg`} zIndex="-1" h={{ base: '0', lg: '0' }} />
           </>
         )}
 
@@ -76,7 +78,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
               bgColor="white"
               display="flex"
               w={{ base: '100%', sm: '450px' }}
-              h={{ base: '100%', sm: '557px' }}
+              h={{ base: 'fit-content', sm: '557px' }}
               p="24px"
               direction="column"
               align="center"

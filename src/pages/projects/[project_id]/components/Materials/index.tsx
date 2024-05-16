@@ -5,6 +5,7 @@ import { FaArrowUp } from 'react-icons/fa6';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { TextInput } from '@/components/Inputs/Text';
 import { InputValueType } from '@/_base/interfaces/shared';
+import { motion } from 'framer-motion';
 
 interface IProps {
   project: IProject;
@@ -28,7 +29,14 @@ export const Materials: React.FC<IProps> = ({ project, setProject, canEdit }) =>
   };
 
   return (
-    <Flex w="100%" overflow="auto" direction="column" gap="24px">
+    <motion.div
+      key={'About'}
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -10, opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ display: `flex`, overflow: `auto`, flexDirection: `column`, gap: `24px` }}
+    >
       <Flex w="100%" borderColor="gray300" borderRadius="10px" gap="32px">
         <TextInput
           bg="white"
@@ -77,6 +85,6 @@ export const Materials: React.FC<IProps> = ({ project, setProject, canEdit }) =>
           ))}
         </Flex>
       </Flex>
-    </Flex>
+    </motion.div>
   );
 };

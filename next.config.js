@@ -9,6 +9,14 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   publicRuntimeConfig: { version },
   pageExtensions: ['page.tsx'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'hub-files-hml.s3.amazonaws.com',
+      },
+    ],
+  },
 };
 
 module.exports = nextConfig;
