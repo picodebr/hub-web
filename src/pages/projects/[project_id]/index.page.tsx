@@ -3,6 +3,7 @@ import { MdWarning } from 'react-icons/md';
 import { Flex } from '@chakra-ui/react';
 import { ReactNode, useMemo, useState } from 'react';
 import axios from 'axios';
+import { AnimatePresence } from 'framer-motion';
 
 import { logError, cookieManager } from '@/_base/utils';
 import { ProjectPageView, projectPageViews } from './interfaces';
@@ -107,7 +108,6 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
     Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} />,
     Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} />,
   };
-
   return (
     <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
       <Flex justify="space-between">
@@ -130,7 +130,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
           rightIcon={needSave ? <MdWarning /> : undefined}
         />
       </Flex>
-      {PageViewComponent[pageView]}
+      <AnimatePresence mode="wait">{PageViewComponent[pageView]}</AnimatePresence>
     </Flex>
   );
 };

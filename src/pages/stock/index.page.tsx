@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Flex, Text, Img, Skeleton, Divider, Input } from '@chakra-ui/react';
+import { Flex, Text, Skeleton, Divider } from '@chakra-ui/react';
+import { motion } from 'framer-motion';
 
 import { FaMinus, FaPlus, FaSave } from 'react-icons/fa';
 import { getStockMaker, updateStockMaker } from '@/_base/services/storeMaker';
@@ -9,6 +10,7 @@ import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { PlusButton } from '@/components/Buttons/Plus';
 import { TextInput } from '@/components/Inputs/Text';
+import { Image } from 'antd';
 
 const Stock: React.FC = () => {
   const [unSavedstock, setUnsavedStock] = useState<IStockMaker[]>([]);
@@ -68,19 +70,28 @@ const Stock: React.FC = () => {
         {stock
           .sort((a, b) => a.store_item.name?.localeCompare(b.store_item.name, undefined, { sensitivity: 'base' }))
           .map((stock) => (
-            <Flex
+            <motion.div
               key={stock.id}
-              borderRadius="8px"
-              bgColor="white"
-              boxShadow="md"
-              border="1px"
-              borderColor="gray100"
-              direction="column"
-              p="20px"
-              justify="space-between"
-              gap="0.5rem"
+              initial={{ scale: 0 }}
+              animate={{ rotate: 360, scale: 1 }}
+              transition={{
+                type: 'spring',
+                stiffness: 260,
+                damping: 20,
+              }}
+              style={{
+                display: `flex`,
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                boxShadow: 'md',
+                flexDirection: 'column',
+                padding: '20px',
+                justifyContent: 'space-between',
+                gap: '0.5rem',
+                border: `1px solid #cccccc66`,
+              }}
             >
-              <Img src={stock.store_item.picture} h="180px" alignSelf="center" justifySelf="center" />
+              <Image src={stock.store_item.picture} height="180" width="180" alt="test" style={{ alignSelf: 'center', justifySelf: 'center' }} />
               <Flex direction="column" gap="0.75rem" w="100%">
                 <Text color="gray600">{stock.store_item.name}</Text>
                 <Divider />
@@ -116,7 +127,7 @@ const Stock: React.FC = () => {
                   </Flex>
                 </Flex>
               </Flex>
-            </Flex>
+            </motion.div>
           ))}
       </Skeleton>
     </Flex>

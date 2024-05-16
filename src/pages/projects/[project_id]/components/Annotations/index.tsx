@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FiSend, FiTrash } from 'react-icons/fi';
 import { Flex, Img, Text } from '@chakra-ui/react';
 import moment from 'moment';
+import { motion } from 'framer-motion';
 
 import { IAddProjectAnnotationParams, IProject } from '@/_base/interfaces/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
@@ -29,7 +30,14 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
   };
 
   return (
-    <Flex w="100%" overflow="auto" direction="column" gap="24px" pr="0.25rem">
+    <motion.div
+      key={'About'}
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -10, opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ display: `flex`, overflow: `auto`, flexDirection: `column`, gap: `24px`, width: `100%`, paddingRight: `0.25rem` }}
+    >
       <Flex direction="column">
         <TextAreaInput
           isDisabled={!canEdit}
@@ -116,6 +124,6 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
           </Text>
         </Flex>
       </SmallModal>
-    </Flex>
+    </motion.div>
   );
 };
