@@ -18,21 +18,24 @@ import {
   useDisclosure,
   useUpdateEffect,
 } from '@chakra-ui/react';
-import { OrdersPageView } from '../..';
-import { FiShoppingCart, FiTrash } from 'react-icons/fi';
+import { FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Avatar } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { MdAddTask } from 'react-icons/md';
+import { motion } from 'framer-motion';
+
 import { IHubGroup } from '@/_base/interfaces/group';
 import { SmallModal } from '@/components/Modal/Small';
 import { IStockMaker, IStoreMakerItem } from '@/_base/interfaces/storeMaker';
 import { useCustomToast } from '@/_base/hooks';
-import { Avatar } from '@chakra-ui/react';
-import { FaArrowRightLong } from 'react-icons/fa6';
 import { cookieManager, formatCoin, formatShortName } from '@/_base/utils';
 import { CoinIcon } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
+import { OrdersPageView } from '../..';
 
 type CustomStoreItem = IStoreMakerItem & { quantity: number };
 interface IProps {
@@ -47,6 +50,7 @@ interface IProps {
 export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList, group, cartIsOpened }) => {
   const [cart, setCart] = useState<CustomStoreItem[]>(cookieManager.getCookie(`cart:${group.id}`, true) || []);
   const [orderPayload, setOrderPayload] = useState<{ id: string; quantity: number }[] | null>(null);
+  const [itemsWithoutStock, setItemsWithoutStock] = useState<string[]>([]);
 
   const storeMakerList = storeList.map((e) => e.store_item);
 
@@ -66,14 +70,15 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
     const targetStock = storeList.find((e) => e.store_maker_item_id === item.id);
 
     if ((targetItemInCard?.quantity || 0) + 1 > (targetStock?.quantity || 0)) {
-      toast({ description: `Limite do estoque atingido`, status: `error` });
+      setItemsWithoutStock((e) => [...e, item.id]);
+      toast({ description: `Limite do estoque atingido`, status: `error`, position: `top` });
       return;
     }
 
     if (targetItemInCard)
       setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)));
     else setCart((e) => [...e, { ...item, quantity: 1 }]);
-    onOpen();
+    toast({ status: `success`, description: `Item adicionado ao carrinho`, position: `top` });
   };
 
   const totalPrice = useMemo(() => cart.reduce((acc, { price, quantity }) => (acc += Number(price) * quantity), 0), [cart]);
@@ -108,24 +113,46 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
         >
           {storeMakerList.map((item) => (
             <Flex key={item.id} position="relative" w="fit-content" h="fit-content">
-              <Flex
-                position="absolute"
-                top="-0.4rem"
-                right="-0.4rem"
-                w="24px"
-                h="24px"
-                bgColor="primary500"
-                borderRadius="6px"
-                align="center"
-                justify="center"
-                zIndex="1"
-                color="white"
-                cursor="pointer"
-                _hover={{ filter: `brightness(0.9)` }}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.75 }}
+                style={{
+                  display: `flex`,
+                  position: 'absolute',
+                  top: '-0.4rem',
+                  right: '-0.4rem',
+                  width: '28px',
+                  height: '28px',
+                  backgroundColor: cart.find((e) => e.id === item.id) ? `#32D583` : `#FF525C`,
+                  borderRadius: '6px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: '1',
+                  color: 'white',
+                  cursor: 'pointer',
+                  padding: '1px 1px 0 0 ',
+                }}
                 onClick={() => addItemInCart(item)}
               >
-                <FiShoppingCart fontSize="14px" />
-              </Flex>
+                <MdAddTask fontSize="19px" />
+                <Flex
+                  position="absolute"
+                  top="-0.5rem"
+                  right="-0.5rem"
+                  zIndex="20"
+                  border="1px"
+                  w="1.1rem"
+                  h="1.1rem"
+                  justify="center"
+                  align="center"
+                  borderColor={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
+                  color={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
+                  borderRadius="50%"
+                  bg="white"
+                >
+                  {cart.find((e) => e.id === item.id)?.quantity || 0}
+                </Flex>
+              </motion.button>
 
               <Flex
                 direction="column"
@@ -139,7 +166,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                 height={{ base: `12.5rem`, lg: '14.5rem' }}
                 width={{ base: `10rem`, lg: '12rem' }}
                 border="1px"
-                borderColor="gray300"
+                borderColor={itemsWithoutStock.includes(item.id) ? `primary500` : 'gray300'}
                 borderRadius="md"
                 overflow="hidden"
               >
