@@ -75,6 +75,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
 
     setGroup((e) => ({ ...e, ...updatedGroup }));
     setSavedGroup((e) => ({ ...e, ...updatedGroup }));
+    cookieManager.setCookie(`cart:${group.id}`, JSON.stringify([]));
   }, []);
 
   const handleApproveOrder = useAsyncCallback(async (order: IHubGroupOrder) => {
