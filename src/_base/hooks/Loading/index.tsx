@@ -45,6 +45,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         width="100vw"
         height="100vh"
         zIndex="9999"
+        bgColor="#00000055"
         // bg={loadingConfig.type === 'spinner' ? 'transparent' : 'primary100'}
         transition="all 0.35s"
         opacity={loadingConfig.isLoading ? '1' : '0'}
@@ -66,8 +67,8 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
 
         {loadingConfig.type === 'spinner' && (
           <Slide direction="bottom" in={loadingConfig.isLoading} style={{ zIndex: 10, justifyContent: 'flex-end', display: 'flex' }}>
-            <Flex>
-              <Image src="/loading/rocket-picode.gif" h="12rem" m={{ base: '0 0 -2.5rem', sm: '0 1rem -1.5rem 0' }} />
+            <Flex w="100vw" h="100vh" align="center" justify="center">
+              <Image src="/loading/rocket-picode.gif" h="16rem" m={{ base: '0 0 -2.5rem', sm: '0 1rem -1.5rem 0' }} />
             </Flex>
           </Slide>
         )}
