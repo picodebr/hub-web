@@ -26,6 +26,7 @@ export * from './refinePasswordSchema';
 export * from './removeDuplicateItems';
 export * from './SerialConnection';
 export * from './showErrorToClient';
+export * from './shuffleArray';
 export * from './sortGrades';
 export * from './statusLabelMapper';
 export * from './stkCommands';
