@@ -33,7 +33,7 @@ const Challenge: React.FC = () => {
   const loadChallenges = useAsyncCallback(
     async () => {
       setIsLoading(true);
-      const challenges = await listChallenges({ type: `algorithm`, limit: 10, grade: 9 });
+      const challenges = await listChallenges({ type: `map`, limit: 10, grade: 9 });
       const shuffled = shuffleArray(challenges.results);
 
       setDailyGame({ challenges: shuffled, currentIndex: 0 });
@@ -62,9 +62,11 @@ const Challenge: React.FC = () => {
         break;
 
       case `map`:
+        isCorrect = response === `true`;
         break;
 
       case `video`:
+        isCorrect = true;
         break;
 
       default:

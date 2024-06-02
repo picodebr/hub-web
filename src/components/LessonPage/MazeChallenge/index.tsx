@@ -1,8 +1,8 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+//@ts-ignore
+import * as Interpreter from 'js-interpreter';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Blockly from 'blockly';
-import * as Interpreter from 'js-interpreter';
 import { FiPlay as PlayIcon } from 'react-icons/fi';
 import { VscDebugRestart as RestartIcon } from 'react-icons/vsc';
 
@@ -31,7 +31,7 @@ export interface Props {
   player: MazePlayer;
 }
 
-const MazeChallenge: React.FC<Props> = ({
+export const MazePage: React.FC<Props> = ({
   fields,
   workspaceCode,
   onGameStatusChange,
@@ -53,7 +53,7 @@ const MazeChallenge: React.FC<Props> = ({
   useEffect(() => {
     if (clearFields) {
       setGameStatus('stop');
-      onClearFields(false);
+      if (onClearFields) onClearFields(false);
     }
   }, [clearFields]);
 
@@ -71,10 +71,7 @@ const MazeChallenge: React.FC<Props> = ({
     return { blocks: { custom: fields.blocks } };
   }, [fields.blocks]);
 
-  const horizontalLayout = useMemo(
-    () => !windowSize.isLandscape || windowSize.width < 1100,
-    [windowSize],
-  );
+  const horizontalLayout = useMemo(() => !windowSize.isLandscape || windowSize.width < 1100, [windowSize]);
 
   const blocklyConfig = useMemo(
     () => ({
@@ -88,9 +85,7 @@ const MazeChallenge: React.FC<Props> = ({
     if (!blocklyWorkspaceRef.current) return false;
 
     const delayedFunctions = ['forward', 'turnLeft', 'turnRight'];
-    const found = delayedFunctions.find(
-      f => f === (blocklyWorkspaceRef.current as any).lastExecutedFunction,
-    );
+    const found = delayedFunctions.find((f) => f === (blocklyWorkspaceRef.current as any).lastExecutedFunction);
 
     if (blocklyWorkspaceRef.current) {
       (blocklyWorkspaceRef.current as any).lastExecutedFunction = '';
@@ -101,14 +96,9 @@ const MazeChallenge: React.FC<Props> = ({
   function handleRunClick() {
     if (!blocklyWorkspaceRef.current || !gameRef.current) return;
 
-    const code: string = (Blockly as any).JavaScript.workspaceToCode(
-      blocklyWorkspaceRef.current,
-    );
+    const code: string = (Blockly as any).JavaScript.workspaceToCode(blocklyWorkspaceRef.current);
 
-    const interpreter = new Interpreter(
-      code,
-      (gameRef.current as any).interpreterInitHandler,
-    );
+    const interpreter = new Interpreter(code, (gameRef.current as any).interpreterInitHandler);
 
     function endOfSimulation() {
       if (checkCollision({ player, map: fields })) setGameStatus('collision');
@@ -163,12 +153,9 @@ const MazeChallenge: React.FC<Props> = ({
           blocklyWorkspaceRef={blocklyWorkspaceRef}
           maxCollisions={maxCollisions}
         />
-        <Button
-          onClick={handleButtonClick}
-          className={`run-button ${gameStatus}`}
-        >
-          <PlayIcon className="play" size="1.5rem" color="#fff" />
-          <RestartIcon className="restart" size="1.5rem" color="#fff" />
+        <Button onClick={handleButtonClick} className={`run-button ${gameStatus}`} whileTap={{ scale: 0.9 }} whileHover={{ scale: 1.05 }}>
+          <PlayIcon className="play" size="1.35rem" />
+          <RestartIcon className="restart" size="1.35rem" />
         </Button>
       </GameButtonContainer>
       <BlocklyWidget
@@ -184,5 +171,3 @@ const MazeChallenge: React.FC<Props> = ({
     </App>
   );
 };
-
-export default MazeChallenge;

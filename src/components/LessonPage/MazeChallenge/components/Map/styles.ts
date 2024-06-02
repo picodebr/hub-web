@@ -23,14 +23,13 @@ export const Map = styled.div<Props>`
   display: flex;
   flex-direction: column;
   padding: ${mapPadding};
-  background-color: ${props => props.backgroundColor};
+  background-color: #fff;
   position: relative;
   user-select: none;
   overflow: hidden;
-
   --map-width: var(--game-button-container-max-width);
-  --columns: ${props => props.size};
-  --rows: ${props => props.size};
+  --columns: ${(props) => props.size};
+  --rows: ${(props) => props.size};
 `;
 
 export const Row = styled.div`
@@ -47,8 +46,8 @@ export const Column = styled.div<ColumnProps>`
   --color-path: #e2e4f7;
   --color-path-line: rgb(161, 170, 248, 0.4);
   --square-size: calc((var(--map-width) - 4rem) / var(--columns));
-  --border-color: ${props => props.borderColor || 'rgba(255, 255, 255, 0.0)'};
-  background-image: url(${props => props.backgroundImageURL});
+  --border-color: ${(props) => props.borderColor || 'rgba(255, 255, 255, 0.0)'};
+  background-image: url(${(props) => props.backgroundImageURL});
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -125,9 +124,9 @@ export const Player = styled.div<PlayerProps>`
   line-height: var(--square-size);
   overflow: hidden;
 
-  --row: ${props => props.coordinates.position.y};
-  --column: ${props => props.coordinates.position.x};
-  --angle: ${props => props.coordinates.angle};
+  --row: ${(props) => props.coordinates.position.y};
+  --column: ${(props) => props.coordinates.position.x};
+  --angle: ${(props) => props.coordinates.angle};
   --square-size: calc((var(--map-width) - 4rem) / var(--columns));
 
   &.running,
@@ -151,9 +150,7 @@ interface PlayerImageProps {
 }
 
 function getBackgroundImageURL(props: PlayerImageProps): string {
-  return props.gameStatus === 'collision'
-    ? props.srcCollision || props.src
-    : props.src;
+  return props.gameStatus === 'collision' ? props.srcCollision || props.src : props.src;
 }
 
 export const PlayerImage = styled.div<PlayerImageProps>`
@@ -173,7 +170,7 @@ interface FinishProps {
 export const Finish = styled.div<FinishProps>`
   width: 70%;
   height: 70%;
-  background-image: url(${props => props.src});
+  background-image: url(${(props) => props.src});
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;
@@ -199,7 +196,7 @@ interface IconProps {
 export const NoCollisionElement = styled.div<IconProps>`
   width: 1.5rem;
   height: 1.5rem;
-  background-image: url(${props => props.imageURL});
+  background-image: url(${(props) => props.imageURL});
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;
@@ -211,7 +208,7 @@ export const CollisionElement = styled.div<IconProps>`
   height: 1.5rem;
   font-size: 1.5rem;
   color: red;
-  background-image: url(${props => props.imageURL});
+  background-image: url(${(props) => props.imageURL});
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;

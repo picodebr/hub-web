@@ -1,10 +1,6 @@
 /* eslint-disable indent */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import sugarImage from '../assets/icons/sugar.svg';
-import locationImage from '../assets/icons/location.png';
-import flagImage from '../assets/icons/flag.png';
-import targetImage from '../assets/icons/target.png';
 import { MazePlayer } from '../interfaces';
 
 export const customBlocksTypes = <const>[
@@ -15,13 +11,13 @@ export const customBlocksTypes = <const>[
   'controls_repeat_until_reach_end',
 ];
 const playerImages: Record<MazePlayer, string> = {
-  ant: sugarImage,
-  bicicle: locationImage,
-  car: flagImage,
-  drone: targetImage,
+  ant: `/challenges/icons/sugar.svg`,
+  bicicle: `/challenges/icons/location.png`,
+  car: `/challenges/icons/flag.png`,
+  drone: `/challenges/icons/target.png`,
 };
 
-type CustomBlockType = typeof customBlocksTypes[number];
+type CustomBlockType = (typeof customBlocksTypes)[number];
 
 interface BlocklyArgs {
   type: string;
@@ -83,10 +79,7 @@ export const movementRotate: CreateCustomBlock = () => ({
   colour: 285,
   tooltip: 'Vire para a direção especificada',
   helpUrl: '',
-  generatorCallback: block =>
-    block.getFieldValue('direction') === 'L'
-      ? 'turnLeft();\n'
-      : 'turnRight();\n',
+  generatorCallback: (block) => (block.getFieldValue('direction') === 'L' ? 'turnLeft();\n' : 'turnRight();\n'),
 });
 
 // source: https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#m5x4ff
@@ -118,22 +111,14 @@ export const controlsIfPath: CreateCustomBlock = () => ({
   previousStatement: null,
   nextStatement: null,
   colour: 210,
-  tooltip:
-    'Executa os blocos em "faça" se houver um caminho para a direção especificada',
+  tooltip: 'Executa os blocos em "faça" se houver um caminho para a direção especificada',
   helpUrl: '',
-  generatorCallback: block => {
+  generatorCallback: (block) => {
     const direction = block.getFieldValue('direction');
-    const condition =
-      direction === 'A'
-        ? 'isPathForward()'
-        : direction === 'L'
-        ? 'isPathToLeft()'
-        : 'isPathToRight()';
+    const condition = direction === 'A' ? 'isPathForward()' : direction === 'L' ? 'isPathToLeft()' : 'isPathToRight()';
 
     return `if (${condition}) {
-  ${
-    (window as any).Blockly.JavaScript.statementToCode(block, 'statement') || ''
-  }
+  ${(window as any).Blockly.JavaScript.statementToCode(block, 'statement') || ''}
 }`;
   },
 });
@@ -171,38 +156,22 @@ export const controlsIfElsePath: CreateCustomBlock = () => ({
   previousStatement: null,
   nextStatement: null,
   colour: 210,
-  tooltip:
-    'Executa os blocos em "faça" se houver um caminho para a direção especificada. Caso contrário, os blocos em "senão" serão executados',
+  tooltip: 'Executa os blocos em "faça" se houver um caminho para a direção especificada. Caso contrário, os blocos em "senão" serão executados',
   helpUrl: '',
-  generatorCallback: block => {
+  generatorCallback: (block) => {
     const direction = block.getFieldValue('direction');
-    const condition =
-      direction === 'A'
-        ? 'isPathForward()'
-        : direction === 'L'
-        ? 'isPathToLeft()'
-        : 'isPathToRight()';
+    const condition = direction === 'A' ? 'isPathForward()' : direction === 'L' ? 'isPathToLeft()' : 'isPathToRight()';
 
     return `if (${condition}) {
-  ${
-    (window as any).Blockly.JavaScript.statementToCode(
-      block,
-      'truthy_statement',
-    ) || ''
-  }
+  ${(window as any).Blockly.JavaScript.statementToCode(block, 'truthy_statement') || ''}
 } else {
-  ${
-    (window as any).Blockly.JavaScript.statementToCode(
-      block,
-      'falsy_statement',
-    ) || ''
-  }
+  ${(window as any).Blockly.JavaScript.statementToCode(block, 'falsy_statement') || ''}
 }`;
   },
 });
 
 // source: https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#9ag263
-export const controlsRepeatUntilReachEnd: CreateCustomBlock = player => ({
+export const controlsRepeatUntilReachEnd: CreateCustomBlock = (player) => ({
   type: 'controls_repeat_until_reach_end',
   message0: 'repetir até %1 %2 faça %3',
   args0: [
@@ -224,13 +193,10 @@ export const controlsRepeatUntilReachEnd: CreateCustomBlock = player => ({
   previousStatement: null,
   nextStatement: null,
   colour: 120,
-  tooltip:
-    'Executa os blocos em "faça" enquanto não chegar na posição final (⚐)',
+  tooltip: 'Executa os blocos em "faça" enquanto não chegar na posição final (⚐)',
   helpUrl: '',
-  generatorCallback: block => `while (notDone()) {
-  ${
-    (window as any).Blockly.JavaScript.statementToCode(block, 'statement') || ''
-  }
+  generatorCallback: (block) => `while (notDone()) {
+  ${(window as any).Blockly.JavaScript.statementToCode(block, 'statement') || ''}
 }`,
 });
 

@@ -1,63 +1,12 @@
-/* eslint-disable react/no-array-index-key */
 import React, { useMemo } from 'react';
 import { MdClose as CloseIcon } from 'react-icons/md';
 
-import dronePassImage from '../../assets/icons/path/drone/pass.svg';
-import droneCurveImage from '../../assets/icons/path/drone/curve.svg';
-import droneEndImage from '../../assets/icons/path/drone/end.svg';
-import droneTeeImage from '../../assets/icons/path/drone/tee.svg';
-import droneCrossImage from '../../assets/icons/path/drone/cross.svg';
-
-import antPassImage from '../../assets/icons/path/ant/pass.svg';
-import antCurveImage from '../../assets/icons/path/ant/curve.svg';
-import antEndImage from '../../assets/icons/path/ant/end.svg';
-import antTeeImage from '../../assets/icons/path/ant/tee.svg';
-import antCrossImage from '../../assets/icons/path/ant/cross.svg';
-
-import biciclePassImage from '../../assets/icons/path/bicicle/pass.svg';
-import bicicleCurveImage from '../../assets/icons/path/bicicle/curve.svg';
-import bicicleEndImage from '../../assets/icons/path/bicicle/end.svg';
-import bicicleTeeImage from '../../assets/icons/path/bicicle/tee.svg';
-import bicicleCrossImage from '../../assets/icons/path/bicicle/cross.svg';
-
-import carPassImage from '../../assets/icons/path/car/pass.svg';
-import carCurveImage from '../../assets/icons/path/car/curve.svg';
-import carEndImage from '../../assets/icons/path/car/end.svg';
-import carTeeImage from '../../assets/icons/path/car/tee.svg';
-import carCrossImage from '../../assets/icons/path/car/cross.svg';
-
-import DroneImage from '../../assets/icons/drone.svg';
-import AntImage from '../../assets/icons/ant.svg';
-import BicicleImage from '../../assets/icons/bicicle.svg';
-import CarImage from '../../assets/icons/car.svg';
-
-import SugarImage from '../../assets/icons/sugar.svg';
-import FlagImage from '../../assets/icons/flag.png';
-import TargetImage from '../../assets/icons/target.png';
-import LocationImage from '../../assets/icons/location.png';
-
-import {
-  Map,
-  Row,
-  Column,
-  Player,
-  Finish,
-  PlayerImage,
-  NoCollisionElement,
-  CollisionElement,
-  CollisionContainer,
-} from './styles';
+import { Map, Row, Column, Player, Finish, PlayerImage, NoCollisionElement, CollisionElement, CollisionContainer } from './styles';
 import { PlayerCoordinates } from '../../utils/getInitialPlayerCoordinates';
 import makeMapMatrix from '../../utils/makeMapMatrix';
 
 import { makeLiveElements } from '../../utils/makeLiveElements';
-import {
-  GameStatus,
-  IMazeFields,
-  IPath,
-  PathImage,
-  Themes,
-} from '../../interfaces';
+import { GameStatus, IMazeFields, IPath, PathImage, Themes } from '../../interfaces';
 
 function getSquareImageURL(classValue: string, path: IPath): string {
   const keys = Object.keys(path);
@@ -85,50 +34,50 @@ const defaultColors = {
 
 const themes: Themes = {
   drone: {
-    player: DroneImage,
-    goal: TargetImage,
+    player: `/challenges/icons/drone.svg`,
+    goal: `/challenges/icons/target.png`,
     path: {
-      pass: dronePassImage,
-      curve: droneCurveImage,
-      end: droneEndImage,
-      tee: droneTeeImage,
-      cross: droneCrossImage,
+      pass: `/challenges/icons/path/drone/pass.svg`,
+      curve: `/challenges/icons/path/drone/curve.svg`,
+      end: `/challenges/icons/path/drone/end.svg`,
+      tee: `/challenges/icons/path/drone/tee.svg`,
+      cross: `/challenges/icons/path/drone/cross.svg`,
     },
     backgroundColor: '#3F3F3F',
   },
   ant: {
-    player: AntImage,
-    goal: SugarImage,
+    player: `/challenges/icons/ant.svg`,
+    goal: `/challenges/icons/sugar.svg`,
     path: {
-      pass: antPassImage,
-      curve: antCurveImage,
-      end: antEndImage,
-      tee: antTeeImage,
-      cross: antCrossImage,
+      pass: '/challenges/icons/path/ant/pass.svg',
+      curve: '/challenges/icons/path/ant/curve.svg',
+      end: '/challenges/icons/path/ant/end.svg',
+      tee: '/challenges/icons/path/ant/tee.svg',
+      cross: '/challenges/icons/path/ant/cross.svg',
     },
     backgroundColor: '#B4753B',
   },
   bicicle: {
-    player: BicicleImage,
-    goal: LocationImage,
+    player: `/challenges/icons/bicicle.svg`,
+    goal: `/challenges/icons/location.png`,
     path: {
-      pass: biciclePassImage,
-      curve: bicicleCurveImage,
-      end: bicicleEndImage,
-      tee: bicicleTeeImage,
-      cross: bicicleCrossImage,
+      pass: '/challenges/icons/path/bicicle/pass.svg',
+      curve: '/challenges/icons/path/bicicle/curve.svg',
+      end: '/challenges/icons/path/bicicle/end.svg',
+      tee: '/challenges/icons/path/bicicle/tee.svg',
+      cross: '/challenges/icons/path/bicicle/cross.svg',
     },
     backgroundColor: '#95d19b',
   },
   car: {
-    player: CarImage,
-    goal: FlagImage,
+    player: `/challenges/icons/car.svg`,
+    goal: `/challenges/icons/flag.png`,
     path: {
-      pass: carPassImage,
-      curve: carCurveImage,
-      end: carEndImage,
-      tee: carTeeImage,
-      cross: carCrossImage,
+      pass: '/challenges/icons/path/car/pass.svg',
+      curve: '/challenges/icons/path/car/curve.svg',
+      end: '/challenges/icons/path/car/end.svg',
+      tee: '/challenges/icons/path/car/tee.svg',
+      cross: '/challenges/icons/path/car/cross.svg',
     },
     backgroundColor: '#AAAAAA',
   },
@@ -150,13 +99,7 @@ const Collision: React.FC<ICollisionProps> = ({ playerUrl }) => {
   );
 };
 
-const Maps: React.FC<Props> = ({
-  gameStatus,
-  fields,
-  player,
-  collisions,
-  maxCollisions,
-}) => {
+const Maps: React.FC<Props> = ({ gameStatus, fields, player, collisions, maxCollisions }) => {
   const { size } = fields;
 
   const mapMatrix = makeMapMatrix({ map: fields, size });
@@ -192,11 +135,7 @@ const Maps: React.FC<Props> = ({
         </Row>
       ))}
       <Player coordinates={player} className={gameStatus}>
-        <PlayerImage
-          gameStatus={gameStatus}
-          src={theme.player}
-          srcCollision={theme.player}
-        />
+        <PlayerImage gameStatus={gameStatus} src={theme.player} srcCollision={theme.player} />
       </Player>
       <CollisionContainer>
         {collisionElements.map(({ Element, key }) => (

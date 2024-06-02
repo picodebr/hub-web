@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, memo } from 'react';
 import Blockly from 'blockly';
 
@@ -50,7 +48,7 @@ const BlocklyWidget: React.FC<Props> = memo(function BlocklyWidget({
   useEffect(() => {
     if (!blocks.custom) return;
 
-    blocks.custom.forEach(blockType => {
+    blocks.custom.forEach((blockType) => {
       const block = getCustomBlock(blockType, rest.player);
       if (!block) return;
 
@@ -71,15 +69,11 @@ const BlocklyWidget: React.FC<Props> = memo(function BlocklyWidget({
     };
 
     if (blocks.builtin && Array.isArray(blocks.builtin)) {
-      blocks.builtin.forEach(type =>
-        config.contents.push({ kind: 'block', type }),
-      );
+      blocks.builtin.forEach((type) => config.contents.push({ kind: 'block', type }));
     }
 
     if (blocks.custom && Array.isArray(blocks.custom)) {
-      blocks.custom.forEach(type =>
-        config.contents.push({ kind: 'block', type }),
-      );
+      blocks.custom.forEach((type) => config.contents.push({ kind: 'block', type }));
     }
 
     return config;
@@ -88,7 +82,6 @@ const BlocklyWidget: React.FC<Props> = memo(function BlocklyWidget({
   useEffect(() => {
     const blocklyDiv = document.querySelector('.blockly-div');
     if (!blocklyDiv) return () => ({});
-
     const workspace = Blockly.inject(blocklyDiv, {
       ...blocklyConfig,
       toolbox: toolbox as unknown as HTMLElement,
@@ -107,8 +100,7 @@ const BlocklyWidget: React.FC<Props> = memo(function BlocklyWidget({
     (Blockly as any).JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
     (Blockly as any).JavaScript.addReservedWords('highlightBlock');
     const dom = textToDom(workspaceCode || '');
-    if (dom && blocks.custom?.length)
-      Blockly.Xml.domToWorkspace(dom, workspace);
+    if (dom && blocks.custom?.length) Blockly.Xml.domToWorkspace(dom, workspace);
 
     return workspace.dispose.bind(workspace);
 
