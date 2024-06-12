@@ -13,7 +13,7 @@ export const CustomRouterProvider: React.FC<PropsWithChildren> = ({ children }) 
     const previousPush = nextRouter.push;
 
     nextRouter.push = async (...params) => {
-      setLoadingConfig((cfg) => ({ ...cfg, isLoading: true }));
+      setLoadingConfig((cfg) => ({ ...cfg, isLoading: true, type: `darken-spinner` }));
       return await previousPush.bind(nextRouter)(...params);
     };
   }, [nextRouter, setLoadingConfig]);
