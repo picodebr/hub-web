@@ -1,35 +1,43 @@
 import { ReactNode, useCallback, useState } from 'react';
-import { Flex, Text } from '@chakra-ui/react';
+import { Flex, Text, Tooltip } from '@chakra-ui/react';
 import { FaTasks } from 'react-icons/fa';
+import { motion } from 'framer-motion';
 
 import { HubModuleLessonType } from '@/_base/interfaces/module';
 import { QuizPage } from './Quiz';
 import { ILessonPageProps } from './interfaces';
-import { MdTaskAlt } from 'react-icons/md';
+import { MdCheck, MdNavigateBefore, MdNavigateNext, MdTaskAlt } from 'react-icons/md';
 import { AlgorithmPage } from './Algorithm';
 import { MazePage } from './MazeChallenge';
 import { GameStatus } from './MazeChallenge/interfaces';
+import { cookieManager } from '@/_base/utils';
+import { FINISHED_DAILY_CHALLENGES_STORAGE_KEY } from '@/_base/config/storage';
 
-export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, registerAnswer }) => {
+export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, registerAnswer, answers, onPageChange, onFinish }) => {
   const [clearFields, setClearFields] = useState(false);
 
   const [workspaceCode, setWorkspaceCode] = useState('');
+  const finishedAnswers = cookieManager.getCookie<string[]>(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, true);
 
   const handleGameStatusChange = useCallback(
     (status: GameStatus) => {
+      const targetAnswer = answers.find((e) => e.hub_challenge_id === challenge.id);
+      if (status === `collision`)
+        registerAnswer({ hub_challenge_id: challenge.id, is_passed: undefined, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
+
       if (status === 'finish' || status === 'over') {
         const is_passed = status === 'finish';
 
         setWorkspaceCode('');
 
-        registerAnswer(`${is_passed}`);
+        registerAnswer({ hub_challenge_id: challenge.id, is_passed, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
       }
     },
     [workspaceCode],
   );
   const ContentPage: Record<HubModuleLessonType, ReactNode> = {
-    quiz: <QuizPage challenge={challenge} registerAnswer={registerAnswer} />,
-    algorithm: <AlgorithmPage challenge={challenge} registerAnswer={registerAnswer} />,
+    quiz: <QuizPage challenge={challenge} registerAnswer={registerAnswer} answers={answers} />,
+    algorithm: <AlgorithmPage challenge={challenge} registerAnswer={registerAnswer} answers={answers} />,
     map: (
       <MazePage
         fields={challenge.data.maze_field as any}
@@ -41,9 +49,10 @@ export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, r
         onClearFields={setClearFields}
         challengeId={challenge.id}
         player={(challenge.data.maze_field as any)?.player}
+        answers={answers}
       />
     ),
-    video: <QuizPage challenge={challenge} registerAnswer={registerAnswer} />,
+    video: <QuizPage challenge={challenge} registerAnswer={registerAnswer} answers={answers} />,
   };
 
   return (
@@ -56,6 +65,7 @@ export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, r
               {challenge.title}
             </Text>
           </Flex>
+
           <Flex bg="#25467D" w="fit-content" justify="center" borderRadius="md" p="0.25rem 0.75rem" color="white" align="center" gap="0.5rem">
             <FaTasks fontSize="1.5rem" />
             <Text fontSize="20px" whiteSpace="wrap">
@@ -76,6 +86,62 @@ export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, r
         </Flex>
       </Flex>
       {ContentPage[challenge.type]}
+      <Flex
+        justify="center"
+        mt="0.875rem"
+        borderRadius="md"
+        p="0.25rem 0.75rem"
+        color="white"
+        align="center"
+        gap="1rem"
+        sx={{
+          '.btn': {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            bg: '#25467D',
+            p: '0.25rem 0.75rem',
+            fontSize: `1rem`,
+            fontWeight: `500`,
+            borderRadius: `md`,
+          },
+          '.confirm-btn': {
+            display: 'flex',
+            bg: `success400`,
+            borderRadius: `50%`,
+            p: `0.25rem`,
+            fontSize: `1.5rem`,
+          },
+        }}
+      >
+        <motion.button
+          className="btn"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => onPageChange(`previous`)}
+          disabled={!dailyGame?.currentIndex}
+        >
+          <MdNavigateBefore />
+          Anterior
+        </motion.button>
+        {finishedAnswers?.length === dailyGame?.challenges.length && (
+          <Tooltip label="Enviar desafios" placement="top">
+            <motion.button className="confirm-btn" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => onFinish()}>
+              <MdCheck />
+            </motion.button>
+          </Tooltip>
+        )}
+        <motion.button
+          className="btn"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => onPageChange(`next`)}
+          disabled={!finishedAnswers?.includes(challenge.id)}
+        >
+          Próximo
+          <MdNavigateNext />
+        </motion.button>
+      </Flex>
     </Flex>
   );
 };

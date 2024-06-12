@@ -107,7 +107,7 @@ const BlocklyWidget: React.FC<Props> = memo(function BlocklyWidget({
     // DO NOT INCLUDE ANY DEPENDECY
   }, [challengeId]);
 
-  return <BlocklyDiv className="blockly-div" style={style} />;
+  return <BlocklyDiv id="blockly-div" className="blockly-div" style={style} />;
 });
 
 export default BlocklyWidget;

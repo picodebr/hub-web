@@ -1,6 +1,6 @@
-import { IHubChallenge } from './IHubChallenge';
+import { IDailyChallenge } from './IDailyChallenge';
 
-export interface DailyGameProps {
-  challenges: IHubChallenge[];
+export interface DailyGameProps extends IDailyChallenge {
   currentIndex: number;
+  remainingLifes: number;
 }

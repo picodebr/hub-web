@@ -8,6 +8,7 @@ export const App = styled.div`
   background-position: bottom;
   background-size: cover;
   border-radius: 10px;
+  flex: 1;
 
   @media (max-width: 768px) {
     flex-direction: column;

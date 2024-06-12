@@ -17,6 +17,7 @@ export interface Props {
   blocklyWorkspaceRef: React.MutableRefObject<Blockly.WorkspaceSvg | null>;
   remainingBlocks: number;
   maxCollisions: number;
+  initialCollisions?: number;
 }
 
 type ObjectType = Record<string, unknown>;
@@ -25,9 +26,19 @@ export interface GameRef {
   interpreterInitHandler(interpreter: ObjectType, globalObject: ObjectType): void;
 }
 
-const Games: React.FC<Props> = ({ gameRef, gameStatus, onGameStatusChange, fields, player, blocklyWorkspaceRef, remainingBlocks, maxCollisions }) => {
+const Games: React.FC<Props> = ({
+  gameRef,
+  gameStatus,
+  onGameStatusChange,
+  fields,
+  player,
+  blocklyWorkspaceRef,
+  remainingBlocks,
+  maxCollisions,
+  initialCollisions,
+}) => {
   const [, setRefresh] = useState<ObjectType>({});
-  const [collisions, setCollisions] = useState(0);
+  const [collisions, setCollisions] = useState(initialCollisions || 0);
 
   useEffect(() => {
     if (!fields.start) return;

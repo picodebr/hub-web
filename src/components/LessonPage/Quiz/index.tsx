@@ -2,8 +2,21 @@ import { Flex, Grid, Text } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 
 import { ILessonPageProps } from '../interfaces';
+import { ISendQuizParams } from '@/_base/interfaces/challenges';
+import { useEffect, useState } from 'react';
 
-export const QuizPage: React.FC<ILessonPageProps> = ({ challenge, registerAnswer }) => {
+export const QuizPage: React.FC<Omit<ILessonPageProps, `onPageChange` | `onFinish`>> = ({ challenge, registerAnswer, answers }) => {
+  const quizAnswers = answers as ISendQuizParams[];
+  const [selectedAnswer, setSelectedAnswer] = useState<string>(quizAnswers.find((e) => e.hub_challenge_id === challenge.id)?.option || ``);
+
+  useEffect(() => {
+    setSelectedAnswer(quizAnswers.find((e) => e.hub_challenge_id === challenge.id)?.option || ``);
+  }, [challenge, answers]);
+
+  const onRegisterAnswer = (data: ISendQuizParams) => {
+    setSelectedAnswer(data.option);
+    registerAnswer(data);
+  };
   return (
     <Flex flex="1" w="100%" p="2rem" bgImage="/patterns/cloudy.svg" bgPosition="bottom" bgSize="cover" borderRadius="md" justify="center">
       <Grid
@@ -22,12 +35,14 @@ export const QuizPage: React.FC<ILessonPageProps> = ({ challenge, registerAnswer
             whileTap={{ scale: 0.9 }}
             style={{
               padding: `0.5rem`,
-              background: `white`,
+              background: e.text === selectedAnswer ? `#32D583` : `white`,
               height: `fit-content`,
               borderRadius: `6px`,
+              border: e.text === selectedAnswer ? `1px solid #D1FADF` : undefined,
+              color: e.text === selectedAnswer ? `#fefefe` : undefined,
               display: `flex`,
             }}
-            onClick={() => registerAnswer(e.text)}
+            onClick={() => onRegisterAnswer({ hub_challenge_id: challenge.id, option: e.text })}
           >
             <Text textAlign="center" w="100%" whiteSpace="wrap" fontWeight="500">
               {e.text}

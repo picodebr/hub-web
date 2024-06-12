@@ -5,21 +5,30 @@ import { Flex } from '@chakra-ui/react';
 import { KanbanColumn } from './components/Column';
 import { KanbanColumnData, KanbanItemType } from './interfaces';
 import { kanbanUtils } from './utils';
-import { GenericButton } from '@/components/Buttons/Generic';
-import { FaCheck } from 'react-icons/fa6';
 import { ILessonPageProps } from '../interfaces';
+import { ISendAlgorithmParams } from '@/_base/interfaces/challenges';
 
-export const AlgorithmPage: React.FC<ILessonPageProps> = ({ challenge, registerAnswer }) => {
+export const AlgorithmPage: React.FC<Omit<ILessonPageProps, `onPageChange` | `onFinish`>> = ({ challenge, registerAnswer, answers }) => {
   const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>([]);
 
   useEffect(() => {
+    if (!kanbanList[1]?.items) return;
+
+    registerAnswer({ hub_challenge_id: challenge.id, sequence: kanbanList[1].items.map((e) => e.title) });
+  }, [kanbanList]);
+
+  useEffect(() => {
+    const targetAnswer = answers.find((e) => e.hub_challenge_id === challenge.id) as ISendAlgorithmParams;
+
     setKanbanList([
       {
         type: `raw`,
         title: `Ordene o algoritmo`,
-        items: challenge.data.algorithm_sequence?.map((e) => ({ column: `raw`, title: e })) || [],
+        items:
+          challenge.data.algorithm_sequence?.filter((e) => !(targetAnswer?.sequence || []).includes(e))?.map((e) => ({ column: `raw`, title: e })) ||
+          [],
       },
-      { type: `ordered`, title: `Resposta final`, items: [] },
+      { type: `ordered`, title: `Resposta final`, items: targetAnswer?.sequence?.map((e) => ({ title: e, column: `ordered` })) || [] },
     ]);
   }, [challenge]);
 
@@ -69,15 +78,6 @@ export const AlgorithmPage: React.FC<ILessonPageProps> = ({ challenge, registerA
           <KanbanColumn key={column.type} column={column} index={index} />
         ))}
       </DragDropContext>
-      <Flex>
-        <GenericButton
-          label="Finalizar"
-          bg="primary700"
-          rightIcon={<FaCheck />}
-          isDisabled={kanbanList[0]?.items.length !== 0}
-          onClick={() => registerAnswer(kanbanList[1].items.map((e) => e.title))}
-        />
-      </Flex>
     </Flex>
   );
 };

@@ -1,1 +1,1 @@
-export * from './listChallenges';
+export * from './getDailyChallenges';

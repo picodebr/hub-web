@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 //@ts-ignore
 import * as Interpreter from 'js-interpreter';
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useLayoutEffect } from 'react';
 import Blockly from 'blockly';
 import { FiPlay as PlayIcon } from 'react-icons/fi';
 import { VscDebugRestart as RestartIcon } from 'react-icons/vsc';
@@ -16,6 +16,7 @@ import useWindowResize from './utils/windowResize';
 
 import { App, AppGlobal, GameButtonContainer, Button } from './styles';
 import { GameStatus, IMazeFields, MazePlayer } from './interfaces';
+import { AnswerResultType, ISendMazeParams } from '@/_base/interfaces/challenges';
 
 const instructionStepDelay = 500; // milliseconds
 
@@ -29,6 +30,7 @@ export interface Props {
   onClearFields?(bool: boolean): void;
   challengeId: string;
   player: MazePlayer;
+  answers: AnswerResultType[];
 }
 
 export const MazePage: React.FC<Props> = ({
@@ -36,10 +38,11 @@ export const MazePage: React.FC<Props> = ({
   workspaceCode,
   onGameStatusChange,
   onWorkspaceCodeChange,
-  maxCollisions = 4,
+  maxCollisions = 3,
   clearFields,
   onClearFields,
   challengeId,
+  answers,
   ...rest
 }) => {
   const [gameStatus, setGameStatus] = useState<GameStatus>('stop');
@@ -50,12 +53,20 @@ export const MazePage: React.FC<Props> = ({
   const windowSize = useWindowResize();
   const simulationStatus = useMemo(() => ({ status: 'stop' }), []);
 
+  const targetAnswer = answers.find((e) => e.hub_challenge_id === challengeId) as ISendMazeParams & { attempts: number };
+
   useEffect(() => {
     if (clearFields) {
       setGameStatus('stop');
       if (onClearFields) onClearFields(false);
     }
   }, [clearFields]);
+
+  useLayoutEffect(() => {
+    const el = document.getElementById(`blockly-div`);
+
+    if (el) el.style.height = `100%`;
+  }, []);
 
   useEffect(() => {
     simulationStatus.status = gameStatus;
@@ -146,14 +157,21 @@ export const MazePage: React.FC<Props> = ({
         <Game
           remainingBlocks={remainingBlocks}
           gameRef={gameRef}
-          gameStatus={gameStatus}
+          gameStatus={targetAnswer?.is_passed ? `finish` : gameStatus}
           onGameStatusChange={setGameStatus}
           fields={fields}
           player={player}
           blocklyWorkspaceRef={blocklyWorkspaceRef}
           maxCollisions={maxCollisions}
+          initialCollisions={(targetAnswer as any)?.attempts || 0}
         />
-        <Button onClick={handleButtonClick} className={`run-button ${gameStatus}`} whileTap={{ scale: 0.9 }} whileHover={{ scale: 1.05 }}>
+        <Button
+          onClick={handleButtonClick}
+          className={`run-button ${gameStatus}`}
+          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.05 }}
+          disabled={targetAnswer?.attempts >= maxCollisions || targetAnswer?.is_passed}
+        >
           <PlayIcon className="play" size="1.35rem" />
           <RestartIcon className="restart" size="1.35rem" />
         </Button>

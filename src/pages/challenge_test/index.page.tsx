@@ -1,179 +1,66 @@
-import { LuRocket } from 'react-icons/lu';
 import { GetServerSideProps } from 'next';
-import { Button, Flex, Text, transition, useUpdateEffect } from '@chakra-ui/react';
-import { FaHeart, FaRegClock, FaRegHeart } from 'react-icons/fa';
-import { useEffect, useMemo, useState } from 'react';
-import { motion, useAnimate, useMotionValue } from 'framer-motion';
+import { Button, Flex } from '@chakra-ui/react';
+import { ReactNode, useEffect, useState } from 'react';
+import { animate, AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
 
-import { cookieManager } from '@/_base/utils';
-import moment from 'moment';
+import { GenericButton } from '@/components/Buttons/Generic';
+import { LuRocket } from 'react-icons/lu';
+
+type PageView = `start` | `countdown` | `challenges`;
 
 const Challenge: React.FC = () => {
-  const [game, setGame] = useState({
-    lifes: 5,
-    started: 0,
-    challenges: [
-      { id: 1, time: 2000 },
-      { id: 2, time: 2000 },
-      { id: 3, time: 2000 },
-      { id: 4, time: 2000 },
-      { id: 5, time: 5000 },
-    ],
-  });
-  const [currentGameId, setCurrentGameId] = useState(0);
-  const [remaining, setRemaining] = useState(0);
-  const [scope, animate] = useAnimate();
-  const scale = useMotionValue(0);
-  const [lastLife, setLastLife] = useState(0);
+  const [pageView, setPageView] = useState<PageView>(`start`);
+  const [challengeStartedAt, setChallengeStartedAt] = useState<Date | null>(null);
 
   useEffect(() => {
-    const controls = animate(scale, 1, { duration: 1 });
+    if (pageView !== `countdown`) return;
 
-    return () => controls.stop();
-  }, [currentGameId]);
+    const tm = setTimeout(() => setPageView(`challenges`), 11500);
+    return () => clearTimeout(tm);
+  }, [pageView]);
 
-  const currentTime = useMemo(() => moment(remaining).seconds(), [remaining]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (currentGameId > 0 && !remaining) {
-        setRemaining((e) => Math.max(e - 1000, 0));
-      }
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [currentGameId]);
-
-  useUpdateEffect(() => {
-    if (lastLife) {
-      setTimeout(() => {
-        setLastLife(0);
-      }, 150);
-    }
-  }, [lastLife]);
-
-  useUpdateEffect(() => {
-    const target = game.challenges.find((e) => e.id === currentGameId);
-    setRemaining(target?.time || 0);
-    setTimeout(
-      () => {
-        if (target) {
-          setGame((e) => {
-            setLastLife(e.lifes);
-            return { ...e, lifes: e.lifes - 1 };
-          });
-
-          setCurrentGameId((e) => e + 1);
-        } else {
-          setCurrentGameId(0);
-          setRemaining(0);
-          setGame((e) => ({ ...e, started: 0, lifes: 5 }));
-        }
-      },
-      target?.time || 1000,
-    );
-  }, [currentGameId]);
-
-  const onStart = () => {
-    setCurrentGameId(1);
-    setGame((e) => ({ ...e, started: Date.now() }));
-  };
-
-  const variants = {
-    default: {
-      scale: 1,
-    },
-    animate: {
-      scale: 2,
-      transition: {
-        ease: 'easeInOut',
-        duration: 0.15,
-      },
-    },
-  };
-
-  return (
-    <Flex direction="column" flex="1" gap="1.5rem" textAlign="left" whiteSpace="nowrap">
-      <Flex>
-        <Flex
-          h="fit-content"
-          bgColor="white"
-          borderRadius="10px"
-          boxShadow="md"
-          align="center"
-          padding="20px 24px"
-          color="gray400"
-          gap="16px"
-          fontSize="15px"
-          border="1px"
-          borderColor="gray300"
-        >
-          <Flex gap="2rem" justify="space-between">
-            <Text>Vidas restantes</Text>
-
-            <Flex color="error600" gap="0.5rem" fontSize="24px">
-              {Array.from({ length: 5 }).map((_, i) =>
-                i + 1 <= game.lifes ? (
-                  <motion.div id={`heart-${i + 1}`} key={i + 1}>
-                    <FaHeart />
-                  </motion.div>
-                ) : (
-                  <motion.div id={`heart-${i + 1}`} key={i + 1} variants={variants} animate={i + 1 === lastLife ? `animate` : `default`}>
-                    <FaRegHeart />
-                  </motion.div>
-                ),
-              )}
-            </Flex>
-          </Flex>
+  const PageViewComponent: Record<PageView, ReactNode> = {
+    start: (
+      <motion.div style={{ height: `100%`, width: `100%` }}>
+        <Flex w="100%" bgImage="/patterns/cloudy.svg" h="100%" justify="center" align="center">
+          <GenericButton
+            label="Iniciar Desafio"
+            rightIcon={<LuRocket />}
+            onClick={() => {
+              setChallengeStartedAt(new Date());
+              setPageView(`countdown`);
+            }}
+          />
         </Flex>
-      </Flex>
-
-      <Flex
-        flex="1"
-        bgColor="white"
-        display="flex"
-        flexDirection="column"
-        justify="center"
-        align="center"
-        h="fit-content"
-        borderRadius="10px"
-        boxShadow="md"
-        color="primary700"
-        gap="16px"
-        fontSize="18px"
-        p="96px 128px"
+      </motion.div>
+    ),
+    countdown: (
+      <motion.div
+        key="COUNTDOWN"
+        initial={{ y: 0, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -10, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        style={{ height: `100%`, width: `100%` }}
       >
-        {/* <Img src="https://media.newyorker.com/photos/64629d9ca8c7816949e96e85/1:1/w_1910,h_1910,c_limit/Dillon-Blur-11.jpg"></Img> */}
-        <Flex display="flex" flexDirection="column" align="center" justify="center" gap="8px" fontSize="20px" fontWeight="600" color="primary800">
-          <FaRegClock size="26px" />
-          Tempo restante para o desafio
-        </Flex>
-        <Flex color="gray600" fontSize="16px" gap="8px" textAlign="center">
-          Fique atento(a)! O desafio está em andamento, e o tempo está passando. Você tem o seguinte período para completar o desafio
-        </Flex>
-        <Flex display="flex" flexDirection="column" fontSize="40px" fontWeight="700" color="gray800" align="center">
-          00:{currentTime.toString().padStart(2, `0`)}
-        </Flex>
-        <Text fontSize="14px" color="gray600">
-          Use cada momento valioso para dar o seu melhor. Boa sorte!
-        </Text>
-        <Button
-          bgColor="primary600"
-          _hover={{ filter: `brightness(0.9)` }}
-          gap="8px"
-          color="white"
-          p="12px"
-          disabled={!!currentGameId}
-          onClick={() => onStart()}
-        >
-          Iniciar Desafio
-          <LuRocket />
-        </Button>
-      </Flex>
-    </Flex>
-  );
+        <Countdown key={challengeStartedAt?.getTime() || `empty`} />
+      </motion.div>
+    ),
+    challenges: (
+      <motion.div
+        key="CHALLENGES"
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -10, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        style={{ height: `100%`, width: `100%` }}
+      >
+        <Flex bgImage="/patterns/sprinkle.svg" h="100%" borderRadius="md"></Flex>
+      </motion.div>
+    ),
+  };
+
+  return <AnimatePresence mode="wait">{PageViewComponent[pageView]}</AnimatePresence>;
 };
 
 export default Challenge;
@@ -183,3 +70,75 @@ export const getServerSideProps: GetServerSideProps = async () => {
 
   return { props: { selectedPage, pageTitle: 'Desafio Diário', showBackButton: false } };
 };
+
+function Countdown() {
+  const count = useMotionValue(59);
+  const rounded = useTransform(count, Math.round);
+
+  const [num, setNum] = useState(count.get());
+
+  useEffect(() => {
+    const animation = animate(count, 0, { duration: 10, ease: [`circInOut`], delay: 1.5, onUpdate: (e) => setNum(Math.round(e)) });
+
+    return animation.stop;
+  }, []);
+
+  return (
+    <Flex
+      direction="column"
+      fontSize="2.3rem"
+      userSelect="none"
+      bgImage="/patterns/cloudy.svg"
+      h="100%"
+      w="100%"
+      sx={{
+        '.wrapper': {
+          w: `20rem`,
+          aspectRatio: 1,
+          margin: `auto`,
+          bgImage: `/loading/rocket-picode.gif`,
+          bgPosition: `bottom`,
+          bgSize: `contain`,
+          bgRepeat: `no-repeat`,
+        },
+      }}
+    >
+      <Flex margin="auto" direction="column" gap="0.5rem" align="center" fontFamily="LXGW WenKai Mono TC" color="#fff">
+        <motion.p
+          animate={{
+            opacity: [0, 0, 0, 0, 0, 0, 1],
+            transition: { duration: 2.5 },
+          }}
+        >
+          Contagem regressiva
+        </motion.p>
+        <Flex fontFamily="LXGW WenKai Mono TC" fontWeight="600">
+          <motion.h1
+            animate={{
+              opacity: [0, 0, 0, 0, 0, 0, 1],
+              transition: { duration: 2.5 },
+            }}
+          >
+            {num < 10 ? `00:0` : `00:`}
+          </motion.h1>
+          <motion.h1
+            animate={{
+              opacity: [0, 0, 0, 0, 0, 0, 1],
+              transition: { duration: 2.5 },
+            }}
+          >
+            {rounded}
+          </motion.h1>
+        </Flex>
+      </Flex>
+      <motion.div
+        className="wrapper"
+        animate={{
+          scale: [0, 2, 4, 3, 1],
+          rotate: [0, -95, 270, 270, 0],
+          transition: { duration: 1.75, ease: `backInOut` },
+        }}
+      />
+    </Flex>
+  );
+}
