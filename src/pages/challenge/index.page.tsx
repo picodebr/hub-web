@@ -78,8 +78,8 @@ const Challenge: React.FC = () => {
       setDailyGame(game);
       if (!game.finished_at) {
         setCurrentChallenge(game.challenges[game.currentIndex]);
-        // setPageView(`challenges`);
-        setPageView(`finished`);
+        setPageView(`challenges`);
+        // setPageView(`finished`);
       }
     }
   }, [user]);
