@@ -1,8 +1,20 @@
 import { GetServerSideProps } from 'next';
-import { Flex, Text, useUpdateEffect } from '@chakra-ui/react';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { Box, Flex, Img, Text, useUpdateEffect } from '@chakra-ui/react';
+import { FaFire, FaHeart, FaRegHeart } from 'react-icons/fa';
 import { ReactNode, useEffect, useState } from 'react';
 import { animate, AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
+import {
+  Step,
+  StepDescription,
+  StepIcon,
+  StepIndicator,
+  StepNumber,
+  StepSeparator,
+  StepStatus,
+  StepTitle,
+  Stepper,
+  useSteps,
+} from '@chakra-ui/react';
 
 import { getDailyChallenges } from '@/_base/services/challenges';
 import { AnswerResultType, IDailyChallenge, IHubChallenge } from '@/_base/interfaces/challenges';
@@ -47,6 +59,16 @@ const Challenge: React.FC = () => {
     },
   );
 
+  const steps = [
+    { title: '1 dia', description: '' },
+    { title: '5 dias', description: '5 Moedas Bônus' },
+    { title: '10 dias', description: '10 Moedas Bônus' },
+    { title: '20 dias', description: 'Vida Extra' },
+    { title: '30 dias', description: '15 Moedas Bônus' },
+    { title: '40 dias', description: '15 Moedas Bônus' },
+    { title: '50 dias', description: '1 Dinheiro' },
+  ];
+
   useEffect(() => {
     const challengeInProgress = user.metadata.daily_challenges;
 
@@ -56,7 +78,8 @@ const Challenge: React.FC = () => {
       setDailyGame(game);
       if (!game.finished_at) {
         setCurrentChallenge(game.challenges[game.currentIndex]);
-        setPageView(`challenges`);
+        // setPageView(`challenges`);
+        setPageView(`finished`);
       }
     }
   }, [user]);
@@ -183,12 +206,85 @@ const Challenge: React.FC = () => {
         ) : (
           <Flex w="100%" bgImage="/patterns/cloudy.svg" h="100%" pt="5rem" align="center" borderRadius="lg" direction="column" gap="5rem">
             <Flex direction="column" color="#fff" fontSize="16px" gap="2rem" textAlign="center" align="center">
-              <Text fontSize="20px" fontWeight="500">
+              <Img src="https://i.imgur.com/bnpvSJs.png" w="160px" h="140px" />
+              <Text fontSize="27px" fontWeight="500">
                 Novos desafios disponíveis!
               </Text>
+              <Flex gap="10px">
+                <Flex
+                  w="170px"
+                  h="170px"
+                  bgColor="#fff"
+                  color="#000"
+                  borderRadius="8px"
+                  boxShadow="md"
+                  direction="column"
+                  p="8px"
+                  justify="space-between"
+                  align="center"
+                >
+                  <Flex fontSize="15px" fontWeight="600" lineHeight="16px">
+                    Você está em uma consistência de
+                  </Flex>
+                  <Flex justify="center" align="center" fontSize="25px" fontWeight="700">
+                    <Img src="https://i.imgur.com/BkeE5tT.png" w="45px" h="40px" /> 10
+                  </Flex>
+                  <Flex justify="center" fontSize="16px" fontWeight="600">
+                    dias
+                  </Flex>
+                </Flex>
+                <Flex
+                  w="170px"
+                  h="170px"
+                  bgColor="#fff"
+                  color="#000"
+                  borderRadius="8px"
+                  boxShadow="md"
+                  direction="column"
+                  p="8px"
+                  justify="space-between"
+                  align="center"
+                >
+                  <Flex fontSize="15px" fontWeight="600" lineHeight="16px">
+                    O desafio expira em
+                  </Flex>
+                  <Flex justify="center" align="center" fontSize="20px" fontWeight="700">
+                    <Img src="https://i.imgur.com/IwH4B07.png" w="40px" h="40px" />
+                  </Flex>
+                  <Flex justify="center" fontSize="16px" fontWeight="600">
+                    Faça já!
+                  </Flex>
+                </Flex>
+                <Flex
+                  w="170px"
+                  h="170px"
+                  bgColor="#fff"
+                  color="#000"
+                  borderRadius="8px"
+                  boxShadow="md"
+                  direction="column"
+                  p="8px"
+                  justify="space-between"
+                  align="center"
+                >
+                  <Flex fontSize="15px" fontWeight="600" lineHeight="16px">
+                    Esse desafio já foi feito por
+                  </Flex>
+                  <Flex justify="center" align="center" fontSize="25px" fontWeight="700">
+                    <Img src="/icons/medal.svg" w="40px" h="40px" /> 4
+                  </Flex>
+                  <Flex justify="center" fontSize="16px" fontWeight="600">
+                    alunos
+                  </Flex>
+                </Flex>
+              </Flex>
+
               <Text maxW={{ base: `100%`, lg: `70%` }}>
-                Hey {formatShortName(user.name, true) || `aluno`}, os desafios não ficam disponíveis por muito tempo. Portanto, estabeleça um horário
-                do seu dia para realizar os desafios diários e ganhe bônus pela sua consistência!
+                <Text color="primary300" fontWeight="700">
+                  {formatShortName(user.name, true) || `aluno`},
+                </Text>{' '}
+                Resgate moedas fazendo os desafios diários <br /> Estabeleça um horário do seu dia para realizar os desafios diários e ganhe bônus
+                pela sua consistência!
               </Text>
             </Flex>
             <GenericButton btntype="outline-white" label="Iniciar Desafio" rightIcon={<LuRocket />} onClick={() => loadChallenges()} />
@@ -333,8 +429,111 @@ const Challenge: React.FC = () => {
         transition={{ duration: 0.2 }}
         style={{ height: `100%`, width: `100%` }}
       >
-        <Flex h="100%" w="100%" bg="white">
-          Tela de resultado
+        <Flex
+          h="100%"
+          w="100%"
+          bg="white"
+          p="20px"
+          boxShadow="md"
+          borderRadius="10px"
+          border="1px"
+          borderColor="gray300"
+          direction="column"
+          align="center"
+          gap="8px"
+        >
+          <Img src="https://media.tenor.com/7a1t4VJSC2kAAAAj/snoopy.gif" w="300px" />
+          <Flex w="100%" fontSize="30px" fontWeight="700" justify="center">
+            Parabéns por completar os desafios
+          </Flex>
+          <Flex>
+            <Stepper size="sm" colorScheme="yellow" index={1}>
+              {steps.map((step, index) => (
+                <Step key={index}>
+                  <StepIndicator>
+                    <StepStatus complete={<StepIcon />} incomplete={<StepNumber />} active={<StepNumber />} />
+                  </StepIndicator>
+
+                  <Box flexShrink="0">
+                    <StepTitle>{step.title}</StepTitle>
+                    <StepDescription>{step.description}</StepDescription>
+                  </Box>
+
+                  <StepSeparator />
+                </Step>
+              ))}
+            </Stepper>
+          </Flex>
+          <Flex w="100%" justify="center" p="60px" gap="10px">
+            <Flex
+              w="150px"
+              h="150px"
+              bgColor="gray100"
+              borderRadius="8px"
+              p="8px"
+              align="center"
+              justify="space-between"
+              direction="column"
+              boxShadow="md"
+            >
+              <Text align="center">Consistência de</Text>
+              <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
+                <Img src="https://i.imgur.com/BkeE5tT.png" w="45px" h="40px" /> 1
+              </Flex>
+              <Text>dias</Text>
+            </Flex>
+            <Flex
+              w="150px"
+              h="150px"
+              bgColor="gray100"
+              borderRadius="8px"
+              p="8px"
+              align="center"
+              justify="space-between"
+              direction="column"
+              boxShadow="md"
+            >
+              <Text align="center">Você acertou</Text>
+              <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
+                <Img src="https://images.emojiterra.com/google/android-12l/512px/1f3af.png" w="35px" h="35px" /> 4
+              </Flex>
+              <Text>de 5 questões</Text>
+            </Flex>
+            <Flex
+              w="150px"
+              h="150px"
+              bgColor="gray100"
+              borderRadius="8px"
+              p="8px"
+              align="center"
+              justify="space-between"
+              direction="column"
+              boxShadow="md"
+            >
+              <Text align="center">Você conquistou</Text>
+              <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
+                <Img src="/icons/coin.svg" w="35px" h="35px" /> 3
+              </Flex>
+              <Text>moedas</Text>
+            </Flex>
+          </Flex>
+          <Flex w="100%" align="center" justify="center">
+            <Flex
+              w="300px"
+              h="60px"
+              borderRadius="8px"
+              bgColor="primary300"
+              color="white"
+              fontWeight="700"
+              boxShadow="md"
+              align="center"
+              justify="center"
+              cursor="pointer"
+              _hover={{ boxShadow: `lg`, color: 'gray700' }}
+            >
+              Continuar
+            </Flex>
+          </Flex>
         </Flex>
       </motion.div>
     ),
@@ -386,7 +585,7 @@ function Countdown() {
         >
           Contagem regressiva
         </motion.p>
-        <Flex fontFamily="LXGW WenKai Mono TC" fontWeight="600">
+        <Flex fontFamily="Inter" fontWeight="600">
           <motion.h1
             animate={{
               opacity: [0, 0, 0, 0, 0, 0, 1],
