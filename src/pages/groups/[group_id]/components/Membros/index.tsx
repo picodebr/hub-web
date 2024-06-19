@@ -93,7 +93,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user }) => {
         <Text h="58px" w="100%" align="left" p="20px" fontSize="14px" color="gray600" borderBottom="1px" borderColor="gray300">
           Membros do Grupo
         </Text>
-        <GenericButton mr="12px" label="Editar Membros" size="sm" onClick={() => setOpenModal(true)} />
+        {user.role === 'teacher' && <GenericButton mr="12px" label="Editar Membros" size="sm" onClick={() => setOpenModal(true)} />}
       </Flex>
       <Flex h="fit-content" gap="12px" p="12px 20px">
         <Avatar src={group.educator?.avatar || undefined} />
