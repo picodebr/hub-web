@@ -135,17 +135,18 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   );
 
   const handleUpdateGroup = useAsyncCallback(async (params: IUpdateHubGroupParams) => {
-    await updateGroup({ ...params, id: group.id });
+    await updateGroup({ display_name: params.display_name, users: params.users, id: group.id });
     setGroup((e) => ({
       ...e,
       display_name: params.display_name || e.display_name,
-      students: [...availableStudents, ...group.students].filter((e) => params.users?.includes(e.id)),
+      students: removeDuplicateStudents([...availableStudents, ...group.students]).filter((e) => params.users?.includes(e.id)),
     }));
     setSavedGroup((e) => ({
       ...e,
       display_name: params.display_name || e.display_name,
-      students: [...availableStudents, ...group.students].filter((e) => params.users?.includes(e.id)),
+      students: removeDuplicateStudents([...availableStudents, ...group.students]).filter((e) => params.users?.includes(e.id)),
     }));
+    setAvailableStudents(() => removeDuplicateStudents([...availableStudents, ...group.students]).filter((e) => !params.users?.includes(e.id)));
     toast({ status: `success`, description: `Grupo atualizado` });
   }, []);
 
@@ -221,6 +222,14 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
 };
 
 export default GroupPage;
+
+const removeDuplicateStudents = (students: IHubUser[]): IHubUser[] => {
+  return students.reduce((acc, v) => {
+    const target = acc.find((e) => e.id === v.id);
+    if (!target) acc.push(v);
+    return acc;
+  }, [] as IHubUser[]);
+};
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
   const selectedPage = 'groups';
