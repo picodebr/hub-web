@@ -12,8 +12,8 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useAuth, useCustomToast } from '@/_base/hooks';
 import { Planning } from './components/Planejamentos';
 import { Members } from './components/Membros';
-import { acceptOrder, rejectOrder, addOrder, getGroupById, updateGroup } from '@/_base/services/group';
-import { IHubGroup, IHubGroupMetadata, IHubGroupOrder } from '@/_base/interfaces/group';
+import { acceptOrder, rejectOrder, addOrder, getGroupById, updateGroup, listAvailableUsersForGroupByProject } from '@/_base/services/group';
+import { IHubGroup, IHubGroupMetadata, IHubGroupOrder, IUpdateHubGroupParams } from '@/_base/interfaces/group';
 import { getStockMaker } from '@/_base/services/storeMaker';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { IStockMaker } from '@/_base/interfaces/storeMaker';
@@ -31,15 +31,18 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [storeIsOpened, setStoreIsOpened] = useState(false);
   const [cartIsOpened, setCartIsOpened] = useState(false);
+  const [stock, setStock] = useState<IStockMaker[]>([]);
+  const [availableStudents, setAvailableStudents] = useState<IHubUser[]>([]);
 
   const toast = useCustomToast();
   const { user, setUser } = useAuth();
-
-  const [stock, setStock] = useState<IStockMaker[]>([]);
-
   const { school } = useSelectedSchool();
 
+  const canEdit = user.role === `student` && !!group.student_links.find((e) => e.hub_user_id === user.id);
+  const needSave = useMemo<boolean>(() => JSON.stringify(group) !== JSON.stringify(savedGroup), [group, savedGroup]);
+
   useEffect(() => {
+    if (!school) return;
     (async () => {
       setIsLoading(true);
       try {
@@ -50,9 +53,6 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
       }
     })();
   }, [school]);
-
-  const canEdit = user.role === `student` && !!group.student_links.find((e) => e.hub_user_id === user.id);
-  const needSave = useMemo<boolean>(() => JSON.stringify(group) !== JSON.stringify(savedGroup), [group, savedGroup]);
 
   const handleSaveGroup = useAsyncCallback(
     async (metadata: IHubGroupMetadata, showToast = true) => {
@@ -134,6 +134,36 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
     },
   );
 
+  const handleUpdateGroup = useAsyncCallback(async (params: IUpdateHubGroupParams) => {
+    await updateGroup({ ...params, id: group.id });
+    setGroup((e) => ({
+      ...e,
+      display_name: params.display_name || e.display_name,
+      students: [...availableStudents, ...group.students].filter((e) => params.users?.includes(e.id)),
+    }));
+    setSavedGroup((e) => ({
+      ...e,
+      display_name: params.display_name || e.display_name,
+      students: [...availableStudents, ...group.students].filter((e) => params.users?.includes(e.id)),
+    }));
+    toast({ status: `success`, description: `Grupo atualizado` });
+  }, []);
+
+  const loadAvailableStudents = useAsyncCallback(async () => {
+    const students = await listAvailableUsersForGroupByProject(group.project?.id || ``);
+    setAvailableStudents(
+      students.reduce((acc, v) => {
+        const target = group.students.find((e) => e.id === v.id);
+        if (!target) acc.push(v);
+        return acc;
+      }, [] as IHubUser[]),
+    );
+  }, []);
+
+  useEffect(() => {
+    loadAvailableStudents();
+  }, []);
+
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Atividades: <Activities group={group} setGroup={setGroup} canEdit={canEdit} />,
     Planejamentos: <Planning group={group} setGroup={setGroup} canEdit={canEdit} />,
@@ -150,7 +180,15 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
         storeMakerList={stock}
       />
     ),
-    Membros: <Members group={group} onDonation={(data) => handleMakeStudentDonation(data)} user={user} />,
+    Membros: (
+      <Members
+        group={group}
+        onDonation={(data) => handleMakeStudentDonation(data)}
+        user={user}
+        onUpdateGroup={handleUpdateGroup}
+        availableStudents={availableStudents}
+      />
+    ),
   };
 
   return (

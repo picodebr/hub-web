@@ -1,18 +1,12 @@
-import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
-import { ICreateHubGroupParams, IHubGroup, createHubGroupSchema } from '@/_base/interfaces/group';
-import { IProject } from '@/_base/interfaces/project';
-import { PageDataType } from '@/_base/interfaces/shared';
+import { useInputHandler } from '@/_base/hooks';
+import { IHubGroup, IUpdateHubGroupParams, updateHubGroupSchema } from '@/_base/interfaces/group';
 import { IHubUser } from '@/_base/interfaces/user';
-import { createGroup, listAvailableUsersForGroupByProject, updateGroup } from '@/_base/services/group';
-import { listAvailableProjectsForStudent } from '@/_base/services/project';
 import { formatCoin, formatShortName } from '@/_base/utils';
 import { AvatarList } from '@/components/AvatarList';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { NumberScaleInput } from '@/components/Inputs/NumberScale';
 import { TextInput } from '@/components/Inputs/Text';
 import { CoinIcon } from '@/components/Logo';
-import { GenericModal } from '@/components/Modal/GenericModal';
-import { IGenericModalProps } from '@/components/Modal/GenericModal/interfaces';
 import { SmallModal } from '@/components/Modal/Small';
 import {
   Avatar,
@@ -28,10 +22,10 @@ import {
   MenuOptionGroup,
   Text,
   Tooltip,
-  useToast,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
+import { GoGear } from 'react-icons/go';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 
 interface IStudentDonation {
@@ -41,59 +35,40 @@ interface IStudentDonation {
 interface IProps {
   group: IHubGroup;
   user: IHubUser;
+  availableStudents: IHubUser[];
   onDonation: (data: IStudentDonation) => void;
+  onUpdateGroup: (data: IUpdateHubGroupParams) => void;
 }
 
-// interface IManageGroup {
-//   group: IHubGroup | null;
-//   student: IHubUser | null;
-//   display_name: string | null;
-//   user: IHubUser | null;
-// }
-
 const EMPTY_DONATION: IStudentDonation = { student: null, donation: `0` };
-// const NO_GROUP_MANAGEMENT: IManageGroup = { group: null, student: null, display_name: '', user: null };
 
-export const Members: React.FC<IProps> = ({ group, onDonation, user }) => {
+export const Members: React.FC<IProps> = ({ group, onDonation, user, availableStudents, onUpdateGroup }) => {
   const [studentDonationData, setStudentDonationData] = useState<IStudentDonation>(EMPTY_DONATION);
-  const [availableProjects, setAvailableProjects] = useState<IProject[]>([]);
-  const [availableStudents, setAvailableStudents] = useState<IHubUser[]>([]);
   const [openModal, setOpenModal] = useState(false);
 
-  const toast = useToast();
-  const { errors, onInputChange, data, submit, setData } = useInputHandler<ICreateHubGroupParams>({
-    schema: createHubGroupSchema,
+  const { errors, onInputChange, data, submit, setData } = useInputHandler<IUpdateHubGroupParams>({
+    schema: updateHubGroupSchema,
   });
 
-  const handleUpdateGroup = useAsyncCallback(
-    async () => {
-      const updatedGroup = await updateGroup({ ...data, id: group.id } as any);
+  const handleUpdateGroup = () => {
+    onUpdateGroup({ ...data, id: group.id });
 
-      setOpenModal(false);
-      toast({ status: `success`, description: `Grupo adicionado` });
-    },
-    [],
-    undefined,
-  );
-
-  const loadAvailableStudents = useAsyncCallback(async () => {
-    // const students = await listAvailableUsersForGroupByProject(group.project?.id || ``);
-    setAvailableStudents(group.students);
-  }, []);
+    setOpenModal(false);
+  };
 
   useEffect(() => {
-    loadAvailableStudents();
-    setData({ ...group, users: group.students.map((student) => student.id) });
-    console.log(group);
+    setData({ display_name: group.display_name, id: group.id, users: group.students.map((student) => student.id) });
   }, [group]);
 
   return (
     <Flex direction="column" display="flex" w="100%" h="fit-content" border="1px" borderColor="gray300" borderRadius="10px" bg="white" boxShadow="md">
-      <Flex justify="space-between" align="center">
-        <Text h="58px" w="100%" align="left" p="20px" fontSize="14px" color="gray600" borderBottom="1px" borderColor="gray300">
+      <Flex justify="space-between" align="center" p="10px 20px" borderBottom="1px" borderColor="gray300">
+        <Text w="100%" fontSize="14px" color="gray600">
           Membros do Grupo
         </Text>
-        {user.role === 'teacher' && <GenericButton mr="12px" label="Editar Membros" size="sm" onClick={() => setOpenModal(true)} />}
+        {user.role === 'teacher' && (
+          <GenericButton size="sm" label="Editar" rightIcon={<GoGear fontSize="18px" />} onClick={() => setOpenModal(true)} />
+        )}
       </Flex>
       <Flex h="fit-content" gap="12px" p="12px 20px">
         <Avatar src={group.educator?.avatar || undefined} />
@@ -172,15 +147,30 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user }) => {
         show={openModal}
         onConfirm={() => submit(handleUpdateGroup)}
         okText="Atualizar"
-        onCancel={() => setOpenModal(false)}
-        disableOkButton={!data.users?.length || !data.hub_project_class_id || !data.display_name || !group.project?.educator}
+        onCancel={() => {
+          setOpenModal(false);
+          setData({ ...group, users: group.students.map((student) => student.id) });
+        }}
+        disableOkButton={!data.users?.length || !data.display_name}
         topIcon={'checked'}
       >
         <Flex direction="column" minW="350px" gap="1rem">
           <TextInput value={data?.display_name} onInputChange={(v) => onInputChange('display_name', v)} error={errors.display_name} />
           <Menu closeOnSelect={false} placement="right">
-            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
-              Remover membros do grupo
+            <MenuButton
+              as={Button}
+              rightIcon={<IoChevronDownCircleOutline />}
+              border="1px"
+              borderColor="gray300"
+              bg="white"
+              onClick={() => {
+                availableStudents.forEach((student) => {
+                  const el = document.getElementsByClassName(student.id)[0];
+                  if (el) el.setAttribute(`aria-checked`, `true`);
+                });
+              }}
+            >
+              Adicionar membros ao grupo
             </MenuButton>
             <MenuList borderColor="gray300" boxShadow="md">
               <MenuOptionGroup type="checkbox">
@@ -192,7 +182,50 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user }) => {
                       onClick={() =>
                         onInputChange(
                           `users`,
-                          data.users.find((id) => id === student.id) ? data.users.filter((id) => id !== student.id) : [...data.users, student.id],
+                          data.users?.find((id) => id === student.id)
+                            ? data.users.filter((id) => id !== student.id)
+                            : [...(data.users || []), student.id],
+                        )
+                      }
+                    >
+                      {student.name}
+                    </MenuItemOption>
+                  ))
+                ) : (
+                  <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
+                )}
+              </MenuOptionGroup>
+            </MenuList>
+          </Menu>
+          <Menu closeOnSelect={false} placement="right">
+            <MenuButton
+              as={Button}
+              rightIcon={<IoChevronDownCircleOutline />}
+              border="1px"
+              borderColor="gray300"
+              bg="white"
+              onClick={() => {
+                availableStudents.forEach((student) => {
+                  const el = document.getElementsByClassName(student.id)[0];
+                  if (el) el.setAttribute(`aria-checked`, `true`);
+                });
+              }}
+            >
+              Remover membros do grupo
+            </MenuButton>
+            <MenuList borderColor="gray300" boxShadow="md">
+              <MenuOptionGroup type="checkbox">
+                {group.students.length ? (
+                  group.students.map((student) => (
+                    <MenuItemOption
+                      key={student.id}
+                      value={student.id}
+                      onClick={() =>
+                        onInputChange(
+                          `users`,
+                          data.users?.find((id) => id === student.id)
+                            ? data.users.filter((id) => id !== student.id)
+                            : [...(data.users || []), student.id],
                         )
                       }
                     >
@@ -231,7 +264,11 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user }) => {
             <Text fontSize="15px" fontWeight="500">
               Membros:
             </Text>
-            <AvatarList users={group.students.filter((e) => data.users?.includes(e.id))} max={10} emptyMessage="Nenhum membro adicionado" />
+            <AvatarList
+              users={[...availableStudents, ...group.students].filter((e) => data.users?.includes(e.id))}
+              max={10}
+              emptyMessage="Nenhum membro adicionado"
+            />
           </Flex>
         </Flex>
       </SmallModal>
