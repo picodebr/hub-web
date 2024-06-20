@@ -110,7 +110,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
             cursor="pointer"
             transition="0.12s"
             _hover={{ filter: 'brightness(0.7)' }}
-            onClick={() => router.push('/logout')}
+            onClick={() => router.push('/logout', `spinner`)}
             className="only-desktop"
           >
             <FiLogOut color="#FDA29B" />

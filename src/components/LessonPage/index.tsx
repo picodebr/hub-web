@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useState } from 'react';
+import { ReactNode, useCallback, useMemo, useState } from 'react';
 import { Flex, Text, Tooltip } from '@chakra-ui/react';
 import { FaTasks } from 'react-icons/fa';
 import { motion } from 'framer-motion';
@@ -12,32 +12,45 @@ import { MazePage } from './MazeChallenge';
 import { GameStatus } from './MazeChallenge/interfaces';
 import { cookieManager } from '@/_base/utils';
 import { FINISHED_DAILY_CHALLENGES_STORAGE_KEY } from '@/_base/config/storage';
+import { AnswerResultType } from '@/_base/interfaces/challenges';
 
 export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, registerAnswer, answers, onPageChange, onFinish }) => {
   const [clearFields, setClearFields] = useState(false);
 
   const [workspaceCode, setWorkspaceCode] = useState('');
-  const finishedAnswers = cookieManager.getCookie<string[]>(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, true);
+
+  const [finishedAnswers, setFinishedAnswers] = useState<string[]>(
+    cookieManager.getCookie<string[]>(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, true) || [],
+  );
+
+  const onRegisterAnswer = useCallback(
+    (value: AnswerResultType) => {
+      registerAnswer(value);
+      setFinishedAnswers(cookieManager.getCookie<string[]>(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, true) || []);
+    },
+    [challenge],
+  );
 
   const handleGameStatusChange = useCallback(
     (status: GameStatus) => {
       const targetAnswer = answers.find((e) => e.hub_challenge_id === challenge.id);
       if (status === `collision`)
-        registerAnswer({ hub_challenge_id: challenge.id, is_passed: undefined, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
+        onRegisterAnswer({ hub_challenge_id: challenge.id, is_passed: undefined, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
 
       if (status === 'finish' || status === 'over') {
         const is_passed = status === 'finish';
 
         setWorkspaceCode('');
 
-        registerAnswer({ hub_challenge_id: challenge.id, is_passed, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
+        onRegisterAnswer({ hub_challenge_id: challenge.id, is_passed, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
       }
     },
     [workspaceCode],
   );
+
   const ContentPage: Record<HubModuleLessonType, ReactNode> = {
-    quiz: <QuizPage challenge={challenge} registerAnswer={registerAnswer} answers={answers} />,
-    algorithm: <AlgorithmPage challenge={challenge} registerAnswer={registerAnswer} answers={answers} />,
+    quiz: <QuizPage challenge={challenge} registerAnswer={onRegisterAnswer} answers={answers} />,
+    algorithm: <AlgorithmPage challenge={challenge} registerAnswer={onRegisterAnswer} answers={answers} />,
     map: (
       <MazePage
         fields={challenge.data.maze_field as any}
@@ -52,7 +65,7 @@ export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, r
         answers={answers}
       />
     ),
-    video: <QuizPage challenge={challenge} registerAnswer={registerAnswer} answers={answers} />,
+    video: <QuizPage challenge={challenge} registerAnswer={onRegisterAnswer} answers={answers} />,
   };
 
   return (

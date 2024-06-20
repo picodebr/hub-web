@@ -6,6 +6,10 @@ export interface IDailyChallenge {
   expires_at: number;
   started_at: number;
   finished_at: number | null;
+  total_lifes: number;
+  daily_lifes: number;
+  consecutive_days: number;
+  last_activity_day: Date | null;
   answers: Record<number, IDailyChallengeAnswers[]>;
 }
 
