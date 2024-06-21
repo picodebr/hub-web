@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useState } from 'react';
 import { Flex, Text, Tooltip } from '@chakra-ui/react';
 import { FaTasks } from 'react-icons/fa';
 import { motion } from 'framer-motion';
@@ -70,7 +70,7 @@ export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, r
 
   return (
     <Flex flex="1" bg="white" direction="column" borderRadius="md" p="1rem" gap="1rem" overflow="hidden auto" h="100%">
-      <Flex direction="column" gap={{ base: `1rem` }}>
+      <Flex direction="column" gap={{ base: `1rem` }} maxH="50%" overflow="hidden">
         <Flex justify="space-between">
           <Flex bg="#25467D" w="fit-content" justify="center" borderRadius="md" p="0.25rem 0.75rem" color="white" align="center" gap="0.5rem">
             <MdTaskAlt fontSize="1.5rem" />
@@ -86,7 +86,7 @@ export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, r
             </Text>
           </Flex>
         </Flex>
-        <Flex minH="5rem" align="center" maxW="85%" margin="auto">
+        <Flex minH="5rem" align="center" maxW="85%" margin="auto" overflow="hidden auto">
           <Flex borderRadius="md" border="1px" borderColor="gray200" p="1rem 2rem" h="fit-content" margin="auto">
             <Text
               fontSize="16px"
