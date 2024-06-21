@@ -4,3 +4,4 @@ export * from './IHubGroupMetadata';
 export * from './IHubGroupOrder';
 export * from './IHubGroupStudentLink';
 export * from './IHubGroupStudentLinkMetadata';
+export * from './IUpdateHubGroupParams';

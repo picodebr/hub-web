@@ -55,7 +55,8 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
   }, [selectedSchool]);
 
   useEffect(() => {
-    const target = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0];
+    const storage = JSON.parse(localStorage.getItem(`context-storage`) || `{}`);
+    const target = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0] || storage?.state?.school;
 
     if (target) setSchool(target);
   }, [user]);
