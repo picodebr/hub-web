@@ -1,9 +1,9 @@
 import { GetServerSideProps } from 'next';
-import { Box, Flex, Img, Text, Tooltip, useUpdateEffect } from '@chakra-ui/react';
+import { Flex, Img, Text, Tooltip } from '@chakra-ui/react';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { animate, AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
-import { Step, StepDescription, StepIcon, StepIndicator, StepNumber, StepSeparator, StepStatus, StepTitle, Stepper } from '@chakra-ui/react';
+import { Step, StepIndicator, StepNumber, StepStatus, Stepper } from '@chakra-ui/react';
 
 import { getDailyChallenges, getDailyConfig } from '@/_base/services/challenges';
 import { AnswerResultType, IDailyChallenge, IHubChallenge } from '@/_base/interfaces/challenges';
@@ -21,7 +21,7 @@ import { GoDot, GoDotFill } from 'react-icons/go';
 
 const EXPIRES_AT = new Date().setHours(23, 59, 59);
 
-type PageView = `start` | `countdown` | `challenges` | `sending` | `finished`;
+type PageView = `start` | `countdown` | `challenges` | `sending` | `retry` | `finished`;
 
 const Challenge: React.FC = () => {
   const [pageView, setPageView] = useState<PageView>(`start`);
@@ -68,6 +68,7 @@ const Challenge: React.FC = () => {
 
   useEffect(() => {
     loadConfig();
+    setPageView(`retry`);
     const challengeInProgress = user.metadata.daily_challenges;
 
     const savedDataIsValid = challengeInProgress?.challenges?.length && challengeInProgress.expires_at > Date.now();
@@ -76,7 +77,7 @@ const Challenge: React.FC = () => {
       setDailyGame(game);
       if (!game.finished_at) {
         setCurrentChallenge(game.challenges[game.currentIndex]);
-        setPageView(`challenges`);
+        // setPageView(`challenges`);
       }
     }
   }, [user]);
@@ -413,6 +414,106 @@ const Challenge: React.FC = () => {
               transition: { duration: 1.75, ease: `backInOut` },
             }}
           />
+        </Flex>
+      </motion.div>
+    ),
+    retry: (
+      <motion.div
+        key="RETRY"
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -10, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        style={{ height: `100%`, width: `100%` }}
+      >
+        <Flex
+          h="100%"
+          w="100%"
+          bg="white"
+          p="20px"
+          boxShadow="md"
+          borderRadius="10px"
+          border="1px"
+          borderColor="gray300"
+          direction="column"
+          align="center"
+          gap="8px"
+          overflow="hidden"
+        >
+          <Img src="https://i.imgur.com/YpcVqrl.gif" w="300px" />
+          <Flex w="100%" fontSize="30px" fontWeight="700" justify="center">
+            Vamos tentar de novo?
+          </Flex>
+          <Flex w="100%" fontSize="20px" fontWeight="500" justify="center">
+            Você não acertou todas as questões, mas não se preocupe! Você pode tentar de novo!
+          </Flex>
+          <Flex overflow="auto" userSelect="none" cursor="auto">
+            <Stepper size="sm" colorScheme="yellow" index={dailyGame?.consecutive_days || 1} gap="0.5" overflow="auto !important" w="100%">
+              {steps.map((step, index) => (
+                <Tooltip key={index} label={step.bonus ? `Bônus de ${step.bonus} moedas` : undefined} placement="top">
+                  <Step key={index} style={{ position: `relative` }}>
+                    {step.bonus || !index ? (
+                      <StepIndicator>
+                        <StepStatus complete={<StepNumber />} incomplete={<StepNumber />} active={<StepNumber />} />
+                      </StepIndicator>
+                    ) : (dailyGame?.consecutive_days || 0) >= index + 1 ? (
+                      <GoDotFill color="#FDB022" fontSize={(dailyGame?.consecutive_days || 0) === index + 1 ? `22px` : undefined} />
+                    ) : (
+                      <GoDot />
+                    )}
+                  </Step>
+                </Tooltip>
+              ))}
+            </Stepper>
+          </Flex>
+          <Flex w="100%" justify="center" p="60px" gap="10px">
+            <Flex
+              w="150px"
+              h="150px"
+              bgColor="gray100"
+              borderRadius="8px"
+              p="8px"
+              align="center"
+              justify="space-between"
+              direction="column"
+              boxShadow="md"
+            >
+              <Text align="center">Você acertou</Text>
+              <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
+                <Img src="https://images.emojiterra.com/google/android-12l/512px/1f3af.png" w="35px" h="35px" /> 4
+              </Flex>
+              <Text>de 5 questões</Text>
+            </Flex>
+            <Flex
+              w="150px"
+              h="150px"
+              bgColor="gray100"
+              borderRadius="8px"
+              p="8px"
+              align="center"
+              justify="space-between"
+              direction="column"
+              boxShadow="md"
+            >
+              <Text align="center">Você ainda possui</Text>
+              <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
+                <FaHeart color="red" /> 2
+              </Flex>
+              <Text>vida(s)</Text>
+            </Flex>
+          </Flex>
+          <Flex w="100%" align="center" justify="center">
+            <GenericButton
+              w="300px"
+              h="60px"
+              label="Tentar novamente"
+              borderRadius="8px"
+              bgColor="primary300"
+              color="white"
+              fontWeight="700"
+              boxShadow="md"
+            />
+          </Flex>
         </Flex>
       </motion.div>
     ),
