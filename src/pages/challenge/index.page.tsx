@@ -8,7 +8,6 @@ import { Step, StepIndicator, StepNumber, StepStatus, Stepper } from '@chakra-ui
 import { getDailyChallenges, getDailyConfig } from '@/_base/services/challenges';
 import { AnswerResultType, IDailyChallenge, IHubChallenge } from '@/_base/interfaces/challenges';
 import { useAsyncCallback, useAuth } from '@/_base/hooks';
-import { challengeVariants } from './motionVariants';
 import { DailyGameProps } from '@/_base/interfaces/challenges/DailyGameProps';
 import { LessonPage } from '@/components/LessonPage';
 import { GenericButton } from '@/components/Buttons/Generic';
@@ -160,15 +159,6 @@ const Challenge: React.FC = () => {
 
   const onFinish = () => {
     setPageView(`sending`);
-    // const isCorrect = false;
-    // if (isCorrect) {
-    //   setDailyGame((e) => ({ ...(e || ({} as any)), currentIndex: (e?.currentIndex || 0) + 1 }));
-    //   setCurrentChallenge(dailyGame?.challenges[(dailyGame?.currentIndex || 0) + 1] || null);
-    // } else {
-    //   setLastLife(dailyGame?.remainingLifes || 0);
-    //   setDailyGame((e) => ({ ...(e || ({} as any)), currentIndex: (e?.currentIndex || 0) + 1, remainingLifes: (e?.remainingLifes || 1) - 1 }));
-    //   setCurrentChallenge(dailyGame?.challenges[(dailyGame?.currentIndex || 0) + 1] || null);
-    // }
   };
 
   const steps = Array.from({ length: 50 }).map((_, i) => ({
@@ -324,28 +314,9 @@ const Challenge: React.FC = () => {
               borderColor="gray300"
             >
               <Flex gap="2rem" justify="space-between">
-                <Text>Tentativas restantes</Text>
-
-                <Flex color="error600" gap="0.5rem" fontSize="24px">
-                  {Array.from({ length: dailyGame?.total_lifes || 0 }).map((_, i) =>
-                    i + 1 <= (dailyGame?.daily_lifes || 0) ? (
-                      <Tooltip label={dailyGame?.daily_lifes || 0} key={i + 1} placement="right">
-                        <motion.div id={`heart-${i + 1}`} key={i + 1}>
-                          <FaHeart />
-                        </motion.div>
-                      </Tooltip>
-                    ) : (
-                      <motion.div
-                        id={`heart-${i + 1}`}
-                        key={i + 1}
-                        variants={challengeVariants.health}
-                        animate={i + 1 === (dailyGame?.daily_lifes || 0) ? `animate` : `default`}
-                      >
-                        <FaRegHeart />
-                      </motion.div>
-                    ),
-                  )}
-                </Flex>
+                <Text>{`${(dailyGame?.daily_lifes || 0) + 1}${
+                  (dailyGame?.daily_lifes || 0) + 1 === 1 ? ' tentativa restante' : ' tentativas restantes'
+                }`}</Text>
               </Flex>
             </Flex>
             <Flex
@@ -645,12 +616,9 @@ export default Challenge;
 
 function Countdown() {
   const count = useMotionValue(59);
-  const rounded = useTransform(count, Math.round);
-
-  const [num, setNum] = useState(count.get());
 
   useEffect(() => {
-    const animation = animate(count, 0, { duration: 10, ease: [`circInOut`], delay: 1.5, onUpdate: (e) => setNum(Math.round(e)) });
+    const animation = animate(count, 0, { duration: 10, ease: [`circInOut`], delay: 1.5 });
 
     return animation.stop;
   }, []);
