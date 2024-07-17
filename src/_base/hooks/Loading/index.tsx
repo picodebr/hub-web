@@ -79,7 +79,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         )}
 
         {loadingConfig.type === 'fullscreen-with-info' && (
-          <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md">
+          <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md" p={{ base: '1rem' }}>
             <Flex
               bgColor="white"
               display="flex"

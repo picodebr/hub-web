@@ -325,6 +325,7 @@ const RecoverPassword: React.FC = () => {
       align="center"
       padding="24px"
       transition="all 0.2s"
+      mx={{ base: '1rem', md: 'auto' }}
       h={SizeMapper[step]}
     >
       <Logo />
