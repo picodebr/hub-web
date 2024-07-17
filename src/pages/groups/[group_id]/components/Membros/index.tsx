@@ -156,7 +156,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
       >
         <Flex direction="column" minW="350px" gap="1rem">
           <TextInput value={data?.display_name} onInputChange={(v) => onInputChange('display_name', v)} error={errors.display_name} />
-          <Menu closeOnSelect={false} placement="right">
+          <Menu closeOnSelect={false} placement="bottom-end">
             <MenuButton
               as={Button}
               rightIcon={<IoChevronDownCircleOutline />}
@@ -197,7 +197,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
               </MenuOptionGroup>
             </MenuList>
           </Menu>
-          <Menu closeOnSelect={false} placement="right">
+          <Menu closeOnSelect={false} placement="bottom-end">
             <MenuButton
               as={Button}
               rightIcon={<IoChevronDownCircleOutline />}
