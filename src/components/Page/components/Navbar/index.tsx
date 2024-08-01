@@ -190,11 +190,11 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
               </>
             ) : (
               <>
-                <Flex align="center" justify="center" gap="0.45rem">
+                <Flex display="none" align="center" justify="center" gap="0.45rem">
                   <Image src="/icons/coin.svg" />
                   <Text>0</Text>
                 </Flex>
-                <Flex cursor="pointer" align="center" gap="0.45rem" justify="center" onClick={() => router.push('/store')}>
+                <Flex display="none" cursor="pointer" align="center" gap="0.45rem" justify="center" onClick={() => router.push('/store')}>
                   <Image src="/icons/cash.svg" />
                   <Text>0</Text>
                 </Flex>
