@@ -1,22 +1,22 @@
+import moment from 'moment';
+import { LuRocket } from 'react-icons/lu';
 import { GetServerSideProps } from 'next';
+import { GoDot, GoDotFill } from 'react-icons/go';
 import { Flex, Img, Text, Tooltip } from '@chakra-ui/react';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaHeart } from 'react-icons/fa';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { animate, AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
+import { animate, AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import { Step, StepIndicator, StepNumber, StepStatus, Stepper } from '@chakra-ui/react';
 
-import { getDailyChallenges, getDailyConfig } from '@/_base/services/challenges';
+import { getDailyChallenges, getDailyConfig, ISendDailyChallengesResponse, sendDailyChallenges } from '@/_base/services/challenges';
 import { AnswerResultType, IDailyChallenge, IHubChallenge } from '@/_base/interfaces/challenges';
 import { useAsyncCallback, useAuth } from '@/_base/hooks';
 import { DailyGameProps } from '@/_base/interfaces/challenges/DailyGameProps';
 import { LessonPage } from '@/components/LessonPage';
 import { GenericButton } from '@/components/Buttons/Generic';
-import { LuRocket } from 'react-icons/lu';
-import { cookieManager, formatShortName, logError } from '@/_base/utils';
-import moment from 'moment';
+import { cookieManager, formatShortName } from '@/_base/utils';
 import { validateSession } from '@/_base/services/auth';
 import { FINISHED_DAILY_CHALLENGES_STORAGE_KEY, DAILY_CHALLENGES_STORAGE_KEY } from '@/_base/config/storage';
-import { GoDot, GoDotFill } from 'react-icons/go';
 
 const EXPIRES_AT = new Date().setHours(23, 59, 59);
 
@@ -28,8 +28,19 @@ const Challenge: React.FC = () => {
   const [dailyGame, setDailyGame] = useState<DailyGameProps | null>(null);
   const [currentChallenge, setCurrentChallenge] = useState<IHubChallenge | null>(null);
   const [answers, setAnswers] = useState<AnswerResultType[]>(cookieManager.getCookie<AnswerResultType[]>(DAILY_CHALLENGES_STORAGE_KEY, true) || []);
+  const [dailyResults, setDailyResults] = useState<ISendDailyChallengesResponse | null>(null);
 
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+
+  const loadUser = useAsyncCallback(
+    async () => {
+      const { metadata } = await validateSession();
+
+      setUser({ ...user, metadata });
+    },
+    [],
+    false,
+  );
 
   const loadChallenges = useAsyncCallback(
     async () => {
@@ -42,12 +53,15 @@ const Challenge: React.FC = () => {
       setCurrentChallenge(game.challenges[game.currentIndex]);
     },
     [],
-    true,
+    false,
     () => {
       setCounterAnimation(Date.now());
       setPageView(`countdown`);
+      cookieManager.setCookie(DAILY_CHALLENGES_STORAGE_KEY, JSON.stringify([]));
+      cookieManager.setCookie(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, JSON.stringify([]));
     },
   );
+
   const loadConfig = useAsyncCallback(
     async () => {
       const config = await getDailyConfig();
@@ -66,17 +80,22 @@ const Challenge: React.FC = () => {
   );
 
   useEffect(() => {
+    if (!['start', 'finished'].includes(pageView)) return;
+    loadUser();
+  }, [pageView]);
+
+  useEffect(() => {
     loadConfig();
-    setPageView(`retry`);
     const challengeInProgress = user.metadata.daily_challenges;
 
-    const savedDataIsValid = challengeInProgress?.challenges?.length && challengeInProgress.expires_at > Date.now();
+    const savedDataIsValid =
+      challengeInProgress?.challenges?.length && challengeInProgress.expires_at > Date.now() && !challengeInProgress.finished_at;
     if (savedDataIsValid) {
       const game = formatDailyGame(challengeInProgress);
       setDailyGame(game);
-      if (!game.finished_at) {
+      if (!user.metadata.daily_challenges?.finished_at) {
         setCurrentChallenge(game.challenges[game.currentIndex]);
-        // setPageView(`challenges`);
+        setPageView(`challenges`);
       }
     }
   }, [user]);
@@ -157,9 +176,19 @@ const Challenge: React.FC = () => {
     setDailyGame((e) => ({ ...(e as any), currentIndex: newIndex }));
   };
 
-  const onFinish = () => {
+  const onFinish = useAsyncCallback(async () => {
     setPageView(`sending`);
-  };
+    const answers = cookieManager.getCookie<AnswerResultType[]>(DAILY_CHALLENGES_STORAGE_KEY, true);
+    cookieManager.setCookie(DAILY_CHALLENGES_STORAGE_KEY, JSON.stringify([]));
+    cookieManager.setCookie(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, JSON.stringify([]));
+    if (!answers) return;
+
+    const results = await sendDailyChallenges({ results: answers });
+    if (results.finished) setPageView('finished');
+    else setPageView(`retry`);
+
+    setDailyResults(results);
+  }, []);
 
   const steps = Array.from({ length: 50 }).map((_, i) => ({
     bonus: dailyGame?.config?.daily_challenges?.consistency_bonus[i + 1]?.coins,
@@ -175,15 +204,13 @@ const Challenge: React.FC = () => {
         transition={{ duration: 0 }}
         style={{ height: `100%`, width: `100%` }}
       >
-        {dailyGame?.finished_at ? (
+        {!user.metadata.daily_challenges?.finished_at ? (
           <Flex w="100%" bgImage="/patterns/cloudy.svg" h="100%" pt="5rem" align="center" borderRadius="lg" direction="column" gap="5rem">
             <Flex direction="column" color="#fff" fontSize="16px" gap="2rem" textAlign="center" align="center">
               <Text fontSize="20px" fontWeight="500">
                 {`Novos desafios ${moment(EXPIRES_AT).fromNow()}`}
               </Text>
-              <Text maxW={{ base: `100%`, lg: `70%` }}>
-                Parabéns por realizar os desafios diários, continue assim para obter o máximo de moedas possível.
-              </Text>
+              <Text maxW={{ base: `100%`, lg: `70%` }}>, continue assim para obter o máximo de moedas possível.</Text>
             </Flex>
           </Flex>
         ) : (
@@ -191,7 +218,7 @@ const Challenge: React.FC = () => {
             <Flex direction="column" color="#fff" fontSize="16px" gap="2rem" textAlign="center" align="center">
               <Img src="https://i.imgur.com/bnpvSJs.png" w="160px" h="140px" />
               <Text fontSize="27px" fontWeight="500">
-                Novos desafios disponíveis!
+                {dailyGame?.finished_at ? 'Parabéns por realizar os desafios diários' : 'Novos desafios disponíveis!'}
               </Text>
 
               <Flex gap="10px">
@@ -232,11 +259,13 @@ const Challenge: React.FC = () => {
                   align="center"
                 >
                   <Flex fontSize="15px" fontWeight="500" lineHeight="16px">
-                    {`O desafio expira ${moment(EXPIRES_AT).fromNow()}`}
+                    {dailyGame?.finished_at
+                      ? `Novos desafios disponíveis ${moment(EXPIRES_AT).fromNow()}`
+                      : `O desafio expira ${moment(EXPIRES_AT).fromNow()}`}
                   </Flex>
                   <Img src="https://i.imgur.com/IwH4B07.png" w="40px" h="40px" />
                   <Flex justify="center" fontSize="16px" fontWeight="500">
-                    Faça já!
+                    Se programe!
                   </Flex>
                 </Flex>
 
@@ -259,7 +288,7 @@ const Challenge: React.FC = () => {
                     <Img src="/icons/medal.svg" w="40px" h="40px" /> {dailyGame?.averageResponse || 0}%
                   </Flex>
                   <Flex justify="center" fontSize="16px" fontWeight="500">
-                    {`de ${Object.values(dailyGame?.answers || {}).flatMap((e) => e).length} respostas`}
+                    {`de ${Object.values(user.metadata.daily_challenges?.answers || {}).flatMap((e) => e).length} respostas`}
                   </Flex>
                 </Flex>
               </Flex>
@@ -272,7 +301,9 @@ const Challenge: React.FC = () => {
                 pela sua consistência!
               </Flex>
             </Flex>
-            <GenericButton btntype="outline-white" label="Iniciar Desafio" rightIcon={<LuRocket />} onClick={() => loadChallenges()} />
+            {!dailyGame?.finished_at && (
+              <GenericButton btntype="outline-white" label="Iniciar Desafio" rightIcon={<LuRocket />} onClick={() => loadChallenges()} />
+            )}
           </Flex>
         )}
       </motion.div>
@@ -314,8 +345,8 @@ const Challenge: React.FC = () => {
               borderColor="gray300"
             >
               <Flex gap="2rem" justify="space-between">
-                <Text>{`${(dailyGame?.daily_lifes || 0) + 1}${
-                  (dailyGame?.daily_lifes || 0) + 1 === 1 ? ' tentativa restante' : ' tentativas restantes'
+                <Text>{`${dailyGame?.daily_lifes || 0}${
+                  (dailyGame?.daily_lifes || 0) === 1 ? ' tentativa restante' : ' tentativas restantes'
                 }`}</Text>
               </Flex>
             </Flex>
@@ -450,10 +481,11 @@ const Challenge: React.FC = () => {
               boxShadow="md"
             >
               <Text align="center">Você acertou</Text>
-              <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
-                <Img src="https://images.emojiterra.com/google/android-12l/512px/1f3af.png" w="35px" h="35px" /> 4
+              <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center" gap="0.5rem">
+                <Img src="https://images.emojiterra.com/google/android-12l/512px/1f3af.png" w="35px" h="35px" />{' '}
+                {dailyResults?.results?.filter((e) => e.isCorrect)?.length || 0}
               </Flex>
-              <Text>de 5 questões</Text>
+              <Text>de {dailyGame?.challenges?.length || 0} questões</Text>
             </Flex>
             <Flex
               w="150px"
@@ -467,10 +499,10 @@ const Challenge: React.FC = () => {
               boxShadow="md"
             >
               <Text align="center">Você ainda possui</Text>
-              <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
-                <FaHeart color="red" /> 2
+              <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center" gap="0.5rem">
+                <FaHeart color="red" /> {dailyGame?.remainingLifes || 0}
               </Flex>
-              <Text>vida(s)</Text>
+              <Text>{`${(dailyGame?.remainingLifes || 0) === 1 ? 'vida' : 'vidas'}`}</Text>
             </Flex>
           </Flex>
           <Flex w="100%" align="center" justify="center">
@@ -483,6 +515,7 @@ const Challenge: React.FC = () => {
               color="white"
               fontWeight="700"
               boxShadow="md"
+              onClick={() => setPageView(`start`)}
             />
           </Flex>
         </Flex>
@@ -548,7 +581,7 @@ const Challenge: React.FC = () => {
             >
               <Text align="center">Consistência de</Text>
               <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
-                <Img src="https://i.imgur.com/BkeE5tT.png" w="45px" h="40px" /> 1
+                <Img src="https://i.imgur.com/BkeE5tT.png" w="45px" h="40px" /> {user.metadata?.daily_challenges?.consecutive_days || 0}
               </Flex>
               <Text>dias</Text>
             </Flex>
@@ -565,9 +598,10 @@ const Challenge: React.FC = () => {
             >
               <Text align="center">Você acertou</Text>
               <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
-                <Img src="https://images.emojiterra.com/google/android-12l/512px/1f3af.png" w="35px" h="35px" /> 4
+                <Img src="https://images.emojiterra.com/google/android-12l/512px/1f3af.png" w="35px" h="35px" />{' '}
+                {dailyResults?.results?.filter((e) => e.isCorrect)?.length || 0}
               </Flex>
-              <Text>de 5 questões</Text>
+              <Text>de {dailyGame?.challenges?.length || 0} questões</Text>
             </Flex>
             <Flex
               w="150px"
@@ -582,7 +616,7 @@ const Challenge: React.FC = () => {
             >
               <Text align="center">Você conquistou</Text>
               <Flex w="100%" fontSize="25px" fontWeight="700" align="center" justify="center">
-                <Img src="/icons/coin.svg" w="35px" h="35px" /> 3
+                <Img src="/icons/coin.svg" w="35px" h="35px" /> {dailyResults?.coins_earned || 0}
               </Flex>
               <Text>moedas</Text>
             </Flex>
@@ -599,6 +633,7 @@ const Challenge: React.FC = () => {
               align="center"
               justify="center"
               cursor="pointer"
+              onClick={() => setPageView(`start`)}
               _hover={{ boxShadow: `lg`, color: 'gray700' }}
             >
               Continuar
@@ -668,17 +703,8 @@ const formatDailyGame = (daily: IDailyChallenge): DailyGameProps => {
   return { ...daily, currentIndex, remainingLifes };
 };
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'challenge';
-  try {
-    cookieManager.updateToken(req);
 
-    await validateSession();
-    return { props: { selectedPage, pageTitle: 'Desafio Diário', showBackButton: false } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Desafio Diário', showBackButton: false } };
 };

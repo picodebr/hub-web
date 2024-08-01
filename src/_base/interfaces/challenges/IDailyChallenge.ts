@@ -21,3 +21,9 @@ export interface IDailyChallengeAnswers extends IHubChallenge {
 export interface ISendDailyChallengesParams {
   results: AnswerResultType[];
 }
+
+export interface ICorrectorResponse {
+  id: string;
+  isCorrect: boolean;
+  coinsEarned: number;
+}
