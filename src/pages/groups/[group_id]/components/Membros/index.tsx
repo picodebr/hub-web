@@ -61,7 +61,18 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
   }, [group]);
 
   return (
-    <Flex direction="column" display="flex" w="100%" h="fit-content" border="1px" borderColor="gray300" borderRadius="10px" bg="white" boxShadow="md">
+    <Flex
+      direction="column"
+      display="flex"
+      w="100%"
+      h="fit-content"
+      border="1px"
+      borderColor="gray300"
+      borderRadius="10px"
+      bg="white"
+      boxShadow="md"
+      overflow="auto"
+    >
       <Flex justify="space-between" align="center" p="10px 20px" borderBottom="1px" borderColor="gray300">
         <Text w="100%" fontSize="14px" color="gray600">
           Membros do Grupo
@@ -172,7 +183,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
             >
               Adicionar membros ao grupo
             </MenuButton>
-            <MenuList borderColor="gray300" boxShadow="md">
+            <MenuList borderColor="gray300" boxShadow="md" overflow="auto">
               <MenuOptionGroup type="checkbox">
                 {availableStudents.length ? (
                   availableStudents.map((student) => (
@@ -213,7 +224,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
             >
               Remover membros do grupo
             </MenuButton>
-            <MenuList borderColor="gray300" boxShadow="md">
+            <MenuList borderColor="gray300" boxShadow="md" overflow="auto">
               <MenuOptionGroup type="checkbox">
                 {group.students.length ? (
                   group.students.map((student) => (

@@ -161,19 +161,19 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
 
         {/* Ranking */}
         <Flex bg="white" display="column" p={{ base: `0 1.5rem`, xl: '0 2.5rem' }} gap="0.5rem" h="fit-content">
-          <Flex
-            fontWeight="600"
-            p={{ base: '0.5rem', xl: '1rem 0.5rem' }}
-            gap="1.25rem"
-            color="white"
-            borderColor="primary600"
-            bg="primary400"
-            borderRadius="10px"
-            justify="center"
-            align="center"
-            w="100%"
-          >
-            {user?.role === 'student' ? (
+          {user?.role === 'student' && (
+            <Flex
+              fontWeight="600"
+              p={{ base: '0.5rem', xl: '1rem 0.5rem' }}
+              gap="1.25rem"
+              color="white"
+              borderColor="primary600"
+              bg="primary400"
+              borderRadius="10px"
+              justify="center"
+              align="center"
+              w="100%"
+            >
               <>
                 <Flex align="center" justify="center" gap="0.45rem">
                   <Image src="/icons/coin.svg" />
@@ -188,19 +188,8 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
                   <Text>0</Text>
                 </Flex>
               </>
-            ) : (
-              <>
-                <Flex align="center" justify="center" gap="0.45rem">
-                  <Image src="/icons/coin.svg" />
-                  <Text>0</Text>
-                </Flex>
-                <Flex cursor="pointer" align="center" gap="0.45rem" justify="center" onClick={() => router.push('/store')}>
-                  <Image src="/icons/cash.svg" />
-                  <Text>0</Text>
-                </Flex>
-              </>
-            )}
-          </Flex>
+            </Flex>
+          )}
         </Flex>
       </Flex>
 
