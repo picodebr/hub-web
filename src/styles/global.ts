@@ -62,7 +62,7 @@ export const globalTheme = extendTheme((props) => {
       xs: '485px',
       sm: '618px',
       md: '768px',
-      lg: '1020px',
+      lg: '1120px',
       xl: '1367px',
       '2xl': '1536px',
     },
