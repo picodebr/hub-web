@@ -1,9 +1,6 @@
 import { Flex, Image, Img, Link, Text } from '@chakra-ui/react';
 import { HubUserType } from '@/_base/interfaces/user';
 
-import Professor from '../../../../../public/icons/icone-professor.webp';
-import Aluno from '../../../../../public/icons/icone-estudante.webp';
-
 interface IProps {
   onUserTypeChange: (type: HubUserType) => void;
 }
