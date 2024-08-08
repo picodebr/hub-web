@@ -1,15 +1,7 @@
-import { useState } from 'react';
-import { FiClock, FiPlus } from 'react-icons/fi';
-
-import { Badge, Divider, Flex, Image, Text, textDecoration } from '@chakra-ui/react';
+import { Divider, Flex, Image, Text } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { cookieManager, logError } from '@/_base/utils';
 import { validateSession } from '@/_base/services/auth';
-import { HubTable } from '@/components/Table';
-import { GenericButton } from '@/components/Buttons/Generic';
-import { SmallModal } from '@/components/Modal/Small';
-import { useCustomRouter, useCustomToast } from '@/_base/hooks';
-import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { IoIosArrowForward } from 'react-icons/io';
 
 const Ranking: React.FC = () => {
