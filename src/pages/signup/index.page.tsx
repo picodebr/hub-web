@@ -190,6 +190,7 @@ const SignUp: React.FC = () => {
       padding="24px"
       transition="all 0.2s"
       overflow="hidden"
+      mx={{ base: '1rem', md: 'auto' }}
       h={SizeMapper[step]}
     >
       <Logo />

@@ -13,4 +13,4 @@ export interface ILoadingProviderProps {
   changeSignal?: any;
 }
 
-export type HookLoadingType = 'spinner' | 'fullscreen' | 'fullscreen-with-info';
+export type HookLoadingType = 'spinner' | 'fullscreen' | 'fullscreen-with-info' | `darken-spinner` | `none`;

@@ -55,8 +55,14 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
 
   return (
     <Flex direction="column" bgColor="white" borderRadius="md" flex="1" border="1px" borderColor="gray300" overflow="hidden" boxShadow="md">
-      <Flex p="1rem" gap="1rem" borderBottom="1px" borderColor="gray300" align="center">
-        <Skeleton isLoaded={!isLoading}>
+      <Flex p="1rem" gap="1rem" borderBottom="1px" borderColor="gray300" align="center" direction={{ base: 'column', lg: 'row' }}>
+        <Skeleton
+          isLoaded={!isLoading}
+          display={{ base: 'flex', lg: undefined }}
+          justifyContent={{ base: 'space-around', lg: undefined }}
+          w={{ base: '100%', lg: undefined }}
+          gap="1rem"
+        >
           <Flex
             backgroundImage={hubModule?.course.thumbnail || `/logo/pi-logo-dark.svg`}
             backgroundSize="cover"
@@ -67,14 +73,21 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
             border="1px"
             borderColor="gray200"
           />
+          <Flex display={{ base: 'flex', lg: 'none' }}>
+            <Progress
+              type="circle"
+              percent={Math.ceil((finishedLessons.length / lessons.length) * 100)}
+              format={() => (isLoading ? `` : `${finishedLessons.length}/${lessons.length}`)}
+            />
+          </Flex>
         </Skeleton>
-        <Flex direction="column" gap="1rem" flex="1" h="100%">
-          <Skeleton isLoaded={!isLoading} maxW="30%">
+        <Flex direction="column" gap="1rem" flex="1" h="100%" w="100%">
+          <Skeleton isLoaded={!isLoading} maxW={{ base: undefined, xl: '30%' }}>
             <Text noOfLines={1} fontWeight="500" fontSize="1rem">
               {hubModule?.title || `Módulo vazio`}
             </Text>
           </Skeleton>
-          <Skeleton isLoaded={!isLoading} maxW="30%">
+          <Skeleton isLoaded={!isLoading} maxW={{ base: undefined, xl: '30%' }}>
             {hubModule?.description && (
               <Text noOfLines={4} color="gray500">
                 {hubModule.description}
@@ -82,14 +95,14 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
             )}
           </Skeleton>
           <Flex flex="1" align="flex-end">
-            <Skeleton isLoaded={!isLoading} maxW="30%">
+            <Skeleton isLoaded={!isLoading} maxW={{ base: undefined, xl: '30%' }}>
               <Text noOfLines={1} color="gray400" fontSize="14px">
                 Curso: {hubModule?.course.title || `Módulo vazio`}
               </Text>
             </Skeleton>
           </Flex>
         </Flex>
-        <Flex>
+        <Flex display={{ base: 'none', lg: 'flex' }}>
           <Progress
             type="circle"
             percent={Math.ceil((finishedLessons.length / lessons.length) * 100)}

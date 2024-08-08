@@ -21,3 +21,8 @@ export const mazeCustomBlocks = <const>[
   'controls_if_else_path',
   'controls_repeat_until_reach_end',
 ];
+
+export interface ISendMazeParams {
+  hub_challenge_id: string;
+  is_passed: boolean;
+}

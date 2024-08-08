@@ -59,7 +59,7 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
       case 'warning':
         return '#991919';
       default:
-        return 'rgba(255,255,255,0.20)';
+        return 'rgba(255,255,255,0.70)';
     }
   };
 
@@ -94,7 +94,7 @@ export const GenericButton = ({ label, btntype, ...otherProps }: IGenericButton 
         color: 'white !important',
         opacity: 0.5,
       }}
-      _hover={btntype ? { background: getBtnColorHover(), color: getBtnTextColorHover() } : { filter: `brightness(0.9)` }}
+      _hover={btntype ? { background: getBtnColorHover(), color: getBtnTextColorHover() } : { filter: `brightness(0.95)` }}
       {...otherProps}
     >
       {label}

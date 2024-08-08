@@ -205,7 +205,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
           </Text>
           <Flex p="20px">
             <Flex gap="8px" align="center" flex="1">
-              <Avatar src={user.avatar} size="sm" />
+              <Avatar src={user.avatar || undefined} size="sm" />
               <Text color="gray900">{user.username}</Text>
             </Flex>
             <Text align="center" fontWeight="600" color="gray900">

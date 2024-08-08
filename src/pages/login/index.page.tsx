@@ -58,7 +58,7 @@ const LoginPage: React.FC = () => {
 
       await new Promise((res) =>
         setTimeout(() => {
-          router.push('/profile');
+          router.push('/profile', `fullscreen-with-info`);
           setTimeout(() => res(true), 15000);
         }, 2000),
       );

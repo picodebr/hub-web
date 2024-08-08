@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import Cookies from 'js-cookie';
 import { IncomingMessage, ServerResponse } from 'http';
 
@@ -20,10 +21,35 @@ export const cookieManager: ITokenManager = {
   },
   getCookie: (name, parse, decode = true) => {
     const encodedToken = Cookies.get(decode ? btoa(name) : name);
-    if (encodedToken) return parse ? JSON.parse(decode ? atob(encodedToken) : encodedToken) : decode ? atob(encodedToken) : encodedToken;
-    return null;
+
+    try {
+      if (encodedToken)
+        return parse
+          ? JSON.parse(decode ? atob(encodeURIComponent(encodedToken)) : encodedToken)
+          : decode
+          ? atob(encodeURIComponent(encodedToken))
+          : encodedToken;
+    } catch {
+      try {
+        if (encodedToken) return parse ? JSON.parse(decode ? atob(encodedToken) : encodedToken) : decode ? atob(encodedToken) : encodedToken;
+        return null;
+      } catch (err) {
+        console.error(`Error on get cookies`, err);
+      }
+      return null;
+    }
   },
-  setCookie: (name, value, expires = 1, encode = true) => Cookies.set(encode ? btoa(name) : name, encode ? btoa(value) : value, { expires }),
+  setCookie: (name, value, expires = 1, encode = true) => {
+    try {
+      Cookies.set(encode ? btoa(decodeURIComponent(name)) : name, encode ? btoa(decodeURIComponent(value)) : value, { expires });
+    } catch {
+      try {
+        Cookies.set(encode ? btoa(name) : name, encode ? btoa(value) : value, { expires });
+      } catch (err) {
+        console.error(`Error on set cookies`, err);
+      }
+    }
+  },
 };
 
 type NextAppRequest = IncomingMessage & { cookies: Partial<{ [key: string]: string }> };

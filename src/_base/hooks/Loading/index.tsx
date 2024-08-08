@@ -45,8 +45,8 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         width="100vw"
         height="100vh"
         zIndex="9999"
-        // bg={loadingConfig.type === 'spinner' ? 'transparent' : 'primary100'}
-        transition="all 0.35s"
+        bg={loadingConfig.type === `darken-spinner` ? '#00000055' : ''}
+        transition="all 0.35s, background 0.5s"
         opacity={loadingConfig.isLoading ? '1' : '0'}
         pointerEvents={loadingConfig.isLoading ? 'auto' : 'none'}
       >
@@ -67,13 +67,19 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         {loadingConfig.type === 'spinner' && (
           <Slide direction="bottom" in={loadingConfig.isLoading} style={{ zIndex: 10, justifyContent: 'flex-end', display: 'flex' }}>
             <Flex>
-              <Image src="/loading/rocket-picode.gif" h="12rem" m={{ base: '0 0 -2.5rem', sm: '0 1rem -1.5rem 0' }} />
+              <Image src="/loading/rocket-picode.gif" h="16rem" m={{ base: '0 0 -2.5rem', sm: '0 1rem -1.5rem 0' }} />
             </Flex>
           </Slide>
         )}
 
+        {loadingConfig.type === 'darken-spinner' && (
+          <Flex w="100vw" h="100vh" align="center" justify="center">
+            <Image src="/loading/rocket-picode.gif" h="16rem" m={{ base: '0 0 -2.5rem', sm: '0 1rem -1.5rem 0' }} />
+          </Flex>
+        )}
+
         {loadingConfig.type === 'fullscreen-with-info' && (
-          <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md">
+          <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md" p={{ base: '1rem' }}>
             <Flex
               bgColor="white"
               display="flex"

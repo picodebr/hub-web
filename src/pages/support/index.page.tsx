@@ -120,7 +120,11 @@ const Support: React.FC = () => {
     ),
   };
 
-  return PageStepElement[step];
+  return (
+    <Flex m="auto" mx={{ base: '1rem', md: 'auto' }}>
+      {PageStepElement[step]}
+    </Flex>
+  );
 };
 
 export default Support;

@@ -8,6 +8,6 @@ import { GiMaze } from 'react-icons/gi';
 export const lessonTypeInfoMapper: Record<HubModuleLessonType, { label: string; icon: IconType }> = {
   video: { label: `Vídeo`, icon: MdOutlineSlowMotionVideo },
   algorithm: { label: `Algoritmo`, icon: IoOptionsOutline },
-  maze: { label: `Mapa`, icon: GiMaze },
+  map: { label: `Mapa`, icon: GiMaze },
   quiz: { label: `Quiz`, icon: MdOutlineQuiz },
 };
