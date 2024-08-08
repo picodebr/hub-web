@@ -1,4 +1,4 @@
-export type CustomActions = { type: CustomActionType; data: IRedirectLinkActionData };
+export type CustomActions = { type: CustomActionType; data: IRedirectLinkActionData; school_id?: string | null };
 
 export const customActionTypes = <const>['redirect_link'];
 

@@ -1,4 +1,5 @@
 import { IHubSchool } from './ISchool';
+import { IHubSchoolGroupMetadata } from './IHubSchoolGroupMetadata';
 
 export interface IHubSchoolGroup {
   id: string;
@@ -8,4 +9,5 @@ export interface IHubSchoolGroup {
   created_at: Date;
   updated_at: Date;
   schools: IHubSchool[];
+  metadata?: IHubSchoolGroupMetadata;
 }
