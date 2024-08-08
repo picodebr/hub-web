@@ -12,6 +12,7 @@ import { dimensions } from '@/styles/global';
 import { IHubUserSchool } from '@/_base/interfaces/school';
 import { MenuItemType } from '../../interfaces';
 import { MobileMenu } from '../MobileMenu';
+import { CustomActions } from '@/_base/interfaces/customActions';
 
 interface IProps {
   user?: IHubUser;
@@ -21,13 +22,19 @@ interface IProps {
   hideOnMobile?: boolean;
 }
 
-type TargetSchoolHookType = { school: IHubUserSchool | null; setSchool: (school: IHubUserSchool) => void };
-
+type TargetSchoolHookType = {
+  school: IHubUserSchool | null;
+  customActions: CustomActions[];
+  setSchool: (school: IHubUserSchool) => void;
+  setCustomActions: (customActions: CustomActions[]) => void;
+};
 export const useSelectedSchool = create<TargetSchoolHookType>(
   persist(
     (set) => ({
       school: null,
+      customActions: [],
       setSchool: (data: IHubUserSchool) => set(() => ({ school: data })),
+      setCustomActions: (data: CustomActions) => set(() => ({ customActions: data })),
     }),
     { name: `context-storage` },
   ) as any,
@@ -39,7 +46,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
 
   const router = useCustomRouter();
   const { colorMode } = useColorMode();
-  const { setSchool, school } = useSelectedSchool();
+  const { setSchool, school, setCustomActions } = useSelectedSchool();
 
   const data = user?.schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
   useUpdateEffect(() => {
@@ -48,6 +55,11 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
 
     if (target) {
       setSchool(target);
+      if (user?.role === `teacher`)
+        setCustomActions(
+          target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
+            [],
+        );
       setTimeout(() => {
         setIsLoading(false);
       }, 3000);
@@ -55,9 +67,18 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
   }, [selectedSchool]);
 
   useEffect(() => {
-    const target = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0];
+    const storage = JSON.parse(localStorage.getItem(`context-storage`) || `{}`);
+    const target: IHubUserSchool = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0] || storage?.state?.school;
 
-    if (target) setSchool(target);
+    if (target) {
+      setSchool(target);
+      if (user?.role === `teacher`)
+        setCustomActions(
+          target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
+            [],
+        );
+      else setCustomActions([]);
+    }
   }, [user]);
 
   return (
@@ -110,7 +131,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
             cursor="pointer"
             transition="0.12s"
             _hover={{ filter: 'brightness(0.7)' }}
-            onClick={() => router.push('/logout')}
+            onClick={() => router.push('/logout', `spinner`)}
             className="only-desktop"
           >
             <FiLogOut color="#FDA29B" />
