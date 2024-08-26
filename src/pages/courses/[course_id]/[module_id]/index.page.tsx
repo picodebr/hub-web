@@ -60,7 +60,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
           isLoaded={!isLoading}
           display={{ base: 'flex', lg: undefined }}
           justifyContent={{ base: 'space-around', lg: undefined }}
-          w={{ base: '100%', lg: undefined }}
+          w={{ base: '100%', lg: `fit-content` }}
           gap="1rem"
         >
           <Flex
@@ -83,11 +83,11 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
         </Skeleton>
         <Flex direction="column" gap="1rem" flex="1" h="100%" w="100%">
           <Skeleton isLoaded={!isLoading} maxW={{ base: undefined, xl: '30%' }}>
-            <Text noOfLines={1} fontWeight="500" fontSize="1rem">
+            <Text noOfLines={1} fontWeight="500" fontSize="1rem" color="text">
               {hubModule?.title || `Módulo vazio`}
             </Text>
           </Skeleton>
-          <Skeleton isLoaded={!isLoading} maxW={{ base: undefined, xl: '30%' }}>
+          <Skeleton isLoaded={!isLoading} maxW={{ base: undefined, xl: '70%' }}>
             {hubModule?.description && (
               <Text noOfLines={4} color="gray500">
                 {hubModule.description}
@@ -106,7 +106,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
           <Progress
             type="circle"
             percent={Math.ceil((finishedLessons.length / lessons.length) * 100)}
-            format={() => (isLoading ? `` : `${finishedLessons.length}/${lessons.length}`)}
+            format={() => <Text color="text">{isLoading ? `` : `${finishedLessons.length}/${lessons.length}`}</Text>}
           />
         </Flex>
       </Flex>
@@ -127,7 +127,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
             >
               <Flex direction="column" justify="space-between" pb="0.15rem">
                 <Flex gap="0.5rem" align="center">
-                  <Text fontWeight="500" color="gray800">{`${i + 1}. ${lesson.title}`}</Text>
+                  <Text fontWeight="500" color="text">{`${i + 1}. ${lesson.title}`}</Text>
                   {lesson.finished && (
                     <Flex color="primary300">
                       <PiSealCheckFill fontSize="1.2rem" filter="brightness(0.93)" />
@@ -144,7 +144,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
                 <GenericButton
                   label={finishedLessons.find((l) => l.entity_id === lesson.id) ? 'Ver novamente' : 'Iniciar'}
                   bg="primary700"
-                  color="gray800"
+                  color="#fff"
                   leftIcon={lessonTypeInfoMapper[lesson.lesson_type].icon({ fontSize: `1.15rem` })}
                   onClick={() => router.push(`/courses/${courseId}/${moduleId}/${lesson.id}?_p=${lesson.title}`)}
                 />
