@@ -461,7 +461,7 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
       <CodeEventMenu
         onClick={(type) => headerEvents.emit(type)}
         allowUpload={allowUpload}
-        isProjectOwner={true}
+        isProjectOwner={project === null || user.id === project?.folder?.hub_user_id}
         isSignedIn={true}
         isTextMode={isTextMode}
       />
