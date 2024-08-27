@@ -1,20 +1,24 @@
 import { GetServerSideProps } from 'next';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaRegShareSquare } from 'react-icons/fa';
 import { FiMoreVertical, FiTrash } from 'react-icons/fi';
 import moment from 'moment';
 
 import { cookieManager } from '@/_base/utils';
-import { Flex, Menu, MenuButton, MenuItem, MenuList, Skeleton, Text } from '@chakra-ui/react';
+import { Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Skeleton, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { PlusButton } from '@/components/Buttons/Plus';
 import { BsMotherboard } from 'react-icons/bs';
 import { useEffect, useState } from 'react';
 import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
 import { getCodeProjectFolder } from '@/_base/services/codeProjectFolder';
-import { removeCodeProject } from '@/_base/services/codeProject';
+import { removeCodeProject, shareCodeProject } from '@/_base/services/codeProject';
 import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
 import { SmallModal } from '@/components/Modal/Small';
 import { LuSquareDashedBottomCode } from 'react-icons/lu';
+import { IHubUser } from '@/_base/interfaces/user';
+import { listRelatedUsers } from '@/_base/services/user';
+import { IoChevronDownCircleOutline } from 'react-icons/io5';
+import { AvatarList } from '@/components/AvatarList';
 
 interface IProps {
   folderId: string;
@@ -23,6 +27,9 @@ interface IProps {
 const CodeProjects: React.FC<IProps> = ({ folderId }) => {
   const [targetFolder, setTargetFolder] = useState<IProjectFolder | null>(null);
   const [targetProjectToRemove, setTargetProjectToRemove] = useState<ICodeProject | null>(null);
+  const [targetProjectToShare, setTargetProjectToShare] = useState<ICodeProject | null>(null);
+  const [usersToShare, setUsersToShare] = useState<IHubUser[]>([]);
+  const [relatedUsers, setRelatedUsers] = useState<IHubUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const toast = useCustomToast();
@@ -32,9 +39,10 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
     (async () => {
       setIsLoading(true);
       try {
-        const [projectFolder] = await Promise.all([getCodeProjectFolder(folderId)]);
+        const [projectFolder, relatedUsersRes] = await Promise.all([getCodeProjectFolder(folderId), listRelatedUsers()]);
         if (!projectFolder?.projects.length) router.push(`/code/${folderId}/example`);
         setTargetFolder(projectFolder);
+        setRelatedUsers(relatedUsersRes);
       } catch {
         toast({ status: `error`, description: `Não foi possível listar as pastas disponíveis no momento` });
       } finally {
@@ -45,14 +53,28 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
 
   const onCloseModal = () => {
     setTargetProjectToRemove(null);
+    setTargetProjectToShare(null);
+    setUsersToShare([]);
   };
 
-  const handleRemoveFolder = useAsyncCallback(
+  const handleRemoveProject = useAsyncCallback(
     async () => {
       if (!targetProjectToRemove) return;
       setIsLoading(true);
       await removeCodeProject(targetProjectToRemove.id);
       setTargetFolder((f) => ({ ...(f || ({} as any)), projects: f?.projects.filter((p) => p.id !== targetProjectToRemove.id) || [] }));
+      onCloseModal();
+    },
+    [targetProjectToRemove],
+    true,
+    () => setIsLoading(false),
+  );
+
+  const handleShareProject = useAsyncCallback(
+    async () => {
+      if (!targetProjectToShare || !usersToShare) return;
+      setIsLoading(true);
+      await Promise.all(usersToShare.map((u) => shareCodeProject({ hub_user_id: u.id, code_project_id: targetProjectToShare.id })));
       onCloseModal();
     },
     [targetProjectToRemove],
@@ -137,10 +159,22 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
                       setTargetProjectToRemove(project);
                     }}
                   >
-                    <Flex color="gray400">
+                    <Flex color="red.400">
                       <FiTrash />
                     </Flex>
                     <Text fontSize="15px">Remover</Text>
+                  </MenuItem>
+                  <MenuItem
+                    gap="0.5rem"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTargetProjectToShare(project);
+                    }}
+                  >
+                    <Flex color="green.400">
+                      <FaRegShareSquare />
+                    </Flex>
+                    <Text fontSize="15px">Compartilhar</Text>
                   </MenuItem>
                 </MenuList>
               </Menu>
@@ -149,12 +183,12 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
         ))}
       </Skeleton>
 
-      {/* Remove folder modal */}
+      {/* Remove project modal */}
       <SmallModal
         show={!!targetProjectToRemove}
         topIcon="warning"
         onCancel={onCloseModal}
-        onConfirm={handleRemoveFolder}
+        onConfirm={handleRemoveProject}
         title="Atenção"
         okText="Confirmar"
         isLoading={isLoading}
@@ -166,6 +200,52 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
           <Text fontSize="1rem" fontWeight="500" color="gray600">
             Essa ação é <b>irreversível</b>.
           </Text>
+        </Flex>
+      </SmallModal>
+
+      {/* Share project modal */}
+      <SmallModal
+        show={!!targetProjectToShare}
+        topIcon="checked"
+        onCancel={onCloseModal}
+        onConfirm={handleShareProject}
+        title=" Quem vai ter acesso ao projeto?"
+        okText="Confirmar"
+        isLoading={isLoading}
+      >
+        <Flex direction="column" gap="1rem" mt="1rem">
+          <Menu closeOnSelect={false} placement="right">
+            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
+              Selecionar
+            </MenuButton>
+            <MenuList borderColor="gray300" boxShadow="md">
+              <MenuOptionGroup type="checkbox">
+                {relatedUsers.length ? (
+                  relatedUsers.map((user) => (
+                    <MenuItemOption
+                      key={user.id}
+                      value={user.id}
+                      isChecked={!!targetProjectToShare?.share_links?.find((e) => e.hub_user_id === user.id)}
+                      onClick={() =>
+                        setUsersToShare((data) => (data.find((u) => u.id === user.id) ? data.filter((u) => u.id !== user.id) : [...data, user]))
+                      }
+                    >
+                      {user.name}
+                    </MenuItemOption>
+                  ))
+                ) : (
+                  <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
+                )}
+              </MenuOptionGroup>
+            </MenuList>
+          </Menu>
+          <AvatarList
+            users={relatedUsers.filter(
+              (e) => !!targetProjectToShare?.share_links.find((s) => s.hub_user_id === e.id) || usersToShare.find((u) => u.id === e.id),
+            )}
+            max={10}
+            emptyMessage="-"
+          />
         </Flex>
       </SmallModal>
     </Flex>

@@ -6,7 +6,7 @@ import { codeEventButtonTypes } from '../CodeEventButton/interfaces';
 import { CodeEventButton } from '../CodeEventButton';
 import { Flex } from '@chakra-ui/react';
 
-export const CodeEventMenu: React.FC<ICodeEventMenuProps> = ({ allowUpload, isTextMode, onClick }) => (
+export const CodeEventMenu: React.FC<ICodeEventMenuProps> = ({ allowUpload, isTextMode, onClick, isProjectOwner }) => (
   <Flex
     justify="flex-end"
     align="center"
@@ -28,10 +28,9 @@ export const CodeEventMenu: React.FC<ICodeEventMenuProps> = ({ allowUpload, isTe
         onClick={() => onClick(type)}
         hide={
           // (type === 'simulation' && (!isSignedIn || isTextMode)) ||
-          // (type === 'save' && !isProjectOwner) ||
           // (type === 'duplicate' && isProjectOwner) ||
           // (type === 'toText' && isTextMode)
-          type === `duplicate` || (type === `toText` && isTextMode)
+          (type === 'save' && !isProjectOwner) || type === `duplicate` || (type === `toText` && isTextMode)
         }
         disabled={type === 'upload' && !allowUpload}
       />
