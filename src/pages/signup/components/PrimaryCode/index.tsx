@@ -8,7 +8,7 @@ import { AppReCaptcha } from '@/components/ReCaptcha';
 import { SignUpPageStepsType } from '../../interfaces';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 import { InputValueType } from '@/_base/interfaces/shared';
-import { HubUserType } from '@/_base/interfaces/user';
+import { HubUserType, hubUserTypes } from '@/_base/interfaces/user';
 
 interface IProps {
   primaryCode: InputValueType<string>;
@@ -31,7 +31,11 @@ export const PrimaryCodeStep: React.FC<IProps> = ({ setPrimaryCode, primaryCode,
           <Text fontWeight="600" fontSize="20px" color="gray900">
             Informe o código de acesso
           </Text>
-          <Text color="gray500">Esse código estará nos seus livros. Informe ao campo abaixo e você será vinculado a sua turma.</Text>
+          {userType === `student` ? (
+            <Text color="gray500">Informe o código da sua turma, que deve ser disponibilizado pelo seu professor.</Text>
+          ) : (
+            <Text color="gray500">Informe o código de acesso disponibilizado pela equipe PiCode.</Text>
+          )}
         </Flex>
         <CodeInput
           onFill={(value) => setPrimaryCode((e) => ({ ...e, value }))}
