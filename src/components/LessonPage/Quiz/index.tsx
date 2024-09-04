@@ -5,7 +5,7 @@ import { ILessonPageProps } from '../interfaces';
 import { ISendQuizParams } from '@/_base/interfaces/challenges';
 import { useEffect, useState } from 'react';
 
-export const QuizPage: React.FC<Omit<ILessonPageProps, `onPageChange` | `onFinish`>> = ({ challenge, registerAnswer, answers }) => {
+export const QuizPage: React.FC<Omit<ILessonPageProps, `onPageChange` | `onFinish`>> = ({ challenge, registerAnswer, answers, complete }) => {
   const quizAnswers = answers as ISendQuizParams[];
   const [selectedAnswer, setSelectedAnswer] = useState<string>(quizAnswers.find((e) => e.hub_challenge_id === challenge.id)?.option || ``);
 
@@ -18,7 +18,41 @@ export const QuizPage: React.FC<Omit<ILessonPageProps, `onPageChange` | `onFinis
     registerAnswer(data);
   };
   return (
-    <Flex flex="1" w="100%" p="2rem" bgImage="/patterns/cloudy.svg" bgPosition="bottom" bgSize="cover" borderRadius="md" justify="center">
+    <Flex
+      direction="column"
+      flex="1"
+      w="100%"
+      p="2rem"
+      bgImage="/patterns/cloudy.svg"
+      bgPosition="bottom"
+      bgSize="cover"
+      borderRadius="md"
+      align="center"
+      gap="0.5rem"
+      overflow="hidden"
+    >
+      {complete && (
+        <Flex
+          bg="#fff"
+          borderRadius="md"
+          w="100%"
+          minH="8rem"
+          maxH={{ base: '12rem', xl: '18rem' }}
+          overflow="hidden"
+          p="0.5rem"
+          boxShadow="inset 0 0 100px #3356B744"
+        >
+          <Flex direction="column" w="100%" overflow="hidden auto" gap="0.5rem" border="1px" borderColor="#293056" borderRadius="md" p="0.5rem">
+            <Text w="100%" textAlign="center" fontSize="22px" fontWeight="500">
+              {challenge.title}
+            </Text>
+            <Text w="100%" textAlign="center" fontSize="18px" flex="1">
+              {challenge.description}
+            </Text>
+          </Flex>
+        </Flex>
+      )}
+
       <Grid
         justifySelf="center"
         p="1rem"
@@ -27,6 +61,7 @@ export const QuizPage: React.FC<Omit<ILessonPageProps, `onPageChange` | `onFinis
         gap="1.5rem"
         gridTemplateColumns="repeat(auto-fill, minmax(200px, 1fr))"
         gridTemplateRows="minmax(min-content, max-content)"
+        overflow="hidden auto"
       >
         {challenge.data.quiz_answers?.map((e) => (
           <motion.button

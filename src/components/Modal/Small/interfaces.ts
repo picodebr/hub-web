@@ -1,4 +1,5 @@
 import { ModalOverlayProps, ModalProps } from '@chakra-ui/react';
+import { ReactNode } from 'react';
 
 export interface IModalProps extends Partial<ModalProps> {
   show: boolean;
@@ -6,7 +7,7 @@ export interface IModalProps extends Partial<ModalProps> {
   onCancel?: () => void;
   onCloseModal?: () => void;
   title?: string;
-  okText?: string;
+  okText?: ReactNode;
   cancelText?: string;
   disableOkButton?: boolean;
   disableCancelButton?: boolean;
@@ -14,6 +15,7 @@ export interface IModalProps extends Partial<ModalProps> {
   overlay?: ModalOverlayProps;
   topIcon?: ModalTopIconType | React.ReactElement;
   showCloseButton?: boolean;
+  bgOkButton?: string;
 }
 
 export const modalTopIconTypes = <const>['ray', 'checked', 'warning'];

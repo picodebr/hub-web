@@ -3,8 +3,8 @@ import { FaPlus, FaRegShareSquare } from 'react-icons/fa';
 import { FiMoreVertical, FiTrash } from 'react-icons/fi';
 import moment from 'moment';
 
-import { cookieManager } from '@/_base/utils';
-import { Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Skeleton, Text } from '@chakra-ui/react';
+import { cookieManager, formatShortName } from '@/_base/utils';
+import { Avatar, Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Skeleton, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { PlusButton } from '@/components/Buttons/Plus';
 import { BsMotherboard } from 'react-icons/bs';
@@ -218,7 +218,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               Selecionar
             </MenuButton>
-            <MenuList borderColor="gray300" boxShadow="md">
+            <MenuList borderColor="gray300" boxShadow="md" maxH="15rem" overflow="hidden auto">
               <MenuOptionGroup type="checkbox">
                 {relatedUsers.length ? (
                   relatedUsers.map((user) => (
@@ -226,11 +226,23 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
                       key={user.id}
                       value={user.id}
                       isChecked={!!targetProjectToShare?.share_links?.find((e) => e.hub_user_id === user.id)}
+                      _hover={{ filter: `brightness(0.9)` }}
                       onClick={() =>
                         setUsersToShare((data) => (data.find((u) => u.id === user.id) ? data.filter((u) => u.id !== user.id) : [...data, user]))
                       }
                     >
-                      {user.name}
+                      <Flex align="center" gap="0.5rem">
+                        <Avatar
+                          name={formatShortName(user?.name || ``)}
+                          src={user?.avatar || ``}
+                          title={user?.name}
+                          h="35px"
+                          w="35px"
+                          border="1px"
+                          borderColor="gray200 !important"
+                        />
+                        <Text>{user.name}</Text>
+                      </Flex>
                     </MenuItemOption>
                   ))
                 ) : (

@@ -28,6 +28,7 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
   isLoading,
   onCloseModal,
   showCloseButton = true,
+  bgOkButton,
   ...rest
 }) => {
   return (
@@ -68,6 +69,7 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
             }}
             isDisabled={disableOkButton}
             isLoading={isLoading}
+            bg={bgOkButton || 'primary900'}
           />
         </ModalFooter>
       </ModalContent>
