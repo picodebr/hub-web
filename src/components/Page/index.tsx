@@ -1,5 +1,5 @@
 import { PropsWithChildren } from 'react';
-import { FiCheckCircle, FiChevronLeft } from 'react-icons/fi';
+import { FiChevronLeft } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import { FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
@@ -89,7 +89,7 @@ const studentMenuItems: Array<MenuItemType> = [
   { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
   { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
   { name: 'Meus Grupos', page: 'groups', icon: FiUsers },
-  { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle },
+  // { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle },
 ];
 
 const teacherMenuItems: Array<MenuItemType> = [

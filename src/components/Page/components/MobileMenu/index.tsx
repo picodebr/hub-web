@@ -17,6 +17,7 @@ import {
 import NextImage from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Uploader } from 'rsuite';
+import { motion } from 'framer-motion';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { formatShortName } from '@/_base/utils';
@@ -27,6 +28,9 @@ import { IHubUser } from '@/_base/interfaces/user';
 import { MenuItemType } from '../../interfaces';
 import { HiMenu } from 'react-icons/hi';
 import { FiEdit2, FiLogOut } from 'react-icons/fi';
+import { customActionTypes } from '@/_base/interfaces/customActions';
+import { iconList } from '@/_base/config/iconList';
+import { useSelectedSchool } from '../Header';
 
 export interface INavbarProps {
   page: string;
@@ -36,6 +40,8 @@ export interface INavbarProps {
 
 export const MobileMenu: React.FC<INavbarProps> = ({ page, user: _user, menuItems }) => {
   const btnRef = useRef<any>();
+
+  const { customActions } = useSelectedSchool();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useCustomRouter();
@@ -214,6 +220,38 @@ export const MobileMenu: React.FC<INavbarProps> = ({ page, user: _user, menuItem
                 </Flex>
               ))}
             </Flex>
+            {!!customActionTypes.length && (
+              <Flex flex="1" color="primary700" gap="1.25rem" justify="center" align="flex-end" p="1rem 1rem 2rem">
+                {customActions.map((action, i) => (
+                  <motion.a
+                    key={action.type + i}
+                    href={action.data.link}
+                    target="_blank"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                    style={{
+                      display: `flex`,
+                      flexDirection: `column`,
+                      alignItems: `center`,
+                      justifyContent: `center`,
+                      background: `#F9F5FF`,
+                      border: `1px solid #d9d5dd88`,
+                      height: `3.25rem`,
+                      minWidth: `4rem`,
+                      padding: `0.25rem`,
+                      gap: `0.23rem`,
+                      borderRadius: `8px`,
+                      cursor: `pointer`,
+                    }}
+                  >
+                    <Icon fontSize="20" as={iconList[action.data.icon]} />
+                    <Text lineHeight="1" noOfLines={1} textAlign="center" letterSpacing={0.5} fontWeight="500">
+                      {action.data.label}
+                    </Text>
+                  </motion.a>
+                ))}
+              </Flex>
+            )}
           </DrawerBody>
 
           <DrawerFooter justifyContent="flex-start">
