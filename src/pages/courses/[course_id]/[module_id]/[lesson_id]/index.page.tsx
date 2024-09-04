@@ -57,7 +57,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
 
       if (lesson?.lesson_type === `quiz`) {
         result.openSuccessModal = !!result?.is_finished;
-        result.openSuccessModal = !result?.is_finished;
+        result.openFailModal = !result?.is_finished;
       }
       setCustomResult(result);
       setLessonIsFinished(result.is_finished);
