@@ -33,6 +33,7 @@ const stepsOrder: PageStepsType[] = ['HELP', 'DOUBT', 'TECH_CALENDAR', 'PEDAGO_C
 
 const Appointment: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('HELP');
+  const [meetingDateTime, setMeetingDateTime] = useState<Date | null>(null);
   const router = useCustomRouter();
   const { colorMode } = useColorMode();
   const guides: GuideType[] = [
@@ -80,10 +81,9 @@ const Appointment: React.FC = () => {
     const date = new Date();
     date.setDate(date.getDate() + id);
 
-    // Verifica se o dia da semana é sábado (6) ou domingo (0)
     const dayOfWeek = date.getDay();
     if (dayOfWeek === 0 || dayOfWeek === 6) {
-      return []; // Retorna um array vazio para pular sábados e domingos
+      return [];
     }
 
     const morningSlot = {
@@ -95,7 +95,7 @@ const Appointment: React.FC = () => {
     const afternoonSlot = {
       id: `${id}-afternoon`,
       startTime: new Date(date.setHours(13, 0, 0, 0)),
-      endTime: new Date(date.setHours(17, 0, 0, 0)),
+      endTime: new Date(date.setHours(18, 0, 0, 0)),
     };
 
     return [morningSlot, afternoonSlot];
@@ -185,7 +185,7 @@ const Appointment: React.FC = () => {
     DOUBT: (
       <Flex direction="column" gap="50px">
         <Flex justify="center" fontSize="30px" fontWeight="700" borderColor="gray300" padding="0 20px 20px">
-          Selecione o assunto da reunião
+          Como podemos te ajudar hoje?
         </Flex>
         <Flex w="100%" h="fit-content" justify="center" direction="column">
           <Flex w="100%" h="auto" justify="space-between" align="center">
@@ -208,9 +208,9 @@ const Appointment: React.FC = () => {
                 onClick={() => setStep('TECH_CALENDAR')}
               >
                 <BiSupport />
-                Problemas técnicos
+                Suporte técnico
                 <Flex fontSize="18px" textAlign="center" fontWeight="400">
-                  Problemas técnicos referem-se <br /> a erros nas plataformas digitais da PiCode.
+                  Aqui, você falará com nossa equipe <br /> responsável pelos kits <br /> físicos e placas eletrônicas!
                 </Flex>
               </Flex>
             </Flex>
@@ -235,9 +235,9 @@ const Appointment: React.FC = () => {
             onClick={() => setStep('PEDAGO_CALENDAR')}
           >
             <MdOutlineSchool />
-            Problemas pedagógicos
+            Suporte pedagógico
             <Flex fontSize="18px" textAlign="center" fontWeight="400">
-              Problemas pedagógicos referem-se <br /> a materiais físicos e digitais da PiCode.
+              Aqui, você falará com um dos nossos <br /> especialistas em educação para tirar dúvidas <br /> sobre o material didático.
             </Flex>
           </Flex>
         </Flex>
@@ -252,11 +252,11 @@ const Appointment: React.FC = () => {
           borderRadius={10}
           primaryColor="#3f5b85"
           backgroundColor={colorMode === 'light' ? '#fff' : '#252D38'}
-          eventDurationInMinutes={60}
+          eventDurationInMinutes={45}
           availableTimeslots={availableTimeslots}
-          onStartTimeSelect={console.log}
-          startTimeListStyle="scroll-list"
+          onStartTimeSelect={(selectedTimeslot) => setMeetingDateTime(selectedTimeslot.startTime)}
           // Language props
+          startTimeListStyle="scroll-list"
           lang_cancelButtonText="Cancelar"
           lang_confirmButtonText="Confirmar"
           lang_emptyListText="Sem horários disponíveis"
@@ -270,6 +270,7 @@ const Appointment: React.FC = () => {
           format_startTimeFormatString="h:mm a"
           locale={ptBR}
         />
+        {meetingDateTime && <Text>Você tem uma reunião marcada para: {meetingDateTime.toString()}</Text>}
       </Flex>
     ),
     PEDAGO_CALENDAR: (
@@ -281,9 +282,9 @@ const Appointment: React.FC = () => {
           borderRadius={10}
           primaryColor="#3f5b85"
           backgroundColor={colorMode === 'light' ? '#fff' : '#252D38'}
-          eventDurationInMinutes={60}
+          eventDurationInMinutes={45}
           availableTimeslots={availableTimeslots}
-          onStartTimeSelect={console.log}
+          onStartTimeSelect={(selectedTimeslot) => setMeetingDateTime(selectedTimeslot.startTime)}
           startTimeListStyle="scroll-list"
           // Language props
           lang_cancelButtonText="Cancelar"
@@ -299,6 +300,7 @@ const Appointment: React.FC = () => {
           format_startTimeFormatString="h:mm a"
           locale={ptBR}
         />
+        {meetingDateTime && <Text>Você tem uma reunião marcada para: {meetingDateTime.toString()}</Text>}
       </Flex>
     ),
   };
