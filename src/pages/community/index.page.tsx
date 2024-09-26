@@ -13,8 +13,15 @@ import {
   Tooltip,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
-import { FiSend, FiTrash2 } from 'react-icons/fi';
 import { useEffect, useState } from 'react';
+import { Divider } from 'antd';
+import moment from 'moment';
+import { FiSend, FiTrash2 } from 'react-icons/fi';
+import { IconType } from 'react-icons';
+import { TbThumbUpFilled } from 'react-icons/tb';
+import { IoMdHeart } from 'react-icons/io';
+import { HiLightBulb } from 'react-icons/hi';
+import { RiUserStarFill } from 'react-icons/ri';
 
 import { useAsyncCallback, useAuth, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
@@ -22,17 +29,10 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { EMPTY_CREATE_POST_DATA, ICreateHubCommunityPostParams, IHubCommunityPost, communityPostSchema } from '@/_base/interfaces/community';
 import { createCommunityPost, listCommunityPosts, updateCommunityPostReaction } from '@/_base/services/community';
 import { FileInput, useFileInput } from '@/components/Inputs/File';
-import { Divider } from 'antd';
-import { TbThumbUpFilled } from 'react-icons/tb';
-import { IoMdHeart } from 'react-icons/io';
-import { HiLightBulb } from 'react-icons/hi';
-import { RiUserStarFill } from 'react-icons/ri';
 import { TextInput } from '@/components/Inputs/Text';
 import { SmallModal } from '@/components/Modal/Small';
 import { deleteCommunityPost } from '@/_base/services/community/deleteCommunityPost';
 import { PostReaction, PostReactionKey } from '@/_base/interfaces/community/PostReaction';
-import { IconType } from 'react-icons';
-import moment from 'moment';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { MediaGallery } from '@/components/MediaGallery';
 
@@ -351,7 +351,7 @@ const Community: React.FC = () => {
                                 <Text fontSize="14px">{postReply.content}</Text>
                               </Flex>
                               <Text mb="-0.75rem" fontSize="13px" color="gray400" alignSelf="flex-end">
-                                {moment(postReply.updated_at).fromNow()}
+                                {moment(postReply.created_at).fromNow()}
                               </Text>
                             </Flex>
                           </Flex>
