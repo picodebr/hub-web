@@ -508,7 +508,7 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
       <SerialMonitor show={showSerialMonitor} onClose={handleSerialMonitorClose} usbFilters={usbFilters} />
       <EditorModeModal show={showEditorModeModal} onClose={handleEditorModalClose} />
       <SmallModal topIcon="warning" show={mobileView} onConfirm={() => setMobileView(false)} okText="OK">
-        Nesse dispositivo, a experiência no CODE pode ser melhor se você manter seu celular na horizontal.
+        A experiência no CODE pode ser melhor neste dispositivo se você mantiver o celular na horizontal.
       </SmallModal>
     </Flex>
   );

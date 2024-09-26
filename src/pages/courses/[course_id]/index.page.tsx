@@ -56,7 +56,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" color="gray600">
         Módulos
       </Text>
-      <Flex direction="column" p="0.35rem 1rem" fontWeight="700" color="gray700" gap="6px" overflow="hidden auto">
+      <Flex direction="column" p="0.35rem 1rem" fontWeight="700" color="gray700" gap="6px" h="100%" maxH="400px" overflowY="auto">
         <Skeleton isLoaded={!isLoading} h="2.75rem">
           {modules.map((mod) => (
             <Flex
