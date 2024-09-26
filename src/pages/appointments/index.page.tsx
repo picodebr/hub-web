@@ -26,7 +26,7 @@ import { BiSupport } from 'react-icons/bi';
 import { VscRequestChanges } from 'react-icons/vsc';
 import { MdOutlineSchool } from 'react-icons/md';
 
-type PageStepsType = 'HELP' | 'DOUBT' | 'TECH_CALENDAR' | 'PEDAGO_CALENDAR';
+type PageStepsType = 'HELP' | 'DOUBT' | 'TECH_CALENDAR' | 'PEDAGO_CALENDAR' | 'FORM_EMAIL';
 type GuideType = { label: string; instructions: string };
 
 const stepsOrder: PageStepsType[] = ['HELP', 'DOUBT', 'TECH_CALENDAR', 'PEDAGO_CALENDAR'];
@@ -77,7 +77,15 @@ const Appointment: React.FC = () => {
     },
   ];
 
-  const availableTimeslots = [0, 1, 2, 3, 4, 5].flatMap((id) => {
+  // const unavailableTimeslots = [
+  //   {
+  //     id: `unavailable`,
+  //     startTime: new Date('2024-09-13T09:00:00.000Z'),
+  //     endTime: new Date('2024-09-13T10:00:00.000Z'),
+  //   },
+  // ];
+
+  const availableTimeslots = Array.from({ length: 90 }, (_, i) => i).flatMap((id) => {
     const date = new Date();
     date.setDate(date.getDate() + id);
 
@@ -88,8 +96,8 @@ const Appointment: React.FC = () => {
 
     const morningSlot = {
       id: `${id}-morning`,
-      startTime: new Date(date.setHours(9, 0, 0)),
-      endTime: new Date(date.setHours(13, 0, 0, 0)),
+      startTime: new Date(date.setHours(8, 0, 0, 0)),
+      endTime: new Date(date.setHours(12, 0, 0, 0)),
     };
 
     const afternoonSlot = {
@@ -98,7 +106,7 @@ const Appointment: React.FC = () => {
       endTime: new Date(date.setHours(18, 0, 0, 0)),
     };
 
-    return [morningSlot, afternoonSlot];
+    return [afternoonSlot, morningSlot];
   });
 
   const goBackStep = () => {
@@ -255,7 +263,7 @@ const Appointment: React.FC = () => {
           eventDurationInMinutes={45}
           availableTimeslots={availableTimeslots}
           onStartTimeSelect={(selectedTimeslot) => setMeetingDateTime(selectedTimeslot.startTime)}
-          // Language props
+          // Language props"
           startTimeListStyle="scroll-list"
           lang_cancelButtonText="Cancelar"
           lang_confirmButtonText="Confirmar"
@@ -303,6 +311,7 @@ const Appointment: React.FC = () => {
         {meetingDateTime && <Text>Você tem uma reunião marcada para: {meetingDateTime.toString()}</Text>}
       </Flex>
     ),
+    FORM_EMAIL: <Flex></Flex>,
   };
 
   return (
