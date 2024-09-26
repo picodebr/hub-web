@@ -133,6 +133,7 @@ export const light = {
   orange700: '#C4320A',
   orange800: '#9C2A10',
   orange900: '#7E2410',
+  text: `#1D2939`,
 };
 
 export const dark: typeof light = {
@@ -270,4 +271,5 @@ export const dark: typeof light = {
   orange700: '#C4320A',
   orange800: '#9C2A10',
   orange900: '#7E2410',
+  text: `#fff`,
 };

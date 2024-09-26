@@ -5,7 +5,10 @@ export interface ILessonPageProps {
   challenge: IHubChallenge;
   registerAnswer: (value: AnswerResultType) => void;
   dailyGame?: DailyGameProps;
-  answers: AnswerResultType[];
-  onPageChange: (action: `next` | `previous`) => void;
+  lessonChallenges?: IHubChallenge[];
+  answers?: AnswerResultType[];
+  onPageChange?: (action: `next` | `previous`) => void;
   onFinish: () => void;
+  complete?: boolean;
+  currentLessonIndex?: number;
 }

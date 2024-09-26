@@ -1,4 +1,5 @@
 import { ILearnBotElementLayout } from '@/components/LearnBotSimulator/interfaces';
+import { IProjectFolder } from '../codeFolder/IProjectFolder';
 
 export const sourceCodeModes = <const>['block', 'text'];
 
@@ -21,4 +22,13 @@ export interface ICodeProject {
   private: boolean;
   created_at: string;
   updated_at: string;
+  share_links: ICodeProjectShareLink[];
+  folder: IProjectFolder;
+}
+export interface ICodeProjectShareLink {
+  id: string;
+  hub_user_id: string;
+  code_project_id: string;
+  accepted_at: Date | null;
+  created_at: Date;
 }

@@ -1,11 +1,15 @@
-import { Flex, Skeleton, Text } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
-import { PiSealCheckFill } from 'react-icons/pi';
 import { GetServerSideProps } from 'next';
 
 import { useCustomToast } from '@/_base/hooks';
 import { IHubModuleLesson } from '@/_base/interfaces/module';
-import { getCourseActivity, getModuleLesson, sendModuleLesson } from '@/_base/services/course';
+import { getCourseActivity, getModuleLesson, ILessonResult, sendModuleLesson } from '@/_base/services/course';
+import { VideoLesson } from './components/video';
+import { LessonPage } from '@/components/LessonPage';
+import { AnswerResultType } from '@/_base/interfaces/challenges';
+import { SmallModal } from '@/components/Modal/Small';
+import { Flex, Image, ListItem, Text, UnorderedList } from '@chakra-ui/react';
+import { IHubCourseActivity } from '@/_base/interfaces/course';
 
 interface IProps {
   courseId: string;
@@ -13,10 +17,15 @@ interface IProps {
   lessonId: string;
 }
 
+type CustomResult = ILessonResult & { openSuccessModal?: boolean; openFailModal?: boolean };
+
 const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
   const [lesson, setLesson] = useState<IHubModuleLesson | null>(null);
   const [lessonIsFinished, setLessonIsFinished] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [answers, setAnswers] = useState<AnswerResultType[]>([]);
+  const [customResult, setCustomResult] = useState<CustomResult | null>(null);
+  const [activity, setActivity] = useState<IHubCourseActivity | null>(null);
 
   const toast = useCustomToast();
 
@@ -25,6 +34,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
       setIsLoading(true);
       try {
         const [moduleLesson, activity] = await Promise.all([getModuleLesson(courseId, moduleId, lessonId), getCourseActivity(courseId)]);
+        setActivity(activity);
         setLesson(moduleLesson);
         setLessonIsFinished(!!activity.metadata?.find((m) => m.lessons.find((l) => l.entity_id === lessonId && !!l.finished_at)));
       } catch {
@@ -36,72 +46,125 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
   }, []);
 
   const handleSubmitLesson = useCallback(async () => {
-    if (lessonIsFinished) return;
+    if (lessonIsFinished) {
+      if (activity && lesson?.lesson_type === 'quiz') setCustomResult({ ...activity, is_finished: true, openSuccessModal: true });
+      return;
+    }
     try {
-      setLessonIsFinished(true);
-      await sendModuleLesson(courseId, moduleId, lessonId);
+      const r = await sendModuleLesson({ course_id: courseId, module_id: moduleId, lesson_id: lessonId, answers });
+
+      const result = r as CustomResult;
+
+      if (lesson?.lesson_type === `quiz`) {
+        result.openSuccessModal = !!result?.is_finished;
+        result.openFailModal = !result?.is_finished;
+      }
+      setCustomResult(result);
+      setLessonIsFinished(result.is_finished);
     } catch {
       toast({ status: `error`, description: `Não foi possível salvar seu progresso` });
     }
-  }, []);
+  }, [lessonIsFinished, activity]);
 
   return (
-    <Flex direction="column" bgColor="white" borderRadius="md" flex="1" border="1px" borderColor="gray300" overflow="hidden" boxShadow="md">
-      <Flex p="1rem" gap="0.75rem" borderBottom="1px" borderColor="gray300" justify="center">
-        <Flex direction="column" gap="0.75rem" flex="1">
-          <Skeleton isLoaded={!isLoading} maxW="30%" display="flex" alignItems="center" gap="0.25rem">
-            <Text noOfLines={1} fontWeight="500" fontSize="1rem" color="gray800">
-              {lesson?.title || `Módulo vazio`}
+    <>
+      {lesson?.lesson_type === `quiz` ? (
+        <LessonPage
+          challenge={lesson.challenges[0]}
+          registerAnswer={(answer) =>
+            setAnswers((s) =>
+              s.find((e) => e.hub_challenge_id === answer.hub_challenge_id)
+                ? s.map((v) => (v.hub_challenge_id === answer.hub_challenge_id ? answer : v))
+                : [...s, answer],
+            )
+          }
+          answers={answers}
+          onFinish={handleSubmitLesson}
+          lessonChallenges={lesson.challenges}
+        />
+      ) : (
+        <VideoLesson lesson={lesson} isLoading={isLoading} handleSubmitLesson={handleSubmitLesson} lessonIsFinished={lessonIsFinished} />
+      )}
+      <SmallModal
+        show={!!(customResult?.openSuccessModal || customResult?.openFailModal)}
+        onConfirm={() => setCustomResult((e) => ({ ...(e || ({} as any)), openFailModal: false, openSuccessModal: false }))}
+        size="lg"
+        okText={
+          <Flex color={customResult?.openFailModal ? `warning600` : `success600`} gap="0.5rem">
+            <Text fontSize="16px">Continuar</Text>
+            {customResult?.openSuccessModal && <Image src={`/icons/done.png`} h="20px" />}
+          </Flex>
+        }
+        bgOkButton="transparent"
+      >
+        <Flex direction="column" gap="1.5rem">
+          <Flex align="center" gap="1rem">
+            <Flex>
+              <Image src={`/icons/${customResult?.openFailModal ? 'warning' : 'checked'}.svg`} h="108px" />
+            </Flex>
+            <Text fontSize="24px" fontWeight="500" color={customResult?.openFailModal ? 'warning600' : 'success700'}>
+              {customResult?.openFailModal ? 'Quiz não concluído' : 'Quiz concluído'}
             </Text>
-            {lessonIsFinished && (
-              <Flex color="primary300">
-                <PiSealCheckFill fontSize="1.2rem" filter="brightness(0.93)" />
+          </Flex>
+          <Flex
+            bg={customResult?.openFailModal ? 'warning100' : 'success500'}
+            borderRadius="md"
+            p="1rem"
+            fontSize="19px"
+            color={customResult?.openFailModal ? 'warning900' : '#fff'}
+            gap="0.5rem"
+          >
+            <Flex direction="column" gap="0.5rem" justify="center">
+              <Flex gap="0.5rem" align="center">
+                <Text>Questões:</Text>
+                <Text fontWeight="500">5</Text>
               </Flex>
-            )}
-          </Skeleton>
-          <Skeleton isLoaded={!isLoading} maxW="30%">
-            {lesson?.description && (
-              <Text noOfLines={1} color="gray500">
-                {lesson.description}
-              </Text>
-            )}
-          </Skeleton>
-        </Flex>
-        <Flex gap="0.5rem" align="center" h="fit-content">
-          <Skeleton isLoaded={!isLoading} h="1.35rem">
-            <Text noOfLines={1} color="gray800" fontSize="14px">
-              {lesson?.module.title}
-            </Text>
-          </Skeleton>
-        </Flex>
-      </Flex>
-      <Flex direction="column" flex="1" p={{ base: `1rem`, xl: '1rem' }} gap={{ base: `1rem`, xl: '1rem' }} overflow="hidden">
-        <Flex direction="column" gap="0.5rem">
-          <Skeleton isLoaded={!isLoading} minH="1.35rem">
-            <Text fontSize="1rem">{lesson?.video?.title}</Text>
-          </Skeleton>
-          <Skeleton isLoaded={!isLoading} minH="1.35rem">
-            <Text color="gray400">{lesson?.video?.description}</Text>
-          </Skeleton>
-        </Flex>
-        <Flex flex="1" border="1px" borderColor="gray200" borderRadius="10px" overflow="hidden" justify="center">
-          {!!lesson?.video && (
-            <video
-              controls
-              preload="none"
-              autoPlay
-              controlsList="nodownload"
-              poster={lesson.video.thumbnail}
-              onTimeUpdate={(e) =>
-                ((e.target as any).currentTime / (e.target as any).duration) * 100 > 90 && !lessonIsFinished && handleSubmitLesson()
-              }
-            >
-              <source src={lesson.video.file} type="video/mp4" />
-            </video>
+              <Flex gap="0.5rem" align="center">
+                <Text>Acertos:</Text>
+                <Text fontWeight="500">4</Text>
+              </Flex>
+              <Flex gap="0.5rem" align="center">
+                <Text>Tempo:</Text>
+                <Text fontWeight="500">14 minutos</Text>
+              </Flex>
+            </Flex>
+            <Flex flex="1" justify="flex-end">
+              <Flex align="center" justify="center" direction="column" gap="0.5rem">
+                <Text fontSize="16px">Aproveitamento</Text>
+                <Flex border="2px" borderRadius="50%" w="5rem" h="5rem" align="center" justify="center">
+                  80%
+                </Flex>
+              </Flex>
+            </Flex>
+          </Flex>
+          {customResult?.openSuccessModal && (
+            <Flex borderRadius="md" p="1rem" direction="column" gap="1rem" border="1px" borderColor="gray300">
+              <Flex gap="0.5rem">
+                <Image src="/icons/medal.svg" />
+                <Text fontSize="20px" fontWeight="600">
+                  Conquistas
+                </Text>
+              </Flex>
+              <UnorderedList fontSize="16px">
+                <ListItem>+ 500 Moedas</ListItem>
+                <ListItem>
+                  <Flex gap="0.5rem" align="center">
+                    <Text>Novo módulo desbloqueado</Text>
+                    <Text fontWeight="500">(Modulo 2)</Text>
+                  </Flex>
+                </ListItem>
+                <ListItem>
+                  <Flex gap="0.5rem" align="center">
+                    <Text>Novo certificado conquistado</Text>
+                    <Text fontWeight="500">(PiMaker pro)</Text>
+                  </Flex>
+                </ListItem>
+              </UnorderedList>
+            </Flex>
           )}
         </Flex>
-      </Flex>
-    </Flex>
+      </SmallModal>
+    </>
   );
 };
 
