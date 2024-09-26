@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { Progress } from 'antd';
 import { Flex, Skeleton, Text } from '@chakra-ui/react';
@@ -111,53 +111,55 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
         </Flex>
       </Flex>
       <Flex direction="column" flex="1" overflow="hidden auto" p={{ base: `1rem`, xl: '2rem' }} gap={{ base: `1rem`, xl: '2rem' }}>
-        {(lessons.length ? lessons : [{} as IHubModuleLesson & { finished?: boolean }]).map((lesson, i) =>
-          lesson.id ? (
-            <Flex
-              key={lesson.id + i}
-              bg="gray50"
-              minH="4.5rem"
-              maxH="4.5rem"
-              padding="0.5rem 1rem"
-              borderRadius="md"
-              justify="space-between"
-              cursor="pointer"
-              transition="all 0.07s"
-              _hover={{ filter: `brightness(0.98)` }}
-            >
-              <Flex direction="column" justify="space-between" pb="0.15rem">
-                <Flex gap="0.5rem" align="center">
-                  <Text fontWeight="500" color="text">{`${i + 1}. ${lesson.title}`}</Text>
-                  {lesson.finished && (
-                    <Flex color="primary300">
-                      <PiSealCheckFill fontSize="1.2rem" filter="brightness(0.93)" />
-                    </Flex>
-                  )}
+        {(lessons.length ? lessons : [{} as IHubModuleLesson & { finished?: boolean }])
+          .sort((a, b) => (a?.position || 1) - (b?.position || 1))
+          .map((lesson, i) =>
+            lesson.id ? (
+              <Flex
+                key={lesson.id + i}
+                bg="gray50"
+                minH="4.5rem"
+                maxH="4.5rem"
+                padding="0.5rem 1rem"
+                borderRadius="md"
+                justify="space-between"
+                cursor="pointer"
+                transition="all 0.07s"
+                _hover={{ filter: `brightness(0.98)` }}
+              >
+                <Flex direction="column" justify="space-between" pb="0.15rem">
+                  <Flex gap="0.5rem" align="center">
+                    <Text fontWeight="500" color="text">{`${i + 1}. ${lesson.title}`}</Text>
+                    {lesson.finished && (
+                      <Flex color="primary300">
+                        <PiSealCheckFill fontSize="1.2rem" filter="brightness(0.93)" />
+                      </Flex>
+                    )}
+                  </Flex>
+                  <Flex bg="primary700" w="fit-content" p="0.15rem 0.5rem" borderRadius="xl" align="center">
+                    <Text color="#fff" fontSize="13px" textAlign="center">
+                      {lessonTypeInfoMapper[lesson.lesson_type].label}
+                    </Text>
+                  </Flex>
                 </Flex>
-                <Flex bg="primary700" w="fit-content" p="0.15rem 0.5rem" borderRadius="xl" align="center">
-                  <Text color="#fff" fontSize="13px" textAlign="center">
-                    {lessonTypeInfoMapper[lesson.lesson_type].label}
-                  </Text>
+                <Flex align="center">
+                  <GenericButton
+                    label={finishedLessons.find((l) => l.entity_id === lesson.id) ? 'Ver novamente' : 'Iniciar'}
+                    bg="primary700"
+                    color="#fff"
+                    leftIcon={lessonTypeInfoMapper[lesson.lesson_type].icon({ fontSize: `1.15rem` })}
+                    onClick={() => router.push(`/courses/${courseId}/${moduleId}/${lesson.id}?_p=${lesson.title}`)}
+                  />
                 </Flex>
               </Flex>
-              <Flex align="center">
-                <GenericButton
-                  label={finishedLessons.find((l) => l.entity_id === lesson.id) ? 'Ver novamente' : 'Iniciar'}
-                  bg="primary700"
-                  color="#fff"
-                  leftIcon={lessonTypeInfoMapper[lesson.lesson_type].icon({ fontSize: `1.15rem` })}
-                  onClick={() => router.push(`/courses/${courseId}/${moduleId}/${lesson.id}?_p=${lesson.title}`)}
-                />
-              </Flex>
-            </Flex>
-          ) : (
-            <>
-              <Skeleton minH="4.5rem" maxH="4.5rem" m="0 2rem" />
-              <Skeleton minH="4.5rem" maxH="4.5rem" m="0 2rem" />
-              <Skeleton minH="4.5rem" maxH="4.5rem" m="0 2rem" />
-            </>
-          ),
-        )}
+            ) : (
+              <React.Fragment key={i}>
+                <Skeleton minH="4.5rem" maxH="4.5rem" m="0 2rem" />
+                <Skeleton minH="4.5rem" maxH="4.5rem" m="0 2rem" />
+                <Skeleton minH="4.5rem" maxH="4.5rem" m="0 2rem" />
+              </React.Fragment>
+            ),
+          )}
       </Flex>
     </Flex>
   );
