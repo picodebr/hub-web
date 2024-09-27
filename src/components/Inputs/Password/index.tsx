@@ -14,7 +14,6 @@ import {
   ListItem,
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
-import zxcvbn from 'zxcvbn';
 import { Progress } from 'rsuite';
 import { FaRegCircleQuestion } from 'react-icons/fa6';
 
@@ -41,12 +40,14 @@ export const PasswordInput: React.FC<IInputProps & IPasswordProps> = ({
   minPassLength = 8,
 }) => {
   const [showPass, setShowPass] = useState(false);
+
   const passwordStrong = useMemo<number>(() => {
-    let score: number = zxcvbn(value).score;
-
     const isValid = validatePassword(value);
+    const hasMinLength = value.length >= minPassLength;
 
-    if (!isValid && score > 2) score = (passStrong || 2) - 1;
+    let score = 0;
+    if (hasMinLength) score += 1;
+    if (isValid) score += 2;
 
     return score;
   }, [value]);
@@ -81,7 +82,7 @@ export const PasswordInput: React.FC<IInputProps & IPasswordProps> = ({
       </Flex>
       {!!passStrong && (
         <Flex w="100%" align="center" px="0.15rem" pt="0.15rem">
-          <Progress.Line percent={passwordStrong * 25} status={passwordStrong < passStrong ? 'fail' : 'success'} style={{ padding: '0' }} />
+          <Progress.Line percent={passwordStrong * 50} status={passwordStrong < passStrong ? 'fail' : 'success'} style={{ padding: '0' }} />
           <Popover placement="right">
             <PopoverTrigger>
               <Flex ml="-1rem" color="primary400" cursor="pointer" transition="all 0.1s" _hover={{ transform: `scale(1.1)` }}>

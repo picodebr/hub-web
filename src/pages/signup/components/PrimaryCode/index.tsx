@@ -8,7 +8,7 @@ import { AppReCaptcha } from '@/components/ReCaptcha';
 import { SignUpPageStepsType } from '../../interfaces';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 import { InputValueType } from '@/_base/interfaces/shared';
-import { HubUserType, hubUserTypes } from '@/_base/interfaces/user';
+import { HubUserType } from '@/_base/interfaces/user';
 
 interface IProps {
   primaryCode: InputValueType<string>;
