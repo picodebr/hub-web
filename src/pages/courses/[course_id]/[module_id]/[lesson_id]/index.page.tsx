@@ -51,7 +51,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
       return;
     }
     try {
-      const r = await sendModuleLesson({ course_id: courseId, module_id: moduleId, lesson_id: lessonId, answers });
+      const r = await sendModuleLesson({ course_id: courseId, module_id: moduleId, lesson_id: lessonId });
 
       const result = r as CustomResult;
 
