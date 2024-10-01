@@ -10,6 +10,7 @@ import { AnswerResultType } from '@/_base/interfaces/challenges';
 import { SmallModal } from '@/components/Modal/Small';
 import { Flex, Image, ListItem, Text, UnorderedList } from '@chakra-ui/react';
 import { IHubCourseActivity } from '@/_base/interfaces/course';
+import React from 'react';
 
 interface IProps {
   courseId: string;
@@ -26,6 +27,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
   const [answers, setAnswers] = useState<AnswerResultType[]>([]);
   const [customResult, setCustomResult] = useState<CustomResult | null>(null);
   const [activity, setActivity] = useState<IHubCourseActivity | null>(null);
+  const [sendingLesson, setSendingLesson] = useState(false);
 
   const toast = useCustomToast();
 
@@ -46,12 +48,14 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
   }, []);
 
   const handleSubmitLesson = useCallback(async () => {
+    if (sendingLesson) return;
+    setSendingLesson(true);
     if (lessonIsFinished) {
       if (activity && lesson?.lesson_type === 'quiz') setCustomResult({ ...activity, is_finished: true, openSuccessModal: true });
       return;
     }
     try {
-      const r = await sendModuleLesson({ course_id: courseId, module_id: moduleId, lesson_id: lessonId });
+      const r = await sendModuleLesson({ course_id: courseId, module_id: moduleId, lesson_id: lessonId, answers });
 
       const result = r as CustomResult;
 
@@ -63,6 +67,8 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
       setLessonIsFinished(result.is_finished);
     } catch {
       toast({ status: `error`, description: `Não foi possível salvar seu progresso` });
+    } finally {
+      setSendingLesson(false);
     }
   }, [lessonIsFinished, activity]);
 
