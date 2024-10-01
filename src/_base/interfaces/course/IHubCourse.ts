@@ -6,6 +6,7 @@ export interface IHubCourse {
   readable_id: number;
   dependency_id: string | null;
   scope: HubContentScope;
+  is_available?: boolean;
   title: string;
   description: string | null;
   grades: string[];
