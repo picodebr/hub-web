@@ -35,6 +35,8 @@ import { deleteCommunityPost } from '@/_base/services/community/deleteCommunityP
 import { PostReaction, PostReactionKey } from '@/_base/interfaces/community/PostReaction';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { MediaGallery } from '@/components/MediaGallery';
+import { PostReply } from './components/PostReply';
+import { getTime } from '@/_base/utils/getTime';
 
 const Community: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -81,7 +83,10 @@ const Community: React.FC = () => {
           posts.reduce(
             (acc, post) => {
               acc[post.id] = post.metadata.reactions;
-              post.replies.forEach((reply) => (acc[reply.id] = reply.metadata.reactions));
+              post.replies.forEach((reply) => {
+                acc[reply.id] = reply.metadata.reactions;
+                reply.replies.forEach((replyComment) => (acc[replyComment.id] = replyComment.metadata.reactions));
+              });
               return acc;
             },
             {} as Record<string, PostReaction>,
@@ -123,11 +128,22 @@ const Community: React.FC = () => {
       if (!replyDTO.hub_community_post_id) return;
       setLastFocusedPostId(replyDTO.hub_community_post_id);
 
+      const isFirstLevel = !!communityPosts.find((e) => e.id === replyDTO.hub_community_post_id);
+
       const replyResponse = await createCommunityPost(replyDTO);
       setCommunityPosts((state) => [
         {
-          ...(state.find((e) => e.id === replyDTO.hub_community_post_id) || ({} as any)),
-          replies: [replyResponse, ...(state.find((e) => e.id === replyDTO.hub_community_post_id)?.replies || [])],
+          ...(isFirstLevel
+            ? state.find((e) => e.id === replyDTO.hub_community_post_id) || ({} as any)
+            : state.find((e) => !!e.replies.find((r) => r.id === replyDTO.hub_community_post_id)) || ({} as any)),
+          replies: isFirstLevel
+            ? [replyResponse, ...(state.find((e) => e.id === replyDTO.hub_community_post_id)?.replies || [])]
+            : state
+                .find((e) => !!e.replies.find((r) => r.id === replyDTO.hub_community_post_id))
+                ?.replies.map((commentReply) => ({
+                  ...commentReply,
+                  replies: commentReply.id === replyDTO.hub_community_post_id ? [replyResponse, ...commentReply.replies] : commentReply.replies,
+                })),
         },
         ...state.filter((post) => post.id !== replyDTO.hub_community_post_id),
       ]);
@@ -324,96 +340,22 @@ const Community: React.FC = () => {
                   </AccordionButton>
                   <AccordionPanel>
                     <Flex direction="column" gap="1rem">
-                      {post.replies.map((postReply) => (
-                        <Flex
-                          key={postReply.id}
-                          h="fit-content"
-                          direction="column"
-                          p="20x"
-                          border="1px"
-                          borderColor="gray300"
-                          margin={postReply.user.id !== user.id ? `0 3rem 0 0` : `0 0 0 3rem`}
-                          borderRadius={postReply.user.id !== user.id ? `0 10px 10px 10px` : `10px 0 10px 10px`}
-                          overflow="hidden"
-                        >
-                          <Flex p="0.75rem" gap="0.75rem" bgColor={postReply.user.id === user.id ? `orange200` : undefined}>
-                            <Avatar src={postReply.user.avatar || ''} name={postReply.user.name} size="sm" />
-                            <Flex direction="column" flex="1">
-                              <Flex direction="column" flex="1" mt="-0.25rem">
-                                <Text fontWeight="600" color="primary500">
-                                  {postReply.user.name}
-                                </Text>
-                                <Text fontSize="14px" color="gray600">
-                                  {postReply.user.hub_class?.display_name || postReply.user.school_group?.display_name || ``}
-                                </Text>
-                              </Flex>
-                              <Flex flex="1" py="0.5rem" color="gray800">
-                                <Text fontSize="14px">{postReply.content}</Text>
-                              </Flex>
-                              <Text mb="-0.75rem" fontSize="13px" color="gray400" alignSelf="flex-end">
-                                {moment(postReply.created_at).fromNow()}
-                              </Text>
-                            </Flex>
-                          </Flex>
-                          <Flex
-                            w="100%"
-                            justify="space-between"
-                            direction={postReply.user.id === user.id ? `row` : `row-reverse`}
-                            bg={postReply.user.id === user.id ? undefined : `gray100`}
-                            fontSize="20px"
-                            p="0.5rem 0.875rem 0.875rem 0.5rem"
-                          >
-                            <Flex gap="1rem">
-                              {reactionsElements.map((reaction) => (
-                                <Tooltip key={reaction.key} label={reaction.label}>
-                                  <Box
-                                    cursor="pointer"
-                                    position="relative"
-                                    _hover={{ filter: `brightness(0.8)` }}
-                                    onClick={() => handleUpdateReaction(postReply.id, reaction.key)}
-                                  >
-                                    <reaction.icon color={reaction.color} />
-                                    <Flex
-                                      align="center"
-                                      justify="center"
-                                      position="absolute"
-                                      top="0.875rem"
-                                      left="0.9rem"
-                                      fontSize="11px"
-                                      fontWeight="500"
-                                      bg={
-                                        reactions[postReply.id] && reactions[postReply.id][reaction.key]?.includes(user.id) ? 'primary700' : 'red.400'
-                                      }
-                                      minW="0.875rem"
-                                      h="0.875rem"
-                                      color="white"
-                                      borderRadius="md"
-                                      p="0.1rem 0.15rem"
-                                    >
-                                      {(reactions[postReply.id] && reactions[postReply.id][reaction.key]?.length) || 0}
-                                    </Flex>
-                                  </Box>
-                                </Tooltip>
-                              ))}
-                            </Flex>
-
-                            {postReply.user.id === user.id && (
-                              <Tooltip label="Excluir">
-                                <Flex
-                                  _hover={{ color: `primary500` }}
-                                  color="gray500"
-                                  cursor="pointer"
-                                  fontSize="1.1rem"
-                                  align="center"
-                                  onClick={() => setPostToRemove({ id: postReply.id, isReply: true })}
-                                >
-                                  <FiTrash2 />
-                                </Flex>
-                              </Tooltip>
-                            )}
-                          </Flex>
-                        </Flex>
-                      ))}
+                      {post.replies
+                        .sort((a, b) => getTime(b.created_at) - getTime(a.created_at))
+                        .map((postReply) => (
+                          <PostReply
+                            key={postReply.id}
+                            user={user}
+                            reply={postReply}
+                            reactions={reactions}
+                            setPostToRemove={setPostToRemove}
+                            handleUpdateReaction={handleUpdateReaction}
+                            onSubmit={() => submitReply(handleSentReply)}
+                            onReplyChange={onReplyChange}
+                            replyDTO={replyDTO}
+                            replyErrors={replyErrors}
+                          />
+                        ))}
                     </Flex>
                   </AccordionPanel>
                 </AccordionItem>
