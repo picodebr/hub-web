@@ -16,8 +16,6 @@ import {
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useState } from 'react';
-import { ScheduleMeeting } from 'react-schedule-meeting';
-import { ptBR } from 'date-fns/locale';
 import { FaSearch } from 'react-icons/fa';
 import { FiChevronLeft, FiHelpCircle } from 'react-icons/fi';
 import { GenericButton } from '@/components/Buttons/Generic';
@@ -25,15 +23,16 @@ import { useCustomRouter } from '@/_base/hooks';
 import { BiSupport } from 'react-icons/bi';
 import { VscRequestChanges } from 'react-icons/vsc';
 import { MdOutlineSchool } from 'react-icons/md';
+import PedagoCalendar from './components/PedagoCalendar';
+import TechCalendar from './components/TechCalendar';
 
-type PageStepsType = 'HELP' | 'DOUBT' | 'TECH_CALENDAR' | 'PEDAGO_CALENDAR' | 'FORM_EMAIL';
+type PageStepsType = 'HELP' | 'DOUBT' | 'TECH_CALENDAR' | 'PEDAGO_CALENDAR';
 type GuideType = { label: string; instructions: string };
 
 const stepsOrder: PageStepsType[] = ['HELP', 'DOUBT', 'TECH_CALENDAR', 'PEDAGO_CALENDAR'];
 
 const Appointment: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('HELP');
-  const [meetingDateTime, setMeetingDateTime] = useState<Date | null>(null);
   const router = useCustomRouter();
   const { colorMode } = useColorMode();
   const guides: GuideType[] = [
@@ -77,42 +76,14 @@ const Appointment: React.FC = () => {
     },
   ];
 
-  // const unavailableTimeslots = [
-  //   {
-  //     id: `unavailable`,
-  //     startTime: new Date('2024-09-13T09:00:00.000Z'),
-  //     endTime: new Date('2024-09-13T10:00:00.000Z'),
-  //   },
-  // ];
-
-  const availableTimeslots = Array.from({ length: 90 }, (_, i) => i).flatMap((id) => {
-    const date = new Date();
-    date.setDate(date.getDate() + id);
-
-    const dayOfWeek = date.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      return [];
-    }
-
-    const morningSlot = {
-      id: `${id}-morning`,
-      startTime: new Date(date.setHours(8, 0, 0, 0)),
-      endTime: new Date(date.setHours(12, 0, 0, 0)),
-    };
-
-    const afternoonSlot = {
-      id: `${id}-afternoon`,
-      startTime: new Date(date.setHours(13, 0, 0, 0)),
-      endTime: new Date(date.setHours(18, 0, 0, 0)),
-    };
-
-    return [afternoonSlot, morningSlot];
-  });
-
   const goBackStep = () => {
-    const currentIndex = stepsOrder.indexOf(step);
-    if (currentIndex > 0) {
-      setStep(stepsOrder[currentIndex - 1]); // Volta um step
+    if (step === 'PEDAGO_CALENDAR' || step === 'TECH_CALENDAR') {
+      setStep('DOUBT'); // Volta diretamente para HELP
+    } else {
+      const currentIndex = stepsOrder.indexOf(step);
+      if (currentIndex > 0) {
+        setStep(stepsOrder[currentIndex - 1]); // Volta um step normal
+      }
     }
   };
 
@@ -251,67 +222,8 @@ const Appointment: React.FC = () => {
         </Flex>
       </Flex>
     ),
-    TECH_CALENDAR: (
-      <Flex direction="column" gap="50px">
-        <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" fontSize="20px" fontWeight="600">
-          Selecione o melhor horário disponível para agendar uma reunião com o setor escolhido.
-        </Text>
-        <ScheduleMeeting
-          borderRadius={10}
-          primaryColor="#3f5b85"
-          backgroundColor={colorMode === 'light' ? '#fff' : '#252D38'}
-          eventDurationInMinutes={45}
-          availableTimeslots={availableTimeslots}
-          onStartTimeSelect={(selectedTimeslot) => setMeetingDateTime(selectedTimeslot.startTime)}
-          // Language props"
-          startTimeListStyle="scroll-list"
-          lang_cancelButtonText="Cancelar"
-          lang_confirmButtonText="Confirmar"
-          lang_emptyListText="Sem horários disponíveis"
-          lang_goToNextAvailableDayText="Próximo disponível"
-          lang_noFutureTimesText="Sem horários disponíveis futuros"
-          lang_selectedButtonText="Selecionado:"
-          // Date format props
-          format_nextFutureStartTimeAvailableFormatString="cccc, LLLL do"
-          format_selectedDateDayTitleFormatString="cccc, LLLL do"
-          format_selectedDateMonthTitleFormatString="LLLL yyyy"
-          format_startTimeFormatString="h:mm a"
-          locale={ptBR}
-        />
-        {meetingDateTime && <Text>Você tem uma reunião marcada para: {meetingDateTime.toString()}</Text>}
-      </Flex>
-    ),
-    PEDAGO_CALENDAR: (
-      <Flex direction="column" gap="50px">
-        <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" fontSize="20px" fontWeight="600">
-          Selecione o melhor horário disponível para agendar uma reunião com o setor escolhido.
-        </Text>
-        <ScheduleMeeting
-          borderRadius={10}
-          primaryColor="#3f5b85"
-          backgroundColor={colorMode === 'light' ? '#fff' : '#252D38'}
-          eventDurationInMinutes={45}
-          availableTimeslots={availableTimeslots}
-          onStartTimeSelect={(selectedTimeslot) => setMeetingDateTime(selectedTimeslot.startTime)}
-          startTimeListStyle="scroll-list"
-          // Language props
-          lang_cancelButtonText="Cancelar"
-          lang_confirmButtonText="Confirmar"
-          lang_emptyListText="Sem horários disponíveis"
-          lang_goToNextAvailableDayText="Próximo disponível"
-          lang_noFutureTimesText="Sem horários disponíveis futuros"
-          lang_selectedButtonText="Selecionado:"
-          // Date format props
-          format_nextFutureStartTimeAvailableFormatString="cccc, LLLL do"
-          format_selectedDateDayTitleFormatString="cccc, LLLL do"
-          format_selectedDateMonthTitleFormatString="LLLL yyyy"
-          format_startTimeFormatString="h:mm a"
-          locale={ptBR}
-        />
-        {meetingDateTime && <Text>Você tem uma reunião marcada para: {meetingDateTime.toString()}</Text>}
-      </Flex>
-    ),
-    FORM_EMAIL: <Flex></Flex>,
+    TECH_CALENDAR: <TechCalendar />,
+    PEDAGO_CALENDAR: <PedagoCalendar />,
   };
 
   return (
