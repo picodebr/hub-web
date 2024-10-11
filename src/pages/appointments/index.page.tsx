@@ -78,11 +78,11 @@ const Appointment: React.FC = () => {
 
   const goBackStep = () => {
     if (step === 'PEDAGO_CALENDAR' || step === 'TECH_CALENDAR') {
-      setStep('DOUBT'); // Volta diretamente para HELP
+      setStep('DOUBT');
     } else {
       const currentIndex = stepsOrder.indexOf(step);
       if (currentIndex > 0) {
-        setStep(stepsOrder[currentIndex - 1]); // Volta um step normal
+        setStep(stepsOrder[currentIndex - 1]);
       }
     }
   };
