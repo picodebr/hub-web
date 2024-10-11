@@ -35,9 +35,9 @@ export const VideoLesson: React.FC<ILessonPageProps> = ({ handleSubmitLesson, is
       </Flex>
       <Flex direction="column" flex="1" p={{ base: `1rem`, xl: '1rem' }} gap={{ base: `1rem`, xl: '1rem' }} overflow="hidden">
         <Flex direction="column" gap="0.5rem">
-          <Skeleton isLoaded={!isLoading} minH="1.35rem">
+          {/* <Skeleton isLoaded={!isLoading} minH="1.35rem">
             <Text fontSize="1rem">{lesson?.video?.title}</Text>
-          </Skeleton>
+          </Skeleton> */}
           <Skeleton isLoaded={!isLoading} minH="1.35rem">
             <Text color="gray400">{lesson?.video?.description}</Text>
           </Skeleton>

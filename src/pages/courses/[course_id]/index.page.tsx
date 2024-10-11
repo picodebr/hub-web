@@ -5,6 +5,8 @@ import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { useEffect, useState } from 'react';
 import { IHubModule } from '@/_base/interfaces/module';
 import { getCourseActivity, listModules } from '@/_base/services/course';
+import React from 'react';
+import { MdBlock } from 'react-icons/md';
 
 interface IProps {
   courseId: string;
@@ -56,34 +58,42 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" color="gray600">
         Módulos
       </Text>
-      <Flex direction="column" p="0.35rem 1rem" fontWeight="700" color="gray700" gap="6px" overflow="hidden auto">
+      <Flex direction="column" p="0.35rem 1rem" fontWeight="700" color="gray700" gap="6px" h="100%" maxH="400px" overflowY="auto">
         <Skeleton isLoaded={!isLoading} h="2.75rem">
-          {modules.map((mod) => (
-            <Flex
-              key={mod.id}
-              cursor="pointer"
-              p="12px 8px"
-              gap="1rem"
-              display="flex"
-              justify="space-between"
-              onClick={() => router.push(`/courses/${mod.hub_course_id}/${mod.id}?_p=${mod.title}`)}
-              _hover={{ bg: `gray50` }}
-              _notLast={{ borderBottom: '1px', borderColor: 'gray100', borderRadius: `4px 4px 0 0` }}
-              _last={{ borderRadius: `4px` }}
-              _first={{ borderRadius: `4px` }}
-            >
-              <Flex gap="8px" align="center">
-                <Text noOfLines={1}>{mod.title}</Text>
-                {/* <FiLock color="#13277A" /> */}
+          {modules
+            .sort((a, b) => a.position - b.position)
+            .map((mod) => (
+              <Flex
+                key={mod.id}
+                cursor={mod.is_available ? 'pointer' : 'not-allowed'}
+                p="12px 8px"
+                gap="1rem"
+                display="flex"
+                justify="space-between"
+                onClick={() => mod.is_available && router.push(`/courses/${mod.hub_course_id}/${mod.id}?_p=${mod.title}`)}
+                _hover={{ bg: `gray50` }}
+                _notLast={{ borderBottom: '1px', borderColor: 'gray300' }}
+                opacity={mod.is_available ? `1` : `0.75`}
+              >
+                <Flex gap="8px" align="center">
+                  <Text noOfLines={1}>{mod.title}</Text>
+                </Flex>
+                <Flex w="320px" gap="12px" align="center" justify="flex-end">
+                  {mod.is_available ? (
+                    <>
+                      <Progress value={mod.finished_lessons} rounded={8} flex="1" min={0} max={mod.lessons.length || 1} size="md" />
+                      <Text fontWeight="500" align="center" fontSize="14px">
+                        {`${mod.finished_lessons}/${mod.lessons.length}`}
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <MdBlock fontSize="20px" />
+                    </>
+                  )}
+                </Flex>
               </Flex>
-              <Flex w="320px" gap="12px" align="center">
-                <Progress value={mod.finished_lessons} rounded={8} flex="1" min={0} max={mod.lessons.length || 1} size="md" />
-                <Text fontWeight="500" align="center" fontSize="14px">
-                  {`${mod.finished_lessons}/${mod.lessons.length}`}
-                </Text>
-              </Flex>
-            </Flex>
-          ))}
+            ))}
         </Skeleton>
       </Flex>
     </Flex>

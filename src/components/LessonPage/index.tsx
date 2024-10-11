@@ -8,62 +8,74 @@ import { QuizPage } from './Quiz';
 import { ILessonPageProps } from './interfaces';
 import { MdCheck, MdNavigateBefore, MdNavigateNext, MdTaskAlt } from 'react-icons/md';
 import { AlgorithmPage } from './Algorithm';
-import { MazePage } from './MazeChallenge';
-import { GameStatus } from './MazeChallenge/interfaces';
 import { cookieManager } from '@/_base/utils';
 import { FINISHED_DAILY_CHALLENGES_STORAGE_KEY } from '@/_base/config/storage';
 import { AnswerResultType } from '@/_base/interfaces/challenges';
 
-export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, registerAnswer, answers, onPageChange, onFinish }) => {
-  const [clearFields, setClearFields] = useState(false);
+export const LessonPage: React.FC<ILessonPageProps> = ({
+  challenge,
+  dailyGame,
+  registerAnswer,
+  answers = [],
+  onPageChange,
+  onFinish,
+  lessonChallenges,
+  currentLessonIndex,
+}) => {
+  // const [clearFields, setClearFields] = useState(false);
 
-  const [workspaceCode, setWorkspaceCode] = useState('');
+  // const [workspaceCode, setWorkspaceCode] = useState('');
 
   const [finishedAnswers, setFinishedAnswers] = useState<string[]>(
-    cookieManager.getCookie<string[]>(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, true) || [],
+    dailyGame ? cookieManager.getCookie<string[]>(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, true) || [] : [],
   );
 
   const onRegisterAnswer = useCallback(
     (value: AnswerResultType) => {
       registerAnswer(value);
-      setFinishedAnswers(cookieManager.getCookie<string[]>(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, true) || []);
+      setFinishedAnswers(
+        dailyGame
+          ? cookieManager.getCookie<string[]>(FINISHED_DAILY_CHALLENGES_STORAGE_KEY, true) || []
+          : (e) => [...e, value.hub_challenge_id].reduce((acc, v) => (acc.includes(v) ? acc : [...acc, v]), [] as string[]),
+      );
     },
     [challenge],
   );
 
-  const handleGameStatusChange = useCallback(
-    (status: GameStatus) => {
-      const targetAnswer = answers.find((e) => e.hub_challenge_id === challenge.id);
-      if (status === `collision`)
-        onRegisterAnswer({ hub_challenge_id: challenge.id, is_passed: undefined, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
+  // const handleGameStatusChange = useCallback(
+  //   (status: GameStatus) => {
+  //     const targetAnswer = answers.find((e) => e.hub_challenge_id === challenge.id);
+  //     if (status === `collision`)
+  //       onRegisterAnswer({ hub_challenge_id: challenge.id, is_passed: undefined, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
 
-      if (status === 'finish' || status === 'over') {
-        const is_passed = status === 'finish';
+  //     if (status === 'finish' || status === 'over') {
+  //       const is_passed = status === 'finish';
 
-        setWorkspaceCode('');
+  //       setWorkspaceCode('');
 
-        onRegisterAnswer({ hub_challenge_id: challenge.id, is_passed, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
-      }
-    },
-    [workspaceCode],
-  );
+  //       onRegisterAnswer({ hub_challenge_id: challenge.id, is_passed, attempts: ((targetAnswer as any)?.attempts || 0) + 1 } as any);
+  //     }
+  //   },
+  //   [workspaceCode],
+  // );
 
   const ContentPage: Record<HubModuleLessonType, ReactNode> = {
     quiz: <QuizPage challenge={challenge} registerAnswer={onRegisterAnswer} answers={answers} />,
     algorithm: <AlgorithmPage challenge={challenge} registerAnswer={onRegisterAnswer} answers={answers} />,
     map: (
-      <MazePage
-        fields={challenge.data.maze_field as any}
-        onGameStatusChange={(status) => handleGameStatusChange(status)}
-        workspaceCode={workspaceCode}
-        onWorkspaceCodeChange={setWorkspaceCode}
-        maxCollisions={3}
-        clearFields={clearFields}
-        onClearFields={setClearFields}
-        challengeId={challenge.id}
-        player={(challenge.data.maze_field as any)?.player}
-        answers={answers}
-      />
+      // <MazePage
+      //   fields={challenge.data.maze_field as any}
+      //   onGameStatusChange={(status) => handleGameStatusChange(status)}
+      //   workspaceCode={workspaceCode}
+      //   onWorkspaceCodeChange={setWorkspaceCode}
+      //   maxCollisions={3}
+      //   clearFields={clearFields}
+      //   onClearFields={setClearFields}
+      //   challengeId={challenge.id}
+      //   player={(challenge.data.maze_field as any)?.player}
+      //   answers={answers}
+      // />
+      <></>
     ),
     video: <QuizPage challenge={challenge} registerAnswer={onRegisterAnswer} answers={answers} />,
   };
@@ -82,7 +94,11 @@ export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, r
           <Flex bg="#25467D" w="fit-content" justify="center" borderRadius="md" p="0.25rem 0.75rem" color="white" align="center" gap="0.5rem">
             <FaTasks fontSize="1.5rem" />
             <Text fontSize="20px" whiteSpace="wrap">
-              {`${(dailyGame?.currentIndex || 0) + 1}/${dailyGame?.challenges.length}`}
+              {dailyGame
+                ? `${(dailyGame.currentIndex || 0) + 1}/${dailyGame.challenges.length}`
+                : lessonChallenges?.length
+                ? `${currentLessonIndex || 1}/${lessonChallenges.length || 1} `
+                : '1/1'}
             </Text>
           </Flex>
         </Flex>
@@ -131,13 +147,13 @@ export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, r
           className="btn"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.9 }}
-          onClick={() => onPageChange(`previous`)}
-          disabled={!dailyGame?.currentIndex}
+          onClick={() => onPageChange && onPageChange(`previous`)}
+          disabled={dailyGame ? !dailyGame?.currentIndex : !currentLessonIndex}
         >
           <MdNavigateBefore />
           Anterior
         </motion.button>
-        {finishedAnswers?.length === dailyGame?.challenges.length && (
+        {finishedAnswers?.length === (dailyGame ? dailyGame?.challenges || [] : lessonChallenges || []).length && (
           <Tooltip label="Enviar desafios" placement="top">
             <motion.button className="confirm-btn" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => onFinish()}>
               <MdCheck />
@@ -148,8 +164,11 @@ export const LessonPage: React.FC<ILessonPageProps> = ({ challenge, dailyGame, r
           className="btn"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.9 }}
-          onClick={() => onPageChange(`next`)}
-          disabled={!finishedAnswers?.includes(challenge.id)}
+          onClick={() => onPageChange && onPageChange(`next`)}
+          disabled={
+            !finishedAnswers?.includes(challenge.id) ||
+            (dailyGame ? dailyGame.currentIndex : currentLessonIndex || 0) + 1 === (dailyGame ? dailyGame.challenges : lessonChallenges || []).length
+          }
         >
           Próximo
           <MdNavigateNext />

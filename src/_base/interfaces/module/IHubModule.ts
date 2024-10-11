@@ -6,7 +6,9 @@ export interface IHubModule {
   readable_id: number;
   dependency_id: string | null;
   hub_course_id: string;
+  is_available?: boolean;
   title: string;
+  position: number;
   description: string | null;
   created_at: Date;
   updated_at: Date;
