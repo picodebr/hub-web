@@ -10,6 +10,7 @@ export interface IProject {
   project_id: string | null;
   class_id: string;
   user_id: string | null;
+  topic?: string | null;
   title: string;
   description: string | null;
   status: HubStatus;

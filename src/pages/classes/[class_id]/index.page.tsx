@@ -26,6 +26,7 @@ import { CiUser } from 'react-icons/ci';
 import { Badge } from 'rsuite';
 import moment from 'moment';
 
+import { generateProjectWithAI, AutoGenerateResponse } from '@/_base/classes/gpt';
 import { formatShortName, statusLabelMapper } from '@/_base/utils';
 import { getClassData } from '@/_base/services/class';
 import { TabSwitch } from '@/components/TabSwitch';
@@ -50,7 +51,7 @@ interface IProps {
   classId: string;
 }
 
-type ModalStep = 'creation_type' | 'man_project_name' | 'man_task_quantity' | 'man_task_naming';
+type ModalStep = 'creation_type' | 'creation_topic' | 'man_project_name' | 'man_task_quantity' | 'man_task_naming';
 
 const Class: React.FC<IProps> = ({ classId }) => {
   const [pageView, setPageView] = useState<ClassPageView>('Projetos');
@@ -61,6 +62,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
   const [factoryProjectToStart, setFactoryProjectToStart] = useState<IProject | null>(null);
   const [hubClass, setHubClass] = useState<IHubClass | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingIa, setIsLoadingIa] = useState(false);
 
   const router = useCustomRouter();
   const toast = useCustomToast();
@@ -229,6 +231,31 @@ const Class: React.FC<IProps> = ({ classId }) => {
     setNewProject(null);
   }, []);
 
+  const handleCreateProjectWithIA = useAsyncCallback(async (y: string) => {
+    setIsLoadingIa(true);
+    const classId = hubClass?.id ?? '';
+    const argToObject = { grade: classId, topic: y };
+    const resultIA = await generateProjectWithAI(argToObject);
+
+    const response = await addProject({
+      title: resultIA.response.content.title,
+      class_id: classId,
+      description: resultIA.response.content.objective,
+      metadata: {
+        steps: resultIA.response.content.steps,
+        bncc: resultIA.response.content.bnccTags,
+      },
+    });
+
+    if (response) {
+      const hubClassData = await getClassData(classId);
+      setHubClass(hubClassData);
+      setProjects(hubClassData.projects);
+      setNewProject(null);
+      setIsLoadingIa(false);
+    }
+  }, []);
+
   const students: StudentTableType[] =
     hubClass?.students.map((student) => ({
       id: student.id,
@@ -354,10 +381,9 @@ const Class: React.FC<IProps> = ({ classId }) => {
       <SmallModal
         title="Método de criação do projeto"
         show={!!newProject && modalStep === 'creation_type'}
-        onConfirm={() => setNewProject(null)}
+        onConfirm={() => setModalStep('creation_topic')}
         onCancel={() => setModalStep('man_project_name')}
         okText="Inteligência Artificial"
-        disableOkButton
         cancelText="Manual"
         topIcon="ray"
       >
@@ -365,6 +391,28 @@ const Class: React.FC<IProps> = ({ classId }) => {
           <Text color="gray500" fontSize="15px">
             Antes de começarmos, você tem a opção de escolher como deseja criar o projeto. Selecione uma das opções abaixo:
           </Text>
+        </Flex>
+      </SmallModal>
+      <SmallModal
+        title="Selecione o tópico do projeto"
+        show={!!newProject && modalStep === 'creation_topic'}
+        onConfirm={() => handleCreateProjectWithIA(`${newProject?.topic}`)}
+        onCancel={() => setModalStep('creation_type')}
+        okText="Criar com IA"
+        disableOkButton={isLoadingIa}
+        cancelText="Cancelar"
+        topIcon="ray"
+      >
+        <Flex direction="column" gap="1rem">
+          <Text color="gray500" fontSize="15px">
+            Escreva o tópico do seu projeto
+          </Text>
+          <TextInput
+            placeholder="(Ex: Biologia, Ecossistema)"
+            leftElement={<FiFileText />}
+            value={newProject?.topic || ''}
+            onInputChange={(topic) => setNewProject((e) => ({ ...(e || ({} as any)), topic }))}
+          />
         </Flex>
       </SmallModal>
 
