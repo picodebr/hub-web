@@ -25,7 +25,7 @@ type FuncType = (data: Prompts) => Promise<AutoGenerateResponse>;
 
 export const generateProjectWithAI: FuncType = async ({ grade, topic }) => {
   try {
-    const apiKey2 = `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`;
+    const apiKey2 = `${process.env.CHATGPT_API_KEY}`;
     if (!apiKey2) throw new Error('Not found api key');
 
     const openai = new OpenAI({ apiKey: apiKey2, dangerouslyAllowBrowser: true });
