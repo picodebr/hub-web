@@ -25,10 +25,10 @@ type FuncType = (data: Prompts) => Promise<AutoGenerateResponse>;
 
 export const generateProjectWithAI: FuncType = async ({ grade, topic }) => {
   try {
-    const apiKey2 = `${process.env.CHATGPT_API_KEY}`;
-    if (!apiKey2) throw new Error('Not found api key');
+    const gptKey = `${process.env.CHATGPT_API_KEY}`;
+    if (!gptKey) throw new Error('Not found api key');
 
-    const openai = new OpenAI({ apiKey: apiKey2, dangerouslyAllowBrowser: true });
+    const openai = new OpenAI({ apiKey: gptKey, dangerouslyAllowBrowser: true });
 
     const FINAL_PROMPT = `Me dê um exemplo de atividade maker, levando em conta a BNCC, para ensinar sobre ${topic}, para alunos do ${grade}º ANO. Liste, ao final, as habilidades da BNCC com o código, que foram usadas nessa atividade.
 
