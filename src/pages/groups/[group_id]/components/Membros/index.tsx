@@ -107,29 +107,31 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
                 @{student.username}
               </Text>
             </Flex>
-            <Tooltip label={student.id !== user.id ? `Fazer doação para ${student.name}` : ``}>
-              <Flex
-                align="center"
-                justify="center"
-                cursor={student.id !== user.id ? 'pointer' : `default`}
-                onClick={() => student.id !== user.id && setStudentDonationData((e) => ({ ...e, student }))}
-                position="relative"
-                p="0.5rem"
-                gap="0.25rem"
-                _hover={student.id !== user.id ? { filter: `brightness(0.9)` } : undefined}
-              >
-                <Text fontWeight="600" color={(student.metadata.coins || 0) > 0 ? 'green' : 'red'}>
-                  {formatCoin(student.metadata.coins || 0)}
-                </Text>
-                <CoinIcon />
+            {user.role === 'student' && (
+              <Tooltip label={student.id !== user.id ? `Fazer doação para ${student.name}` : ``}>
+                <Flex
+                  align="center"
+                  justify="center"
+                  cursor={student.id !== user.id ? 'pointer' : `default`}
+                  onClick={() => student.id !== user.id && setStudentDonationData((e) => ({ ...e, student }))}
+                  position="relative"
+                  p="0.5rem"
+                  gap="0.25rem"
+                  _hover={student.id !== user.id ? { filter: `brightness(0.9)` } : undefined}
+                >
+                  <Text fontWeight="600" color={(student.metadata.coins || 0) > 0 ? 'green' : 'red'}>
+                    {formatCoin(student.metadata.coins || 0)}
+                  </Text>
+                  <CoinIcon />
 
-                {student.id !== user.id && (
-                  <Flex position="absolute" bottom="0.45rem" right="0.25rem" fontSize="1.1rem" color="primary300">
-                    <FaPlus />
-                  </Flex>
-                )}
-              </Flex>
-            </Tooltip>
+                  {student.id !== user.id && (
+                    <Flex position="absolute" bottom="0.45rem" right="0.25rem" fontSize="1.1rem" color="primary300">
+                      <FaPlus />
+                    </Flex>
+                  )}
+                </Flex>
+              </Tooltip>
+            )}
           </Flex>
           {i < arr.length - 1 && <Divider color="gray300" />}
           <SmallModal
