@@ -101,6 +101,6 @@ const teacherMenuItems: Array<MenuItemType> = [
   // { name: 'Loja', page: 'store', icon: FiShoppingBag },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },
   { name: 'Comunidade', page: 'community', icon: FaRegSmile },
-  { name: 'Suporte', page: 'reports', icon: FiHeadphones },
+  { name: 'Suporte', page: 'appointments', icon: FiHeadphones },
   // { name: 'Eventos', page: 'events', icon: FiList, },
 ];
