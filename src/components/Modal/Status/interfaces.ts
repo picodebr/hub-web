@@ -34,6 +34,10 @@ export const statusModalContent: Record<AppStatus, IStatusModalContent> = {
     imageUrl: '/icons/o-loading.svg',
     rotateImage: true,
   },
+  wait_reset_click: {
+    message: '',
+    imageUrl: '/loading/board-reset-click.gif',
+  },
   uploaded: { message: 'Pronto!', imageUrl: '/icons/done.png' },
   upload_failed: {
     message: 'Erro ao carregar. Por favor, reconecte dispositivo.',
