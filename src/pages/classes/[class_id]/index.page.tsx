@@ -27,7 +27,7 @@ import { CiUser } from 'react-icons/ci';
 import { Badge } from 'rsuite';
 import moment from 'moment';
 
-import { generateProjectWithAI, AutoGenerateResponse } from '@/_base/classes/gpt';
+import { generateProjectWithAI, AutoGenerateResponse, generateProjectToolsWithAI } from '@/_base/classes/gpt';
 import { formatShortName, statusLabelMapper } from '@/_base/utils';
 import { getClassData } from '@/_base/services/class';
 import { TabSwitch } from '@/components/TabSwitch';
@@ -36,6 +36,7 @@ import { HubTable } from '@/components/Table';
 import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { IHubClass } from '@/_base/interfaces/class';
 import { IHubUser } from '@/_base/interfaces/user';
+import { IProjectMetadata } from '@/_base/interfaces/project';
 import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
@@ -239,6 +240,13 @@ const Class: React.FC<IProps> = ({ classId }) => {
   const getIAResponse = async (y: string) => {
     const argToObject = { grade: classId, topic: y };
     const resultIA = await generateProjectWithAI(argToObject);
+    const oldTools = resultIA.response.content.materials.slice(0, 2);
+    const newTools = await generateProjectToolsWithAI({
+      tools: oldTools,
+      previousResponse: JSON.stringify(resultIA.response.content),
+    });
+    console.log(oldTools);
+    console.log(newTools);
     const iaSteps = resultIA.response.content.steps;
     setNewProjectSteps(
       iaSteps.map((step, i) => ({
@@ -260,6 +268,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
       metadata: {
         steps: iaSteps,
         bncc: resultIA.response.content.bnccTags,
+        tools: resultIA.response.content.materials,
       },
       groups: [],
       annotations: [],
@@ -295,6 +304,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
   const handleCreateProjectWithIA = useAsyncCallback(async (y: string) => {
     setIsLoadingIa(true);
     const resultIA = await getIAResponse(y);
+
     setNewProject(null);
     setNewProject(resultIA);
     setIsLoadingIa(false);
@@ -330,6 +340,10 @@ const Class: React.FC<IProps> = ({ classId }) => {
       ),
     })) || [];
 
+  const handleCloseModal = () => {
+    setNewProject(null);
+    setModalStep('creation_type');
+  };
   return (
     <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
       <Flex justify="space-between">
@@ -429,6 +443,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
         show={!!newProject && modalStep === 'creation_type'}
         onConfirm={() => setModalStep('creation_topic')}
         onCancel={() => setModalStep('man_project_name')}
+        onCloseModal={handleCloseModal}
         okText="Inteligência Artificial"
         cancelText="Manual"
         topIcon="ray"
@@ -444,6 +459,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
         show={!!newProject && modalStep === 'creation_topic'}
         onConfirm={() => handleCreateProjectWithIA(`${newProject?.topic}`)}
         onCancel={() => setModalStep('creation_type')}
+        onCloseModal={handleCloseModal}
         okText={isLoadingIa ? 'Criando Projeto...' : 'Criar com IA'}
         disableOkButton={isLoadingIa}
         cancelText="Cancelar"
@@ -467,10 +483,12 @@ const Class: React.FC<IProps> = ({ classId }) => {
         show={!!newProject && modalStep === 'edit_draft'}
         onConfirm={() => saveDraftProject()}
         onCancel={() => setModalStep('creation_type')}
+        onCloseModal={handleCloseModal}
         okText="Salvar edição e criar projeto"
         disableOkButton={isLoadingIa}
         cancelText="Cancelar"
         topIcon="ray"
+        size="2xl"
       >
         <Flex direction="column" gap="1rem">
           <Flex>
@@ -488,11 +506,21 @@ const Class: React.FC<IProps> = ({ classId }) => {
             <Text color="gray500" fontSize="15px">
               Descrição do Projeto
             </Text>
-            <TextInput
+            <TextAreaInput
               placeholder={newProject?.description || ''}
               leftElement={<FiFileText />}
               value={newProject?.description || ''}
               onInputChange={(description) => setNewProject((e) => ({ ...(e || ({} as any)), description }))}
+            />
+          </Flex>
+          <Flex>
+            <Text color="gray500" fontSize="15px">
+              Materiais do projeto
+            </Text>
+            <TextInput
+              placeholder={newProject?.metadata.tools?.join(', ') || ''}
+              leftElement={<FiFileText />}
+              value={newProject?.metadata.tools?.join(', ') || ''}
             />
           </Flex>
           <Flex direction="column" gap="1rem">
@@ -552,7 +580,8 @@ const Class: React.FC<IProps> = ({ classId }) => {
       <SmallModal
         title="Criação manual do projeto"
         show={!!newProject && modalStep === 'man_project_name'}
-        onCancel={() => setNewProject(null)}
+        onCancel={handleCloseModal}
+        onCloseModal={handleCloseModal}
         onConfirm={() => setModalStep('man_task_quantity')}
         okText="Enviar"
         topIcon="warning"
@@ -580,7 +609,8 @@ const Class: React.FC<IProps> = ({ classId }) => {
       <SmallModal
         title="Configuração das etapas do projeto"
         show={!!newProject && modalStep === 'man_task_quantity'}
-        onCancel={() => setNewProject(null)}
+        onCancel={handleCloseModal}
+        onCloseModal={handleCloseModal}
         onConfirm={() => setModalStep('man_task_naming')}
         okText="Prosseguir"
         topIcon="ray"
@@ -607,7 +637,8 @@ const Class: React.FC<IProps> = ({ classId }) => {
       <SmallModal
         title="Nomes das etapas do projeto"
         show={!!newProject && modalStep === 'man_task_naming'}
-        onCancel={() => setNewProject(null)}
+        onCancel={handleCloseModal}
+        onCloseModal={handleCloseModal}
         onConfirm={handleCreateProject}
         okText="Finalizar"
         topIcon="checked"
@@ -637,6 +668,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
         title="Iniciar projeto PiCode"
         show={!!factoryProjectToStart}
         onCancel={() => setFactoryProjectToStart(null)}
+        onCloseModal={handleCloseModal}
         onConfirm={() => handleUpdateProjectStatus(factoryProjectToStart?.id || ``, `running`)}
         okText="Iniciar o projeto"
         topIcon="checked"
