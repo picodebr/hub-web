@@ -13,9 +13,10 @@ export const appStatus = <const>[
 
   /* upload */
   'ready_to_upload', // desktop app only
+  'wait_reset_click',
   'uploading',
   'uploaded',
   'upload_failed',
 ];
 
-export type AppStatus = typeof appStatus[number];
+export type AppStatus = (typeof appStatus)[number];

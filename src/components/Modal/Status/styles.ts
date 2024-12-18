@@ -24,6 +24,13 @@ export const Content = styled.div`
 
 export const MessageContainer = styled.div`
   display: flex;
+
+  &[data-status='wait_reset_click'] {
+    border: 1px solid #cccccc88;
+    border-radius: 6px;
+    padding: 0.5rem;
+    background-color: #fff;
+  }
 `;
 
 interface IMessageImage {
@@ -38,6 +45,12 @@ export const MessageText = styled.div`
 
 export const MessageImage = styled.div<IMessageImage>`
   --size: 1.875rem;
+
+  &[data-status='wait_reset_click'] {
+    --size: 15rem;
+    border-radius: 8px;
+    margin-right: 0;
+  }
 
   width: var(--size);
   height: var(--size);
