@@ -92,6 +92,11 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit }) => {
       {openEditor && (
         <Flex bg="white" flex="1" sx={{ '.hub-editor-wrapper': { w: `100%` }, '.hub-editor-content': { p: `0 1rem` } }}>
           <Editor
+            toolbar={{
+              image: {
+                uploadEnabled: true,
+              },
+            }}
             wrapperClassName="hub-editor-wrapper"
             editorClassName="hub-editor-content"
             editorState={editorValue}

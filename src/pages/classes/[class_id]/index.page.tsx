@@ -15,6 +15,7 @@ import {
   Text,
   Skeleton,
   Image,
+  Textarea,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
@@ -26,6 +27,7 @@ import { CiUser } from 'react-icons/ci';
 import { Badge } from 'rsuite';
 import moment from 'moment';
 
+import { generateProjectWithAI, AutoGenerateResponse, generateProjectToolsWithAI } from '@/_base/classes/gpt';
 import { formatShortName, statusLabelMapper } from '@/_base/utils';
 import { getClassData } from '@/_base/services/class';
 import { TabSwitch } from '@/components/TabSwitch';
@@ -33,6 +35,8 @@ import { ClassPageView, classPageViews } from './interfaces';
 import { HubTable } from '@/components/Table';
 import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { IHubClass } from '@/_base/interfaces/class';
+import { IHubUser } from '@/_base/interfaces/user';
+import { IProjectMetadata } from '@/_base/interfaces/project';
 import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
@@ -50,7 +54,7 @@ interface IProps {
   classId: string;
 }
 
-type ModalStep = 'creation_type' | 'man_project_name' | 'man_task_quantity' | 'man_task_naming';
+type ModalStep = 'creation_type' | 'creation_topic' | 'man_project_name' | 'man_task_quantity' | 'man_task_naming' | 'edit_draft';
 
 const Class: React.FC<IProps> = ({ classId }) => {
   const [pageView, setPageView] = useState<ClassPageView>('Projetos');
@@ -61,6 +65,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
   const [factoryProjectToStart, setFactoryProjectToStart] = useState<IProject | null>(null);
   const [hubClass, setHubClass] = useState<IHubClass | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingIa, setIsLoadingIa] = useState(false);
 
   const router = useCustomRouter();
   const toast = useCustomToast();
@@ -87,9 +92,12 @@ const Class: React.FC<IProps> = ({ classId }) => {
     setFactoryProjectToStart(null);
   }, []);
 
+  const sortedProjects = projects?.sort((a, b) => {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
   const dataProjects = useMemo<ProjectTableType[]>(
     () =>
-      projects?.map((project) => ({
+      sortedProjects?.map((project) => ({
         id: project.id,
         user_avatar: (
           <Flex position="relative">
@@ -229,6 +237,81 @@ const Class: React.FC<IProps> = ({ classId }) => {
     setNewProject(null);
   }, []);
 
+  const getIAResponse = async (y: string) => {
+    const argToObject = { grade: classId, topic: y };
+    const resultIA = await generateProjectWithAI(argToObject);
+    const oldTools = resultIA.response.content.materials.slice(0, 2);
+    const newTools = await generateProjectToolsWithAI({
+      tools: oldTools,
+      previousResponse: JSON.stringify(resultIA.response.content),
+    });
+    console.log(oldTools);
+    console.log(newTools);
+    const iaSteps = resultIA.response.content.steps;
+    setNewProjectSteps(
+      iaSteps.map((step, i) => ({
+        title: step.title || '',
+        description: step.description || null,
+        position: step.position,
+      })),
+    );
+    const draftProject: IProject = {
+      id: '',
+      project_id: 'default_project_id',
+      user_id: 'user_id_example',
+      status: 'running' as HubStatus,
+      created_at: new Date(),
+      updated_at: new Date(),
+      title: resultIA.response.content.title,
+      class_id: classId,
+      description: resultIA.response.content.objective,
+      metadata: {
+        steps: iaSteps,
+        bncc: resultIA.response.content.bnccTags,
+        tools: resultIA.response.content.materials,
+      },
+      groups: [],
+      annotations: [],
+      educator: {} as IHubUser,
+      hub_class: {} as IHubClass,
+    };
+
+    return draftProject;
+  };
+
+  const saveDraftProject = useAsyncCallback(async () => {
+    const classId = hubClass?.id ?? '';
+
+    const response = await addProject({
+      title: newProject?.title ?? '',
+      class_id: classId,
+      description: newProject?.description,
+      metadata: {
+        steps: newProject?.metadata.steps,
+        bncc: newProject?.metadata.bncc,
+      },
+    });
+
+    if (response) {
+      const hubClassData = await getClassData(classId);
+      setHubClass(hubClassData);
+      setProjects(hubClassData.projects);
+      setNewProject(null);
+      setIsLoadingIa(false);
+    }
+  }, []);
+
+  const handleCreateProjectWithIA = useAsyncCallback(async (y: string) => {
+    setIsLoadingIa(true);
+    const resultIA = await getIAResponse(y);
+
+    setNewProject(null);
+    setNewProject(resultIA);
+    setIsLoadingIa(false);
+    ////TODO
+    setModalStep('edit_draft');
+  }, []);
+
   const students: StudentTableType[] =
     hubClass?.students.map((student) => ({
       id: student.id,
@@ -257,6 +340,10 @@ const Class: React.FC<IProps> = ({ classId }) => {
       ),
     })) || [];
 
+  const handleCloseModal = () => {
+    setNewProject(null);
+    setModalStep('creation_type');
+  };
   return (
     <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
       <Flex justify="space-between">
@@ -354,10 +441,10 @@ const Class: React.FC<IProps> = ({ classId }) => {
       <SmallModal
         title="Método de criação do projeto"
         show={!!newProject && modalStep === 'creation_type'}
-        onConfirm={() => setNewProject(null)}
+        onConfirm={() => setModalStep('creation_topic')}
         onCancel={() => setModalStep('man_project_name')}
+        onCloseModal={handleCloseModal}
         okText="Inteligência Artificial"
-        disableOkButton
         cancelText="Manual"
         topIcon="ray"
       >
@@ -367,11 +454,134 @@ const Class: React.FC<IProps> = ({ classId }) => {
           </Text>
         </Flex>
       </SmallModal>
+      <SmallModal
+        title="Selecione o tópico do projeto"
+        show={!!newProject && modalStep === 'creation_topic'}
+        onConfirm={() => handleCreateProjectWithIA(`${newProject?.topic}`)}
+        onCancel={() => setModalStep('creation_type')}
+        onCloseModal={handleCloseModal}
+        okText={isLoadingIa ? 'Criando Projeto...' : 'Criar com IA'}
+        disableOkButton={isLoadingIa}
+        cancelText="Cancelar"
+        topIcon="ray"
+      >
+        <Flex direction="column" gap="1rem">
+          <Text color="gray500" fontSize="15px">
+            Escreva o tópico do seu projeto
+          </Text>
+          <TextInput
+            placeholder="(Ex: Biologia, Ecossistema)"
+            leftElement={<FiFileText />}
+            value={newProject?.topic || ''}
+            onInputChange={(topic) => setNewProject((e) => ({ ...(e || ({} as any)), topic }))}
+          />
+        </Flex>
+      </SmallModal>
+
+      <SmallModal
+        title="Revise os dados gerados pela Inteligencia Artificial"
+        show={!!newProject && modalStep === 'edit_draft'}
+        onConfirm={() => saveDraftProject()}
+        onCancel={() => setModalStep('creation_type')}
+        onCloseModal={handleCloseModal}
+        okText="Salvar edição e criar projeto"
+        disableOkButton={isLoadingIa}
+        cancelText="Cancelar"
+        topIcon="ray"
+        size="2xl"
+      >
+        <Flex direction="column" gap="1rem">
+          <Flex>
+            <Text color="gray500" fontSize="15px">
+              Título do Projeto
+            </Text>
+            <TextInput
+              placeholder={newProject?.title || ''}
+              leftElement={<FiFileText />}
+              value={newProject?.title || ''}
+              onInputChange={(title) => setNewProject((e) => ({ ...(e || ({} as any)), title }))}
+            />
+          </Flex>
+          <Flex>
+            <Text color="gray500" fontSize="15px">
+              Descrição do Projeto
+            </Text>
+            <TextAreaInput
+              placeholder={newProject?.description || ''}
+              leftElement={<FiFileText />}
+              value={newProject?.description || ''}
+              onInputChange={(description) => setNewProject((e) => ({ ...(e || ({} as any)), description }))}
+            />
+          </Flex>
+          <Flex>
+            <Text color="gray500" fontSize="15px">
+              Materiais do projeto
+            </Text>
+            <TextInput
+              placeholder={newProject?.metadata.tools?.join(', ') || ''}
+              leftElement={<FiFileText />}
+              value={newProject?.metadata.tools?.join(', ') || ''}
+            />
+          </Flex>
+          <Flex direction="column" gap="1rem">
+            <Text color="gray500" fontSize="15px">
+              Etapas do Projeto
+            </Text>
+            {newProjectSteps.map((step) => (
+              <Flex direction="column" key={step.position} gap="4px">
+                <TextInput
+                  label={`Etapa ${step.position}`}
+                  placeholder="Nome da etapa"
+                  p="0.35rem 0.65rem"
+                  fontSize="15px"
+                  value={step.title}
+                  onInputChange={(title) => setNewProjectSteps((e) => e.map((s) => (s.position === step.position ? { ...s, title } : s)))}
+                />
+                <Textarea
+                  placeholder="Descrição da etapa"
+                  p="0.35rem 0.65rem"
+                  fontSize="15px"
+                  value={step.description || ''}
+                  onChange={(event) =>
+                    setNewProjectSteps((prevSteps) =>
+                      prevSteps.map((s) => (s.position === step.position ? { ...s, description: event.target.value } : s)),
+                    )
+                  }
+                  style={{
+                    minHeight: '100px',
+                    resize: 'vertical',
+                    borderColor: 'lightgrey',
+                  }}
+                />
+              </Flex>
+            ))}
+          </Flex>
+          {/* <Flex>
+            <Text color="gray500" fontSize="15px">
+              BNCC
+            </Text>
+            {newProject?.metadata?.bncc?.map((bnccItem, index) => (
+              <Flex key={`bncc-${index}`} direction="column" gap="1rem">
+                <TextInput
+                  key={`bncc-item-${index}`}
+                  label={`BNCC ${index + 1}`}
+                  placeholder="Código BNCC"
+                  p="0.35rem 0.65rem"
+                  fontSize="15px"
+                  value={bnccItem}
+                  //onInputChange={'jj'}
+                />
+              </Flex>
+            ))}
+          </Flex> */}
+        </Flex>
+      </SmallModal>
 
       <SmallModal
         title="Criação manual do projeto"
         show={!!newProject && modalStep === 'man_project_name'}
-        onCancel={() => setNewProject(null)}
+        onCancel={handleCloseModal}
+        onCloseModal={handleCloseModal}
         onConfirm={() => setModalStep('man_task_quantity')}
         okText="Enviar"
         topIcon="warning"
@@ -399,7 +609,8 @@ const Class: React.FC<IProps> = ({ classId }) => {
       <SmallModal
         title="Configuração das etapas do projeto"
         show={!!newProject && modalStep === 'man_task_quantity'}
-        onCancel={() => setNewProject(null)}
+        onCancel={handleCloseModal}
+        onCloseModal={handleCloseModal}
         onConfirm={() => setModalStep('man_task_naming')}
         okText="Prosseguir"
         topIcon="ray"
@@ -423,11 +634,11 @@ const Class: React.FC<IProps> = ({ classId }) => {
           </NumberInput>
         </Flex>
       </SmallModal>
-
       <SmallModal
         title="Nomes das etapas do projeto"
         show={!!newProject && modalStep === 'man_task_naming'}
-        onCancel={() => setNewProject(null)}
+        onCancel={handleCloseModal}
+        onCloseModal={handleCloseModal}
         onConfirm={handleCreateProject}
         okText="Finalizar"
         topIcon="checked"
@@ -457,6 +668,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
         title="Iniciar projeto PiCode"
         show={!!factoryProjectToStart}
         onCancel={() => setFactoryProjectToStart(null)}
+        onCloseModal={handleCloseModal}
         onConfirm={() => handleUpdateProjectStatus(factoryProjectToStart?.id || ``, `running`)}
         okText="Iniciar o projeto"
         topIcon="checked"
