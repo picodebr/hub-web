@@ -16,6 +16,7 @@ import {
   Skeleton,
   Image,
   Textarea,
+  Button,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
@@ -43,6 +44,8 @@ import { TextInput } from '@/components/Inputs/Text';
 import { addProject, updateProject } from '@/_base/services/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { HubStatus, hubStatuses } from '@/_base/interfaces/shared';
+import { GenericButton } from '@/components/Buttons/Generic';
+import { TbReload } from 'react-icons/tb';
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -491,6 +494,12 @@ const Class: React.FC<IProps> = ({ classId }) => {
         size="2xl"
       >
         <Flex direction="column" gap="1rem">
+          <Flex>
+            <Button gap="1rem" onClick={() => setModalStep('creation_topic')}>
+              <TbReload />
+              Gerar novamente
+            </Button>
+          </Flex>
           <Flex>
             <Text color="gray500" fontSize="15px">
               Título do Projeto
