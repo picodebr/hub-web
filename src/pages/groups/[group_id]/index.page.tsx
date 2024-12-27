@@ -168,7 +168,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Atividades: <Activities group={group} setGroup={setGroup} canEdit={canEdit} />,
     Planejamentos: <Planning group={group} setGroup={setGroup} canEdit={canEdit} />,
-    Pedidos: (
+    'Loja Online': (
       <GroupRequests
         handleFinishOrder={handleFinishOrder}
         handleSave={handleSaveGroup}
@@ -202,8 +202,8 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
         />
 
         <GenericButton
-          label={pageView === `Pedidos` && storeIsOpened ? `Ver carrinho` : 'Salvar'}
-          onClick={() => (pageView === `Pedidos` && storeIsOpened ? setCartIsOpened((e) => !e) : handleSaveGroup(group.metadata))}
+          label={pageView === `Loja Online` && storeIsOpened ? `Ver carrinho` : 'Salvar'}
+          onClick={() => (pageView === `Loja Online` && storeIsOpened ? setCartIsOpened((e) => !e) : handleSaveGroup(group.metadata))}
           border="1px"
           borderColor="gray300"
           isLoading={isLoading}

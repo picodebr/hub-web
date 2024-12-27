@@ -1,5 +1,6 @@
 import { IHubModuleLesson } from '../module';
 import { IHubBookCategory } from './IHubBookCategory';
+import { IHubBookMetadata } from './IHubBookMetadata';
 
 export interface IHubBook {
   id: string;
@@ -10,6 +11,7 @@ export interface IHubBook {
   grades: string[];
   thumbnail: string;
   file: string;
+  metadata: IHubBookMetadata;
   created_at: Date;
   updated_at: Date;
   category: IHubBookCategory;
