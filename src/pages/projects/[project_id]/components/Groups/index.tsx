@@ -42,7 +42,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
 
   return (
     <motion.div
-      key={'About'}
+      key={'Groups'}
       initial={{ y: 10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -10, opacity: 0 }}

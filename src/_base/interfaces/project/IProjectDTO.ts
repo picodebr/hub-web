@@ -1,17 +1,17 @@
 import { HubStatus } from '../shared';
-import { IProjectMetadata } from './IProjectMetadata';
+import { IFactoryProjectMetadata } from './IFactoryProjectMetadata';
 
 export interface IAddProjectParams {
   class_id: string;
   title: string;
   description?: string | null;
-  metadata: IProjectMetadata;
+  metadata: IFactoryProjectMetadata;
 }
 
 export interface IUpdateProjectParams {
   id: string;
   title?: string;
   description?: string | null;
-  metadata?: IProjectMetadata;
+  metadata?: IFactoryProjectMetadata;
   status?: HubStatus;
 }

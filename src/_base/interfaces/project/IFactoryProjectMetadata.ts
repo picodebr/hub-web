@@ -1,6 +1,6 @@
 import { IHubProjectStep } from './IHubProjectStep';
 
-export interface IProjectMetadata {
+export interface IFactoryProjectMetadata {
   steps?: IHubProjectStep[];
   presentation?: string;
   bncc?: string[];

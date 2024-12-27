@@ -3,7 +3,8 @@ import { IHubGlobalComment } from '../globalComment';
 import { IHubGroup } from '../group';
 import { HubStatus } from '../shared';
 import { IHubUser } from '../user';
-import { IProjectMetadata } from './IProjectMetadata';
+import { IHubFactoryProject } from './IHubFactoryProject';
+import { IClassProjectMetadata } from './IClassProjectMetadata';
 
 export interface IProject {
   id: string;
@@ -12,9 +13,10 @@ export interface IProject {
   user_id: string | null;
   topic?: string | null;
   title: string;
+  project?: IHubFactoryProject;
   description: string | null;
   status: HubStatus;
-  metadata: IProjectMetadata;
+  metadata: IClassProjectMetadata;
   created_at: Date;
   updated_at: Date;
   groups: IHubGroup[];

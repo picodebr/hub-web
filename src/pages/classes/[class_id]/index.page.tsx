@@ -36,7 +36,7 @@ import { HubTable } from '@/components/Table';
 import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { IHubClass } from '@/_base/interfaces/class';
 import { IHubUser } from '@/_base/interfaces/user';
-import { IProjectMetadata } from '@/_base/interfaces/project';
+import { IFactoryProjectMetadata } from '@/_base/interfaces/project';
 import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';

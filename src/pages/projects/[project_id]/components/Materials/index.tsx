@@ -30,7 +30,7 @@ export const Materials: React.FC<IProps> = ({ project, setProject, canEdit }) =>
 
   return (
     <motion.div
-      key={'About'}
+      key={'Materials'}
       initial={{ y: 10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -10, opacity: 0 }}
@@ -76,7 +76,7 @@ export const Materials: React.FC<IProps> = ({ project, setProject, canEdit }) =>
             </Text>
           </Flex>
           {project.metadata.tools?.map((tool) => (
-            <Flex p="20px" gap="6px" borderBottom="1px" borderColor="gray300" fontSize="14px" fontWeight="500" justify="space-between">
+            <Flex key={tool} p="20px" gap="6px" borderBottom="1px" borderColor="gray300" fontSize="14px" fontWeight="500" justify="space-between">
               {tool}
               <Flex cursor="pointer" _hover={{ filter: 'brightness(0.8)' }} onClick={() => canEdit && handleRemoveMaterial(tool)}>
                 <FiTrash color="red" />
