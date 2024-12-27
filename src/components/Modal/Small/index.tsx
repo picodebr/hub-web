@@ -13,7 +13,7 @@ import React, { PropsWithChildren } from 'react';
 import { GenericButton } from '../../Buttons/Generic';
 import { IModalProps } from './interfaces';
 
-export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
+export const SmallModal: React.FC<PropsWithChildren<IModalProps & { overflow?: string }>> = ({
   show,
   title,
   onConfirm,
@@ -46,7 +46,7 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
           {title}
         </ModalHeader>
         {(!!onCancel || !!onCloseModal) && showCloseButton && <ModalCloseButton isDisabled={disableCancelButton} mt="0.25rem" />}
-        <ModalBody>{children}</ModalBody>
+        <ModalBody overflow={rest.overflow}> {children}</ModalBody>
 
         <ModalFooter p="1rem" justifyContent="center" gap="1rem">
           {!!onCancel && (

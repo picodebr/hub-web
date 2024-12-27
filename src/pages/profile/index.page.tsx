@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Switch, useColorMode } from '@chakra-ui/react';
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Img, Switch, useColorMode } from '@chakra-ui/react';
 
 import { TeacherProfile } from './components/TeacherProfile';
 import { StudentProfile } from './components/StudentProfile';
@@ -15,6 +15,9 @@ import { getMyProjects } from '@/_base/services/project';
 import { IProject } from '@/_base/interfaces/project';
 import { updateProfile } from '@/_base/services/user';
 import { useSelectedSchool } from '@/components/Page/components/Header';
+import { listUserCertificates } from '@/_base/services/certificates';
+import { IHubCertificate } from '@/_base/interfaces/certificate';
+import { FiExternalLink } from 'react-icons/fi';
 
 interface IProps {
   user: IHubUser;
@@ -23,6 +26,7 @@ interface IProps {
 const Profile: React.FC<IProps> = ({ user }) => {
   const [eventIsClicked, setEventIsClicked] = useState(false);
   const [projects, setProjects] = useState<IProject[]>([]);
+  const [certificates, setCertificates] = useState<IHubCertificate[]>([]);
 
   const [profile, setProfile] = useState<IHubUser>(user);
 
@@ -39,6 +43,42 @@ const Profile: React.FC<IProps> = ({ user }) => {
         const myProjects = school?.id ? await getMyProjects(school?.hub_school_id || ``) : [];
         setProjects(myProjects);
       })();
+  }, [school]);
+
+  useEffect(() => {
+    (async () => {
+      // const certificatesResponse = await listUserCertificates();
+      const certificatesResponse: IHubCertificate[] = [
+        {
+          id: '1',
+          title: 'Formação Maker',
+          hub_course_id: 'Anderson',
+          hub_user_id: 'Anderson',
+          thumbnail:
+            'https://acdn.mitiendanube.com/stores/001/901/585/products/certificado-escolar-ensino-fundamental-curso-infantil-divertido-ilustrado-amarelo-e6177a9dbd399dae7717089997398567-1024-1024.png',
+          link: '/certificate/pdf.pdf',
+        },
+        {
+          id: '2',
+          title: 'Formação Maker',
+          hub_course_id: 'Anderson',
+          hub_user_id: 'Anderson',
+          thumbnail:
+            'https://acdn.mitiendanube.com/stores/001/901/585/products/certificado-escolar-ensino-fundamental-curso-infantil-divertido-ilustrado-amarelo-e6177a9dbd399dae7717089997398567-1024-1024.png',
+          link: '/certificate/pdf.pdf',
+        },
+        {
+          id: '3',
+          title: 'Formação Maker',
+          hub_course_id: 'Anderson',
+          hub_user_id: 'Anderson',
+          thumbnail:
+            'https://acdn.mitiendanube.com/stores/001/901/585/products/certificado-escolar-ensino-fundamental-curso-infantil-divertido-ilustrado-amarelo-e6177a9dbd399dae7717089997398567-1024-1024.png',
+          link: '/certificate/pdf.pdf',
+        },
+      ];
+      setCertificates(certificatesResponse);
+    })();
   }, [school]);
 
   useEffect(() => {
@@ -158,7 +198,41 @@ const Profile: React.FC<IProps> = ({ user }) => {
               <AccordionIcon />
             </AccordionButton>
             <AccordionPanel pb={4}>
-              <Text color="gray500">Você ainda não possui nenhum certificado</Text>
+              {certificates.length ? (
+                <Flex direction="column" gap="1rem">
+                  {certificates.map((certificate) => (
+                    <Flex
+                      key={certificate.id}
+                      justify="space-between"
+                      align="center"
+                      gap="0.5rem"
+                      w="100%"
+                      _notLast={{ borderBottom: '1px', borderColor: '#4B4F5C33', paddingBottom: '1rem' }}
+                    >
+                      <Flex align="center" gap="20px">
+                        <Img src={certificate.thumbnail} w="40px" />
+                        <Text fontWeight="500" fontSize="15px">
+                          {certificate.title}
+                        </Text>
+                      </Flex>
+                      <Box
+                        as="a"
+                        href={certificate.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        bgColor="primary"
+                        borderRadius="5px"
+                        cursor="pointer"
+                        textAlign="center"
+                      >
+                        <FiExternalLink fontSize="22px" />
+                      </Box>
+                    </Flex>
+                  ))}
+                </Flex>
+              ) : (
+                <Text color="gray500">Você ainda não possui nenhum certificado</Text>
+              )}
             </AccordionPanel>
 
             {/* <AccordionPanel pb={4}>

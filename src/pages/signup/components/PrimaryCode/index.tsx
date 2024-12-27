@@ -34,7 +34,7 @@ export const PrimaryCodeStep: React.FC<IProps> = ({ setPrimaryCode, primaryCode,
           {userType === `student` ? (
             <Text color="gray500">Informe o código da sua turma, que deve ser disponibilizado pelo seu professor.</Text>
           ) : (
-            <Text color="gray500">Informe o código de acesso disponibilizado pela equipe PiCode.</Text>
+            <Text color="gray500">Informe o código de acesso disponibilizado pela equipe PiCode ou por sua gestão escolar. </Text>
           )}
         </Flex>
         <CodeInput

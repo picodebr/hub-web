@@ -31,7 +31,7 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
 
   return (
     <motion.div
-      key={'About'}
+      key={'Annotations'}
       initial={{ y: 10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -10, opacity: 0 }}

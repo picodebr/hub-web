@@ -18,5 +18,6 @@ export const bucketFolders = <const>[
   `code-snapshots`,
   `store-maker`,
   `community_posts`,
+  `certificates`,
 ];
 export type BucketFolders = (typeof bucketFolders)[number];
