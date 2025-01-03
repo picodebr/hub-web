@@ -77,52 +77,40 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const pages = pdfDoc.getPages();
       const firstPage = pages[0];
-      const { width, height } = firstPage.getSize();
+
       const { day, month, year } = getFormattedDate();
 
-      firstPage.drawText(`${formatShortName(user?.name)}`, {
-        x: width / 2 - 100,
-        y: height / 2 + 85,
+      firstPage.drawText(`${formatShortName(user?.name, true)}`, {
+        x: 470,
+        y: 325,
+        size: 40,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+        rotate: degrees(0),
+      });
+      firstPage.drawText(
+        `Por sua participação e conclusão no
+curso de ${course.title}, na PiCode,`,
+        {
+          x: 414,
+          y: 267,
+          size: 20,
+          font: helveticaFont,
+          color: rgb(0, 0, 0),
+          rotate: degrees(0),
+        },
+      );
+      firstPage.drawText(`Tendo duração de 20 horas`, {
+        x: 453,
+        y: 220,
         size: 20,
         font: helveticaFont,
         color: rgb(0, 0, 0),
         rotate: degrees(0),
       });
-      firstPage.drawText(`${course.title}`, {
-        x: width / 2 - 100,
-        y: height / 2 + 58,
-        size: 20,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-        rotate: degrees(0),
-      });
-      firstPage.drawText(`02`, {
-        x: width / 2 + 70,
-        y: height / 2 + 30,
-        size: 20,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-        rotate: degrees(0),
-      });
-      firstPage.drawText(`${day}`, {
-        x: width / 2 + 95,
-        y: height / 2 - 70,
-        size: 20,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-        rotate: degrees(0),
-      });
-      firstPage.drawText(`${month}`, {
-        x: width / 2 + 190,
-        y: height / 2 - 70,
-        size: 20,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-        rotate: degrees(0),
-      });
-      firstPage.drawText(`${year}`, {
-        x: width / 2 + 325,
-        y: height / 2 - 70,
+      firstPage.drawText(`Sorocaba, ${day} de ${month} de ${year}`, {
+        x: 450,
+        y: 165,
         size: 20,
         font: helveticaFont,
         color: rgb(0, 0, 0),
@@ -161,6 +149,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       borderColor="gray300"
       boxShadow="md"
     >
+      {/* <Flex>{pdfUrl && <iframe src={pdfUrl} width="100%" height="1000px" style={{ border: 'none' }} title="PDF Preview"></iframe>}</Flex> */}
       <Flex align="center" justify="space-between" borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
         <Text color="gray600">Módulos</Text>
         {allModulesFinished && (
