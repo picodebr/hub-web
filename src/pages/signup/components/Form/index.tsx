@@ -9,6 +9,7 @@ import IRegisterUser from '@/_base/interfaces/user/IRegisterUser';
 import { Dispatch, SetStateAction } from 'react';
 import { FiUser } from 'react-icons/fi';
 import { formatDateInput } from '@/_base/utils';
+import { generateUsername, usernameChecker } from '@/_base/utils/usernameUtils';
 
 interface IProps {
   isGoogleSignin: boolean;
@@ -54,7 +55,8 @@ export const FormStep: React.FC<IProps> = ({
           isDisabled={isGoogleSignin}
           onInputChange={(value) => {
             onInputChange('name', value);
-            onInputChange('username', value.split(' ').slice(0, 2).join(' ').toLocaleLowerCase().replaceAll(' ', '-'));
+            const username = generateUsername(value);
+            onInputChange('username', username);
           }}
         />
         <TextInput
@@ -65,6 +67,7 @@ export const FormStep: React.FC<IProps> = ({
           onInputChange={(value) => onInputChange('username', value)}
           leftElement={<FiUser />}
         />
+
         <TextInput
           label="E-mail (opcional)"
           value={data.email}
