@@ -1,4 +1,10 @@
 import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Box,
   Checkbox,
   Flex,
   Image,
@@ -90,62 +96,113 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
     >
       <Flex direction="column" gap="24px" w="100%">
         <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300">
-          <Flex pb={4} gap="6px" w="100%" justify="space-between" borderBottom="1px" borderColor="gray300">
-            <Flex fontSize="14px" fontWeight="500" align="center" gap="8px" color="gray800">
-              Atividade
-            </Flex>
-            <Text fontSize="14px" fontWeight="500" color="gray800">
-              Cashback
-            </Text>
-          </Flex>
-          {project.project?.book?.metadata?.rewards?.map((reward) => (
-            <Tooltip
-              key={reward.activity}
-              label={
-                project.metadata.finished_activities?.includes(reward?.activity || ``) ? 'Atividade concluída' : 'Clique para concluir a atividade'
-              }
-              isDisabled={!canEdit}
-            >
-              <motion.button
-                disabled={!canEdit || project.metadata.finished_activities?.includes(reward?.activity || ``)}
-                whileHover={
-                  !canEdit || project.metadata.finished_activities?.includes(reward?.activity || ``)
-                    ? undefined
-                    : { scale: 1.02, backgroundColor: `#cccccc11` }
-                }
-                whileTap={!canEdit || project.metadata.finished_activities?.includes(reward?.activity || ``) ? undefined : { scale: 0.98 }}
-                onClick={() => {
-                  if (!canEdit) return;
-                  setTargetReward(reward);
-                  setModalStep(`missing_students`);
-                }}
-                key={reward.activity}
-                style={{
-                  display: `flex`,
-                  padding: '20px',
-                  gap: '6px',
-                  borderBottom: '1px solid #D0D5DD',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                }}
-              >
-                <Flex align="center" gap="0.4rem">
-                  {project.metadata.finished_activities?.includes(reward?.activity || ``) ? (
-                    <MdOutlineCheckBox fontSize="20px" color="#1db832" />
-                  ) : (
-                    <MdPendingActions fontSize="20px" color="#4d4f5cdd" />
-                  )}
-                  <Text>{reward.activity}</Text>
+          <Accordion allowMultiple w="100%" fontWeight="500" color="gray700" border="none" h="100%" display="flex" flexDirection="column">
+            {(
+              project.project?.book?.metadata?.rewards?.reduce((acc, r) => (acc.includes(r.step) ? acc : [...acc, r.step]), [] as string[]) || []
+            ).map((step, idx) => (
+              <AccordionItem key={step + idx} border="none" p="0 0 1rem" gap="0">
+                <Flex
+                  w="100%"
+                  h="100%"
+                  backgroundColor={`${getActivityColor(project, step)}22`}
+                  borderRadius="md"
+                  overflow="hidden"
+                  gap="2px"
+                  border="1px"
+                  borderColor={`${getActivityColor(project, step)}aa`}
+                >
+                  <Flex w="4rem" h="100%" overflow="hidden">
+                    <Box
+                      flex="1"
+                      backgroundImage={`/patterns/${getActivityPattern(getActivityColor(project, step) || ``)}.svg`}
+                      backgroundPosition="center"
+                      backgroundSize="cover"
+                      transform="scale(3)"
+                      backgroundRepeat="no-repeat"
+                    />
+                  </Flex>
+                  <Flex direction="column" flex="1" borderLeft="2px" borderColor={getActivityColor(project, step)}>
+                    <AccordionButton justifyContent="space-between" p="0.5rem">
+                      <Text>{step}</Text>
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel fontWeight="400" p="0.75rem 1rem 0" mb="-8.75rem">
+                      <Flex pb={4} gap="6px" w="100%" justify="space-between">
+                        <Flex fontSize="14px" align="center" gap="8px" color="gray500">
+                          Atividade
+                        </Flex>
+                        <Text fontSize="14px" color="gray500">
+                          Cashback
+                        </Text>
+                      </Flex>
+                    </AccordionPanel>
+
+                    {(project.project?.book?.metadata?.rewards || []).map((reward, i, arr) =>
+                      reward.step !== step ? null : (
+                        <AccordionPanel
+                          fontWeight="400"
+                          key={reward.activity + (i + 1)}
+                          p="0.5rem 1rem"
+                          borderBottom={arr.slice(i).filter((e) => e.step === step).length > 1 ? `1px` : `none`}
+                          borderColor="gray300"
+                        >
+                          <Tooltip
+                            key={reward.activity}
+                            label={
+                              project.metadata.finished_activities?.includes(reward?.activity || ``)
+                                ? 'Atividade concluída'
+                                : 'Clique para concluir a atividade'
+                            }
+                            isDisabled={!canEdit}
+                          >
+                            <motion.button
+                              disabled={!canEdit || project.metadata.finished_activities?.includes(reward?.activity || ``)}
+                              whileHover={
+                                !canEdit || project.metadata.finished_activities?.includes(reward?.activity || ``)
+                                  ? undefined
+                                  : { scale: 1.02, backgroundColor: `#cccccc11` }
+                              }
+                              whileTap={
+                                !canEdit || project.metadata.finished_activities?.includes(reward?.activity || ``) ? undefined : { scale: 0.98 }
+                              }
+                              onClick={() => {
+                                if (!canEdit) return;
+                                setTargetReward(reward);
+                                setModalStep(`missing_students`);
+                              }}
+                              key={reward.activity}
+                              style={{
+                                display: `flex`,
+                                width: `100%`,
+                                gap: '6px',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                justifyContent: 'space-between',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <Flex align="center" gap="0.4rem">
+                                {project.metadata.finished_activities?.includes(reward?.activity || ``) ? (
+                                  <MdOutlineCheckBox fontSize="20px" color="#1db832" />
+                                ) : (
+                                  <MdPendingActions fontSize="20px" color="#4d4f5cdd" />
+                                )}
+                                <Text>{reward.activity}</Text>
+                              </Flex>
+                              <Flex align="center" gap="0.4rem">
+                                <Text>{reward.reward_value}</Text>
+                                <Image src="/icons/coin.svg" />
+                              </Flex>
+                            </motion.button>
+                          </Tooltip>
+                        </AccordionPanel>
+                      ),
+                    )}
+                  </Flex>
                 </Flex>
-                <Flex align="center" gap="0.4rem">
-                  <Text>{reward.reward_value}</Text>
-                  <Image src="/icons/coin.svg" />
-                </Flex>
-              </motion.button>
-            </Tooltip>
-          ))}
+              </AccordionItem>
+            ))}
+          </Accordion>
         </Flex>
       </Flex>
 
@@ -279,4 +336,20 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
       </SmallModal>
     </motion.div>
   );
+};
+
+const getActivityColor = (project: IProject, step: string): string | undefined =>
+  project.project?.book?.metadata?.rewards?.find((e) => e.step === step)?.color;
+
+const getActivityPattern = (color: string): string | undefined => {
+  const colors = [
+    { color: `#f8bb3c`, pattern: `rockets-amarelo` },
+    { color: `#5671b6`, pattern: `rockets-azul-claro` },
+    { color: `#1a1740`, pattern: `rockets-azul-marinho` },
+    { color: `#3e7aff`, pattern: `rockets-azul` },
+    { color: `#20f480`, pattern: `rockets-verde` },
+    { color: `#ff515c`, pattern: `rockets-vermelho` },
+  ];
+
+  return colors.find((e) => e.color === color)?.pattern;
 };
