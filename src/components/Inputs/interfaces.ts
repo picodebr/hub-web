@@ -4,7 +4,7 @@ import { Props as SelectProps } from 'react-select';
 
 export interface IInputProps extends InputProps {
   onInputChange?: (value: string) => void;
-  value?: string;
+  value?: string | number;
   placeholder?: string;
   label?: string;
   error?: string;

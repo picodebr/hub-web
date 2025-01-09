@@ -13,7 +13,6 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
-  Input,
   Switch,
   useDisclosure,
 } from '@chakra-ui/react';
@@ -21,30 +20,30 @@ import { motion } from 'framer-motion';
 import { FaMinus, FaPlus, FaSave } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
 import { UploadOutlined } from '@ant-design/icons';
-import { Upload, message, Image } from 'antd'; // Adicionei o Upload do Ant Design
+import { Upload, Image } from 'antd'; // Adicionei o Upload do Ant Design
 import type { UploadFile } from 'antd';
 
-import { getStockMaker, updateStockMaker } from '@/_base/services/storeMaker';
+import { addItemInStockMaker, getStockMaker, updateStockMaker } from '@/_base/services/storeMaker';
 import { IStockMaker } from '@/_base/interfaces/storeMaker';
-import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { PlusButton } from '@/components/Buttons/Plus';
 import { TextInput } from '@/components/Inputs/Text';
+import { addStockMakerSchema, EMPTY_STOCK_MAKER_ITEM } from '@/_base/interfaces/storeMaker/IAddStockMakerParams';
+import { NumberInput } from '@/components/Inputs/Number';
+import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 
 const Stock: React.FC = () => {
   const [unSavedstock, setUnsavedStock] = useState<IStockMaker[]>([]);
   const [stock, setStock] = useState<IStockMaker[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [fileList, setFileList] = useState<UploadFile[]>([]); // Adicionando estado do upload
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [fileToUpload, setFileToUpload] = useState<UploadFile | null>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [itemName, setItemName] = useState('');
-  const [itemPhoto, setItemPhoto] = useState('');
-  const [itemQuantity, setItemQuantity] = useState(1);
   const [isReusable, setIsReusable] = useState(false);
+
+  const { data, onInputChange, submit, errors } = useInputHandler({ schema: addStockMakerSchema, data: EMPTY_STOCK_MAKER_ITEM });
 
   const toast = useCustomToast();
   const { school } = useSelectedSchool();
@@ -81,55 +80,34 @@ const Stock: React.FC = () => {
     setStock((e) => e.map((s) => (s.id === item.id ? item : s)));
   }, []);
 
-  const handleUpload = async () => {
-    const formData = new FormData();
-    fileList.forEach((file) => {
-      formData.append('files[]', file as any);
-    });
-    setUploading(true);
+  const handleAddItem = useAsyncCallback(
+    async () => {
+      setIsLoading(true);
 
-    //Alterar p/ nossa API, esse ta o padrão do antd
-    try {
-      const response = await fetch('https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      if (!fileToUpload) {
+        toast({ title: `Selecione uma imagem para o componente` });
+        return;
+      }
 
-      const data = await response.json();
+      const presignedUrl = await getPresignedUrl(fileToUpload?.type || ``, `store-maker`);
 
-      setItemPhoto(data.url);
-      message.success('Upload realizado com sucesso!');
-    } catch (error) {
-      message.error('Falha no upload');
-    } finally {
-      setUploading(false);
-    }
-  };
+      await uploadFile(presignedUrl.link, fileToUpload as any);
 
-  const handleAddItem = () => {
-    const newItem = {
-      store_item: { name: itemName, picture: itemPhoto },
-      quantity: itemQuantity,
-      reusable: isReusable,
-    };
-    setStock((prev) => [...prev, newItem as IStockMaker]);
-    onClose();
-  };
+      const newItem = await addItemInStockMaker({ ...data, image: presignedUrl.path, hub_school_id: school?.hub_school_id || `` });
 
-  const uploadProps = {
-    beforeUpload: (file: UploadFile) => {
-      setFileList([...fileList, file]);
-      const imageURL = URL.createObjectURL(file as any);
-      setImagePreview(imageURL);
-      return false;
+      setStock((prev) => [...prev, newItem]);
+      setUnsavedStock((prev) => [...prev, newItem]);
+      onClose();
     },
-    fileList,
-  };
+    [data, fileToUpload],
+    true,
+    () => setIsLoading(false),
+  );
 
   return (
     <Flex direction="column" flex="1" overflow="hidden" gap="1rem" userSelect="none">
       <Flex w="100%" justify="flex-end" gap="1rem">
-        <PlusButton label="Adicionar Item" rightIcon={<IoMdAdd />} alignSelf="flex-end" warning={needSave} onClick={onOpen} isLoading={isLoading} />
+        <PlusButton label="Adicionar Item" rightIcon={<IoMdAdd />} alignSelf="flex-end" onClick={onOpen} isLoading={isLoading} />
         <PlusButton label="Salvar" rightIcon={<FaSave />} alignSelf="flex-end" warning={needSave} onClick={handleSave} isLoading={isLoading} />
       </Flex>
 
@@ -168,9 +146,15 @@ const Stock: React.FC = () => {
                 border: `1px solid #cccccc66`,
               }}
             >
-              <Image src={stock.store_item.picture} height="180" width="180" alt="test" style={{ alignSelf: 'center', justifySelf: 'center' }} />
+              <Image
+                src={stock.hub_user_id ? stock.metadata.image : stock.store_item.picture}
+                height="180"
+                width="180"
+                alt="test"
+                style={{ alignSelf: 'center', justifySelf: 'center' }}
+              />
               <Flex direction="column" gap="0.75rem" w="100%">
-                <Text color="gray600">{stock.store_item.name}</Text>
+                <Text color="gray600">{stock.hub_user_id ? stock.metadata.name : stock.store_item.name}</Text>
                 <Divider />
                 <Flex justify="space-between" align="center" w="100%" color="gray500">
                   <Flex
@@ -212,26 +196,34 @@ const Stock: React.FC = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Adicionar Item Personalizado</ModalHeader>
+          <ModalHeader>Adicionar componente ao estoque</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Input placeholder="Nome do Item" value={itemName} onChange={(e) => setItemName(e.target.value)} mb={4} />
-            <Input type="number" placeholder="Quantidade" value={itemQuantity} onChange={(e) => setItemQuantity(Number(e.target.value))} mb={4} />
+            <Flex direction="column" gap="1rem">
+              <TextInput value={data.name} error={errors.name} onInputChange={(value) => onInputChange('name', value)} label="Nome do componente" />
+              <Flex gap="1rem">
+                <NumberInput
+                  value={data.quantity}
+                  error={errors.quantity}
+                  onInputChange={(value) => onInputChange('quantity', Number(value))}
+                  label="Quantidade"
+                />
 
-            <Upload {...uploadProps}>
-              <Button icon={<UploadOutlined />} loading={uploading} disabled={uploading}>
-                Selecione a Imagem
-              </Button>
-            </Upload>
-            {imagePreview && <Image src={imagePreview} alt="Imagem selecionada" style={{ marginTop: '20px' }} />}
-
-            <Flex align="center" justify="space-between" mt={4}>
-              <Text>É Reutilizável?</Text>
-              <Switch isChecked={isReusable} onChange={(e) => setIsReusable(e.target.checked)} />
+                <Flex align="center" direction="column" justify="space-between" gap="0.5rem">
+                  <Text color="gray700" fontSize="13.5px" whiteSpace="nowrap" fontWeight="500">
+                    É Reutilizável?
+                  </Text>
+                  <Switch isChecked={isReusable} onChange={(e) => setIsReusable(e.target.checked)} flex="1" pt="0.5rem" />
+                </Flex>
+              </Flex>
+              <Upload beforeUpload={(file: UploadFile) => setFileToUpload(file)} fileList={fileToUpload ? [fileToUpload] : []}>
+                <Button leftIcon={<UploadOutlined />}>Selecione a Imagem</Button>
+              </Upload>
+              {fileToUpload && <Image src={fileToUpload ? URL.createObjectURL(fileToUpload as any) : ``} alt="Imagem selecionada" />}
             </Flex>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleAddItem} isLoading={isLoading || uploading}>
+            <Button colorScheme="blue" mr={3} onClick={() => submit(handleAddItem)} isLoading={isLoading}>
               Adicionar
             </Button>
             <Button onClick={onClose}>Cancelar</Button>
