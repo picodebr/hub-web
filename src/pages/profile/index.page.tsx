@@ -15,7 +15,6 @@ import { getMyProjects } from '@/_base/services/project';
 import { IProject } from '@/_base/interfaces/project';
 import { updateProfile } from '@/_base/services/user';
 import { useSelectedSchool } from '@/components/Page/components/Header';
-import { listUserCertificates } from '@/_base/services/certificates';
 import { IHubCertificate } from '@/_base/interfaces/certificate';
 import { FiExternalLink } from 'react-icons/fi';
 
