@@ -1,24 +1,20 @@
 import moment from 'moment';
 import { useState } from 'react';
-import { FaPlus } from 'react-icons/fa6';
 import { Avatar, Badge, Flex, Text } from '@chakra-ui/react';
+import { motion } from 'framer-motion';
 
 import { SmallModal } from '@/components/Modal/Small';
-import { OrdersPageView } from '../..';
 import { IHubGroup, IHubGroupOrder } from '@/_base/interfaces/group';
 import { useAuth } from '@/_base/hooks';
 import { GenericButton } from '@/components/Buttons/Generic';
-import { cookieManager } from '@/_base/utils';
 
 interface IProps {
-  onChangeView: (view: OrdersPageView) => void;
   onApproveOrder: (order: IHubGroupOrder) => void;
   onRejectOrder: (order: IHubGroupOrder) => void;
-  canEdit: boolean;
   group: IHubGroup;
 }
 
-export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, canEdit, onRejectOrder }) => {
+export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder }) => {
   const [order, setOrder] = useState<IHubGroupOrder | null>(null);
 
   const { user } = useAuth();
@@ -38,47 +34,31 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
   };
 
   return (
-    <Flex direction="column" gap="1.5rem" overflow="auto" userSelect="none">
-      <Flex align="center" justify="flex-end" h="fit-content">
-        <Flex
-          bgColor="white"
-          w="fit-content"
-          h="fit-content"
-          border="1px"
-          borderColor="gray300"
-          padding="8px 14px"
-          align="center"
-          gap="8px"
-          borderRadius="8px"
-          fontWeight="600"
-          color="gray700"
-          boxShadow="sm"
-          cursor={canEdit ? 'pointer' : 'not-allowed'}
-          transition="all 0.1s"
-          _hover={canEdit ? { filter: `brightness(0.92)` } : undefined}
-          onClick={() => canEdit && onChangeView(`store`)}
-        >
-          <FaPlus />
-          {cookieManager.getCookie(`cart:${group.id}`) ? `Retomar Pedido` : `Novo Pedido`}
-        </Flex>
-      </Flex>
-
-      {!!group.orders.filter((data) => !data.approved_at && !data.metadata.denied_at).length && (
-        <Flex
-          direction="column"
-          borderRadius="10px"
-          h="fit-content"
-          border="1px"
-          p="1rem"
-          borderColor="gray300"
-          overflow="hidden"
-          gap="1rem"
-          bgColor="warning25"
-        >
-          {group.orders
+    <motion.div
+      key={'Orders'}
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -10, opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ display: `flex`, overflow: `auto`, flexDirection: `column`, gap: `1.5rem`, userSelect: `none`, height: `100%` }}
+    >
+      <Flex
+        direction="column"
+        borderRadius="10px"
+        border="1px"
+        p="1rem"
+        maxH="50%"
+        borderColor="gray300"
+        overflow="hidden auto"
+        gap="1rem"
+        bgColor="warning25"
+        h={group.orders.filter((data) => !!data.approved_at)?.length ? 'auto' : '100%'}
+      >
+        {group.orders.filter((data) => !data.approved_at && !data.metadata.denied_at).length ? (
+          group.orders
             .filter((data) => !data.approved_at && !data.metadata.denied_at)
             .map((order) => (
-              <Flex key={order.id} w="100%" overflow="auto" direction="column" py="0.25rem">
+              <Flex key={order.id} w="100%" overflow="hidden" direction="column" py="0.25rem" minH="3rem">
                 <Flex w="100%" justify="space-between" align="center">
                   <Flex align="center" gap="12px" w="14rem">
                     <Avatar
@@ -104,24 +84,30 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
                   </Flex>
                 </Flex>
               </Flex>
-            ))}
-        </Flex>
-      )}
+            ))
+        ) : (
+          <Text fontSize="16px" fontWeight="500" color="warning700">
+            Não há pedidos pendentes
+          </Text>
+        )}
+      </Flex>
 
-      {!!group.orders.filter((data) => !!data.approved_at)?.length && (
-        <Flex
-          w="100%"
-          h="auto"
-          p="1rem"
-          display="flex"
-          direction="column"
-          bg="white"
-          borderRadius="10px"
-          border="1px"
-          borderColor="gray300"
-          gap="1rem"
-        >
-          {group.orders
+      <Flex
+        w="100%"
+        p="1rem"
+        maxH="50%"
+        h={group.orders.filter((data) => !!data.approved_at)?.length ? 'auto' : '100%'}
+        overflow="hidden auto"
+        display="flex"
+        direction="column"
+        bg="white"
+        borderRadius="10px"
+        border="1px"
+        borderColor="gray300"
+        gap="1rem"
+      >
+        {group.orders.filter((data) => !!data.approved_at).length ? (
+          group.orders
             .filter((data) => !!data.approved_at)
             .map((order) => (
               <Flex
@@ -152,14 +138,18 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
                   </Badge>
                 </Flex>
               </Flex>
-            ))}
-        </Flex>
-      )}
+            ))
+        ) : (
+          <Text fontSize="16px" fontWeight="500" color="gray700">
+            Esse grupo ainda não realizou nenhum pedido
+          </Text>
+        )}
+      </Flex>
       <SmallModal
         size="lg"
         title={!order?.approved_at ? 'Aprovar Pedido' : `Pedido aprovado em ${moment(order.approved_at).format(`DD/MM/YYYY`)}`}
         show={!!order}
-        disableOkButton={!order?.approved_at && (user.role !== `teacher` || group.hub_user_id !== user.id)}
+        disableOkButton={!order?.approved_at && (user.role !== `teacher` || group.project?.user_id !== user.id)}
         onConfirm={() => (!order?.approved_at ? handleApprove() : setOrder(null))}
         okText={!order?.approved_at ? 'Aprovar' : 'OK'}
         cancelText={!order?.approved_at && user.id === group.hub_user_id ? 'Rejeitar' : undefined}
@@ -173,11 +163,11 @@ export const Orders: React.FC<IProps> = ({ onChangeView, group, onApproveOrder, 
             <Flex key={item.id} align="center" gap="0.35rem" borderBottom="1px" borderColor="gray200">
               <Text>{item.quantity}</Text>
               <Text flex="1">{item.store_item.name}</Text>
-              <Text>R$ {item.store_item.price}</Text>
+              <Text>R$ {order.metadata?.is_resale ? order.total : item.store_item.price}</Text>
             </Flex>
           ))}
         </Flex>
       </SmallModal>
-    </Flex>
+    </motion.div>
   );
 };

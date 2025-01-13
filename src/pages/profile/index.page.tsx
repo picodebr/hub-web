@@ -17,6 +17,7 @@ import { updateProfile } from '@/_base/services/user';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { IHubCertificate } from '@/_base/interfaces/certificate';
 import { FiExternalLink } from 'react-icons/fi';
+import { listUserCertificates } from '@/_base/services/certificates';
 
 interface IProps {
   user: IHubUser;
@@ -46,36 +47,8 @@ const Profile: React.FC<IProps> = ({ user }) => {
 
   useEffect(() => {
     (async () => {
-      // const certificatesResponse = await listUserCertificates();
-      const certificatesResponse: IHubCertificate[] = [
-        {
-          id: '1',
-          title: 'Formação Maker',
-          hub_course_id: 'Anderson',
-          hub_user_id: 'Anderson',
-          thumbnail:
-            'https://acdn.mitiendanube.com/stores/001/901/585/products/certificado-escolar-ensino-fundamental-curso-infantil-divertido-ilustrado-amarelo-e6177a9dbd399dae7717089997398567-1024-1024.png',
-          link: '/certificate/pdf.pdf',
-        },
-        {
-          id: '2',
-          title: 'Formação Maker',
-          hub_course_id: 'Anderson',
-          hub_user_id: 'Anderson',
-          thumbnail:
-            'https://acdn.mitiendanube.com/stores/001/901/585/products/certificado-escolar-ensino-fundamental-curso-infantil-divertido-ilustrado-amarelo-e6177a9dbd399dae7717089997398567-1024-1024.png',
-          link: '/certificate/pdf.pdf',
-        },
-        {
-          id: '3',
-          title: 'Formação Maker',
-          hub_course_id: 'Anderson',
-          hub_user_id: 'Anderson',
-          thumbnail:
-            'https://acdn.mitiendanube.com/stores/001/901/585/products/certificado-escolar-ensino-fundamental-curso-infantil-divertido-ilustrado-amarelo-e6177a9dbd399dae7717089997398567-1024-1024.png',
-          link: '/certificate/pdf.pdf',
-        },
-      ];
+      const certificatesResponse = await listUserCertificates();
+
       setCertificates(certificatesResponse);
     })();
   }, [school]);

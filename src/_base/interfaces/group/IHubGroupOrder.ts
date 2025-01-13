@@ -20,7 +20,8 @@ export interface IHubGroupOrder {
 }
 
 export interface IHubGroupOrderMetadata {
-  denied_at: string | null;
+  denied_at?: string | null;
+  is_resale?: boolean;
 }
 
 export interface IHubGroupOrderItem {
