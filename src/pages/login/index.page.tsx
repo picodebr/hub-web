@@ -48,11 +48,11 @@ const LoginPage: React.FC = () => {
         toast({ status: `error`, description: `Seu cadastro está pendente de avaliação` });
         return;
       }
-
       // If keep logged in is checked, the token will be expires in 15 days
       cookieManager.setToken(access_token, keepLogged ? 15 : 1);
       api.defaults.headers.authorization = `Bearer ${access_token}`;
-      setUser(await validateSession());
+      const loggedUser = await validateSession();
+      setUser({ ...loggedUser, ...user });
 
       setLoadingConfig((cfg) => ({ ...cfg, isLoading: true, type: 'fullscreen-with-info' }));
 

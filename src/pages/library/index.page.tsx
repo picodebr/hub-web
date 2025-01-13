@@ -93,6 +93,14 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
     setTargetBook(book);
   };
 
+  const downloadBook = (file: string, title: string) => {
+    const link = document.createElement('a');
+    link.setAttribute(`target`, `_blank`);
+    link.href = file;
+    link.download = `${title}.pdf`;
+    link.click();
+  };
+
   return ![...Object.keys(booksByGrade), ...Object.keys(videosByGrade)].length ? (
     <Flex>
       <TabSwitch
@@ -313,12 +321,17 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
           </Button>
 
           <Flex direction="column" gap="0.5rem" position="fixed" top="1rem" right="2rem" zIndex={9999}>
-            <a href={targetBook?.file} download>
-              <Button bg="primary700" color="white" colorScheme="blue" gap="0.5rem" p="0.5rem 1rem">
-                <FiDownload fontSize="1.5rem" />
-                Baixar livro
-              </Button>
-            </a>
+            <Button
+              bg="primary700"
+              color="white"
+              colorScheme="blue"
+              gap="0.5rem"
+              p="0.5rem 1rem"
+              onClick={() => targetBook && downloadBook(targetBook.file, targetBook?.title)}
+            >
+              <FiDownload fontSize="1.5rem" />
+              Baixar livro
+            </Button>
             <Flex align="center" justify="space-between" gap="0.5rem" w="100%">
               <Button
                 onClick={() => setScale((s) => Math.min(s - 0.1, 3))}

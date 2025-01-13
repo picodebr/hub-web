@@ -11,7 +11,7 @@ import { cookieManager } from '@/_base/utils';
 import { IAvatarOptions, IProfileComponentProps } from './interfaces';
 import { customAvatarOptions, defaultAvatarOptions } from './utils';
 import { GenericButton } from '@/components/Buttons/Generic';
-import { useAuth, useCustomRouter } from '@/_base/hooks';
+import { useAuth } from '@/_base/hooks';
 
 export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({ skinColor: `ccc` });
@@ -19,7 +19,6 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   const [avatarURI, setAvatarURI] = useState(``);
 
   const { setUser } = useAuth();
-  const router = useCustomRouter();
 
   const avatar = useMemo(() => {
     const raw = createAvatar(adventurer, {
@@ -213,8 +212,8 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
             </Text>
           </Flex>
           <Flex direction="column" gap="10px" flex="1" justify="flex-end">
-            <Text color="gray900">Suba seu ranking jogando os desafios diários!</Text>
-            <Button onClick={() => router.push('/challenge')}>Jogar agora!</Button>
+            {/* <Text color="gray900">Suba seu ranking jogando os desafios diários!</Text> */}
+            {/* <Button onClick={() => router.push('/challenge')}>Jogar agora!</Button> */}
           </Flex>
         </Flex>
       </Flex>

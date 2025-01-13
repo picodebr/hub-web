@@ -1,3 +1,7 @@
-export const projectPageViews = <const>['Atividades', 'Planejamentos', 'Loja Online', 'Membros'];
+export const groupPageViews = <const>['Atividades', 'Planejamentos', 'Loja Online', 'Membros'];
 
-export type ProjectPageView = (typeof projectPageViews)[number];
+export type GroupPageView = (typeof groupPageViews)[number];
+
+export const groupOrdersPageViews = <const>['Pedidos', 'Loja PiCode', 'Items do grupo', 'Marketplace'];
+
+export type GroupOrdersPageView = (typeof groupOrdersPageViews)[number];
