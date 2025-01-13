@@ -4,7 +4,7 @@ import { Flex } from '@chakra-ui/react';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { logError, cookieManager } from '@/_base/utils';
-import { ProjectPageView, projectPageViews } from './interfaces';
+import { GroupPageView, groupPageViews } from './interfaces';
 import { TabSwitch } from '@/components/TabSwitch';
 import { Activities } from './components/Atividades';
 import { GroupRequests } from './components/Pedidos';
@@ -16,9 +16,10 @@ import { acceptOrder, rejectOrder, addOrder, getGroupById, updateGroup, listAvai
 import { IHubGroup, IHubGroupMetadata, IHubGroupOrder, IUpdateHubGroupParams } from '@/_base/interfaces/group';
 import { getStockMaker } from '@/_base/services/storeMaker';
 import { useSelectedSchool } from '@/components/Page/components/Header';
-import { IStockMaker } from '@/_base/interfaces/storeMaker';
+import { IStockMaker, IStoreMakerResale } from '@/_base/interfaces/storeMaker';
 import { IHubUser } from '@/_base/interfaces/user';
 import { makeDonation } from '@/_base/services/student/makeDonation';
+import { AnimatePresence } from 'framer-motion';
 
 interface IProps {
   group: IHubGroup;
@@ -27,7 +28,7 @@ interface IProps {
 const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const [group, setGroup] = useState<IHubGroup>(_group);
   const [savedGroup, setSavedGroup] = useState<IHubGroup>(_group);
-  const [pageView, setPageView] = useState<ProjectPageView>('Atividades');
+  const [pageView, setPageView] = useState<GroupPageView>('Atividades');
   const [isLoading, setIsLoading] = useState(false);
   const [storeIsOpened, setStoreIsOpened] = useState(false);
   const [cartIsOpened, setCartIsOpened] = useState(false);
@@ -38,7 +39,9 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const { user, setUser } = useAuth();
   const { school } = useSelectedSchool();
 
-  const canEdit = user.role === `student` && !!group.student_links.find((e) => e.hub_user_id === user.id);
+  const canEdit =
+    (user.role === `student` || group.project?.user_id === user.id) &&
+    (user.role !== `student` || !!group.student_links.find((e) => e.hub_user_id === user.id));
   const needSave = useMemo<boolean>(() => JSON.stringify(group) !== JSON.stringify(savedGroup), [group, savedGroup]);
 
   useEffect(() => {
@@ -60,8 +63,8 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
       const updatedGroup = await updateGroup({ id: group.id, metadata });
       showToast && toast({ status: 'success', description: 'Atualizado com sucesso!' });
 
-      setGroup((g) => ({ ...g, ...updatedGroup }));
-      setSavedGroup((g) => ({ ...g, ...updatedGroup }));
+      setGroup((g) => ({ ...g, ...updatedGroup, orders: g.orders }));
+      setSavedGroup((g) => ({ ...g, ...updatedGroup, orders: g.orders }));
     },
     [],
     false,
@@ -70,12 +73,32 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
     },
   );
 
+  const handleRefreshStock = useAsyncCallback(async () => {
+    const [results, updatedGroup] = await Promise.all([getStockMaker(school?.hub_school_id || ``), getGroupById(group.id)]);
+
+    setStock(results.filter((e) => e.quantity));
+    setGroup(updatedGroup);
+    setSavedGroup(updatedGroup);
+  }, [school]);
+
   const handleFinishOrder = useAsyncCallback(async (items: { id: string; quantity: number }[]) => {
     const updatedGroup = await addOrder({ group_id: group.id, items });
 
     setGroup((e) => ({ ...e, ...updatedGroup }));
     setSavedGroup((e) => ({ ...e, ...updatedGroup }));
     cookieManager.setCookie(`cart:${group.id}`, JSON.stringify([]));
+  }, []);
+
+  const handleFinishResaleOrder = useAsyncCallback(async (items: IStoreMakerResale[]) => {
+    const updatedGroup = await addOrder({
+      group_id: group.id,
+      items: items.map((e) => ({ id: e.store_maker_item_id, quantity: e.quantity, hub_store_maker_resale_id: e.id })),
+      is_resale: true,
+    });
+
+    setGroup((e) => ({ ...e, ...updatedGroup }));
+    setSavedGroup((e) => ({ ...e, ...updatedGroup }));
+    cookieManager.setCookie(`resale:${group.id}`, JSON.stringify([]));
   }, []);
 
   const handleApproveOrder = useAsyncCallback(async (order: IHubGroupOrder) => {
@@ -165,12 +188,13 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
     loadAvailableStudents();
   }, []);
 
-  const PageViewComponent: Record<ProjectPageView, ReactNode> = {
+  const PageViewComponent: Record<GroupPageView, ReactNode> = {
     Atividades: <Activities group={group} setGroup={setGroup} canEdit={canEdit} />,
     Planejamentos: <Planning group={group} setGroup={setGroup} canEdit={canEdit} />,
     'Loja Online': (
       <GroupRequests
         handleFinishOrder={handleFinishOrder}
+        handleFinishResaleOrder={handleFinishResaleOrder}
         handleSave={handleSaveGroup}
         group={group}
         handleApproveOrder={handleApproveOrder}
@@ -179,6 +203,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
         setStoreIsOpened={setStoreIsOpened}
         cartIsOpened={cartIsOpened}
         storeMakerList={stock}
+        refreshStock={handleRefreshStock}
       />
     ),
     Membros: (
@@ -196,7 +221,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
     <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflow="hidden" mb="-1rem" pb="1rem">
       <Flex justify="space-between" gap="1rem" align="center">
         <TabSwitch
-          tabs={projectPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
+          tabs={groupPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
           onSwitch={(view) => setPageView(view as any)}
           currentTabColor="primary700"
         />
@@ -211,12 +236,12 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
           color="white"
           boxShadow="sm"
           minW="7rem"
-          isDisabled={!canEdit}
+          isDisabled={!canEdit || user.role !== `student`}
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}
         />
       </Flex>
-      {PageViewComponent[pageView]}
+      <AnimatePresence mode="wait">{PageViewComponent[pageView]}</AnimatePresence>
     </Flex>
   );
 };
@@ -240,7 +265,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
     // TODO: add in use effect
     const group = await getGroupById(`${query.group_id}`);
 
-    return { props: { selectedPage, pageTitle: group.display_name, group } };
+    return { props: { selectedPage, pageTitle: group.display_name, group, headerLabel: `Projeto ${group.project?.title} | ${group.display_name}` } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

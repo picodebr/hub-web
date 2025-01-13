@@ -5,7 +5,7 @@ import { zodErrorHandler } from '@/_base/errors/zodErrorHandler';
 
 export function useInputHandler<T>(props?: IInputHandlerProps<T>): IInputHandlerOutput<T> {
   const [errors, setErrors] = useState<InputHandlerErrorType<T>>({} as any);
-  const [data, setData] = useState<T>({} as T);
+  const [data, setData] = useState<T>(props?.data || ({} as T));
 
   const onInputChange = (field: keyof T, value: any) => {
     setErrors((e) => ({ ...e, [field]: undefined }));

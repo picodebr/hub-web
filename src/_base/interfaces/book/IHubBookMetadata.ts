@@ -4,6 +4,8 @@ export interface IHubBookMetadata {
 
 export interface IHubBookMetadataReward {
   activity: string;
+  step: string;
+  color: string;
   reward_value: string;
   reward_type: BookMetadataRewardType;
 }

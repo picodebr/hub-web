@@ -18,6 +18,7 @@ import { FormStep } from './components/Form';
 import { FinishStep } from './components/Finish';
 import { SignUpPageStepsType } from './interfaces';
 import { InputValueType } from '@/_base/interfaces/shared';
+import { removeSpaceFromString, removeAccents, usernameChecker } from '@/_base/utils/usernameUtils';
 
 const SizeMapper: Record<SignUpPageStepsType, string> = {
   USER_TYPE: '28.5rem',
@@ -89,15 +90,6 @@ const SignUp: React.FC = () => {
     [userType],
     true,
   );
-
-  const removeSpaceFromString = (str: string) =>
-    str
-      .split(' ')
-      .filter((e) => e)
-      .join(' ');
-
-  const usernameRegex = /^[a-zA-Z0-9_-]{0,}$/;
-  const usernameChecker = (value: string, minLength = 8) => usernameRegex.test(value) && removeSpaceFromString(value).length >= minLength;
 
   const handleRegisterUser = useAsyncCallback(
     async () => {

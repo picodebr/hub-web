@@ -29,6 +29,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
   const { user, setUser } = useProfile();
 
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const { customActions } = useSelectedSchool();
 
@@ -49,6 +50,12 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
         setIsUpdating(false);
       }, 1000);
     }
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsOpen(true);
+    }, 250);
   }, []);
 
   return (
@@ -189,17 +196,57 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
       </Flex>
 
       {/* Menu */}
-      <Flex
-        margin="0 1.25rem 0 0"
-        p={{ base: '0.5rem 0.25rem 0.5rem 1.5rem', xl: '0.5rem 1.25rem 0.5rem 2.5rem' }}
-        direction="column"
-        gap="0.5rem"
-        overflow="hidden auto"
-        align="flex-end"
-        mb={{ base: `1rem`, xl: '2rem' }}
+      <motion.div
+        style={{
+          display: `flex`,
+          margin: '0 1.25rem 0 0',
+          padding: '0.5rem 0.25rem 0.5rem 1.5rem',
+          flexDirection: 'column',
+          gap: '0.5rem',
+          overflow: 'hidden auto',
+          alignItems: 'flex-end',
+          marginBottom: `1rem`,
+        }}
+        animate={isOpen ? 'open' : 'closed'}
+        variants={{
+          open: {
+            clipPath: 'inset(0% 0% 0% 0% round 10px)',
+            transition: {
+              type: 'spring',
+              bounce: 0,
+              duration: 0.7,
+              delayChildren: 0.3,
+              staggerChildren: 0.05,
+            },
+          },
+          closed: {
+            opacity: 0,
+            clipPath: 'inset(10% 50% 90% 50% round 10px)',
+            transition: {
+              type: 'spring',
+              bounce: 0,
+              duration: 0.3,
+            },
+          },
+        }}
       >
         {menuItems.map((item) => (
-          <Flex key={item.name} ref={item.ref as any} w="100%" direction="column" fontWeight="600">
+          <motion.div
+            key={item.name}
+            ref={item.ref as any}
+            style={{ width: `100%`, flexDirection: `column`, fontWeight: `600` }}
+            // initial={{ opacity: 0, scale: 0 }}
+            // animate={{ opacity: 1, scale: 1, x: [0, 100, 500, 100, 0] }}
+
+            variants={{
+              open: {
+                opacity: 1,
+                y: 0,
+                transition: { type: 'spring', stiffness: 300, damping: 24 },
+              },
+              closed: { opacity: 0, y: 20, transition: { duration: 0.2 } },
+            }}
+          >
             <Flex
               align="center"
               padding="10px 18px"
@@ -215,9 +262,9 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
               {item.icon && <Icon mr="3" fontSize="16" as={item.icon} />}
               {item.name}
             </Flex>
-          </Flex>
+          </motion.div>
         ))}
-      </Flex>
+      </motion.div>
       {!!customActions.length && (
         <Flex flex="1" color="primary700" gap="1.25rem" justify="center" align="flex-end" p="1rem 1rem 2rem">
           {customActions.map((action, i) => (

@@ -1,4 +1,5 @@
 import { IProject } from '../project';
+import { IHubUserSchool } from '../school';
 import { IHubUser } from '../user';
 
 export interface IHubClass {
@@ -10,4 +11,5 @@ export interface IHubClass {
   grade: string;
   students: IHubUser[];
   projects: IProject[];
+  hub_school: IHubUserSchool;
 }
