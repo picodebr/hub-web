@@ -16,6 +16,8 @@ import {
   Skeleton,
   Image,
   Textarea,
+  Button,
+  Grid,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
@@ -43,6 +45,8 @@ import { TextInput } from '@/components/Inputs/Text';
 import { addProject, updateProject } from '@/_base/services/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { HubStatus, hubStatuses } from '@/_base/interfaces/shared';
+import { GenericButton } from '@/components/Buttons/Generic';
+import { TbReload } from 'react-icons/tb';
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -399,6 +403,41 @@ const Class: React.FC<IProps> = ({ classId }) => {
             { label: 'XP', field: 'xp' },
           ]}
         />
+      ) : pageView === 'Projetos' ? (
+        <Grid gap="1rem" overflow="auto" gridTemplateColumns="repeat(auto-fill, minmax(210px, 1fr))" padding="2rem" borderRadius="md" flex="1">
+          {dataProjects.map((project) => (
+            <Flex
+              key={project.id}
+              direction="column"
+              h="100%"
+              w="210px"
+              gap="0.5rem"
+              cursor="pointer"
+              bg="white"
+              border="1px"
+              borderColor="gray300"
+              borderRadius="md"
+              p="1rem"
+              boxShadow="md"
+              onClick={() => router.push(`/projects/${project.id}`)}
+            >
+              <Flex
+                backgroundImage={project.thumbnail || '/images/book.svg'}
+                backgroundSize="contain"
+                backgroundPosition="center"
+                backgroundRepeat="no-repeat"
+                h="250px"
+                borderRadius="4px"
+              />
+              <Flex justify="space-between">
+                <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="wrap" overflow="hidden" color="gray600">
+                  {project.name}
+                </Text>
+                <Flex>{project?.user_avatar}</Flex>
+              </Flex>
+            </Flex>
+          ))}
+        </Grid>
       ) : (
         <ProjectTable
           rows={dataProjects}
@@ -436,6 +475,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
           ]}
         />
       )}
+
       {isLoading && <Skeleton isLoaded={false} h="4.5rem" w="100%" />}
 
       <SmallModal
@@ -491,6 +531,12 @@ const Class: React.FC<IProps> = ({ classId }) => {
         size="2xl"
       >
         <Flex direction="column" gap="1rem">
+          <Flex>
+            <Button gap="1rem" onClick={() => setModalStep('creation_topic')}>
+              <TbReload />
+              Gerar novamente
+            </Button>
+          </Flex>
           <Flex>
             <Text color="gray500" fontSize="15px">
               Título do Projeto
