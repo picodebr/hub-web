@@ -56,7 +56,7 @@ export const GroupRequests: React.FC<IProps> = ({
     Marketplace: (
       <Resale onChangeView={setPageView} group={group} onFinishResaleOrder={handleFinishResaleOrder} canEdit={canEdit} cartIsOpened={cartIsOpened} />
     ),
-    'Items do grupo': <GroupItems group={group} refreshStock={refreshStock} />,
+    'Itens do grupo': <GroupItems group={group} refreshStock={refreshStock} />,
   };
   return (
     <Flex direction="column" gap="1rem" overflow="hidden" h="100%">
