@@ -1,4 +1,4 @@
-import { Flex, Grid, Text, Image } from '@chakra-ui/react';
+import { Flex, Grid, Text, Image, Tooltip, Button } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 
@@ -10,6 +10,8 @@ import { NumberInput } from '@/components/Inputs/Number';
 import { EMPTY_RESALE_STOCK_ITEM, IResaleStockParams, resaleStockSchema } from '@/_base/interfaces/storeMaker/IResaleStockMakerParams';
 import { resaleStockItem } from '@/_base/services/storeMaker';
 import { useSelectedSchool } from '@/components/Page/components/Header';
+import { formatCurrency } from '@/_base/utils';
+import { MdOutlineShoppingCart } from 'react-icons/md';
 
 type CustomStoreResale = IStoreMakerItem & IHubGroupOrderItem & IHubGroupOrder & { hub_group_order_item_id: string };
 
@@ -26,8 +28,8 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
   const [selectedStoreItem, setSelectedStoreItem] = useState<CustomStoreResale | null>(null);
 
   const recommendedPrice = useMemo(
-    () => Math.round(Number(selectedStoreItem?.price || 0) - Number(selectedStoreItem?.price || 0) * (modalStep?.endsWith(`teacher`) ? 0.1 : 0.2)),
-    [selectedStoreItem],
+    () => Math.round(Number(selectedStoreItem?.price || 0) - Number(selectedStoreItem?.price || 0) * (modalStep?.endsWith(`teacher`) ? 0.2 : 0.1)),
+    [selectedStoreItem, modalStep],
   );
   const { school } = useSelectedSchool();
   const { user } = useAuth();
@@ -55,8 +57,9 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
       store_maker_item_id: selectedStoreItem?.store_item?.id || ``,
       hub_group_order_item_id: selectedStoreItem?.hub_group_order_item_id || ``,
       hub_school_id: school?.hub_school_id || ``,
+      price: `${Math.round(Number(selectedStoreItem?.price) - Number(selectedStoreItem?.price) * (modalStep?.endsWith(`teacher`) ? 0.2 : 0.1))}`,
     }));
-  }, [selectedStoreItem, school]);
+  }, [selectedStoreItem, school, modalStep]);
 
   const handleResaleItem = useAsyncCallback(
     async () => {
@@ -114,49 +117,72 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
             overflow="hidden auto"
           >
             {storeMakerList.map((item, i) => (
-              <Flex key={`${item.id} - ${i}`} position="relative" w="fit-content" h="fit-content">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.75 }}
-                  style={{
-                    display: `flex`,
-                  }}
-                  onClick={() => {
-                    setSelectedStoreItem(item);
-                    setData((e) => ({
-                      ...e,
-                      price: `${Math.round(Number(item?.price) - Number(item?.price) * (modalStep?.endsWith(`teacher`) ? 0.1 : 0.2))}`,
-                    }));
-                    setModalStep(`default`);
-                  }}
-                >
-                  <Flex
-                    direction="column"
-                    gap="0.5rem"
-                    cursor="pointer"
-                    fontWeight="500"
-                    color="gray700"
-                    fontSize="14px"
-                    align="center"
-                    justify="space-between"
-                    height={{ base: `13.5rem`, lg: '15.5rem' }}
-                    width={{ base: `12rem`, lg: '14rem' }}
-                    border="1px"
-                    borderColor="gray300"
-                    borderRadius="md"
-                    overflow="hidden"
-                  >
-                    <Image src={item.picture} maxHeight={{ base: `8rem`, lg: `10rem` }} w="100%" />
-                    <Flex display="flex" direction="column" align="center" gap="2px" minH="3.5rem" maxH="3.5rem" w="100%">
-                      <Text noOfLines={2} px="0.5rem" flex="1">
-                        {item.name}
-                      </Text>
+              <Flex
+                key={`${item.id} - ${i}`}
+                direction="column"
+                gap="0.5rem"
+                cursor="pointer"
+                fontWeight="500"
+                color="gray700"
+                fontSize="14px"
+                align="center"
+                justify="space-between"
+                height={{ base: `15.5rem`, lg: '17.5rem' }}
+                width={{ base: `13rem`, lg: '15rem' }}
+                border="1px"
+                borderColor="gray300"
+                pb="0.5rem"
+                borderRadius="md"
+                overflow="hidden"
+              >
+                <Tooltip label={item.name}>
+                  <Image src={item.picture} minHeight={{ base: `8rem`, lg: `10rem` }} h="100%" w="100%" />
+                </Tooltip>
+                <Flex display="flex" align="center" w="100%" h="4.35rem">
+                  <Flex direction="column" gap="0.75rem" justify="space-between" h="100%" overflow="hidden" flex="1">
+                    <Text noOfLines={2} px="0.5rem" flex="1" fontSize="13px">
+                      {item.name}
+                    </Text>
+                    <Text noOfLines={1} px="0.5rem" h="min-content" py="0" fontWeight="400" fontSize="11px">
+                      {`${item.quantity || 0} ${item.quantity === 1 ? 'unidade' : 'unidades'}`}
+                    </Text>
+                  </Flex>
+                  <Flex direction="column" justify="space-between" align="flex-end" h="100%" flex="1">
+                    <Text px="0.5rem" fontSize="12px" fontWeight="400" whiteSpace="nowrap" textAlign="right">
+                      Patrimônio acumulado
+                    </Text>
+                    <Flex align="center" gap="0.5rem" flex="1">
+                      <Image src="/icons/coin.svg" />
                       <Text noOfLines={1} px="0.5rem" flex="1" fontWeight="400">
-                        {`${item.quantity || 0} ${item.quantity === 1 ? 'unidade' : 'unidades'}`}
+                        {formatCurrency(item.quantity * Number(item.price))}
                       </Text>
                     </Flex>
+                    <Text noOfLines={1} px="0.5rem" fontWeight="400" fontSize="10px">
+                      {`${formatCurrency(item.price)} / unidade`}
+                    </Text>
                   </Flex>
-                </motion.button>
+                </Flex>
+                <Flex>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.75 }}
+                    style={{
+                      display: `flex`,
+                    }}
+                    onClick={() => {
+                      setSelectedStoreItem(item);
+                      setData((e) => ({
+                        ...e,
+                        price: `${Math.round(Number(item?.price) - Number(item?.price) * (modalStep?.endsWith(`teacher`) ? 0.2 : 0.1))}`,
+                      }));
+                      setModalStep(`default`);
+                    }}
+                  >
+                    <Button size="xs" bg="primary700" color="#fff" _hover={{}} fontWeight={400} leftIcon={<MdOutlineShoppingCart fontSize="16px" />}>
+                      Vender
+                    </Button>
+                  </motion.button>
+                </Flex>
               </Flex>
             ))}
           </Grid>
@@ -190,7 +216,6 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
             <Text fontSize="13px" fontWeight="500">
               {`${selectedStoreItem?.quantity || 0} ${selectedStoreItem?.quantity === 1 ? 'unidade' : 'unidades'} em estoque`}
             </Text>
-            <Text>{selectedStoreItem?.description}</Text>
           </Flex>
         </SmallModal>
 
@@ -244,7 +269,7 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
                 </Text>
                 <Flex align="center">
                   <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
-                    {Math.round(Number(selectedStoreItem?.price) - Number(selectedStoreItem?.price) * (modalStep?.endsWith(`teacher`) ? 0.1 : 0.2))}
+                    {Math.round(Number(selectedStoreItem?.price) - Number(selectedStoreItem?.price) * (modalStep?.endsWith(`teacher`) ? 0.2 : 0.1))}
                   </Text>
                   <Image src="/icons/coin.svg" />
                 </Flex>

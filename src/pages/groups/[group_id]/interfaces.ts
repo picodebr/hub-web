@@ -2,6 +2,6 @@ export const groupPageViews = <const>['Atividades', 'Planejamentos', 'Loja Onlin
 
 export type GroupPageView = (typeof groupPageViews)[number];
 
-export const groupOrdersPageViews = <const>['Pedidos', 'Loja PiCode', 'Items do grupo', 'Marketplace'];
+export const groupOrdersPageViews = <const>['Pedidos', 'Loja PiCode', 'Itens do grupo', 'Marketplace'];
 
 export type GroupOrdersPageView = (typeof groupOrdersPageViews)[number];

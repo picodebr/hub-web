@@ -1,5 +1,4 @@
-import { CurrencyType } from '../interfaces/ad';
-
+type CurrencyType = 'BRL' | 'EUR' | 'USD' | `PICOIN`;
 type CurrencyFuncType = (value: number | string, currency?: CurrencyType) => string;
 
 export const formatCurrency: CurrencyFuncType = (value, currency = 'BRL') => {
@@ -18,6 +17,9 @@ export const formatCurrency: CurrencyFuncType = (value, currency = 'BRL') => {
       break;
     case 'USD':
       prefix = '$';
+      break;
+    case 'PICOIN':
+      prefix = '💰';
       break;
     default:
       return 'Unknown Currency';

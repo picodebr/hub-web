@@ -1,9 +1,9 @@
 import { GetServerSideProps } from 'next';
 import { MdWarning } from 'react-icons/md';
-import { Flex } from '@chakra-ui/react';
+import { Flex, Image, Text } from '@chakra-ui/react';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { logError, cookieManager } from '@/_base/utils';
+import { logError, cookieManager, formatCurrency } from '@/_base/utils';
 import { GroupPageView, groupPageViews } from './interfaces';
 import { TabSwitch } from '@/components/TabSwitch';
 import { Activities } from './components/Atividades';
@@ -42,7 +42,17 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const canEdit =
     (user.role === `student` || group.project?.user_id === user.id) &&
     (user.role !== `student` || !!group.student_links.find((e) => e.hub_user_id === user.id));
+
   const needSave = useMemo<boolean>(() => JSON.stringify(group) !== JSON.stringify(savedGroup), [group, savedGroup]);
+  const { groupAssets, groupBalance } = useMemo(() => {
+    const groupAssets = group.orders
+      .filter((o) => !!o.approved_at)
+      .flatMap((e) => e.items.map((i) => ({ ...e, ...i, ...i.store_item })))
+      .reduce((acc, v) => (acc += v.quantity * Number(v.price)), 0);
+
+    const groupBalance = group.students.reduce((acc, v) => (acc += Number(v.metadata.coins)), 0);
+    return { groupAssets, groupBalance };
+  }, [group]);
 
   useEffect(() => {
     if (!school) return;
@@ -225,21 +235,49 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
           onSwitch={(view) => setPageView(view as any)}
           currentTabColor="primary700"
         />
+        <Flex gap="1rem" align="center">
+          <Flex gap="2rem" align="center" bg="#fff" borderRadius="md" p="0.5rem">
+            <Flex direction="column" gap="0.25rem" justify="space-between">
+              <Text textAlign="right" fontSize="15px" color="gray600">
+                Saldo do grupo
+              </Text>
+              <Flex align="center" gap="0.5rem" flex="1" justify="space-between">
+                <Image src="/icons/coin.svg" />
+                <Text whiteSpace="nowrap" fontWeight="400" fontSize="20px" color="gray500">
+                  {formatCurrency(groupBalance || 0)}
+                </Text>
+              </Flex>
+            </Flex>
+            <Flex direction="column" gap="0.25rem">
+              <Text textAlign="right" fontSize="15px" color="gray600">
+                Patrimônio do grupo
+              </Text>
+              <Flex align="center" gap="0.875rem" flex="1" position="relative" justify="space-between">
+                <Image w="1.2rem" src="/icons/coin.svg" zIndex="5" />
+                <Image w="1.2rem" src="/icons/coin.svg" position="absolute" left="-0.5rem" bottom="-0.1rem" zIndex="4" />
+                <Image w="1.2rem" src="/icons/coin.svg" position="absolute" left="0.5rem" bottom="-0.1rem" zIndex="4" />
+                <Text whiteSpace="nowrap" fontWeight="400" fontSize="20px" color="gray500">
+                  {formatCurrency(groupAssets || 0)}
+                </Text>
+              </Flex>
+            </Flex>
+          </Flex>
 
-        <GenericButton
-          label={pageView === `Loja Online` && storeIsOpened ? `Ver carrinho` : 'Salvar'}
-          onClick={() => (pageView === `Loja Online` && storeIsOpened ? setCartIsOpened((e) => !e) : handleSaveGroup(group.metadata))}
-          border="1px"
-          borderColor="gray300"
-          isLoading={isLoading}
-          bg={needSave ? 'primary500' : 'primary700'}
-          color="white"
-          boxShadow="sm"
-          minW="7rem"
-          isDisabled={!canEdit || user.role !== `student`}
-          _hover={{ filter: 'brightness(0.9)' }}
-          rightIcon={needSave ? <MdWarning /> : undefined}
-        />
+          <GenericButton
+            label={pageView === `Loja Online` && storeIsOpened ? `Ver carrinho` : 'Salvar'}
+            onClick={() => (pageView === `Loja Online` && storeIsOpened ? setCartIsOpened((e) => !e) : handleSaveGroup(group.metadata))}
+            border="1px"
+            borderColor="gray300"
+            isLoading={isLoading}
+            bg={needSave ? 'primary500' : 'primary700'}
+            color="white"
+            boxShadow="sm"
+            minW="7rem"
+            isDisabled={!canEdit || user.role !== `student`}
+            _hover={{ filter: 'brightness(0.9)' }}
+            rightIcon={needSave ? <MdWarning /> : undefined}
+          />
+        </Flex>
       </Flex>
       <AnimatePresence mode="wait">{PageViewComponent[pageView]}</AnimatePresence>
     </Flex>
