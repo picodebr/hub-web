@@ -9,13 +9,14 @@ import IRegisterUser from '@/_base/interfaces/user/IRegisterUser';
 import { Dispatch, SetStateAction } from 'react';
 import { FiUser } from 'react-icons/fi';
 import { formatDateInput } from '@/_base/utils';
-import { generateUsername, usernameChecker } from '@/_base/utils/usernameUtils';
+import { generateUsername } from '@/_base/utils/usernameUtils';
 
 interface IProps {
   isGoogleSignin: boolean;
   canSubmit: boolean;
   submitLoading: boolean;
   data: IRegisterUser;
+  user?: IRegisterUser;
   errors: InputHandlerErrorType<IRegisterUser>;
   setPasswordIsValid: Dispatch<SetStateAction<boolean>>;
   onInputChange: (field: keyof IRegisterUser, value: any) => void;
@@ -69,7 +70,7 @@ export const FormStep: React.FC<IProps> = ({
         />
 
         <TextInput
-          label="E-mail (opcional)"
+          label="E-mail (opcional para alunos)"
           value={data.email}
           isDisabled={isGoogleSignin}
           error={errors.email}
