@@ -129,7 +129,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
       <Flex justify="space-between">
         <TabSwitch
           tabs={projectPageViews
-            .filter((e) => (project.project?.book_id ? e : e !== `Atividades`))
+            .filter((e) => (project.project?.metadata?.steps?.filter((e) => e.parent).length ? e : e !== `Atividades`))
             .map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
           onSwitch={(view) => setPageView(view as any)}
           currentTabColor="primary700"

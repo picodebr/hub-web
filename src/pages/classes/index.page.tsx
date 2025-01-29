@@ -26,6 +26,7 @@ const Classes: React.FC = () => {
   const toast = useCustomToast();
 
   const getClasses = useAsyncCallback(async (school_id: string) => {
+    if (!school_id) return;
     const [userClasses, schoolClasses] = await Promise.all([listMyClasses(school_id), listAllClasses(school_id)]);
     setAllClasses(schoolClasses);
     setClasses({ _isLoading: false, data: userClasses });

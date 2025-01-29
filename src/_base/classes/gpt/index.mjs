@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import { OpenAI } from 'openai';
 
-(async () => {
+const gpt = async () => {
   const grade = 6;
   const topic = `Biologia`;
   try {
@@ -38,4 +38,6 @@ import { OpenAI } from 'openai';
   }
 
   return {};
-})();
+};
+
+// gpt()

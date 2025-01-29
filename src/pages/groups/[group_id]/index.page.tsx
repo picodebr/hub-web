@@ -3,7 +3,7 @@ import { MdWarning } from 'react-icons/md';
 import { Flex, Image, Text } from '@chakra-ui/react';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { logError, cookieManager, formatCurrency } from '@/_base/utils';
+import { logError, cookieManager, formatCoin } from '@/_base/utils';
 import { GroupPageView, groupPageViews } from './interfaces';
 import { TabSwitch } from '@/components/TabSwitch';
 import { Activities } from './components/Atividades';
@@ -244,7 +244,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
               <Flex align="center" gap="0.5rem" flex="1" justify="space-between">
                 <Image src="/icons/coin.svg" />
                 <Text whiteSpace="nowrap" fontWeight="400" fontSize="20px" color="gray500">
-                  {formatCurrency(groupBalance || 0)}
+                  {formatCoin(groupBalance || 0)}
                 </Text>
               </Flex>
             </Flex>
@@ -257,7 +257,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
                 <Image w="1.2rem" src="/icons/coin.svg" position="absolute" left="-0.5rem" bottom="-0.1rem" zIndex="4" />
                 <Image w="1.2rem" src="/icons/coin.svg" position="absolute" left="0.5rem" bottom="-0.1rem" zIndex="4" />
                 <Text whiteSpace="nowrap" fontWeight="400" fontSize="20px" color="gray500">
-                  {formatCurrency(groupAssets || 0)}
+                  {formatCoin(groupAssets || 0)}
                 </Text>
               </Flex>
             </Flex>
