@@ -101,6 +101,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
     () =>
       sortedProjects?.map((project) => ({
         id: project.id,
+        thumbnail: project.project?.metadata?.thumbnail,
         user_avatar: (
           <Flex position="relative">
             {!project.educator.id && project.project_id ? (
@@ -147,23 +148,6 @@ const Class: React.FC<IProps> = ({ classId }) => {
                 border="1px"
                 borderColor="gray200 !important"
               />
-            )}
-            {project.educator?.id && project.project_id && (
-              <Flex
-                position="absolute"
-                color="primary300"
-                right="-0.75rem"
-                bg="#ffffff55"
-                borderRadius="50%"
-                border="1px"
-                borderColor="gray200"
-                h="30px"
-                w="30px"
-                justify="center"
-                align="center"
-              >
-                <Image src="/logo/pi-logo-dark.svg" maxH="1.65rem" minH="1.65rem" title="Projeto da PiCode" />
-              </Flex>
             )}
           </Flex>
         ) as any,
@@ -255,6 +239,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
         title: step.title || '',
         description: step.description || null,
         position: step.position,
+        parent: `default`,
       })),
     );
     const draftProject: IProject = {
@@ -421,7 +406,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
             >
               <Flex
                 backgroundImage={project.thumbnail || '/images/book.svg'}
-                backgroundSize="contain"
+                backgroundSize={project.thumbnail ? `cover` : `contain`}
                 backgroundPosition="center"
                 backgroundRepeat="no-repeat"
                 h="250px"
