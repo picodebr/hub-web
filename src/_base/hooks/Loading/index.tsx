@@ -1,11 +1,10 @@
 import { PropsWithChildren, useContext, useEffect, useState, createContext } from 'react';
-import { Flex, Image, Slide, Text } from '@chakra-ui/react';
+import { Flex, Image, Slide, Text, useColorMode } from '@chakra-ui/react';
 
 import { ILoadingConfig, ILoadingContext, ILoadingProviderProps } from './interfaces';
 import { useAuth } from '../Auth';
 import { Logo } from '@/components/Logo';
 import { formatShortName } from '@/_base/utils';
-import { EMPTY_HUB_USER } from '@/_base/interfaces/user';
 
 const defaultConfig: ILoadingConfig = { isLoading: false, type: 'spinner' };
 
@@ -18,6 +17,7 @@ const LoadingContext = createContext<ILoadingContext>({
 export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>> = ({ children, changeSignal }) => {
   const [loadingConfig, setLoadingConfig] = useState({ ...defaultConfig });
   const [randomMsg, setRandomMsg] = useState('');
+  const { colorMode } = useColorMode();
 
   const { user } = useAuth();
 
@@ -45,15 +45,16 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         width="100vw"
         height="100vh"
         zIndex="9999"
-        bg={loadingConfig.type === 'spinner' ? 'transparent' : 'primary100'}
-        transition="all 0.35s"
+        bg={loadingConfig.type === `darken-spinner` ? '#00000055' : ''}
+        transition="all 0.35s, background 0.5s"
         opacity={loadingConfig.isLoading ? '1' : '0'}
         pointerEvents={loadingConfig.isLoading ? 'auto' : 'none'}
       >
         {loadingConfig.type !== 'spinner' && (
           <>
-            <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
-            <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" />
+            {/* <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
+            <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" /> */}
+            <Image src={`/patterns/bg-${colorMode}.svg`} zIndex="-1" h={{ base: '0', lg: '0' }} />
           </>
         )}
 
@@ -66,35 +67,24 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         {loadingConfig.type === 'spinner' && (
           <Slide direction="bottom" in={loadingConfig.isLoading} style={{ zIndex: 10, justifyContent: 'flex-end', display: 'flex' }}>
             <Flex>
-              <Image
-                src="/loading/rocket-picode.gif"
-                h="12rem"
-                m="0 1rem -1.5rem 0"
-                // css={`
-                //   animation: letterRotation 1s linear infinite;
-
-                //   @keyframes letterRotation {
-                //     from {
-                //       transform: rotateZ(0deg);
-                //     }
-
-                //     to {
-                //       transform: rotateZ(360deg);
-                //     }
-                //   }
-                // `}
-              />
+              <Image src="/loading/rocket-picode.gif" h="16rem" m={{ base: '0 0 -2.5rem', sm: '0 1rem -1.5rem 0' }} />
             </Flex>
           </Slide>
         )}
 
+        {loadingConfig.type === 'darken-spinner' && (
+          <Flex w="100vw" h="100vh" align="center" justify="center">
+            <Image src="/loading/rocket-picode.gif" h="16rem" m={{ base: '0 0 -2.5rem', sm: '0 1rem -1.5rem 0' }} />
+          </Flex>
+        )}
+
         {loadingConfig.type === 'fullscreen-with-info' && (
-          <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md">
+          <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md" p={{ base: '1rem' }}>
             <Flex
               bgColor="white"
               display="flex"
-              w="450px"
-              h="557px"
+              w={{ base: '100%', sm: '450px' }}
+              h={{ base: 'fit-content', sm: '557px' }}
               p="24px"
               direction="column"
               align="center"
@@ -111,7 +101,6 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
                     <Flex gap="5px" direction="row">
                       <Text textAlign="center" color="gray900" fontWeight="600" fontSize="20px">
                         {(user.metadata.first_access || 0) > Date.now() - 1000 * 60 ? ` Seja muito bem-vindo(a),` : `Bem-vindo(a) de volta,`}
-
                       </Text>
                       <Text textAlign="center" color="primary300" fontWeight="600" fontSize="20px">
                         {formatShortName(user?.name, true)}

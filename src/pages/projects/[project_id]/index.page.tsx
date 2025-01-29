@@ -3,6 +3,7 @@ import { MdWarning } from 'react-icons/md';
 import { Flex } from '@chakra-ui/react';
 import { ReactNode, useMemo, useState } from 'react';
 import axios from 'axios';
+import { AnimatePresence } from 'framer-motion';
 
 import { logError, cookieManager } from '@/_base/utils';
 import { ProjectPageView, projectPageViews } from './interfaces';
@@ -21,6 +22,9 @@ import { getPresignedUrl } from '@/_base/services/upload';
 import { IUpdateProjectParams } from '@/_base/interfaces/project';
 import { ICreateHubGroupParams, IHubGroup } from '@/_base/interfaces/group';
 import { acceptGroup, addGroupToProject, removeGroup } from '@/_base/services/group';
+import { Activities } from './components/Activities';
+import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
+import { updateStudentData } from '@/_base/services/student/updateStudentData';
 
 interface IProps {
   project: IProject;
@@ -39,12 +43,13 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const canEdit = user.id === hubProject.user_id;
   const needSave = useMemo<boolean>(() => JSON.stringify(project) !== JSON.stringify(savedProject) || !!files.length, [project, savedProject, files]);
 
-  const handleSave = useAsyncCallback(async () => {
+  const handleSave = useAsyncCallback(async (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward>) => {
+    const _project = newProject || project;
     const dto: IUpdateProjectParams = {
-      id: project.id,
-      title: project.title,
-      description: project.description || undefined,
-      metadata: project.metadata,
+      id: _project.id,
+      title: _project.title,
+      description: _project.description || undefined,
+      metadata: _project.metadata,
     };
     if (files.length) {
       const fileData = await Promise.all(files.map((f) => getPresignedUrl(f.type || '', 'user_projects')));
@@ -62,8 +67,19 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
 
     const updatedProject = await updateProject(dto);
 
-    setProject(updatedProject);
-    setSavedProject(updatedProject);
+    if (newRewards) {
+      await Promise.all(
+        Object.keys(newRewards).map((studentId) =>
+          updateStudentData(
+            studentId,
+            Number(newRewards[studentId].reward_value) + (_project.hub_class.students.find((s) => s.id === studentId)?.metadata?.coins || 0),
+          ),
+        ),
+      );
+    }
+
+    setProject((p) => ({ ...p, ...updatedProject, hub_class: p.hub_class, educator: p.educator }));
+    setSavedProject((p) => ({ ...p, ...updatedProject, hub_class: p.hub_class, educator: p.educator }));
     toast({ status: 'success', description: 'Projeto salvo' });
   }, []);
 
@@ -104,22 +120,24 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} canEdit={canEdit} />,
     Materiais: <Materials project={project} setProject={setProject} canEdit={canEdit} />,
+    Atividades: <Activities project={project} setProject={setProject} canEdit={canEdit} handleSave={handleSave} />,
     Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} />,
     Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} />,
   };
-
   return (
     <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
       <Flex justify="space-between">
         <TabSwitch
-          tabs={projectPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
+          tabs={projectPageViews
+            .filter((e) => (project.project?.metadata?.steps?.filter((e) => e.parent).length ? e : e !== `Atividades`))
+            .map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
           onSwitch={(view) => setPageView(view as any)}
           currentTabColor="primary700"
         />
 
         <GenericButton
           label="Salvar"
-          onClick={handleSave}
+          onClick={() => handleSave()}
           border="1px"
           borderColor="gray300"
           bg={needSave ? 'primary500' : 'primary700'}
@@ -130,7 +148,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
           rightIcon={needSave ? <MdWarning /> : undefined}
         />
       </Flex>
-      {PageViewComponent[pageView]}
+      <AnimatePresence mode="wait">{PageViewComponent[pageView]}</AnimatePresence>
     </Flex>
   );
 };

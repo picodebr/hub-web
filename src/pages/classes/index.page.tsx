@@ -1,34 +1,34 @@
-import { Badge, Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Skeleton } from '@chakra-ui/react';
+import { Badge, Checkbox, Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Skeleton } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
-import { FiEdit2, FiMoreVertical, FiUsers } from 'react-icons/fi';
+import { FiMoreVertical, FiUsers } from 'react-icons/fi';
 
-import { formatClassGrade } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
-import { useAsyncCallback } from '@/_base/hooks';
+import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
 import { IHubClass } from '@/_base/interfaces/class';
-import { addClass, listClasses, removeClass } from '@/_base/services/class';
+import { addClasses, listAllClasses, listMyClasses, removeClass } from '@/_base/services/class';
 import { EmptyPageData } from '@/components/EmptyPageData';
 import { SmallModal } from '@/components/Modal/Small';
-import { TextInput } from '@/components/Inputs/Text';
-import { InputValueType } from '@/_base/interfaces/shared/InputValueType';
 import { AvatarList } from '@/components/AvatarList';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 
 type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
 
 const Classes: React.FC = () => {
-  const [classCode, setClassCode] = useState<InputValueType<string>>({ value: '' });
   const [classes, setClasses] = useState<PageDataType<IHubClass>>({ data: [] });
-  const [newClass, setNewClass] = useState<IHubClass | null>(null);
+  const [allClasses, setAllClasses] = useState<IHubClass[]>([]);
   const [modalOpt, setOpenOpt] = useState<ModalType>({});
+  const [selectedClasses, setSelectedClasses] = useState<IHubClass[]>([]);
+
   const { school } = useSelectedSchool();
+  const toast = useCustomToast();
 
   const getClasses = useAsyncCallback(async (school_id: string) => {
-    const userClasses = await listClasses(school_id);
-
+    if (!school_id) return;
+    const [userClasses, schoolClasses] = await Promise.all([listMyClasses(school_id), listAllClasses(school_id)]);
+    setAllClasses(schoolClasses);
     setClasses({ _isLoading: false, data: userClasses });
   }, []);
 
@@ -37,20 +37,16 @@ const Classes: React.FC = () => {
     getClasses(school?.hub_school_id || ``);
   }, [school]);
 
-  const handleCheckClassCode = useAsyncCallback(async () => {
+  const handleAddClasses = useAsyncCallback(async () => {
     try {
-      if (classCode.value.replace(/\D/g, '').length !== 4) {
-        setClassCode({ error: 'Código inválido', value: '' });
-        return;
-      }
       setClasses((s) => ({ ...s, _isLoading: true }));
 
-      const addedClass = await addClass({ class_code: classCode.value });
+      const newClasses = await addClasses({ class_ids: selectedClasses.map((e) => e.id) });
 
-      setNewClass(addedClass);
-      setClasses((s) => ({ ...s, data: [addedClass, ...s.data] }));
+      setClasses((s) => ({ ...s, data: [...newClasses, ...s.data], _isLoading: false }));
+      onCloseModal();
     } catch {
-      setClassCode({ error: 'Código inválido', value: '' });
+      toast({ status: `error`, description: `Ocorreu um erro ao vincular as turmas, por favor tente novamente` });
     } finally {
       setClasses((s) => ({ ...s, _isLoading: false }));
     }
@@ -69,9 +65,17 @@ const Classes: React.FC = () => {
   }, []);
 
   const onCloseModal = () => {
-    setClassCode({ value: '' });
-    setNewClass(null);
+    setSelectedClasses([]);
     setOpenOpt({});
+  };
+
+  const classIsAvailable = (hubClass: IHubClass): boolean => {
+    return !classes.data?.find((e) => e.id === hubClass.id);
+  };
+
+  const handleChangeSelectedClass = (hubClass: IHubClass, adding: boolean) => {
+    if (!selectedClasses.find((e) => e.id === hubClass.id) && adding) setSelectedClasses((s) => [hubClass, ...s]);
+    if (!adding) setSelectedClasses((s) => s.filter((e) => e.id !== hubClass.id));
   };
 
   return (
@@ -163,36 +167,61 @@ const Classes: React.FC = () => {
         ))
       )}
       <SmallModal
-        title="Código da turma"
+        title={`Turmas da escola ${school?.display_name}`}
         show={!!modalOpt.class_code}
-        onConfirm={newClass ? onCloseModal : handleCheckClassCode}
-        okText={newClass ? 'OK' : 'Confirmar'}
-        onCancel={newClass ? undefined : onCloseModal}
-        topIcon={newClass ? 'checked' : 'ray'}
+        onConfirm={handleAddClasses}
+        okText="Confirmar"
+        size="lg"
+        isLoading={classes._isLoading}
+        onCancel={onCloseModal}
+        topIcon="ray"
+        disableOkButton={!selectedClasses.length}
       >
-        <Flex direction="column" maxW="300px" gap="1rem">
-          <Text color="gray500" fontSize="15px">
-            {newClass
-              ? `Parabéns, agora o ${formatClassGrade(newClass.grade)} também está contigo. Bons projetos`
-              : 'Insira o código da nova turma para adicionar as turmas lecionadas'}
-          </Text>
-          {!newClass && (
-            <TextInput
-              placeholder="Digite o código"
-              _placeholder={{ fontSize: '14px' }}
-              value={classCode.value}
-              onInputChange={(value) => setClassCode({ value })}
-              error={classCode.error}
-              leftElement={<FiEdit2 size="1rem" color="#98A2B3" />}
-            />
-          )}
+        <Flex direction="column" gap="1rem">
+          {allClasses.map((hubClass) => (
+            <Flex
+              key={hubClass.id}
+              h="fit-content"
+              bgColor="white"
+              borderRadius="10px"
+              boxShadow="sm"
+              border="1px"
+              borderColor="gray200"
+              align="center"
+              padding="20px 24px"
+              color="primary700"
+              gap="16px"
+              fontSize="18px"
+              minH="5.5rem"
+              maxH="5.5rem"
+            >
+              <Flex flex="1" gap="1rem" justify="space-between" filter={classIsAvailable(hubClass) ? '' : 'grayscale(0.7)'} overflow="hidden">
+                <Text fontWeight="700" overflow="hidden" whiteSpace="nowrap" textOverflow="ellipsis" title={hubClass.display_name}>
+                  {hubClass.display_name}
+                </Text>
+                <Checkbox
+                  defaultChecked={!classIsAvailable(hubClass)}
+                  isDisabled={!classIsAvailable(hubClass)}
+                  size="lg"
+                  visibility="visible"
+                  border="2px"
+                  p="0.25rem"
+                  color="primary700"
+                  colorScheme="blue"
+                  borderRadius="4px"
+                  onChange={(v) => handleChangeSelectedClass(hubClass, v.target.checked)}
+                />
+              </Flex>
+            </Flex>
+          ))}
         </Flex>
       </SmallModal>
       <SmallModal
         title="Remover turma"
         show={!!modalOpt.confirm_remove}
         onConfirm={handleRemoveClass}
-        okText={newClass ? 'OK' : 'Confirmar'}
+        okText="Confirmar"
+        isLoading={classes._isLoading}
         onCancel={onCloseModal}
         topIcon="warning"
       >

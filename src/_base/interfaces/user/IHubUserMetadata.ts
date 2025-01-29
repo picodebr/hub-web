@@ -1,3 +1,4 @@
+import { IDailyChallenge } from '../challenges';
 import { HistoryDataType } from '../shared';
 
 export interface IHubUserMetadata {
@@ -8,4 +9,5 @@ export interface IHubUserMetadata {
   first_access?: number;
   coins?: number;
   kanban?: string;
+  daily_challenges?: IDailyChallenge;
 }

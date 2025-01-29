@@ -17,6 +17,7 @@ import {
 import { createCodeProjectFolderSchema } from '@/_base/interfaces/codeFolder/ICreateProjectFolderParams';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
+import { RiFolderSharedFill } from 'react-icons/ri';
 
 const CodeFolders: React.FC = () => {
   const [folders, setFolders] = useState<IProjectFolder[]>([]);
@@ -98,7 +99,8 @@ const CodeFolders: React.FC = () => {
 
   return (
     <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
-      <Flex align="center" justify="flex-end" h="fit-content">
+      <Flex align="center" justify="flex-end" h="fit-content" gap="1rem">
+        <PlusButton label="Compartilhados comigo" leftIcon={<RiFolderSharedFill />} onClick={() => router.push(`/code/shared`)} />
         <PlusButton label="Nova pasta" leftIcon={<FaPlus />} onClick={() => setOpenCreateModal(true)} />
       </Flex>
       <Skeleton display="flex" flexDirection="column" gap="1rem" overflow="hidden auto" isLoaded={!isLoading}>

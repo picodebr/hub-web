@@ -10,31 +10,43 @@ import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
 import { IHubUserSchool } from '@/_base/interfaces/school';
+import { MenuItemType } from '../../interfaces';
+import { MobileMenu } from '../MobileMenu';
+import { CustomActions } from '@/_base/interfaces/customActions';
 
 interface IProps {
   user?: IHubUser;
   headerLabel?: string;
+  menuItems: MenuItemType[];
+  page: string;
+  hideOnMobile?: boolean;
 }
 
-type TargetSchoolHookType = { school: IHubUserSchool | null; setSchool: (school: IHubUserSchool) => void };
-
+type TargetSchoolHookType = {
+  school: IHubUserSchool | null;
+  customActions: CustomActions[];
+  setSchool: (school: IHubUserSchool) => void;
+  setCustomActions: (customActions: CustomActions[]) => void;
+};
 export const useSelectedSchool = create<TargetSchoolHookType>(
   persist(
     (set) => ({
       school: null,
+      customActions: [],
       setSchool: (data: IHubUserSchool) => set(() => ({ school: data })),
+      setCustomActions: (data: CustomActions) => set(() => ({ customActions: data })),
     }),
     { name: `context-storage` },
   ) as any,
 );
 
-export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
+export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, hideOnMobile }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
 
   const router = useCustomRouter();
   const { colorMode } = useColorMode();
-  const { setSchool, school } = useSelectedSchool();
+  const { setSchool, school, setCustomActions } = useSelectedSchool();
 
   const data = user?.schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
   useUpdateEffect(() => {
@@ -43,6 +55,11 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
 
     if (target) {
       setSchool(target);
+      if (user?.role === `teacher`)
+        setCustomActions(
+          target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
+            [],
+        );
       setTimeout(() => {
         setIsLoading(false);
       }, 3000);
@@ -50,9 +67,18 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
   }, [selectedSchool]);
 
   useEffect(() => {
-    const target = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0];
+    const storage = JSON.parse(localStorage.getItem(`context-storage`) || `{}`);
+    const target: IHubUserSchool = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0] || storage?.state?.school;
 
-    if (target) setSchool(target);
+    if (target) {
+      setSchool(target);
+      if (user?.role === `teacher`)
+        setCustomActions(
+          target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
+            [],
+        );
+      else setCustomActions([]);
+    }
   }, [user]);
 
   return (
@@ -62,15 +88,17 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
       w="100%"
       alignItems="center"
       justifyContent="space-between"
-      padding="0 2rem"
+      padding={{ base: '0 1rem', lg: '0 2rem' }}
       borderRadius="0 0 0.4rem 0.4rem"
       borderColor="primary"
       bg="white"
       userSelect="none"
       boxShadow="md"
       position="relative"
+      display={{ base: hideOnMobile ? `none` : `flex`, lg: `flex` }}
     >
-      <Logo size="md" />
+      <Logo size="md" className="only-desktop" />
+      <MobileMenu menuItems={menuItems} page={page} />
       {!!headerLabel && (
         <Flex position="absolute" top="50%" left="50%" transform="translate(-50%, -50%)">
           <Tooltip label={`Projeto: ${headerLabel}`}>
@@ -87,6 +115,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
             value={selectedSchool?.value || school?.id}
             size="sm"
             style={{ paddingBottom: 5 }}
+            appearance="subtle"
             searchable={false}
             cleanable={false}
             onChange={(e) => setSelectedSchool(data.find((d) => d.value === e))}
@@ -98,7 +127,13 @@ export const Header: React.FC<IProps> = ({ user, headerLabel }) => {
           </Flex>
         </Tooltip>
         <Tooltip label="Sair">
-          <Flex cursor="pointer" transition="0.12s" _hover={{ filter: 'brightness(0.7)' }} onClick={() => router.push('/logout')}>
+          <Flex
+            cursor="pointer"
+            transition="0.12s"
+            _hover={{ filter: 'brightness(0.7)' }}
+            onClick={() => router.push('/logout', `spinner`)}
+            className="only-desktop"
+          >
             <FiLogOut color="#FDA29B" />
           </Flex>
         </Tooltip>

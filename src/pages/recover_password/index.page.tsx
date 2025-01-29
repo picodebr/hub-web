@@ -207,7 +207,7 @@ const RecoverPassword: React.FC = () => {
     PASSWORD_CHANGED: (
       <Flex direction="column" justify="space-between" h="100%">
         <Flex width="100%" marginTop="32px" gap="20px">
-          <GiCheckMark fontSize="40px" style={{ bgColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
+          <GiCheckMark fontSize="40px" style={{ background: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
@@ -291,7 +291,7 @@ const RecoverPassword: React.FC = () => {
     TEACHER_SENT: (
       <Flex direction="column" justify="space-between" h="100%">
         <Flex width="100%" marginTop="32px" gap="20px">
-          <GiCheckMark fontSize="40px" style={{ bgColor: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
+          <GiCheckMark fontSize="40px" style={{ background: '#E0EEFF', color: '#6699FF', borderRadius: '50%', padding: '8px' }} />
         </Flex>
         <Flex padding="20px 0" width="100%" color="gray900" align="center" gap="8px">
           <Flex direction="column" gap="8px">
@@ -325,6 +325,7 @@ const RecoverPassword: React.FC = () => {
       align="center"
       padding="24px"
       transition="all 0.2s"
+      mx={{ base: '1rem', md: 'auto' }}
       h={SizeMapper[step]}
     >
       <Logo />

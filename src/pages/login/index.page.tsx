@@ -13,15 +13,13 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
-import { AppReCaptcha } from '@/components/ReCaptcha';
 import { IAuthRequest, authSchema } from '@/_base/interfaces/auth';
-import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
 import { api } from '@/_base/classes/api';
 
 const LoginPage: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [keepLogged, setKeepLogged] = useState(false);
-  const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
+  // const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
 
   const { errors, onInputChange, data, submit } = useInputHandler<IAuthRequest>({ schema: authSchema });
   const { setLoadingConfig } = useLoading();
@@ -34,10 +32,10 @@ const LoginPage: React.FC = () => {
       // Prevent the user to click on the button more than one time
       setSubmitLoading(true);
 
-      if (!captcha.token) {
-        setCaptcha((e) => ({ ...e, error: 'Captcha obrigatório' }));
-        return;
-      } else setCaptcha((e) => ({ ...e, error: undefined }));
+      // if (!captcha.token) {
+      //   setCaptcha((e) => ({ ...e, error: 'Captcha obrigatório' }));
+      //   return;
+      // } else setCaptcha((e) => ({ ...e, error: undefined }));
 
       const { user, access_token } = googleAccessToken
         ? await googleLogin(googleAccessToken)
@@ -50,22 +48,22 @@ const LoginPage: React.FC = () => {
         toast({ status: `error`, description: `Seu cadastro está pendente de avaliação` });
         return;
       }
-
       // If keep logged in is checked, the token will be expires in 15 days
       cookieManager.setToken(access_token, keepLogged ? 15 : 1);
       api.defaults.headers.authorization = `Bearer ${access_token}`;
-      setUser(await validateSession());
+      const loggedUser = await validateSession();
+      setUser({ ...loggedUser, ...user });
 
       setLoadingConfig((cfg) => ({ ...cfg, isLoading: true, type: 'fullscreen-with-info' }));
 
       await new Promise((res) =>
         setTimeout(() => {
-          router.push('/profile');
+          router.push('/profile', `fullscreen-with-info`);
           setTimeout(() => res(true), 15000);
         }, 2000),
       );
     },
-    [router, captcha],
+    [router],
     false,
     () => setSubmitLoading(false),
   );
@@ -95,6 +93,7 @@ const LoginPage: React.FC = () => {
             label="Nome de Usuário ou E-mail"
             error={errors.identifier}
             value={data?.identifier}
+            color="gray900"
             onInputChange={(v) => onInputChange('identifier', v)}
             leftElement={<FiUser style={{ color: 'gray300' }} />}
             placeholder="Nome de Usuário"
@@ -123,7 +122,7 @@ const LoginPage: React.FC = () => {
         </Flex>
 
         <Flex fontSize="13px" gap="0.5rem" align="center" w="100%">
-          <Checkbox onChange={(e) => setKeepLogged(e.target.checked)} />
+          <Checkbox onChange={(e) => setKeepLogged(e.target.checked)} borderColor="gray300" />
           <Text fontWeight="medium" _hover={{ filter: 'brightness(1.5)' }} userSelect="none" color="gray700">
             Mantenha-me contectado
           </Text>
@@ -151,7 +150,7 @@ const LoginPage: React.FC = () => {
           />
         </Flex>
 
-        <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} />
+        {/* <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} /> */}
 
         <GenericButton btntype="primary" label="Entrar" onClick={() => submit(handleLogin)} isLoading={submitLoading} marginTop="8px" w="100%" />
       </Flex>

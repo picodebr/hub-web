@@ -1,6 +1,7 @@
 import { extendTheme } from '@chakra-ui/react';
 import 'rsuite/dist/rsuite-no-reset.min.css';
 import '../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 
 import { dark, light } from './colors';
 
@@ -25,21 +26,18 @@ export const globalTheme = extendTheme((props) => {
         'html, body': {
           height: '100%',
           width: '100%',
+          '.only-mobile': {
+            '@media (min-width: 1019px)': { display: `none` },
+          },
+          '.only-desktop': {
+            '@media (max-width: 1020px)': { display: `none` },
+          },
         },
         body: {
           background: '#fff',
           fontSize: '15px',
           color: '#3f3f3f',
           opacity: props.disabled ? '0.3' : '1',
-          '@media (max-width: 800px)': {
-            '*': { fontSize: '99% !important' },
-          },
-          '@media (max-width: 700px)': {
-            '*': { fontSize: '98% !important' },
-          },
-          '@media (max-width: 600px)': {
-            '*': { fontSize: '97% !important' },
-          },
         },
         'a:hover': {
           textDecoration: 'none!important',
@@ -61,10 +59,11 @@ export const globalTheme = extendTheme((props) => {
     },
     breakpoints: {
       base: '0px',
-      sm: '320px',
+      xs: '485px',
+      sm: '618px',
       md: '768px',
-      lg: '960px',
-      xl: '1200px',
+      lg: '1120px',
+      xl: '1367px',
       '2xl': '1536px',
     },
     semanticTokens,

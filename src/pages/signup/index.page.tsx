@@ -18,6 +18,7 @@ import { FormStep } from './components/Form';
 import { FinishStep } from './components/Finish';
 import { SignUpPageStepsType } from './interfaces';
 import { InputValueType } from '@/_base/interfaces/shared';
+import { removeSpaceFromString, removeAccents, usernameChecker } from '@/_base/utils/usernameUtils';
 
 const SizeMapper: Record<SignUpPageStepsType, string> = {
   USER_TYPE: '28.5rem',
@@ -57,7 +58,10 @@ const SignUp: React.FC = () => {
   }, [captcha.token, primaryCode.value]);
 
   const canSubmit = useMemo(
-    () => passwordIsValid && !Object.values(Object.assign(EMPTY_REGISTER_USER_DATA, { ...data, email: '_' })).filter((e) => !e).length,
+    () =>
+      passwordIsValid &&
+      data.password === data.password_confirmation &&
+      !Object.values(Object.assign(EMPTY_REGISTER_USER_DATA, { ...data, email: '_' })).filter((e) => !e).length,
     [passwordIsValid, data],
   );
 
@@ -84,17 +88,8 @@ const SignUp: React.FC = () => {
       }
     },
     [userType],
-    false,
+    true,
   );
-
-  const removeSpaceFromString = (str: string) =>
-    str
-      .split(' ')
-      .filter((e) => e)
-      .join(' ');
-
-  const usernameRegex = /^[a-zA-Z0-9_-]{0,}$/;
-  const usernameChecker = (value: string, minLength = 8) => usernameRegex.test(value) && removeSpaceFromString(value).length >= minLength;
 
   const handleRegisterUser = useAsyncCallback(
     async () => {
@@ -187,6 +182,7 @@ const SignUp: React.FC = () => {
       padding="24px"
       transition="all 0.2s"
       overflow="hidden"
+      mx={{ base: '1rem', md: 'auto' }}
       h={SizeMapper[step]}
     >
       <Logo />

@@ -1,4 +1,5 @@
 import { IHubBook } from '../book';
+import { IHubChallenge } from '../challenges';
 import { IHubVideo } from '../video';
 import { HubModuleLessonType } from './HubModuleLessonType';
 import { IHubModule } from './IHubModule';
@@ -20,4 +21,5 @@ export interface IHubModuleLesson {
   module: IHubModule;
   video: IHubVideo | null;
   book: IHubBook | null;
+  challenges: IHubChallenge[];
 }

@@ -1,5 +1,6 @@
-import { Button, Flex, Link, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Text } from '@chakra-ui/react';
+import { Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Text } from '@chakra-ui/react';
 import moment from 'moment';
+import { motion } from 'framer-motion';
 
 import { IProject } from '@/_base/interfaces/project';
 import { FiUsers } from 'react-icons/fi';
@@ -8,7 +9,7 @@ import { EMPTY_HUB_GROUP_DATA, ICreateHubGroupParams, IHubGroup, createHubGroupS
 import { GenericButton } from '@/components/Buttons/Generic';
 import { AvatarList } from '@/components/AvatarList';
 import { SmallModal } from '@/components/Modal/Small';
-import { useInputHandler } from '@/_base/hooks';
+import { useCustomRouter, useInputHandler } from '@/_base/hooks';
 import { TextInput } from '@/components/Inputs/Text';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 
@@ -22,6 +23,7 @@ interface IProps {
 export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup }) => {
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
 
+  const router = useCustomRouter();
   const { errors, onInputChange, data, submit, setData } = useInputHandler<ICreateHubGroupParams>({
     data: EMPTY_HUB_GROUP_DATA,
     schema: createHubGroupSchema,
@@ -39,7 +41,14 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
   };
 
   return (
-    <Flex w="100%" h="100%" direction="column" gap="24px" overflow="hidden auto" margin="auto">
+    <motion.div
+      key={'Groups'}
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -10, opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ display: `flex`, height: `100%`, overflow: `hidden auto`, flexDirection: `column`, gap: `24px`, width: `100%`, margin: `auto` }}
+    >
       <Flex justify="flex-end" align="center">
         <GenericButton
           label="Cadastrar grupo"
@@ -93,27 +102,29 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
       {project.groups
         .filter((group) => !!group.approved_at)
         .map((group) => (
-          <Link key={group.id} href={`/groups/${group.id}`} target="_blank">
-            <Flex
-              w="100%"
-              h="auto"
-              bg="white"
-              borderRadius="10px"
-              border="1px"
-              borderColor="gray300"
-              p="20px"
-              gap="1rem"
-              _hover={{ '#display_name': { transform: `scale(1.05)` } }}
-            >
-              <FiUsers size="50px" color="#21E080" />
-              <Flex direction="column">
-                <Text id="display_name" color="primary700" fontSize="18px" fontWeight="700" gap="4px" transition="transform 0.2s">
-                  {group.display_name}
-                </Text>
-                <AvatarList users={group.students || []} />
-              </Flex>
+          <Flex
+            key={group.id}
+            onClick={() => router.push(`/groups/${group.id}`)}
+            w="100%"
+            h="auto"
+            bg="white"
+            borderRadius="10px"
+            border="1px"
+            borderColor="gray300"
+            p="20px"
+            gap="1rem"
+            cursor="pointer"
+            transition="0.2s"
+            _hover={{ boxShadow: `md`, '#display_name': { transform: `scale(1.05)` } }}
+          >
+            <FiUsers size="50px" color="#21E080" />
+            <Flex direction="column">
+              <Text id="display_name" color="primary700" fontSize="18px" fontWeight="700" gap="4px" transition="transform 0.2s">
+                {group.display_name}
+              </Text>
+              <AvatarList users={group.students || []} />
             </Flex>
-          </Link>
+          </Flex>
         ))}
 
       <SmallModal
@@ -188,6 +199,6 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
           </Flex>
         </Flex>
       </SmallModal>
-    </Flex>
+    </motion.div>
   );
 };

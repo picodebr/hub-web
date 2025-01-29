@@ -49,19 +49,22 @@ const Courses: React.FC = () => {
       bgColor="white"
       direction="column"
       borderRadius="12px"
-      padding="20px 0"
+      padding="20px"
       gap="20px"
       textAlign="left"
       whiteSpace="nowrap"
       borderBottom="1px solid gray300"
       border="1px"
       borderColor="gray300"
+      boxShadow="md"
       color="gray600"
     >
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
         Meus cursos
       </Text>
-      <Skeleton isLoaded={!isLoading} m="0 2rem" rounded={8} h="250px" w="175px">
+      {isLoading ? (
+        <Skeleton isLoaded={false} m="0 2rem" rounded={8} h="250px" w="175px" />
+      ) : (
         <Grid
           gap="1.5rem"
           gridTemplateColumns="repeat(auto-fill, minmax(175px, 1fr))"
@@ -103,7 +106,7 @@ const Courses: React.FC = () => {
             </Flex>
           ))}
         </Grid>
-      </Skeleton>
+      )}
     </Flex>
   );
 };

@@ -1,48 +1,84 @@
-import { Flex, Grid, Text, Image, Accordion, AccordionItem, AccordionButton, AccordionIcon, AccordionPanel } from '@chakra-ui/react';
-import { OrdersPageView } from '../..';
-import { FiShoppingCart, FiTrash } from 'react-icons/fi';
+import {
+  Flex,
+  Grid,
+  Text,
+  Image,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionIcon,
+  AccordionPanel,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,
+  useDisclosure,
+  useUpdateEffect,
+} from '@chakra-ui/react';
+import { FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
 import { useMemo, useState } from 'react';
-import { BsArrowLeft } from 'react-icons/bs';
+import { Avatar } from '@chakra-ui/react';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { MdAddTask } from 'react-icons/md';
+import { motion } from 'framer-motion';
+
 import { IHubGroup } from '@/_base/interfaces/group';
 import { SmallModal } from '@/components/Modal/Small';
 import { IStockMaker, IStoreMakerItem } from '@/_base/interfaces/storeMaker';
-import { useCustomToast } from '@/_base/hooks';
-import { Avatar } from '@chakra-ui/react';
-import { FaArrowRightLong } from 'react-icons/fa6';
-import { formatCoin, formatShortName } from '@/_base/utils';
+import { useAuth, useCustomToast } from '@/_base/hooks';
+import { cookieManager, formatCoin, formatShortName } from '@/_base/utils';
 import { CoinIcon } from '@/components/Logo';
+import { dimensions } from '@/styles/global';
+import { GroupOrdersPageView } from '@/pages/groups/[group_id]/interfaces';
 
 type CustomStoreItem = IStoreMakerItem & { quantity: number };
 interface IProps {
-  onChangeView: (view: OrdersPageView) => void;
+  onChangeView: (view: GroupOrdersPageView) => void;
   onFinishOrder: (data: { id: string; quantity: number }[]) => void;
   canEdit: boolean;
   storeMakerList: IStockMaker[];
   group: IHubGroup;
+  cartIsOpened: boolean;
 }
 
-export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList, group }) => {
-  const [cart, setCart] = useState<CustomStoreItem[]>([]);
+export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList, group, cartIsOpened }) => {
+  const [cart, setCart] = useState<CustomStoreItem[]>(cookieManager.getCookie(`cart:${group.id}`, true) || []);
   const [orderPayload, setOrderPayload] = useState<{ id: string; quantity: number }[] | null>(null);
+  const [itemsWithoutStock, setItemsWithoutStock] = useState<string[]>([]);
 
-  const storeMakerList = storeList.map((e) => e.store_item);
+  const storeMakerList = storeList.filter((e) => !e.hub_user_id).map((e) => e.store_item);
 
   const toast = useCustomToast();
+  const { isOpen, onOpen, onClose } = useDisclosure({ defaultIsOpen: cartIsOpened || !!cookieManager.getCookie(`cart:${group.id}`) });
+  const { user } = useAuth();
+
+  useUpdateEffect(() => {
+    onOpen();
+  }, [cartIsOpened]);
+
+  useUpdateEffect(() => {
+    cookieManager.setCookie(`cart:${group.id}`, JSON.stringify(cart));
+  }, [cart]);
 
   const addItemInCart = (item: IStoreMakerItem) => {
     const targetItemInCard = cart.find((e) => e.id === item.id);
     const targetStock = storeList.find((e) => e.store_maker_item_id === item.id);
 
     if ((targetItemInCard?.quantity || 0) + 1 > (targetStock?.quantity || 0)) {
-      toast({ description: `Limite do estoque atingido`, status: `error` });
+      setItemsWithoutStock((e) => [...e, item.id]);
+      toast({ description: `Limite do estoque atingido`, status: `error`, position: `top` });
       return;
     }
 
     if (targetItemInCard)
       setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)));
     else setCart((e) => [...e, { ...item, quantity: 1 }]);
+    toast({ status: `success`, description: `Item adicionado ao carrinho`, position: `top` });
   };
 
   const totalPrice = useMemo(() => cart.reduce((acc, { price, quantity }) => (acc += Number(price) * quantity), 0), [cart]);
@@ -50,327 +86,344 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
   const haveMemberWithNegativeBalance = !!group.students.find((e) => (e.metadata.coins || 0) <= 0);
 
   return (
-    <Flex overflow="hidden" gap="1rem" flex="1">
-      <Flex
-        flex="1"
-        bgColor="white"
-        flexDirection="row"
-        borderRadius="12px"
-        padding="20px"
-        gap="20px"
-        textAlign="left"
-        display="flex"
-        overflow="hidden auto"
-        border="1px"
-        borderColor="gray200"
-      >
-        <Grid
-          gap="1rem"
-          gridTemplateColumns="repeat(auto-fill, minmax(12rem, 1fr))"
-          gridTemplateRows="minmax(min-content, max-content)"
-          padding="2rem"
-          borderRadius="md"
+    <motion.div
+      key={'Store'}
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -10, opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ display: `flex`, width: `100%`, height: `100%` }}
+    >
+      <Flex overflow="hidden" gap="1rem" flex="1" direction={{ base: `column-reverse`, lg: `row` }}>
+        <Flex
           flex="1"
+          bgColor="white"
+          flexDirection="row"
+          borderRadius="12px"
+          padding="20px"
+          gap="20px"
+          textAlign="left"
+          display="flex"
           overflow="hidden auto"
+          border="1px"
+          borderColor="gray200"
+          transition="ease-in-out 0.3s"
+          marginRight={{ base: 0, lg: isOpen ? '20rem' : 0 }}
         >
-          {storeMakerList.map((item) => (
-            <Flex key={item.id} position="relative" w="fit-content" h="fit-content">
-              <Flex
-                position="absolute"
-                top="-0.4rem"
-                right="-0.4rem"
-                w="24px"
-                h="24px"
-                bgColor="primary500"
-                borderRadius="6px"
-                align="center"
-                justify="center"
-                zIndex="1"
-                color="white"
-                cursor="pointer"
-                _hover={{ filter: `brightness(0.9)` }}
-                onClick={() => addItemInCart(item)}
-              >
-                <FiShoppingCart fontSize="14px" />
-              </Flex>
+          <Grid
+            gap="1rem"
+            gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(10rem, 1fr))', lg: 'repeat(auto-fill, minmax(12rem, 1fr))' }}
+            gridTemplateRows="minmax(min-content, max-content)"
+            padding="2rem"
+            borderRadius="md"
+            flex="1"
+            overflow="hidden auto"
+          >
+            {storeMakerList.map((item, i) => (
+              <Flex key={`${item.id} - ${i}`} position="relative" w="fit-content" h="fit-content">
+                {user.role === `student` && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.75 }}
+                    style={{
+                      display: `flex`,
+                      position: 'absolute',
+                      top: '-0.4rem',
+                      right: '-0.4rem',
+                      width: '28px',
+                      height: '28px',
+                      backgroundColor: cart.find((e) => e.id === item.id) ? `#32D583` : `#FF525C`,
+                      borderRadius: '6px',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: '1',
+                      color: 'white',
+                      cursor: 'pointer',
+                      padding: '1px 1px 0 0 ',
+                    }}
+                    onClick={() => addItemInCart(item)}
+                  >
+                    <MdAddTask fontSize="19px" />
+                    <Flex
+                      position="absolute"
+                      top="-0.5rem"
+                      right="-0.5rem"
+                      zIndex="20"
+                      border="1px"
+                      w="1.1rem"
+                      h="1.1rem"
+                      justify="center"
+                      align="center"
+                      borderColor={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
+                      color={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
+                      borderRadius="50%"
+                      bg="white"
+                    >
+                      {cart.find((e) => e.id === item.id)?.quantity || 0}
+                    </Flex>
+                  </motion.button>
+                )}
 
-              <Flex
-                direction="column"
-                gap="0.5rem"
-                cursor="pointer"
-                fontWeight="500"
-                color="gray700"
-                fontSize="14px"
-                align="center"
-                justify="space-between"
-                height="14.5rem"
-                width="12rem"
-                border="1px"
-                borderColor="gray300"
-                borderRadius="md"
-                overflow="hidden"
-              >
-                <Image src={item.picture} style={{ maxHeight: `10rem`, width: `100%` }} />
-                <Flex display="flex" justify="space-between" align="center" gap="9px" minH="3.5rem" maxH="3.5rem" w="100%">
-                  <Text noOfLines={2} px="0.5rem" flex="1">
-                    {item.name}
-                  </Text>
-                  <Flex display="flex" align="center" justify="center" gap="0.25rem" pr="0.5rem">
-                    <Image src="/icons/coin.svg" />
-                    <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
-                      {item.price}
+                <Flex
+                  direction="column"
+                  gap="0.5rem"
+                  cursor="pointer"
+                  fontWeight="500"
+                  color="gray700"
+                  fontSize="14px"
+                  align="center"
+                  justify="space-between"
+                  height={{ base: `12.5rem`, lg: '14.5rem' }}
+                  width={{ base: `10rem`, lg: '12rem' }}
+                  border="1px"
+                  borderColor={itemsWithoutStock.includes(item.id) ? `primary500` : 'gray300'}
+                  borderRadius="md"
+                  overflow="hidden"
+                >
+                  <Image src={item.picture} maxHeight={{ base: `8rem`, lg: `10rem` }} w="100%" />
+                  <Flex display="flex" justify="space-between" align="center" gap="9px" minH="3.5rem" maxH="3.5rem" w="100%">
+                    <Text noOfLines={2} px="0.5rem" flex="1">
+                      {item.name}
                     </Text>
-                  </Flex>
-                </Flex>
-              </Flex>
-            </Flex>
-          ))}
-        </Grid>
-      </Flex>
-
-      <Flex
-        display="column"
-        bg="white"
-        w="340px"
-        gap="2.5rem"
-        borderRadius="10px"
-        border="1px"
-        overflow="hidden"
-        justify="space-between"
-        borderColor="gray200"
-        p="1rem"
-        h="100%"
-      >
-        <Flex direction="column" overflow="hidden" flex="1" h="calc(100% - 10.2rem)">
-          <Accordion allowMultiple mb="0.75rem">
-            <AccordionItem border="none" borderBottom="1px" borderColor="gray300" pb="0.25rem">
-              <AccordionButton p="0.25rem">
-                <Flex w="100%" fontSize="15px" gap="0.5rem" align="center" justify="space-between">
-                  <Text>Saldo do grupo</Text>
-                  <Flex align="center" gap="0.35rem">
-                    <CoinIcon size="xs" />
-                    <Text>
-                      {formatCoin(
-                        group.students.reduce((total, student) => total + ((student.metadata.coins || 0) > 0 ? student.metadata.coins || 0 : 0), 0),
-                      )}
-                    </Text>
-                  </Flex>
-                </Flex>
-
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel pb={4} w="100%">
-                <Flex direction="column" gap="0.35rem" pt="0.25rem">
-                  {group.students.map((student) => (
-                    <Flex key={student.id} align="center" gap="0.35rem" w="100%">
-                      <Avatar src={student.avatar || undefined} size="xs" />
-                      <Text color="gray700" fontSize="13px" fontWeight="500">
-                        {formatShortName(student.name, true)}
+                    <Flex display="flex" align="center" justify="center" gap="0.25rem" pr="0.5rem">
+                      <Image src="/icons/coin.svg" />
+                      <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
+                        {item.price}
                       </Text>
-                      <Flex
-                        align="center"
-                        justify="flex-end"
-                        flex="1"
-                        color={formatCoin(student.metadata.coins).startsWith(`-`) ? `primary500` : undefined}
-                      >
-                        <Text>{formatCoin(student.metadata.coins)}</Text>
+                    </Flex>
+                  </Flex>
+                </Flex>
+              </Flex>
+            ))}
+          </Grid>
+        </Flex>
+
+        <Drawer isOpen={isOpen && user.role === `student`} placement="right" onClose={onClose}>
+          <DrawerOverlay bg="transparent" backdropFilter="blur(2px) " />
+          <DrawerContent mt={`calc(${dimensions.header.height} + 1.5rem)`} mb="1.5rem" borderRadius="md" p="0">
+            <DrawerCloseButton />
+            <DrawerHeader display="flex">
+              <Accordion allowMultiple mb="0.75rem" w="100%" mr="1.5rem">
+                <AccordionItem border="none" borderBottom="1px" borderColor="gray300" pb="0.25rem">
+                  <AccordionButton p="0.25rem">
+                    <Flex w="100%" fontSize="15px" gap="0.5rem" direction="column">
+                      <Text textAlign="left">Saldo do grupo</Text>
+                      <Flex align="center" gap="0.35rem">
+                        <CoinIcon size="xs" />
+                        <Text>
+                          {formatCoin(
+                            group.students.reduce(
+                              (total, student) => total + ((student.metadata.coins || 0) > 0 ? student.metadata.coins || 0 : 0),
+                              0,
+                            ),
+                          )}
+                        </Text>
                       </Flex>
                     </Flex>
-                  ))}
-                </Flex>
-              </AccordionPanel>
-            </AccordionItem>
-          </Accordion>
 
-          <Flex direction="column" overflow="hidden auto" gap="0.75rem" py="0.35rem">
-            {cart.map((item) => (
-              <Flex key={item.id} gap="12px" border="1px" borderColor="gray300" borderRadius="md" padding=".25rem">
-                <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
-                <Flex w="97.5px" display="column" align="center" justify="center" gap="9px" fontWeight="500" fontSize="14px" color="gray700">
-                  {item.name}
-                  <Flex display="flex" align="center" gap="9px" h="18px">
-                    <Image src="/icons/cash.svg" />
-                    <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
-                      {item.price}
-                    </Text>
+                    <AccordionIcon />
+                  </AccordionButton>
+                  <AccordionPanel pb={4} w="100%">
+                    <Flex direction="column" gap="0.35rem" pt="0.25rem">
+                      {group.students.map((student) => (
+                        <Flex key={student.id} align="center" gap="0.35rem" w="100%">
+                          <Avatar src={student.avatar || undefined} size="xs" />
+                          <Text color="gray700" fontSize="13px" fontWeight="500">
+                            {formatShortName(student.name, true)}
+                          </Text>
+                          <Flex
+                            align="center"
+                            justify="flex-end"
+                            flex="1"
+                            color={formatCoin(student.metadata.coins).startsWith(`-`) ? `primary500` : undefined}
+                          >
+                            <Text>{formatCoin(student.metadata.coins)}</Text>
+                          </Flex>
+                        </Flex>
+                      ))}
+                    </Flex>
+                  </AccordionPanel>
+                </AccordionItem>
+              </Accordion>
+            </DrawerHeader>
+
+            <DrawerBody display="flex" flexDirection="column" overflow="hidden auto" gap="0.75rem" py="0.35rem">
+              {cart.map((item, i) => (
+                <Flex key={`${item.id} - ${i}`} gap="12px" border="1px" borderColor="gray300" borderRadius="md" padding=".25rem">
+                  <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
+                  <Flex w="97.5px" display="column" align="center" justify="center" gap="9px" fontWeight="500" fontSize="14px" color="gray700">
+                    {item.name}
+                    <Flex display="flex" align="center" gap="9px" h="18px">
+                      <Image src="/icons/cash.svg" />
+                      <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
+                        {item.price}
+                      </Text>
+                    </Flex>
                   </Flex>
-                </Flex>
-                <Flex display="flex" justify="center" align="center">
-                  <Flex w="97.5px" h="40px" display="flex" justify="space-between" align="center">
-                    <FaMinus
-                      fontSize="10px"
-                      color="gray300"
-                      onClick={() =>
-                        setCart((e) =>
-                          item.quantity > 1
-                            ? e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity - 1 } : cartItem))
-                            : e.filter((cartItem) => cartItem.id !== item.id),
-                        )
-                      }
-                    />
-                    <Text fontSize="14px" fontWeight="500" color="gray500">
-                      {item.quantity}
-                    </Text>
-                    <FaPlus
+                  <Flex display="flex" justify="center" align="center">
+                    <Flex w="97.5px" h="40px" display="flex" justify="space-between" align="center">
+                      <FaMinus
+                        fontSize="10px"
+                        color="gray300"
+                        onClick={() =>
+                          setCart((e) =>
+                            item.quantity > 1
+                              ? e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity - 1 } : cartItem))
+                              : e.filter((cartItem) => cartItem.id !== item.id),
+                          )
+                        }
+                      />
+                      <Text fontSize="14px" fontWeight="500" color="gray500">
+                        {item.quantity}
+                      </Text>
+                      <FaPlus
+                        cursor="pointer"
+                        fontSize="10px"
+                        color="gray300"
+                        onClick={() =>
+                          setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)))
+                        }
+                      />
+                    </Flex>
+                  </Flex>
+                  <Flex display="flex" justify="center" align="center">
+                    <Flex
+                      bgColor="error100"
+                      w="25px"
+                      h="25px"
+                      borderRadius="10px"
+                      color="error800"
+                      display="flex"
+                      justify="center"
+                      align="center"
+                      fontSize="14px"
                       cursor="pointer"
-                      fontSize="10px"
-                      color="gray300"
-                      onClick={() =>
-                        setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)))
-                      }
-                    />
+                      _hover={{ filter: `brightness(0.9)` }}
+                      onClick={() => setCart((e) => e.filter((cartItem) => cartItem.id !== item.id))}
+                    >
+                      <FiTrash />
+                    </Flex>
                   </Flex>
                 </Flex>
-                <Flex display="flex" justify="center" align="center">
+              ))}
+            </DrawerBody>
+
+            <DrawerFooter justifyContent="flex-start">
+              <Flex direction="column" w="100%">
+                <Flex w="100%" justify="flex-end" align="center" gap="0.5rem" py="0.5rem">
+                  <Text fontSize="20px">Total</Text>
+                  <Image src="/icons/coin.svg" height="40px" />
+                  <Text fontSize="40px" fontWeight="700" color="primary900">
+                    {totalPrice}
+                  </Text>
+                </Flex>
+                <Flex direction="column" gap="1.35rem">
                   <Flex
-                    bgColor="error100"
-                    w="25px"
-                    h="25px"
-                    borderRadius="10px"
-                    color="error800"
-                    display="flex"
+                    userSelect="none"
+                    cursor={cart.length ? 'pointer' : 'not-allowed'}
+                    color="white"
+                    bgColor="primary600"
+                    p="0.5rem"
                     justify="center"
                     align="center"
-                    fontSize="14px"
-                    cursor="pointer"
+                    borderRadius="8px"
+                    fontWeight="600"
+                    opacity={cart.length ? `1` : `0.8`}
                     _hover={{ filter: `brightness(0.9)` }}
-                    onClick={() => setCart((e) => e.filter((cartItem) => cartItem.id !== item.id))}
+                    onClick={() =>
+                      !!cart.length &&
+                      setOrderPayload(
+                        cart.map((e) => ({
+                          id: e.id,
+                          quantity: e.quantity,
+                        })),
+                      )
+                    }
                   >
-                    <FiTrash />
+                    Solicitar pedido
+                  </Flex>
+                  <Flex>
+                    <Flex
+                      color="gray500"
+                      justify="center"
+                      align="center"
+                      gap="0.25rem"
+                      w="fit-content"
+                      margin="auto"
+                      cursor="pointer"
+                      fontSize="14px"
+                      _hover={{ filter: `brightness(0.5)` }}
+                      onClick={() => setCart([])}
+                    >
+                      Limpar carrinho
+                      <FaRegTrashCan />
+                    </Flex>
                   </Flex>
                 </Flex>
               </Flex>
-            ))}
-          </Flex>
-        </Flex>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
 
-        <Flex direction="column">
-          <Flex w="100%" justify="flex-end" align="center" gap="0.5rem" py="0.5rem">
-            <Text fontSize="20px">Total</Text>
-            <Image src="/icons/coin.svg" height="40px" />
-            <Text fontSize="40px" fontWeight="700" color="primary900">
-              {totalPrice}
-            </Text>
-          </Flex>
-          <Flex direction="column" gap="1.35rem">
-            <Flex
-              userSelect="none"
-              cursor={cart.length ? 'pointer' : 'not-allowed'}
-              color="white"
-              bgColor="primary600"
-              p="0.5rem"
-              justify="center"
-              align="center"
-              borderRadius="8px"
-              fontWeight="600"
-              opacity={cart.length ? `1` : `0.8`}
-              _hover={{ filter: `brightness(0.9)` }}
-              onClick={() =>
-                !!cart.length &&
-                setOrderPayload(
-                  cart.map((e) => ({
-                    id: e.id,
-                    quantity: e.quantity,
-                  })),
-                )
-              }
-            >
-              Solicitar pedido
+        <SmallModal
+          size="xl"
+          topIcon="checked"
+          title="Finalizar pedido"
+          show={!!orderPayload}
+          onConfirm={() => {
+            if (!orderPayload) return;
+            onFinishOrder(orderPayload);
+            setOrderPayload(null);
+            onChangeView(`Pedidos`);
+          }}
+          onCancel={() => setOrderPayload(null)}
+          disableOkButton={haveMemberWithNegativeBalance}
+        >
+          <Flex direction="column" gap="0.5rem">
+            {haveMemberWithNegativeBalance ? (
+              <>
+                <Text>
+                  Um ou mais membros do grupo possuem saldo negativo ou zerado, volte para finalizar o pedido quando todos membros estiverem com saldo
+                  positivo.
+                </Text>
+                <Text>Lembrando que você pode fazer uma doação aos membros caso possua saldo suficiente.</Text>
+              </>
+            ) : (
+              <>
+                <Text>{`O total da compra ficou em ${formatCoin(totalPrice)}`}</Text>
+                <Text>{`Sendo assim, o valor de ${formatCoin(
+                  totalPrice / group.students.length,
+                )} será descontado de cada participante do grupo.`}</Text>
+              </>
+            )}
+            <Flex direction="column" gap="6px" m="0.5rem 0 1rem">
+              {group.students.map((student) => (
+                <Flex key={student.id} w="100%" justify="space-between">
+                  <Flex gap="8px">
+                    <Avatar size="sm" name={student.name} src={student.avatar || ``} />
+                    <Flex align="center">{student.name}</Flex>
+                  </Flex>
+                  <Flex align="center" fontWeight="600" color={(student.metadata.coins || 0) > 0 ? 'green' : 'red'} gap="6px">
+                    <Text>{formatCoin(student.metadata.coins)}</Text>
+                    <FaArrowRightLong color="green" />
+                    <Text color={(student.metadata.coins || 0) - totalPrice / group.students.length > 0 ? 'gray800' : 'red'}>
+                      {formatCoin((student.metadata.coins || 0) - totalPrice / group.students.length)}
+                    </Text>
+                    <Image src="/icons/coin.svg" />
+                  </Flex>
+                </Flex>
+              ))}
             </Flex>
-            <Flex>
-              <Flex
-                color="gray500"
-                justify="center"
-                align="center"
-                gap="0.25rem"
-                w="fit-content"
-                margin="auto"
-                cursor="pointer"
-                fontSize="14px"
-                _hover={{ filter: `brightness(0.5)` }}
-                onClick={() => onChangeView(`orders`)}
-              >
-                <BsArrowLeft />
-                Sair da loja
-              </Flex>
-              <Flex
-                color="gray500"
-                justify="center"
-                align="center"
-                gap="0.25rem"
-                w="fit-content"
-                margin="auto"
-                cursor="pointer"
-                fontSize="14px"
-                _hover={{ filter: `brightness(0.5)` }}
-                onClick={() => setCart([])}
-              >
-                Limpar carrinho
-                <FaRegTrashCan />
+            <Flex w="100%" justify="space-between" mt="8px">
+              Valor total:
+              <Flex fontWeight="600">
+                {formatCoin(totalPrice)}
+                <Image src="/icons/coin.svg" />
               </Flex>
             </Flex>
           </Flex>
-        </Flex>
+        </SmallModal>
       </Flex>
-
-      <SmallModal
-        size="xl"
-        topIcon="checked"
-        title="Finalizar pedido"
-        show={!!orderPayload}
-        onConfirm={() => {
-          if (!orderPayload) return;
-          onFinishOrder(orderPayload);
-          setOrderPayload(null);
-          onChangeView(`orders`);
-        }}
-        onCancel={() => setOrderPayload(null)}
-        disableOkButton={haveMemberWithNegativeBalance}
-      >
-        <Flex direction="column" gap="0.5rem">
-          {haveMemberWithNegativeBalance ? (
-            <>
-              <Text>
-                Um ou mais membros do grupo possuem saldo negativo ou zerado, volte para finalizar o pedido quando todos membros estiverem com saldo
-                positivo.
-              </Text>
-              <Text>Lembrando que você pode fazer uma doação aos membros caso possua saldo suficiente.</Text>
-            </>
-          ) : (
-            <>
-              <Text>{`O total da compra ficou em ${formatCoin(totalPrice)}`}</Text>
-              <Text>{`Sendo assim, o valor de ${formatCoin(
-                totalPrice / group.students.length,
-              )} será descontado de cada participante do grupo.`}</Text>
-            </>
-          )}
-          <Flex direction="column" gap="6px" m="0.5rem 0 1rem">
-            {group.students.map((student) => (
-              <Flex key={student.id} w="100%" justify="space-between">
-                <Flex gap="8px">
-                  <Avatar size="sm" name={student.name} src={student.avatar || ``} />
-                  <Flex align="center">{student.name}</Flex>
-                </Flex>
-                <Flex align="center" fontWeight="600" color={(student.metadata.coins || 0) > 0 ? 'green' : 'red'} gap="6px">
-                  <Text>{formatCoin(student.metadata.coins)}</Text>
-                  <FaArrowRightLong color="green" />
-                  <Text color={(student.metadata.coins || 0) - totalPrice / group.students.length > 0 ? 'gray800' : 'red'}>
-                    {formatCoin((student.metadata.coins || 0) - totalPrice / group.students.length)}
-                  </Text>
-                  <Image src="/icons/coin.svg" />
-                </Flex>
-              </Flex>
-            ))}
-          </Flex>
-          <Flex w="100%" justify="space-between" mt="8px">
-            Valor total:
-            <Flex fontWeight="600">
-              {formatCoin(totalPrice)}
-              <Image src="/icons/coin.svg" />
-            </Flex>
-          </Flex>
-        </Flex>
-      </SmallModal>
-    </Flex>
+    </motion.div>
   );
 };

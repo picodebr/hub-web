@@ -35,12 +35,12 @@ export const EditableTextInput: React.FC<IInputProps & EditableControlsType> = (
           defaultValue="Rasengan ⚡️"
           isPreviewFocusable={false}
           placeholder={placeholder}
-          value={value}
+          value={`${value}`}
           border="none"
           padding="5px 10px"
           borderRadius="8px"
           variant="unstyled"
-          fontSize="16px"
+          fontSize="14px"
         >
           <EditablePreview />
           {/* Here is the custom input */}

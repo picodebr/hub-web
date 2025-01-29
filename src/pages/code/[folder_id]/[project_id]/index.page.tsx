@@ -92,6 +92,7 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
 
   const [allowUpload, setAllowUpload] = useState(true);
   const [isTextMode, setIsTextMode] = useState(false);
+  const [mobileView, setMobileView] = useState(false);
 
   useEffect(() => {
     setIsTextMode(!!(project?.source_code?.mode === 'text'));
@@ -443,12 +444,24 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
     headerEvents.on('codemode', (value) => setIsTextMode(value === 'text'));
   }, []);
 
+  useEffect(() => {
+    const ev = () => {
+      setMobileView(window.innerWidth < 800 && window.innerWidth < window.innerHeight);
+    };
+    ev();
+    window.addEventListener(`resize`, ev);
+
+    return () => {
+      window.removeEventListener(`resize`, ev);
+    };
+  }, []);
+
   return (
     <Flex direction="column" flex="1">
       <CodeEventMenu
         onClick={(type) => headerEvents.emit(type)}
         allowUpload={allowUpload}
-        isProjectOwner={true}
+        isProjectOwner={project === null || user.id === project?.folder?.hub_user_id}
         isSignedIn={true}
         isTextMode={isTextMode}
       />
@@ -494,6 +507,9 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
       <SimulationCodeModal show={showCodeModal} onClose={handleCodeModalClose} />
       <SerialMonitor show={showSerialMonitor} onClose={handleSerialMonitorClose} usbFilters={usbFilters} />
       <EditorModeModal show={showEditorModeModal} onClose={handleEditorModalClose} />
+      <SmallModal topIcon="warning" show={mobileView} onConfirm={() => setMobileView(false)} okText="OK">
+        A experiência no CODE pode ser melhor neste dispositivo se você mantiver o celular na horizontal.
+      </SmallModal>
     </Flex>
   );
 };
@@ -523,6 +539,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
       project,
       isDefaultProject: projectId === `example` || !projectId,
       iframeUrl: process.env.NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL || '',
+      hideHeaderOnMobile: true,
+      fullScreenOnMobile: true,
     },
   };
 };

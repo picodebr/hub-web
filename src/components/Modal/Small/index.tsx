@@ -10,10 +10,12 @@ import {
   ModalOverlay,
 } from '@chakra-ui/react';
 import React, { PropsWithChildren } from 'react';
+import { motion } from 'framer-motion';
+
 import { GenericButton } from '../../Buttons/Generic';
 import { IModalProps } from './interfaces';
 
-export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
+export const SmallModal: React.FC<PropsWithChildren<IModalProps & { overflow?: string }>> = ({
   show,
   title,
   onConfirm,
@@ -22,12 +24,14 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
   okText,
   cancelText,
   disableCancelButton = false,
+  disableCloseButton = false,
   disableOkButton = false,
   overlay = {},
   topIcon,
   isLoading,
   onCloseModal,
   showCloseButton = true,
+  bgOkButton,
   ...rest
 }) => {
   return (
@@ -44,31 +48,36 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps>> = ({
         <ModalHeader fontSize="1rem" p="0.5rem 1rem" color="gray800">
           {title}
         </ModalHeader>
-        {(!!onCancel || !!onCloseModal) && showCloseButton && <ModalCloseButton isDisabled={disableCancelButton} mt="0.25rem" />}
-        <ModalBody>{children}</ModalBody>
+        {(!!onCancel || !!onCloseModal) && showCloseButton && <ModalCloseButton isDisabled={disableCloseButton} mt="0.25rem" />}
+        <ModalBody overflow={rest.overflow}> {children}</ModalBody>
 
         <ModalFooter p="1rem" justifyContent="center" gap="1rem">
           {!!onCancel && (
+            <motion.button className="btn" whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.9 }}>
+              <GenericButton
+                px="1.5rem"
+                borderColor="gray300"
+                label={cancelText || 'Cancelar'}
+                onClick={onCancel}
+                btntype="outline"
+                isDisabled={disableCancelButton}
+              />
+            </motion.button>
+          )}
+          <motion.button className="btn" whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.9 }}>
             <GenericButton
               px="1.5rem"
-              borderColor="gray300"
-              label={cancelText || 'Cancelar'}
-              onClick={onCancel}
-              btntype="outline"
-              isDisabled={disableCancelButton}
+              border="none"
+              fontWeight="500"
+              label={okText || 'Confirmar'}
+              onClick={() => {
+                onConfirm();
+              }}
+              isDisabled={disableOkButton}
+              isLoading={isLoading}
+              bg={bgOkButton || 'primary900'}
             />
-          )}
-          <GenericButton
-            px="1.5rem"
-            border="none"
-            fontWeight="500"
-            label={okText || 'Confirmar'}
-            onClick={() => {
-              onConfirm();
-            }}
-            isDisabled={disableOkButton}
-            isLoading={isLoading}
-          />
+          </motion.button>
         </ModalFooter>
       </ModalContent>
     </ChakraModal>
