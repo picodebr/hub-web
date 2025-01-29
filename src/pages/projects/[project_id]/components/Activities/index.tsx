@@ -320,8 +320,10 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                     {formatShortName(student.name, true)}
                   </Text>
                   <Flex align="center" gap="0.5rem" justify="space-between">
+                    R${' '}
                     {Number(targetReward?.reward_value || 0) -
                       Number(targetReward?.reward_value || 0) * (Number(taxedStudents[student.id] || 0) / 100)}
+                    ,00
                     <Flex position="relative">
                       <Image src="/icons/coin.svg" />
                       <Flex position="absolute" right="-0.5rem">

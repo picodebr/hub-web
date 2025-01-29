@@ -675,7 +675,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
       >
         <Flex direction="column" gap="1rem">
           <Text color="gray500" fontSize="16px">
-            Você está prestes a iniciar um projeto de fábrica da PiCode.
+            Você está prestes a iniciar um novo projeto
           </Text>
           <Text color="gray500" fontSize="16px">
             É de sua resposabilidade realizar o projeto com a turma até o fim, mantendo a <b>consistência</b> e <b>boas práticas</b>.
