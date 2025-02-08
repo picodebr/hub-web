@@ -89,4 +89,3 @@ export const writeSerialCode = async (device: any, code: number[], waitForDevice
         console.error("Erro no upload do código:", error);
     }
 };
-
