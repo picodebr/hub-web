@@ -113,7 +113,8 @@ export class SerialConnection extends EventEmitter {
   private static async getSerialPort(filters?: SerialPortFilter[]) {
     if (!navigator.serial) throw new Error('Serial API not supported');
 
-    return await navigator.serial.requestPort({ filters });
+    //return await navigator.serial.requestPort({ filters });
+    return await navigator.serial.getPorts();
   }
 
   private async getSerialReader(options: SerialOptions) {
