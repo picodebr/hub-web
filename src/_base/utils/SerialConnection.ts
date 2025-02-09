@@ -110,11 +110,19 @@ export class SerialConnection extends EventEmitter {
     return false;
   }
 
-  private static async getSerialPort(filters?: SerialPortFilter[]) {
+ // private static async getSerialPort(filters?: SerialPortFilter[]) {
+//    if (!navigator.serial) throw new Error('Serial API not supported');
+
+ //   return await navigator.serial.requestPort({ filters });
+    //return await navigator.serial.getPorts();
+//  }
+
+    private static async getSerialPort() {
     if (!navigator.serial) throw new Error('Serial API not supported');
 
+    return await navigator.serial.requestPort();
     //return await navigator.serial.requestPort({ filters });
-    return await navigator.serial.getPorts();
+    //return await navigator.serial.getPorts();
   }
 
   private async getSerialReader(options: SerialOptions) {
