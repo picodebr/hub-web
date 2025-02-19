@@ -54,7 +54,6 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
     const target = user?.schools.find((e) => e.id === selectedSchool?.value);
 
     if (target) {
-      console.log(1, target);
       setSchool(target);
       if (user?.role === `teacher`)
         setCustomActions(
@@ -72,7 +71,6 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
     const target: IHubUserSchool = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0] || storage?.state?.school;
 
     if (!school && target) {
-      console.log(2, target);
       setSchool(target);
       if (user?.role === `teacher`)
         setCustomActions(

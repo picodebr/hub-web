@@ -8,7 +8,6 @@ interface ColumnProps {
   backgroundImageURL: string;
   pathStrokeColor: string;
   pathFillColor: string;
-  showBorder?: boolean;
   borderColor?: string;
 }
 
