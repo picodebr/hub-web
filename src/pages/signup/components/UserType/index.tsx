@@ -34,7 +34,9 @@ export const UserTypeStep: React.FC<IProps> = ({ onUserTypeChange }) => {
           overflow="hidden"
           cursor="pointer"
           _hover={{ filter: 'brightness(0.95)' }}
-          onClick={() => onUserTypeChange('student')}
+          onClick={() => {
+            onUserTypeChange('student');
+          }}
         >
           <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
           <Image src="/icons/icone-estudante.png" w="150px" alignSelf="center" />
@@ -51,7 +53,9 @@ export const UserTypeStep: React.FC<IProps> = ({ onUserTypeChange }) => {
           overflow="hidden"
           cursor="pointer"
           _hover={{ filter: 'brightness(0.95)' }}
-          onClick={() => onUserTypeChange('teacher')}
+          onClick={() => {
+            onUserTypeChange('teacher');
+          }}
         >
           <Flex className="IMAGEM DO TIPO DE USUÁRIO SELECIONADO" flex="1" />
           <Img src="/icons/icone-professor.png" w="150px" alignSelf="center" />

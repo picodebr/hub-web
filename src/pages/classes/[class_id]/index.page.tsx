@@ -393,6 +393,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
               key={project.id}
               direction="column"
               h="100%"
+              maxH="340px"
               w="210px"
               gap="0.5rem"
               cursor="pointer"
@@ -704,7 +705,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
       >
         <Flex direction="column" gap="1rem">
           <Text color="gray500" fontSize="16px">
-            Você está prestes a iniciar um novo projeto
+            Você está prestes a iniciar o projeto {factoryProjectToStart?.title}
           </Text>
           <Text color="gray500" fontSize="16px">
             É de sua resposabilidade realizar o projeto com a turma até o fim, mantendo a <b>consistência</b> e <b>boas práticas</b>.

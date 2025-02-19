@@ -18,7 +18,7 @@ import { FormStep } from './components/Form';
 import { FinishStep } from './components/Finish';
 import { SignUpPageStepsType } from './interfaces';
 import { InputValueType } from '@/_base/interfaces/shared';
-import { removeSpaceFromString, removeAccents, usernameChecker } from '@/_base/utils/usernameUtils';
+import { usernameChecker } from '@/_base/utils/usernameUtils';
 
 const SizeMapper: Record<SignUpPageStepsType, string> = {
   USER_TYPE: '28.5rem',
@@ -164,6 +164,7 @@ const SignUp: React.FC = () => {
         canSubmit={canSubmit}
         handleRegisterUser={handleRegisterUser}
         submitLoading={submitLoading}
+        userType={userType}
       />
     ),
     FINISH: <FinishStep userType={userType} />,
