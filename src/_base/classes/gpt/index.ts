@@ -27,6 +27,7 @@ type RawGenerateFuncType = (data: Prompts) => Promise<AutoGenerateResponse>;
 type ToolsGenerateFuncType = (data: ToolPrompts) => Promise<string[]>;
 
 export const generateProjectWithAI: RawGenerateFuncType = async ({ grade, topic }) => {
+  console.log('grade: ', grade);
   try {
     const gptKey = `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`;
     if (!gptKey) throw new Error('Not found api key');

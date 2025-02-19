@@ -16,6 +16,8 @@ import {
   Skeleton,
   Image,
   Textarea,
+  Button,
+  Grid,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
@@ -27,7 +29,7 @@ import { CiUser } from 'react-icons/ci';
 import { Badge } from 'rsuite';
 import moment from 'moment';
 
-import { generateProjectWithAI, AutoGenerateResponse, generateProjectToolsWithAI } from '@/_base/classes/gpt';
+import { generateProjectWithAI, generateProjectToolsWithAI } from '@/_base/classes/gpt';
 import { formatShortName, statusLabelMapper } from '@/_base/utils';
 import { getClassData } from '@/_base/services/class';
 import { TabSwitch } from '@/components/TabSwitch';
@@ -36,18 +38,18 @@ import { HubTable } from '@/components/Table';
 import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { IHubClass } from '@/_base/interfaces/class';
 import { IHubUser } from '@/_base/interfaces/user';
-import { IFactoryProjectMetadata } from '@/_base/interfaces/project';
 import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { addProject, updateProject } from '@/_base/services/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { HubStatus, hubStatuses } from '@/_base/interfaces/shared';
+import { TbReload } from 'react-icons/tb';
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
 
-type ProjectTableType = { id: string; user_avatar: ReactNode; name: ReactNode; status: ReactNode; created_at: ReactNode };
+type ProjectTableType = { id: string; user_avatar: ReactNode; name: ReactNode; status: ReactNode; thumbnail?: string; created_at: ReactNode };
 const ProjectTable = HubTable<ProjectTableType>;
 
 interface IProps {
@@ -99,6 +101,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
     () =>
       sortedProjects?.map((project) => ({
         id: project.id,
+        thumbnail: project.project?.metadata?.thumbnail,
         user_avatar: (
           <Flex position="relative">
             {!project.educator.id && project.project_id ? (
@@ -109,8 +112,8 @@ const Class: React.FC<IProps> = ({ classId }) => {
                   borderRadius="50%"
                   border="1px"
                   borderColor="gray200"
-                  h="40px"
-                  w="40px"
+                  h="30px"
+                  w="30px"
                   justify="center"
                   align="center"
                 >
@@ -140,28 +143,11 @@ const Class: React.FC<IProps> = ({ classId }) => {
                 name={formatShortName(project.educator.name || ``)}
                 src={project.educator.avatar || ``}
                 title={project.educator.name}
-                h="40px"
-                w="40px"
+                h="30px"
+                w="30px"
                 border="1px"
                 borderColor="gray200 !important"
               />
-            )}
-            {project.educator?.id && project.project_id && (
-              <Flex
-                position="absolute"
-                color="primary300"
-                right="-1.4rem"
-                bg="#ffffff55"
-                borderRadius="50%"
-                border="1px"
-                borderColor="gray200"
-                h="40px"
-                w="40px"
-                justify="center"
-                align="center"
-              >
-                <Image src="/logo/pi-logo-dark.svg" maxH="1.65rem" minH="1.65rem" title="Projeto da PiCode" />
-              </Flex>
             )}
           </Flex>
         ) as any,
@@ -253,6 +239,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
         title: step.title || '',
         description: step.description || null,
         position: step.position,
+        parent: `default`,
       })),
     );
     const draftProject: IProject = {
@@ -399,6 +386,41 @@ const Class: React.FC<IProps> = ({ classId }) => {
             { label: 'XP', field: 'xp' },
           ]}
         />
+      ) : pageView === 'Projetos' ? (
+        <Grid gap="1rem" overflow="auto" gridTemplateColumns="repeat(auto-fill, minmax(210px, 1fr))" padding="2rem" borderRadius="md" flex="1">
+          {dataProjects.map((project) => (
+            <Flex
+              key={project.id}
+              direction="column"
+              h="100%"
+              w="210px"
+              gap="0.5rem"
+              cursor="pointer"
+              bg="white"
+              border="1px"
+              borderColor="gray300"
+              borderRadius="md"
+              p="1rem"
+              boxShadow="md"
+              onClick={() => router.push(`/projects/${project.id}`)}
+            >
+              <Flex
+                backgroundImage={project.thumbnail || '/images/book.svg'}
+                backgroundSize={project.thumbnail ? `cover` : `contain`}
+                backgroundPosition="center"
+                backgroundRepeat="no-repeat"
+                h="250px"
+                borderRadius="4px"
+              />
+              <Flex justify="space-between">
+                <Text fontWeight="500" p="0.25rem 0.35rem" textOverflow="ellipsis" whiteSpace="wrap" overflow="hidden" color="gray600">
+                  {project.name}
+                </Text>
+                <Flex>{project?.user_avatar}</Flex>
+              </Flex>
+            </Flex>
+          ))}
+        </Grid>
       ) : (
         <ProjectTable
           rows={dataProjects}
@@ -436,6 +458,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
           ]}
         />
       )}
+
       {isLoading && <Skeleton isLoaded={false} h="4.5rem" w="100%" />}
 
       <SmallModal
@@ -491,6 +514,12 @@ const Class: React.FC<IProps> = ({ classId }) => {
         size="2xl"
       >
         <Flex direction="column" gap="1rem">
+          <Flex>
+            <Button gap="1rem" onClick={() => setModalStep('creation_topic')}>
+              <TbReload />
+              Gerar novamente
+            </Button>
+          </Flex>
           <Flex>
             <Text color="gray500" fontSize="15px">
               Título do Projeto

@@ -16,13 +16,12 @@ import {
   Text,
   Tooltip,
 } from '@chakra-ui/react';
-import { IProject } from '@/_base/interfaces/project';
+import { IHubProjectStep, IProject } from '@/_base/interfaces/project';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SmallModal } from '@/components/Modal/Small';
 import { formatShortName } from '@/_base/utils';
 import { FaMinus, FaPlus } from 'react-icons/fa';
-import { IHubBookMetadataReward } from '@/_base/interfaces/book/IHubBookMetadata';
 import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
 import { MdOutlineCheckBox, MdPendingActions } from 'react-icons/md';
 import { useAsyncCallback } from '@/_base/hooks';
@@ -36,7 +35,7 @@ interface IProps {
 type ModalStep = 'hidden' | 'missing_students' | 'taxed_students' | 'students_rewarded';
 
 export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) => {
-  const [targetReward, setTargetReward] = useState<IHubBookMetadataReward | null>(null);
+  const [targetReward, setTargetReward] = useState<IHubProjectStep | null>(null);
   const [missingStudents, setMissingStudents] = useState<string[]>([]);
   const [taxedStudents, setTaxedStudents] = useState<Record<string, string>>({});
   const [modalStep, setModalStep] = useState<ModalStep>('hidden');
@@ -60,10 +59,10 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
 
         const newReward = {
           reward_value: `${
-            Number(targetReward?.reward_value || 0) - Number(targetReward.reward_value || 0) * (Number(taxedStudents[student.id] || 0) / 100)
+            Number(targetReward?.cashback || 0) - Number(targetReward.cashback || 0) * (Number(taxedStudents[student.id] || 0) / 100)
           }`,
           tax_value: `${taxedStudents[student.id] || 0}`,
-          activity_title: targetReward.activity || ``,
+          activity_title: targetReward.title || ``,
         };
 
         acc[student.id].push(newReward);
@@ -78,7 +77,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
       metadata: {
         ...project.metadata,
         rewards,
-        finished_activities: [...(project.metadata.finished_activities?.filter((e) => e !== targetReward.activity) || []), targetReward?.activity],
+        finished_activities: [...(project.metadata.finished_activities?.filter((e) => e !== targetReward.title) || []), targetReward?.title],
       },
     };
     setModalStep(`hidden`);
@@ -98,32 +97,33 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
         <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300">
           <Accordion allowMultiple w="100%" fontWeight="500" color="gray700" border="none" h="100%" display="flex" flexDirection="column">
             {(
-              project.project?.book?.metadata?.rewards?.reduce((acc, r) => (acc.includes(r.step) ? acc : [...acc, r.step]), [] as string[]) || []
-            ).map((step, idx) => (
-              <AccordionItem key={step + idx} border="none" p="0 0 1rem" gap="0">
+              project.project?.metadata?.steps?.reduce((acc, r) => (acc.includes(r.parent || ``) ? acc : [...acc, r.parent || ``]), [] as string[]) ||
+              []
+            ).map((parent, idx) => (
+              <AccordionItem key={parent + idx} border="none" p="0 0 1rem" gap="0">
                 <Flex
                   w="100%"
                   h="100%"
-                  backgroundColor={`${getActivityColor(project, step)}22`}
+                  backgroundColor={`${getActivityColor(project, parent)}22`}
                   borderRadius="md"
                   overflow="hidden"
                   gap="2px"
                   border="1px"
-                  borderColor={`${getActivityColor(project, step)}aa`}
+                  borderColor={`${getActivityColor(project, parent)}aa`}
                 >
                   <Flex w="4rem" h="100%" overflow="hidden">
                     <Box
                       flex="1"
-                      backgroundImage={`/patterns/${getActivityPattern(getActivityColor(project, step) || ``)}.svg`}
+                      backgroundImage={`/patterns/${getActivityPattern(getActivityColor(project, parent) || ``)}.svg`}
                       backgroundPosition="center"
                       backgroundSize="cover"
                       transform="scale(3)"
                       backgroundRepeat="no-repeat"
                     />
                   </Flex>
-                  <Flex direction="column" flex="1" borderLeft="2px" borderColor={getActivityColor(project, step)}>
+                  <Flex direction="column" flex="1" borderLeft="2px" borderColor={getActivityColor(project, parent)}>
                     <AccordionButton justifyContent="space-between" p="0.5rem">
-                      <Text>{step}</Text>
+                      <Text>{parent}</Text>
                       <AccordionIcon />
                     </AccordionButton>
                     <AccordionPanel fontWeight="400" p="0.75rem 1rem 0" mb="-8.75rem">
@@ -137,40 +137,38 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                       </Flex>
                     </AccordionPanel>
 
-                    {(project.project?.book?.metadata?.rewards || []).map((reward, i, arr) =>
-                      reward.step !== step ? null : (
+                    {(project.project?.metadata?.steps || []).map((step, i, arr) =>
+                      step.parent !== parent ? null : (
                         <AccordionPanel
                           fontWeight="400"
-                          key={reward.activity + (i + 1)}
+                          key={step.title + (i + 1)}
                           p="0.5rem 1rem"
-                          borderBottom={arr.slice(i).filter((e) => e.step === step).length > 1 ? `1px` : `none`}
+                          borderBottom={arr.slice(i).filter((e) => e.parent === parent).length > 1 ? `1px` : `none`}
                           borderColor="gray300"
                         >
                           <Tooltip
-                            key={reward.activity}
+                            key={step.title}
                             label={
-                              project.metadata.finished_activities?.includes(reward?.activity || ``)
+                              project.metadata.finished_activities?.includes(step?.title || ``)
                                 ? 'Atividade concluída'
                                 : 'Clique para concluir a atividade'
                             }
                             isDisabled={!canEdit}
                           >
                             <motion.button
-                              disabled={!canEdit || project.metadata.finished_activities?.includes(reward?.activity || ``)}
+                              disabled={!canEdit || project.metadata.finished_activities?.includes(step?.title || ``)}
                               whileHover={
-                                !canEdit || project.metadata.finished_activities?.includes(reward?.activity || ``)
+                                !canEdit || project.metadata.finished_activities?.includes(step?.title || ``)
                                   ? undefined
                                   : { scale: 1.02, backgroundColor: `#cccccc11` }
                               }
-                              whileTap={
-                                !canEdit || project.metadata.finished_activities?.includes(reward?.activity || ``) ? undefined : { scale: 0.98 }
-                              }
+                              whileTap={!canEdit || project.metadata.finished_activities?.includes(step?.title || ``) ? undefined : { scale: 0.98 }}
                               onClick={() => {
                                 if (!canEdit) return;
-                                setTargetReward(reward);
+                                setTargetReward(step);
                                 setModalStep(`missing_students`);
                               }}
-                              key={reward.activity}
+                              key={step.title}
                               style={{
                                 display: `flex`,
                                 width: `100%`,
@@ -182,15 +180,15 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                               }}
                             >
                               <Flex align="center" gap="0.4rem">
-                                {project.metadata.finished_activities?.includes(reward?.activity || ``) ? (
+                                {project.metadata.finished_activities?.includes(step?.title || ``) ? (
                                   <MdOutlineCheckBox fontSize="20px" color="#1db832" />
                                 ) : (
                                   <MdPendingActions fontSize="20px" color="#4d4f5cdd" />
                                 )}
-                                <Text>{reward.activity}</Text>
+                                <Text>{step.title}</Text>
                               </Flex>
                               <Flex align="center" gap="0.4rem">
-                                <Text>{reward.reward_value}</Text>
+                                <Text>{step.cashback || 0}</Text>
                                 <Image src="/icons/coin.svg" />
                               </Flex>
                             </motion.button>
@@ -320,10 +318,14 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                     {formatShortName(student.name, true)}
                   </Text>
                   <Flex align="center" gap="0.5rem" justify="space-between">
+<<<<<<< HEAD
                     R${' '}
                     {Number(targetReward?.reward_value || 0) -
                       Number(targetReward?.reward_value || 0) * (Number(taxedStudents[student.id] || 0) / 100)}
                     ,00
+=======
+                    {Number(targetReward?.cashback || 0) - Number(targetReward?.cashback || 0) * (Number(taxedStudents[student.id] || 0) / 100)}
+>>>>>>> bae43cf23f130f94cf380336f0393290571ac426
                     <Flex position="relative">
                       <Image src="/icons/coin.svg" />
                       <Flex position="absolute" right="-0.5rem">
@@ -340,8 +342,8 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
   );
 };
 
-const getActivityColor = (project: IProject, step: string): string | undefined =>
-  project.project?.book?.metadata?.rewards?.find((e) => e.step === step)?.color;
+const getActivityColor = (project: IProject, parent: string): string | undefined =>
+  project.project?.metadata?.steps?.find((e) => e.parent === parent)?.color;
 
 const getActivityPattern = (color: string): string | undefined => {
   const colors = [
@@ -353,5 +355,6 @@ const getActivityPattern = (color: string): string | undefined => {
     { color: `#ff515c`, pattern: `rockets-vermelho` },
   ];
 
+  console.log('colors.find((e) => e.color === color)?.pattern: ', colors.find((e) => e.color === color)?.pattern);
   return colors.find((e) => e.color === color)?.pattern;
 };

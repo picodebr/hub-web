@@ -6,4 +6,5 @@ export interface IFactoryProjectMetadata {
   bncc?: string[];
   tools?: string[];
   attachments?: string[];
+  thumbnail?: string;
 }
