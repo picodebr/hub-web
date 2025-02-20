@@ -122,6 +122,7 @@ const SignUp: React.FC = () => {
       const signupData = { ...data };
 
       delete (signupData as any).password_confirmation;
+      if (!signupData.email) signupData.email = null;
 
       await signup(signupData);
 

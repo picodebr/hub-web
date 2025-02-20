@@ -71,16 +71,16 @@ export const FormStep: React.FC<IProps> = ({
           onInputChange={(value) => onInputChange('username', value)}
           leftElement={<FiUser />}
         />
-        {/* {userType === 'teacher' && ( */}
-        <TextInput
-          label="E-mail"
-          value={data?.email}
-          isDisabled={isGoogleSignin}
-          error={errors.email}
-          onInputChange={(value) => onInputChange('email', value)}
-          leftElement={<MdMailOutline />}
-        />
-        {/* )} */}
+        {userType === 'teacher' && (
+          <TextInput
+            label="E-mail"
+            value={data?.email || ``}
+            isDisabled={isGoogleSignin}
+            error={errors.email}
+            onInputChange={(value) => onInputChange('email', value)}
+            leftElement={<MdMailOutline />}
+          />
+        )}
 
         <DateInput
           label="Data de Nascimento"
