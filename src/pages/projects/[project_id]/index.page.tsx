@@ -120,7 +120,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} canEdit={canEdit} />,
     Materiais: <Materials project={project} setProject={setProject} canEdit={canEdit} />,
-    Atividades: <Activities project={project} setProject={setProject} canEdit={canEdit} handleSave={handleSave} />,
+    Cashback: <Activities project={project} setProject={setProject} canEdit={canEdit} handleSave={handleSave} />,
     Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} />,
     Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} />,
   };
@@ -129,7 +129,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
       <Flex justify="space-between">
         <TabSwitch
           tabs={projectPageViews
-            .filter((e) => (project.project?.metadata?.steps?.filter((e) => e.parent).length ? e : e !== `Atividades`))
+            .filter((e) => (project.project?.book_id ? e : e !== `Cashback`))
             .map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
           onSwitch={(view) => setPageView(view as any)}
           currentTabColor="primary700"

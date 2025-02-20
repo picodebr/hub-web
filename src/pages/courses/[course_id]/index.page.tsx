@@ -73,7 +73,9 @@ const Course: React.FC<IProps> = ({ courseId }) => {
   }, []);
 
   const handleGeneratePDF = useCallback(async () => {
+    console.log(course, certificateTemplate);
     if (!course || !certificateTemplate) return;
+    console.log(2);
 
     try {
       setLoadingPdf(true);
@@ -112,14 +114,14 @@ const Course: React.FC<IProps> = ({ courseId }) => {
             rotate: degrees(0),
           },
         );
-        firstPage.drawText(`Tendo duração de 20 horas`, {
-          x: 453,
-          y: 220,
-          size: 20,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-          rotate: degrees(0),
-        });
+        // firstPage.drawText(`Tendo duração de 20 horas`, {
+        //   x: 453,
+        //   y: 220,
+        //   size: 20,
+        //   font: helveticaFont,
+        //   color: rgb(0, 0, 0),
+        //   rotate: degrees(0),
+        // });
         firstPage.drawText(`Sorocaba, ${day} de ${month} de ${year}`, {
           x: 450,
           y: 165,
@@ -171,7 +173,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       {/* <Flex>{pdfUrl && <iframe src={pdfUrl} width="100%" height="1000px" style={{ border: 'none' }} title="PDF Preview"></iframe>}</Flex> */}
       <Flex align="center" justify="space-between" borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
         <Text color="gray600">Módulos</Text>
-        {allModulesFinished && (
+        {allModulesFinished && certificateTemplate && (
           <Button
             onClick={handleGeneratePDF}
             leftIcon={<PiCertificate fontSize="18px" />}

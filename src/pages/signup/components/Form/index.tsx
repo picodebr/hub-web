@@ -10,6 +10,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { FiUser } from 'react-icons/fi';
 import { formatDateInput } from '@/_base/utils';
 import { generateUsername } from '@/_base/utils/usernameUtils';
+import { HubUserType } from '@/_base/interfaces/user';
 
 interface IProps {
   isGoogleSignin: boolean;
@@ -22,6 +23,7 @@ interface IProps {
   onInputChange: (field: keyof IRegisterUser, value: any) => void;
   submit: (cb: (args?: any) => any) => void;
   handleRegisterUser: () => Promise<void>;
+  userType?: HubUserType;
 }
 
 export const FormStep: React.FC<IProps> = ({
@@ -34,6 +36,7 @@ export const FormStep: React.FC<IProps> = ({
   canSubmit,
   handleRegisterUser,
   submitLoading,
+  userType,
 }) => {
   return (
     <Flex direction="column" h="100%" justify="space-between" align="center" gap="1.25rem" overflow="hidden">
@@ -68,15 +71,16 @@ export const FormStep: React.FC<IProps> = ({
           onInputChange={(value) => onInputChange('username', value)}
           leftElement={<FiUser />}
         />
-
-        <TextInput
-          label="E-mail (opcional para alunos)"
-          value={data.email}
-          isDisabled={isGoogleSignin}
-          error={errors.email}
-          onInputChange={(value) => onInputChange('email', value)}
-          leftElement={<MdMailOutline />}
-        />
+        {userType === 'teacher' && (
+          <TextInput
+            label="E-mail"
+            value={data.email}
+            isDisabled={isGoogleSignin}
+            error={errors.email}
+            onInputChange={(value) => onInputChange('email', value)}
+            leftElement={<MdMailOutline />}
+          />
+        )}
 
         <DateInput
           label="Data de Nascimento"

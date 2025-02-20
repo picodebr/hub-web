@@ -1,4 +1,4 @@
-import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, useUpdateEffect } from '@chakra-ui/react';
+import { Flex, Image, Menu, MenuButton, MenuItem, MenuList, ScaleFade, Text, Tooltip, useColorMode, useUpdateEffect } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
 import { useEffect, useState } from 'react';
 import { create } from 'zustand';
@@ -13,6 +13,10 @@ import { IHubUserSchool } from '@/_base/interfaces/school';
 import { MenuItemType } from '../../interfaces';
 import { MobileMenu } from '../MobileMenu';
 import { CustomActions } from '@/_base/interfaces/customActions';
+import { getNotifications, markNotificationAsRead } from '@/_base/services/notifications';
+import { NotificationCard } from './components/NotificationCard';
+import { IHubNotification } from '@/_base/interfaces/notification';
+import { useAsyncCallback } from '@/_base/hooks';
 
 interface IProps {
   user?: IHubUser;
@@ -43,12 +47,21 @@ export const useSelectedSchool = create<TargetSchoolHookType>(
 export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, hideOnMobile }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
+  const [notifications, setNotifications] = useState<IHubNotification[]>([]);
 
   const router = useCustomRouter();
   const { colorMode } = useColorMode();
   const { setSchool, school, setCustomActions } = useSelectedSchool();
 
   const data = user?.schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
+
+  useEffect(() => {
+    if (!school?.hub_school_id) return;
+    getNotifications(school.hub_school_id || ``).then((res) => {
+      setNotifications(res);
+    });
+  }, [school]);
+
   useUpdateEffect(() => {
     setIsLoading(true);
     const target = user?.schools.find((e) => e.id === selectedSchool?.value);
@@ -70,7 +83,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
     const storage = JSON.parse(localStorage.getItem(`context-storage`) || `{}`);
     const target: IHubUserSchool = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0] || storage?.state?.school;
 
-    if (target) {
+    if (!school && target) {
       setSchool(target);
       if (user?.role === `teacher`)
         setCustomActions(
@@ -80,6 +93,12 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
       else setCustomActions([]);
     }
   }, [user]);
+
+  const handleRemoveNotification = useAsyncCallback((id: string) => {
+    markNotificationAsRead(id);
+
+    setNotifications((e) => e.map((n) => (n.id === id ? { ...n, opened_by: [...n.opened_by, user?.id || ``] } : n)));
+  }, []);
 
   return (
     <Flex
@@ -121,11 +140,42 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
             onChange={(e) => setSelectedSchool(data.find((d) => d.value === e))}
           />
         )}
-        <Tooltip label="Notificações">
-          <Flex cursor="pointer" transition="0.12s" _hover={{ filter: 'brightness(0.7)' }}>
-            <FiBell color="#667085" />
-          </Flex>
-        </Tooltip>
+        <Menu>
+          <Tooltip label="Notificações">
+            <MenuButton cursor="pointer" transition="0.12s" _hover={{ filter: 'brightness(0.7)' }}>
+              <FiBell />
+            </MenuButton>
+          </Tooltip>
+          <MenuList
+            border="none"
+            fontSize="16px"
+            boxShadow="none"
+            bg="transparent"
+            overflow="auto"
+            height="calc(100vh - 5rem)"
+            px="1rem"
+            sx={{
+              '&::-webkit-scrollbar-thumb': {
+                background: '#d8d8d8',
+                borderRadius: '24px',
+              },
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-track': {
+                width: '6px',
+              },
+            }}
+          >
+            {notifications
+              .filter((n) => !n.opened_by.includes(user?.id || ``))
+              .map((notification) => (
+                <MenuItem key={notification.id} bg="transparent">
+                  <NotificationCard notification={notification} onRemoveNotification={() => handleRemoveNotification(notification.id)} />
+                </MenuItem>
+              ))}
+          </MenuList>
+        </Menu>
         <Tooltip label="Sair">
           <Flex
             cursor="pointer"

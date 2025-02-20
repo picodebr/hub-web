@@ -28,6 +28,7 @@ export * from './SerialConnection';
 export * from './showErrorToClient';
 export * from './shuffleArray';
 export * from './sortGrades';
+export * from './sortGradesByClass';
 export * from './statusLabelMapper';
 export * from './stkCommands';
 export * from './storeComponentList';
