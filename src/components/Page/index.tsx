@@ -45,9 +45,9 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
         children
       ) : (
         <>
-          <Header user={user} headerLabel={headerLabel} menuItems={menuItems} page={selectedPage} hideOnMobile={hideHeaderOnMobile} />
+          {/* <Header user={user} headerLabel={headerLabel} menuItems={menuItems} page={selectedPage} hideOnMobile={hideHeaderOnMobile} /> */}
           <Flex flex="1" overflow="hidden">
-            <Navbar page={selectedPage} user={user} menuItems={menuItems} />
+            {/* <Navbar page={selectedPage} user={user} menuItems={menuItems} /> */}
             <RedefinePass user={user} />
             <Flex
               flex="1"
