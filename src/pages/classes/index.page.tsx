@@ -13,6 +13,7 @@ import { EmptyPageData } from '@/components/EmptyPageData';
 import { SmallModal } from '@/components/Modal/Small';
 import { AvatarList } from '@/components/AvatarList';
 import { useSelectedSchool } from '@/components/Page/components/Header';
+import { sortGrades, sortGradesByClass } from '@/_base/utils';
 
 type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
 
@@ -178,7 +179,7 @@ const Classes: React.FC = () => {
         disableOkButton={!selectedClasses.length}
       >
         <Flex direction="column" gap="1rem">
-          {allClasses.map((hubClass) => (
+          {sortGradesByClass(allClasses).map((hubClass) => (
             <Flex
               key={hubClass.id}
               h="fit-content"

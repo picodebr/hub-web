@@ -318,7 +318,8 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                     {formatShortName(student.name, true)}
                   </Text>
                   <Flex align="center" gap="0.5rem" justify="space-between">
-                    {Number(targetReward?.cashback || 0) - Number(targetReward?.cashback || 0) * (Number(taxedStudents[student.id] || 0) / 100)}
+                    R$ {Number(targetReward?.cashback || 0) - Number(targetReward?.cashback || 0) * (Number(taxedStudents[student.id] || 0) / 100)}
+                    ,00
                     <Flex position="relative">
                       <Image src="/icons/coin.svg" />
                       <Flex position="absolute" right="-0.5rem">
