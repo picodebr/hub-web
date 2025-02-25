@@ -15,6 +15,7 @@ import { IHubUser } from '@/_base/interfaces/user';
 import { MenuItemType } from '../../interfaces';
 import { iconList } from '@/_base/config/iconList';
 import { useSelectedSchool } from '../Header';
+import { CustomActions } from '@/_base/interfaces/customActions';
 
 export interface INavbarProps {
   page: string;
@@ -30,6 +31,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [actions, setActions] = useState<CustomActions[]>([]);
 
   const { customActions } = useSelectedSchool();
 
@@ -37,6 +39,10 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
     if (_user) setUser({ ...user, ..._user });
     setAvatar(_user?.avatar || user.avatar);
   }, [_user]);
+
+  useEffect(() => {
+    setActions(customActions);
+  }, [_user, customActions]);
 
   const handleUploadAvatar = useCallback(async (file?: File) => {
     if (file) {
@@ -265,9 +271,10 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
           </motion.div>
         ))}
       </motion.div>
-      {!!customActions.length && (
+
+      {!!actions.length && (
         <Flex flex="1" color="primary700" gap="1.25rem" justify="center" align="flex-end" p="1rem 1rem 2rem">
-          {customActions.map((action, i) => (
+          {actions.map((action, i) => (
             <motion.a
               key={action.type + i}
               href={action.data.link}

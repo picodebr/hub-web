@@ -1,6 +1,6 @@
 import { Flex, Image, Menu, MenuButton, MenuItem, MenuList, ScaleFade, Text, Tooltip, useColorMode, useUpdateEffect } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { FiBell, FiLogOut } from 'react-icons/fi';
 import { persist } from 'zustand/middleware';
@@ -16,7 +16,6 @@ import { CustomActions } from '@/_base/interfaces/customActions';
 import { getNotifications, markNotificationAsRead } from '@/_base/services/notifications';
 import { NotificationCard } from './components/NotificationCard';
 import { IHubNotification } from '@/_base/interfaces/notification';
-import { useAsyncCallback } from '@/_base/hooks';
 
 interface IProps {
   user?: IHubUser;
@@ -94,7 +93,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
     }
   }, [user]);
 
-  const handleRemoveNotification = useAsyncCallback((id: string) => {
+  const handleRemoveNotification = useCallback((id: string) => {
     markNotificationAsRead(id);
 
     setNotifications((e) => e.map((n) => (n.id === id ? { ...n, opened_by: [...n.opened_by, user?.id || ``] } : n)));
