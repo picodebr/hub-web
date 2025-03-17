@@ -24,13 +24,13 @@ import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { IoMdArrowUp } from 'react-icons/io';
 import { FaPlus } from 'react-icons/fa6';
-import { FiCalendar, FiFileText } from 'react-icons/fi';
+import { FiCalendar, FiFileText, FiUsers } from 'react-icons/fi';
 import { CiUser } from 'react-icons/ci';
 import { Badge } from 'rsuite';
 import moment from 'moment';
 
 import { generateProjectWithAI, generateProjectToolsWithAI } from '@/_base/classes/gpt';
-import { formatShortName, statusLabelMapper } from '@/_base/utils';
+import { formatCoin, formatShortName, statusLabelMapper } from '@/_base/utils';
 import { getClassData } from '@/_base/services/class';
 import { TabSwitch } from '@/components/TabSwitch';
 import { ClassPageView, classPageViews } from './interfaces';
@@ -45,8 +45,9 @@ import { addProject, updateProject } from '@/_base/services/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { HubStatus, hubStatuses } from '@/_base/interfaces/shared';
 import { TbReload } from 'react-icons/tb';
+import { CoinIcon } from '@/components/Logo';
 
-type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; engagement: ReactNode; xp: ReactNode };
+type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; groups: ReactNode; coins: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
 
 type ProjectTableType = { id: string; user_avatar: ReactNode; name: ReactNode; status: ReactNode; thumbnail?: string; created_at: ReactNode };
@@ -309,19 +310,16 @@ const Class: React.FC<IProps> = ({ classId }) => {
         </Flex>
       ),
       avatar: (<Avatar name={formatShortName(student.name, true)} title={student.name} h="40px" w="40px" />) as any,
-      engagement: (
+      groups: (
         <Flex align="center" gap="0.25rem">
-          <Text fontWeight="500">0</Text>
-          <Box borderRadius="50%" color="primary700" fontSize="1.75rem">
-            <IoArrowUpCircleOutline />
-          </Box>
+          <Text noOfLines={1}>{student.groups.map((group) => group.display_name).join(', ')}</Text>
         </Flex>
       ),
-      xp: (
+      coins: (
         <Flex align="center" gap="0.25rem">
-          <Text fontWeight="500">0</Text>
-          <Box borderRadius="50%" color="primary300" fontSize="1.75rem">
-            <IoArrowUpCircleOutline />
+          <Text fontSize="1rem">{formatCoin(student.metadata.coins)}</Text>
+          <Box>
+            <CoinIcon />
           </Box>
         </Flex>
       ),
@@ -368,7 +366,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
           onRowClick={(e) => router.push(`/students/${e.id}`)}
           columnSizes={[
             { field: 'avatar', width: '2rem' },
-            { field: 'xp', width: '2rem' },
+            { field: 'coins', width: '2rem' },
           ]}
           columns={[
             {
@@ -382,8 +380,8 @@ const Class: React.FC<IProps> = ({ classId }) => {
               field: 'avatar',
             },
             { label: 'Nome', field: 'name' },
-            { label: 'Engajamento', field: 'engagement' },
-            { label: 'XP', field: 'xp' },
+            { label: 'Grupos', field: 'groups' },
+            { label: 'Moedas', field: 'coins' },
           ]}
         />
       ) : pageView === 'Projetos' ? (
