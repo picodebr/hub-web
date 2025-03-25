@@ -165,8 +165,8 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               Selecione os membros do grupo
             </MenuButton>
-            <MenuList borderColor="gray300" boxShadow="md">
-              <MenuOptionGroup type="checkbox">
+            <MenuList borderColor="gray300" boxShadow="md" overflow="auto" maxH="300px">
+              <MenuOptionGroup type="checkbox" >
                 {availableStudents.length ? (
                   availableStudents.map((student) => (
                     <MenuItemOption
