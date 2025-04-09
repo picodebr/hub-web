@@ -349,6 +349,5 @@ const getActivityPattern = (color: string): string | undefined => {
     { color: `#ff515c`, pattern: `rockets-vermelho` },
   ];
 
-  console.log('colors.find((e) => e.color === color)?.pattern: ', colors.find((e) => e.color === color)?.pattern);
   return colors.find((e) => e.color === color)?.pattern;
 };

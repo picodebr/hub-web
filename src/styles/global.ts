@@ -4,6 +4,7 @@ import '../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 
 import { dark, light } from './colors';
+import { overflow } from 'html2canvas/dist/types/css/property-descriptors/overflow';
 
 type SemanticTokenColors = Record<string, { default: string; _dark: string }>;
 type SemanticTokenType = { colors: SemanticTokenColors };
@@ -51,6 +52,15 @@ export const globalTheme = extendTheme((props) => {
         '&::-webkit-scrollbar-thumb': {
           background: '#EAECF0',
           borderRadius: '24px',
+        },
+        '.hub-editor-wrapper': {
+          overflow: `hidden`,
+          // 'max-height': `calc(100vh - 18rem)`,
+          // 'padding-top': `2.5rem`,
+        },
+        '.DraftEditor-editorContainer': {
+          'max-height': `calc(100vh - 24rem)`,
+          overflow: `hidden auto !important`,
         },
       }),
     },
