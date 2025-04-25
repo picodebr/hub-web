@@ -196,10 +196,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
           left: '0',
           bottom: '0',
           right: '0',
-          background: 'white',
-          backgroundImage: `/patterns/bg-${colorMode}.svg`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: 'cover',
+          backgroundColor: `${colorMode === `light` ? `#FDFAFF` : `#18203D` }`,
           height: '100%',
           width: '100%',
           pointerEvents: 'none',
@@ -208,7 +205,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
           transition: 'all 0.2s',
         }}
       >
-        <Flex height="100%" w="100%" bg="white" bgImg={`/patterns/bg-${colorMode}.svg`} bgRepeat="no-repeat" bgSize="cover">
+        <Flex height="100%" w="100%" bgColor={`${colorMode === `light` ? `#FDFAFF` : `#18203D` }`} bgRepeat="no-repeat" bgSize="cover">
           <Flex direction="column" margin="auto" gap="1rem" align="center">
             <Image src="/loading/rocket-loading.gif" h="100%" borderRadius="1rem" boxShadow="md" />
             <Text fontSize="24px" mt="-6rem">

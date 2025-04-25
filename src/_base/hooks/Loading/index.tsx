@@ -54,7 +54,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
           <>
             {/* <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" left="0" top="11.5rem" />
             <Image src="/patterns/line-pattern.svg" zIndex="-1" h={{ base: '0', lg: '445px' }} position="absolute" bottom="0" right="-5rem" /> */}
-            <Image src={`/patterns/bg-${colorMode}.svg`} zIndex="-1" h={{ base: '0', lg: '0' }} />
+            <Image src={`/patterns/background-${colorMode}.svg`} zIndex="-1" h={{ base: '0', lg: '0' }} />
           </>
         )}
 

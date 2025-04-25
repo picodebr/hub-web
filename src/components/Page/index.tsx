@@ -37,9 +37,10 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
       position="relative"
       overflow="hidden"
       zIndex="0"
-      bgImg={`/patterns/bg-${colorMode}.svg`}
+      bgImg={`/patterns/background-${colorMode}.svg`}
       bgRepeat="no-repeat"
       bgSize="cover"
+      
     >
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
