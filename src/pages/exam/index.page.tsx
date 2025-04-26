@@ -1,52 +1,46 @@
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Avatar,
-  Box,
-  Button,
-  Drawer,
-  DrawerBody,
-  DrawerCloseButton,
-  DrawerContent,
-  DrawerOverlay,
-  Flex,
-  Text,
-  Tooltip,
-  useDisclosure,
-} from '@chakra-ui/react';
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Avatar, Box, Button, Flex, Text, Tooltip } from '@chakra-ui/react';
 import { Progress } from 'antd';
 import { GetServerSideProps } from 'next';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PiShootingStar } from 'react-icons/pi';
-import { motion } from 'framer-motion';
-import { useAsyncCallback } from '@/_base/hooks';
+import { useAsyncCallback, useCustomRouter } from '@/_base/hooks';
 import { IHubFactoryProject } from '@/_base/interfaces/project/IHubFactoryProject';
 import { IHubUser } from '@/_base/interfaces/user';
 import { getStudent } from '@/_base/services/user';
 import { cookieManager, formatCoin, formatShortName, logError } from '@/_base/utils';
 import { CoinIcon } from '@/components/Logo';
-import { Header } from '@/components/Tailwind/HubForm/components/Header';
-import AnnouncementSection from '@/components/Tailwind/HubForm/components/AnnouncementSection';
-import { AssessmentSection } from '@/components/Tailwind/HubForm/components/AssessmentSection';
+import { HiOutlineShieldCheck } from 'react-icons/hi';
+import { RatingQuestionProps } from '@/components/Tailwind/HubForm/components/RatingQuestion';
 
 type TempProject = { project: IHubFactoryProject; students: Array<{ name: string; id: string }> };
 type TempStudent = IHubUser & { project: IHubFactoryProject };
+type TempFinishedForms = { student_id: string; project_id: string; questions: (Omit<RatingQuestionProps, 'onRatingChange'> & { type: 'rating' })[] };
 
 const Exam: React.FC = () => {
   const [projects, setProjects] = useState<TempProject[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<TempStudent | null>(null);
+  const [finishedForms, setFinishedForms] = useState<TempFinishedForms[]>([]);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const router = useCustomRouter();
+
+  const studentProgress = useMemo(() => {
+    return Math.ceil(
+      ((finishedForms.find((e) => e.student_id === selectedStudent?.id)?.questions.reduce((acc, v) => (acc += v.rating || 0), 0) || 0) /
+        ((finishedForms.find((e) => e.student_id === selectedStudent?.id)?.questions?.length || 0) * 5 || 0)) *
+        100 || 0,
+    );
+  }, [finishedForms, selectedStudent]);
 
   useEffect(() => {
+    const finished = JSON.parse(localStorage.getItem(`finished_forms`) || `[]`);
     const _projects: TempProject[] = Object.keys(localStorage)
       .filter((k) => k.startsWith(`pending_forms::`))
       .map((k) => JSON.parse(localStorage.getItem(k) || `{}`));
 
+    setFinishedForms(finished);
     setProjects(_projects);
+
+    if (_projects.length && _projects[0].students[0]) handleSelectStudent(_projects[0].students[0].id, _projects[0].project);
   }, []);
 
   const handleSelectStudent = useAsyncCallback(async (studentId: string, project: IHubFactoryProject) => {
@@ -60,7 +54,7 @@ const Exam: React.FC = () => {
         <Flex border="1px" flex="1" borderColor="gray300" borderRadius="8px" bg="white" padding="20px" gap="32px" align="center" h="100%">
           <Avatar size="xl" name={formatShortName(selectedStudent?.name || '', true)} title={selectedStudent?.name} />
 
-          <Flex h="fit-content" direction="column" justify="end">
+          <Flex h="fit-content" direction="column" justify="end" hidden={!selectedStudent}>
             <Text fontSize="18px" fontWeight="600" color="primary500">
               {selectedStudent?.name || ``}
             </Text>
@@ -72,28 +66,35 @@ const Exam: React.FC = () => {
             </Text>
           </Flex>
           <Flex direction="column" align="flex-end" justify="space-between" h="100%" gap="0.5rem" flex="1">
-            <Flex align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
+            <Flex align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400" hidden={!selectedStudent}>
               <CoinIcon />
               <Text fontSize="1rem">{formatCoin(selectedStudent?.metadata.coins)}</Text>
             </Flex>
-            <Button gap="0.5rem" onClick={onOpen} hidden={!selectedStudent}>
-              <Text>Avaliar</Text>
-              <PiShootingStar fontSize="22px" />
-            </Button>
+
+            {finishedForms.find((e) => e.project_id === selectedStudent?.project.id && e.student_id === selectedStudent?.id) ? (
+              <Flex color="primary300" align="center" gap="0.5rem" hidden={!selectedStudent}>
+                <Text color="gray400">Aluno já avaliado</Text>
+                <HiOutlineShieldCheck fontSize="22px" />
+              </Flex>
+            ) : (
+              <Button
+                gap="0.5rem"
+                onClick={() => router.push(`/exam/${selectedStudent?.project.id}?p=${selectedStudent?.project.title}&s=${selectedStudent?.id}`)}
+                hidden={!selectedStudent}
+              >
+                <Text>Avaliar</Text>
+                <PiShootingStar fontSize="22px" />
+              </Button>
+            )}
           </Flex>
         </Flex>
         <Flex border="1px" borderColor="gray300" w="150px" h="100%" bg="white" borderRadius="8px" justify="center" align="center">
-          <Progress
-            type="circle"
-            // percent={Math.ceil((finishedLessons.length / lessons.length) * 100)}
-            percent={0}
-            format={() => <Text color="text">{`${0}/${projects.length}`}</Text>}
-          />
+          <Progress type="circle" percent={studentProgress} format={() => <Text color="text">{`${studentProgress}%`}</Text>} />
         </Flex>
       </Flex>
       <Flex flex="1" border="1px" borderColor="gray300" bg="white" borderRadius="8px" overflow="hidden auto" maxH="calc(100vh - 19.5rem)">
         {projects.map(({ project, students }) => (
-          <Accordion allowMultiple w="100%" fontWeight="500" color="gray700">
+          <Accordion key={project.id} allowMultiple w="100%" fontWeight="500" color="gray700" defaultIndex={projects.length === 1 ? 0 : undefined}>
             <AccordionItem>
               <h2>
                 <AccordionButton justifyContent="space-between">
@@ -122,11 +123,18 @@ const Exam: React.FC = () => {
                       {name}
                     </Text>
                     <Flex flex="1" justify="flex-end" align="center">
-                      <Tooltip label="Avaliar" placement="left">
-                        <Button p="0" onClick={onOpen}>
-                          <PiShootingStar fontSize="24px" />
-                        </Button>
-                      </Tooltip>
+                      {finishedForms.find((e) => e.project_id === project.id && e.student_id === id) ? (
+                        <Flex color="primary300" align="center" gap="0.5rem">
+                          <Text color="gray400">Aluno já avaliado</Text>
+                          <HiOutlineShieldCheck fontSize="22px" />
+                        </Flex>
+                      ) : (
+                        <Tooltip label="Avaliar" placement="left">
+                          <Button p="0" onClick={() => router.push(`/exam/${project.id}?p=${project.title}&s=${id}`)}>
+                            <PiShootingStar fontSize="24px" />
+                          </Button>
+                        </Tooltip>
+                      )}
                     </Flex>
                   </Flex>
                 ))}
@@ -135,35 +143,6 @@ const Exam: React.FC = () => {
           </Accordion>
         ))}
       </Flex>
-      <Drawer size="full" isOpen={isOpen} placement="right" onClose={onClose}>
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-
-          <DrawerBody>
-            <Flex direction="column">
-              <motion.div className="min-h-screen bg-gray-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ overflow: `hidden auto` }}>
-                <Header />
-
-                <div className="container max-w-4xl mx-auto px-4 py-6">
-                  <AnnouncementSection />
-                  <AssessmentSection />
-
-                  <motion.footer
-                    className="mt-16 mb-8 text-center text-gray-500 text-sm"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                  >
-                    <p>© 2025 EduQuest - Sistema de Avaliações Online</p>
-                    <p className="mt-1">Desenvolvido para proporcionar a melhor experiência educacional</p>
-                  </motion.footer>
-                </div>
-              </motion.div>
-            </Flex>
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
     </Flex>
   );
 };
@@ -176,7 +155,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     cookieManager.updateToken(req);
 
-    return { props: { selectedPage, pageTitle: 'Avalições' } };
+    return { props: { selectedPage, pageTitle: 'Avaliações' } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

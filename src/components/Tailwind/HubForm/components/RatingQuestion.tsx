@@ -24,7 +24,7 @@ export const RatingQuestion: React.FC<RatingQuestionProps> = ({ id, title, quest
     <motion.div className="question-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <div className="flex justify-between items-start mb-4">
         <h3 className="font-heading text-lg font-medium text-education-dark">{title}</h3>
-        <span className="bg-education-accent/10 text-education-accent text-xs px-2 py-1 rounded-full">Avaliação</span>
+        {/* <span className="bg-education-accent/10 text-education-accent text-xs px-2 py-1 rounded-full">Avaliação</span> */}
       </div>
 
       <p className="text-gray-700 mb-6">{question}</p>

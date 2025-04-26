@@ -11,11 +11,11 @@ interface IHubFormProps {
 export const HubForm: React.FC<IHubFormProps> = () => {
   return (
     <motion.div className="min-h-screen bg-gray-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ overflow: `hidden auto` }}>
-      <Header />
+      {/* <Header /> */}
 
       <div className="container max-w-4xl mx-auto px-4 py-6">
-        <AnnouncementSection />
-        <AssessmentSection />
+        {/* <AnnouncementSection /> */}
+        {/* <AssessmentSection /> */}
 
         <motion.footer
           className="mt-16 mb-8 text-center text-gray-500 text-sm"

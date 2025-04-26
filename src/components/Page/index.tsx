@@ -86,7 +86,7 @@ const studentMenuItems: Array<MenuItemType> = [
   { name: 'Home', page: 'profile', icon: RiHome2Line },
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
   // { name: 'Loja', page: 'store', icon: FiShoppingBag,  },
-  { name: 'Avaliações', page: 'exams', icon: PiExamLight },
+  { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },
   { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
   { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
@@ -97,7 +97,7 @@ const studentMenuItems: Array<MenuItemType> = [
 const teacherMenuItems: Array<MenuItemType> = [
   { name: 'Home', page: 'profile', icon: RiHome2Line },
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
-  { name: 'Avaliações', page: 'exams', icon: PiExamLight },
+  { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Turmas', page: 'classes', icon: FiUsers },
   { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
   { name: 'Estoque Maker', page: 'stock', icon: FiInbox },

@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useCustomRouter } from '@/_base/hooks';
 
 interface SubmissionCompleteProps {
   onClose: () => void;
 }
 
 export const SubmissionComplete: React.FC<SubmissionCompleteProps> = ({ onClose }) => {
+  const router = useCustomRouter();
   return (
     <motion.div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -47,23 +49,19 @@ export const SubmissionComplete: React.FC<SubmissionCompleteProps> = ({ onClose 
         <p className="text-gray-600 text-center mb-6">Suas respostas foram enviadas com sucesso. Obrigado por completar esta avaliação.</p>
 
         <div className="w-full bg-gray-100 rounded-lg p-4 mb-6">
-          <div className="flex justify-between items-center mb-1">
+          {/* <div className="flex justify-between items-center mb-1">
             <span className="text-sm text-gray-500">Tempo de conclusão</span>
             <span className="text-sm font-medium">12 minutos</span>
-          </div>
+          </div> */}
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">Questões respondidas</span>
             <span className="text-sm font-medium">10/10</span>
           </div>
         </div>
 
-        <motion.button className="btn-primary w-full" onClick={onClose} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+        <motion.button className="btn-primary w-full" onClick={() => router.push(`/exam`)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
           Retornar ao Painel
         </motion.button>
-
-        <button className="mt-4 text-sm text-gray-500 hover:text-education-primary transition-colors" onClick={onClose}>
-          Ver detalhes da avaliação
-        </button>
       </motion.div>
     </motion.div>
   );

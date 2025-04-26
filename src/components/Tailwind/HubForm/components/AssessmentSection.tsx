@@ -5,55 +5,22 @@ import { OpenQuestion, OpenQuestionProps } from './OpenQuestion';
 import { RatingQuestion, RatingQuestionProps } from './RatingQuestion';
 import { LoadingOverlay } from './LoadingOverlay';
 import { SubmissionComplete } from './SubmissionComplete';
+import { IProject } from '@/_base/interfaces/project';
+import { IHubUser } from '@/_base/interfaces/user';
 
-type Question =
+export type AssessmentQuestionType =
   | (Omit<MultipleChoiceQuestionProps, 'onOptionSelect'> & { type: 'multiple-choice' })
   | (Omit<OpenQuestionProps, 'onAnswerChange'> & { type: 'open' })
   | (Omit<RatingQuestionProps, 'onRatingChange'> & { type: 'rating' });
 
-const initialQuestions: Question[] = [
-  {
-    id: 'q1',
-    type: 'multiple-choice',
-    title: 'Questão 1',
-    question: 'Qual é o resultado da expressão 3x + 7 = 22 quando resolvemos para x?',
-    options: ['x = 5', 'x = 7', 'x = 15', 'x = 8'],
-    selectedOption: null,
-  },
-  {
-    id: 'q2',
-    type: 'multiple-choice',
-    title: 'Questão 2',
-    question: 'Um triângulo equilátero tem todos os lados iguais a 12 cm. Qual é o perímetro deste triângulo?',
-    options: ['12 cm', '24 cm', '36 cm', '48 cm'],
-    selectedOption: null,
-  },
-  {
-    id: 'q3',
-    type: 'open',
-    title: 'Questão 3',
-    question: 'Explique com suas palavras o Teorema de Pitágoras e dê um exemplo de sua aplicação no dia a dia.',
-    answer: '',
-  },
-  {
-    id: 'q4',
-    type: 'rating',
-    title: 'Avaliação de Conteúdo',
-    question: 'Quão claro foi o conteúdo sobre equações de primeiro grau apresentado em aula?',
-    rating: null,
-  },
-  {
-    id: 'q5',
-    type: 'multiple-choice',
-    title: 'Questão 4',
-    question: 'Um ciclista percorre 15 km em 45 minutos. Se ele mantiver a mesma velocidade, quanto tempo levará para percorrer 25 km?',
-    options: ['1 hora e 15 minutos', '1 hora e 30 minutos', '50 minutos', '1 hora'],
-    selectedOption: null,
-  },
-];
+interface IProps {
+  project: IProject | null;
+  student: IHubUser | null;
+  questions: AssessmentQuestionType[];
+}
 
-export const AssessmentSection: React.FC = () => {
-  const [questions, setQuestions] = useState<Question[]>(initialQuestions);
+export const AssessmentSection: React.FC<IProps> = ({ questions: initialQuestions, project, student }) => {
+  const [questions, setQuestions] = useState<AssessmentQuestionType[]>(initialQuestions);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -71,12 +38,18 @@ export const AssessmentSection: React.FC = () => {
 
   const handleSubmit = () => {
     setIsLoading(true);
-
+    updateLocalStorage();
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
       setIsSubmitted(true);
     }, 3000);
+  };
+
+  const updateLocalStorage = () => {
+    const items = JSON.parse(localStorage.getItem(`finished_forms`) || `[]`);
+
+    localStorage.setItem(`finished_forms`, JSON.stringify([...items, { student_id: student?.id, project_id: project?.id, questions }]));
   };
 
   const closeSubmissionComplete = () => {
@@ -149,8 +122,8 @@ export const AssessmentSection: React.FC = () => {
         })}
       </div>
 
-      <motion.div className="mt-10 flex justify-between items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <button className="text-education-primary hover:text-education-primary/80 font-medium transition-colors">Salvar para depois</button>
+      <motion.div className="mt-10 flex justify-end items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        {/* <button className="text-education-primary hover:text-education-primary/80 font-medium transition-colors">Salvar para depois</button> */}
 
         <motion.button
           className={`btn-primary flex items-center ${!allAnswered ? 'opacity-70 cursor-not-allowed' : ''}`}
