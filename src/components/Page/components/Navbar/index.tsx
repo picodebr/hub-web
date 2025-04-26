@@ -73,9 +73,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
       gap={{ base: `0.6rem`, xl: '1rem' }}
       overflow="hidden"
       userSelect="none"
-      borderRadius="10px"
-      border="1px"
-      borderColor="gray300"
+      borderRadius="8px"
       boxShadow="md"
       margin={{ base: '1rem', xl: '1.5rem' }}
       display={{ base: `none`, lg: `flex` }}
@@ -86,7 +84,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
           bg={colorMode === 'light' ? 'primary900' : 'primary400'}
           h={{ base: `85px`, xl: '102px' }}
           position="relative"
-          borderRadius="10px"
+          borderRadius="8px"
           minH={{ base: `85px`, xl: '102px' }}
         >
           <Flex
@@ -257,12 +255,18 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
               align="center"
               padding="10px 18px"
               transition="all 0.15s"
-              borderRadius="lg"
+              borderRadius="8px"
               fontSize={{ base: `14px`, xl: '15px' }}
               cursor="pointer"
               _hover={{ outline: '1px solid #3356B7' }}
-              bg={page === item.page ? 'primary50' : 'primary50'}
-              color={page === item.page ? 'primary900' : 'primary700'}
+              bg={page === item.page ? 'primary700' : 'primary50'}
+              color={page === item.page && colorMode === 'dark'
+                ? 'primary25'
+                : page !== item.page && colorMode === 'dark'
+                ? 'primary25'
+                : page === item.page && colorMode === 'light'
+                ? 'primary25'
+                : 'primary800'}
               onClick={() => router.push(`/${item.page}`)}
             >
               {item.icon && <Icon mr="3" fontSize="16" as={item.icon} />}

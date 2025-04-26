@@ -261,7 +261,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
       >
         <Flex display="flex" justify="space-between" direction="row">
           <Text fontSize="16px">Modo noturno</Text>
-          <Switch onChange={toggleColorMode} isChecked={colorMode === 'dark'} colorScheme="yellow" />
+          <Switch onChange={toggleColorMode} isChecked={colorMode === 'dark'} colorScheme="orange" />
         </Flex>
       </Flex>
     </Flex>
