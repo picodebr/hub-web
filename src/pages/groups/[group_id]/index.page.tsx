@@ -20,6 +20,8 @@ import { IStockMaker, IStoreMakerResale } from '@/_base/interfaces/storeMaker';
 import { IHubUser } from '@/_base/interfaces/user';
 import { makeDonation } from '@/_base/services/student/makeDonation';
 import { AnimatePresence } from 'framer-motion';
+import { ITempFile } from '@/_base/interfaces/shared';
+import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 
 interface IProps {
   group: IHubGroup;
@@ -34,6 +36,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const [cartIsOpened, setCartIsOpened] = useState(false);
   const [stock, setStock] = useState<IStockMaker[]>([]);
   const [availableStudents, setAvailableStudents] = useState<IHubUser[]>([]);
+  const [activityFiles, setActivityFiles] = useState<ITempFile[]>([]);
 
   const toast = useCustomToast();
   const { user, setUser } = useAuth();
@@ -70,13 +73,25 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const handleSaveGroup = useAsyncCallback(
     async (metadata: IHubGroupMetadata, showToast = true) => {
       setIsLoading(true);
+
+      if (activityFiles.length) {
+        for (const { path, file } of activityFiles) {
+          if (!metadata.annotation?.includes(path)) return;
+          const response = await getPresignedUrl(file.type, 'groups', `public-read`);
+          await uploadFile(response.link, file);
+          metadata.annotation = metadata.annotation.replaceAll(path, `https://hub-files-hml.s3.amazonaws.com/${response.path}`);
+        }
+
+        setActivityFiles([]);
+      }
+
       const updatedGroup = await updateGroup({ id: group.id, metadata });
       showToast && toast({ status: 'success', description: 'Atualizado com sucesso!' });
 
       setGroup((g) => ({ ...g, ...updatedGroup, orders: g.orders }));
       setSavedGroup((g) => ({ ...g, ...updatedGroup, orders: g.orders }));
     },
-    [],
+    [activityFiles],
     false,
     () => {
       setIsLoading(false);
@@ -197,9 +212,8 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   useEffect(() => {
     loadAvailableStudents();
   }, []);
-
   const PageViewComponent: Record<GroupPageView, ReactNode> = {
-    Atividades: <Activities group={group} setGroup={setGroup} canEdit={canEdit} />,
+    Atividades: <Activities group={group} setGroup={setGroup} canEdit={canEdit} setActivityFiles={setActivityFiles} />,
     Planejamentos: <Planning group={group} setGroup={setGroup} canEdit={canEdit} />,
     'Loja Online': (
       <GroupRequests

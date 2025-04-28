@@ -74,7 +74,7 @@ export const FormStep: React.FC<IProps> = ({
         {userType === 'teacher' && (
           <TextInput
             label="E-mail"
-            value={data.email}
+            value={data?.email || ``}
             isDisabled={isGoogleSignin}
             error={errors.email}
             onInputChange={(value) => onInputChange('email', value)}

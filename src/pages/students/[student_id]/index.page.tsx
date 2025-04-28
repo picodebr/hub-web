@@ -1,7 +1,19 @@
 import { GetServerSideProps } from 'next';
 
 import { logError, cookieManager, formatShortName, formatCoin } from '@/_base/utils';
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Flex, Img, Text, Tooltip, useColorMode } from '@chakra-ui/react';
+import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Flex,
+  Img,
+  Link,
+  Text,
+  Tooltip,
+  useColorMode,
+} from '@chakra-ui/react';
 import { FiUsers } from 'react-icons/fi';
 import { getStudent } from '@/_base/services/user';
 import { IHubUser } from '@/_base/interfaces/user';
@@ -72,36 +84,6 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
               <CoinIcon />
               <Text fontSize="1rem">{formatCoin(student.metadata.coins)}</Text>
             </Flex>
-            <Flex gap="1rem" pl="0.5rem">
-              <Tooltip label="Descontar moedas">
-                <Flex
-                  border="1px"
-                  borderColor="gray200"
-                  cursor="pointer"
-                  p="0.35rem"
-                  borderRadius="50%"
-                  transition="all 0.1s"
-                  _hover={{ boxShadow: `sm`, borderColor: `gray300` }}
-                  onClick={() => setRemoveCoinValue(`0`)}
-                >
-                  <FaMinus />
-                </Flex>
-              </Tooltip>
-              <Tooltip label="Creditar moedas">
-                <Flex
-                  border="1px"
-                  borderColor="gray200"
-                  cursor="pointer"
-                  p="0.35rem"
-                  borderRadius="50%"
-                  transition="all 0.1s"
-                  _hover={{ boxShadow: `sm`, borderColor: `gray300` }}
-                  onClick={() => setAddCoinValue(`0`)}
-                >
-                  <FaPlus />
-                </Flex>
-              </Tooltip>
-            </Flex>
           </Flex>
         </Flex>
       </Flex>
@@ -116,12 +98,13 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
           <AccordionPanel padding="20px">
             {student.groups.map((group) => (
               <Flex key={group.id} direction="row" gap="16px" align="center" _notLast={{ mb: `1rem` }}>
-                <FiUsers fontSize="40px" color="#21E080" />
-                <Flex display="column" justify="space-between">
-                  <Text fontWeight="700" fontSize="18px" color="primary700">
+                <Link display="flex" alignContent="center" gap="1rem" href={`/groups/${group.id}`} target="_blank">
+                  <FiUsers fontSize="40px" color="#21E080" />
+
+                  <Text fontWeight="700" fontSize="18px" color="primary700" pt="7px">
                     {group.display_name}
                   </Text>
-                </Flex>
+                </Link>
               </Flex>
             ))}
           </AccordionPanel>

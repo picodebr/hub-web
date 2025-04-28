@@ -15,6 +15,7 @@ import { IHubUser } from '@/_base/interfaces/user';
 import { MenuItemType } from '../../interfaces';
 import { iconList } from '@/_base/config/iconList';
 import { useSelectedSchool } from '../Header';
+import { CustomActions } from '@/_base/interfaces/customActions';
 
 export interface INavbarProps {
   page: string;
@@ -30,6 +31,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [actions, setActions] = useState<CustomActions[]>([]);
 
   const { customActions } = useSelectedSchool();
 
@@ -37,6 +39,10 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
     if (_user) setUser({ ...user, ..._user });
     setAvatar(_user?.avatar || user.avatar);
   }, [_user]);
+
+  useEffect(() => {
+    setActions(customActions);
+  }, [_user, customActions]);
 
   const handleUploadAvatar = useCallback(async (file?: File) => {
     if (file) {
@@ -61,109 +67,98 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
   return (
     <Flex
       direction="column"
-      bg="white"
+      // bg="white"
       minW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
       maxW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
       gap={{ base: `0.6rem`, xl: '1rem' }}
       overflow="hidden"
       userSelect="none"
-      borderRadius="10px"
-      border="1px"
-      borderColor="gray300"
-      boxShadow="md"
+      borderRadius="8px"
       margin={{ base: '1rem', xl: '1.5rem' }}
       display={{ base: `none`, lg: `flex` }}
     >
       <Flex direction="column" gap={{ base: '0.5rem', xl: '1rem' }}>
-        {/* Avatar */}
-        <Flex
-          bg={colorMode === 'light' ? 'primary900' : 'primary400'}
-          h={{ base: `85px`, xl: '102px' }}
-          position="relative"
-          borderRadius="10px"
-          minH={{ base: `85px`, xl: '102px' }}
-        >
-          <Flex
-            title="Trocar foto de perfil"
-            position="absolute"
-            borderRadius="50%"
-            bg="gray300"
-            bottom={{ base: `-1.2rem`, xl: '-2rem' }}
-            w={{ base: `4.75rem`, xl: '6rem' }}
-            h={{ base: `4.75rem`, xl: '6rem' }}
-            left="50%"
-            transform="translate(-50%, 0)"
-            boxShadow=" 0px 4px 6px -2px"
-            overflow="hidden"
-            border="4px"
-            borderColor="white"
-          >
-            <NextImage loader={() => avatar} src={avatar} width={100} height={100} alt="" style={{ opacity: isUpdating ? `0.4` : `1` }} priority />
-          </Flex>
-          {isUpdating && (
+        {/* Informações */}
+        <Flex bg="white" padding="1rem" gap="1rem" h="fit-content" borderRadius="8px" boxShadow="md">
+          <Flex position="relative" borderRadius="8px">
             <Flex
-              position="absolute"
+              title="Trocar foto de perfil"
               borderRadius="50%"
-              bottom={{ base: `-1.2rem`, xl: '-2rem' }}
-              w={{ base: `4.75rem`, xl: '6rem' }}
-              h={{ base: `4.75rem`, xl: '6rem' }}
-              left="50%"
-              transform="translate(-50%, 0)"
-              align="center"
-              justify="center"
+              bg="gray300"
+              w={{ base: `4rem`, xl: '5rem' }}
+              h={{ base: `4rem`, xl: '5rem' }}
+              overflow="hidden"
+              border="4px"
+              borderColor="white"
             >
-              <Spinner size="xl" />
+              <NextImage loader={() => avatar} src={avatar} width={100} height={100} alt="" style={{ opacity: isUpdating ? `0.4` : `1` }} priority />
             </Flex>
-          )}
-          <Uploader
-            autoUpload={true}
-            accept={`img/*`}
-            draggable={false}
-            action=""
-            fileListVisible={false}
-            onChange={(e) => {
-              handleUploadAvatar(e[0]?.blobFile as File);
-            }}
-            toggleAs={(e) => (
+            {isUpdating && (
               <Flex
-                border="1px"
-                borderColor="gray300"
                 borderRadius="50%"
-                p="0.25rem"
-                bg="white"
                 position="absolute"
-                left={{ base: `calc(50% + 1.75rem)`, xl: 'calc(50% + 2.5rem)' }}
+                w={{ base: `4rem`, xl: '5rem' }}
+                h={{ base: `4rem`, xl: '5rem' }}
+                left="50%"
                 transform="translate(-50%, 0)"
-                cursor={'pointer'}
-                _hover={{ filter: `brightness(0.9)` }}
-                bottom="-1.5rem"
-                onClick={() => e.onClick(e)}
+                align="center"
+                justify="center"
+              >
+                <Spinner size="xl" />
+              </Flex>
+            )}
+            <Uploader
+              autoUpload={true}
+              accept={`img/*`}
+              draggable={false}
+              action=""
+              fileListVisible={false}
+              onChange={(e) => {
+                handleUploadAvatar(e[0]?.blobFile as File);
+              }}
+              toggleAs={(e) => (
+                <Flex
+                  border="1px"
+                  borderColor="gray300"
+                  borderRadius="50%"
+                  p="0.25rem"
+                  bg="white"
+                  position="absolute"
+                  right="0"
+                  cursor={'pointer'}
+                  _hover={{ filter: `brightness(0.9)` }}
+                  bottom="0"
+                  onClick={() => e.onClick(e)}
+                >
+                  <FiEdit2 size="1rem" color="#98A2B3" />
+                </Flex>
+              )}
+            />
+          </Flex>
+          <Flex direction="column" flex="1" w="100%">
+            <Flex fontSize={{ base: `16px`, xl: '18px' }} fontWeight="600" flex="1 0 0" color="primary900" justify="space-between" align="center">
+              {formatShortName(user?.name || '', true)}
+              <Flex
+                cursor="pointer"
+                transition="all 0.12s"
+                _hover={{ filter: 'brightness(0.7)' }}
+                onClick={() => router.push('/profile?opened=true')}
               >
                 <FiEdit2 size="1rem" color="#98A2B3" />
               </Flex>
-            )}
-          />
-        </Flex>
-
-        {/* Informações */}
-        <Flex bg="white" display="column" padding={{ base: `0 1.5rem`, xl: '0 2.5rem' }} gap="0.5rem" h="fit-content" mt="1.5rem">
-          <Flex fontSize={{ base: `16px`, xl: '18px' }} fontWeight="600" flex="1 0 0" color="primary900" justify="space-between" align="center">
-            {formatShortName(user?.name || '', true)}
-            <Flex cursor="pointer" transition="all 0.12s" _hover={{ filter: 'brightness(0.7)' }} onClick={() => router.push('/profile?opened=true')}>
-              <FiEdit2 size="1rem" color="#98A2B3" />
             </Flex>
-          </Flex>
-          <Flex fontSize="12px" fontWeight="400" color="gray400" h="18px" display="column">
-            {user?.email}
-          </Flex>
-          <Flex fontSize="13px" color="gray600" fontWeight="400" marginTop="0.5rem" maxH="8rem" overflow="auto" opacity={user?.bio ? '1' : '0'}>
-            {user?.bio || '.'}
+            <Flex fontSize="12px" fontWeight="400" color="gray400" h="18px" display="column">
+              {user?.email}
+            </Flex>
+            <Flex fontSize="13px" color="gray600" fontWeight="400" marginTop="0.5rem" maxH="8rem" overflow="auto" opacity={user?.bio ? '1' : '0'}>
+              {user?.bio || '.'}
+            </Flex>
           </Flex>
         </Flex>
 
         {/* Ranking */}
-        <Flex bg="white" display="column" p={{ base: `0 1.5rem`, xl: '0 2.5rem' }} gap="0.5rem" h="fit-content">
-          {user?.role === 'student' && (
+        {user?.role === 'student' && (
+          <Flex display="column" gap="0.5rem" h="fit-content">
             <Flex
               fontWeight="600"
               p={{ base: '0.5rem', xl: '1rem 0.5rem' }}
@@ -191,21 +186,21 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
                 </Flex>
               </>
             </Flex>
-          )}
-        </Flex>
+          </Flex>
+        )}
       </Flex>
 
       {/* Menu */}
       <motion.div
         style={{
           display: `flex`,
-          margin: '0 1.25rem 0 0',
-          padding: '0.5rem 0.25rem 0.5rem 1.5rem',
+          flex: `1`,
+          padding: '1rem',
           flexDirection: 'column',
           gap: '0.5rem',
           overflow: 'hidden auto',
           alignItems: 'flex-end',
-          marginBottom: `1rem`,
+          background: colorMode === `light` ? `white` : `#101828`,
         }}
         animate={isOpen ? 'open' : 'closed'}
         variants={{
@@ -251,12 +246,22 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
               align="center"
               padding="10px 18px"
               transition="all 0.15s"
-              borderRadius="lg"
+              borderRadius="8px"
+              border={colorMode === 'dark' && page !== item.page ? `1px` : undefined}
+              borderColor="#4E5BA666"
               fontSize={{ base: `14px`, xl: '15px' }}
               cursor="pointer"
               _hover={{ outline: '1px solid #3356B7' }}
-              bg={page === item.page ? 'primary50' : 'primary50'}
-              color={page === item.page ? 'primary900' : 'primary700'}
+              bg={page === item.page ? 'primary700' : colorMode === 'dark' ? `transparent` : 'primary50'}
+              color={
+                page === item.page && colorMode === 'dark'
+                  ? 'primary25'
+                  : page !== item.page && colorMode === 'dark'
+                    ? 'primary25'
+                    : page === item.page && colorMode === 'light'
+                      ? 'primary25'
+                      : 'primary800'
+              }
               onClick={() => router.push(`/${item.page}`)}
             >
               {item.icon && <Icon mr="3" fontSize="16" as={item.icon} />}
@@ -265,9 +270,10 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
           </motion.div>
         ))}
       </motion.div>
-      {!!customActions.length && (
-        <Flex flex="1" color="primary700" gap="1.25rem" justify="center" align="flex-end" p="1rem 1rem 2rem">
-          {customActions.map((action, i) => (
+
+      {!!actions.length && (
+        <Flex gap="1.25rem" justify="center" align="flex-end">
+          {actions.map((action, i) => (
             <motion.a
               key={action.type + i}
               href={action.data.link}
@@ -279,10 +285,11 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
                 flexDirection: `column`,
                 alignItems: `center`,
                 justifyContent: `center`,
-                background: `#F9F5FF`,
-                border: `1px solid #d9d5dd88`,
+                background: colorMode === `light` ? `white` : `#101828`,
+                border: `1px solid ${colorMode === 'light' ? '#d9d5dd88' : '#272352'}`,
                 height: `3.25rem`,
                 minWidth: `4rem`,
+                color: colorMode === `light` ? `#1D2939` : `white`,
                 padding: `0.25rem`,
                 gap: `0.23rem`,
                 borderRadius: `8px`,

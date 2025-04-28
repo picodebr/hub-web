@@ -73,9 +73,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
   }, []);
 
   const handleGeneratePDF = useCallback(async () => {
-    console.log(course, certificateTemplate);
     if (!course || !certificateTemplate) return;
-    console.log(2);
 
     try {
       setLoadingPdf(true);

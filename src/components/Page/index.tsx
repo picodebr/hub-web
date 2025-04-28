@@ -12,6 +12,7 @@ import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 import { RedefinePass } from './components/RedefinePass';
 import { MenuItemType } from './interfaces';
+import { PiExamLight } from 'react-icons/pi';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   selectedPage,
@@ -37,9 +38,10 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
       position="relative"
       overflow="hidden"
       zIndex="0"
-      bgImg={`/patterns/bg-${colorMode}.svg`}
+      bgImg={`/patterns/background-${colorMode}.svg`}
       bgRepeat="no-repeat"
       bgSize="cover"
+      
     >
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
@@ -85,6 +87,7 @@ const studentMenuItems: Array<MenuItemType> = [
   { name: 'Home', page: 'profile', icon: RiHome2Line },
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
   // { name: 'Loja', page: 'store', icon: FiShoppingBag,  },
+  { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },
   { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
   { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
@@ -95,6 +98,7 @@ const studentMenuItems: Array<MenuItemType> = [
 const teacherMenuItems: Array<MenuItemType> = [
   { name: 'Home', page: 'profile', icon: RiHome2Line },
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
+  { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Turmas', page: 'classes', icon: FiUsers },
   { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
   { name: 'Estoque Maker', page: 'stock', icon: FiInbox },

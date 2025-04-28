@@ -1,7 +1,7 @@
 import { Image, useColorMode } from '@chakra-ui/react';
 import { ILogoProps } from './interfaces';
 
-export const Logo: React.FC<ILogoProps> = ({ size = 'md', ...rest }) => {
+export const Logo: React.FC<ILogoProps> = ({ size = 'md', variant = `full`, forceTheme, ...rest }) => {
   const { colorMode } = useColorMode();
 
   const sizeMapper = {
@@ -12,7 +12,7 @@ export const Logo: React.FC<ILogoProps> = ({ size = 'md', ...rest }) => {
     xl: '5.5rem',
     '2xl': '7rem',
   };
-  return <Image src={`/logo/picode-logo-${colorMode}.svg`} h={sizeMapper[size]} {...rest} />;
+  return <Image src={`/logo/${variant === `full` ? 'picode-logo' : 'pi-logo'}-${forceTheme || colorMode}.svg`} h={sizeMapper[size]} {...rest} />;
 };
 
 export const CoinIcon: React.FC<ILogoProps> = ({ size = 'md', ...rest }) => {

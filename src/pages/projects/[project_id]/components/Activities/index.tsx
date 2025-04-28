@@ -4,7 +4,14 @@ import {
   AccordionIcon,
   AccordionItem,
   AccordionPanel,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
   Box,
+  Button,
   Checkbox,
   Flex,
   Image,
@@ -15,16 +22,17 @@ import {
   NumberInputStepper,
   Text,
   Tooltip,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { IHubProjectStep, IProject } from '@/_base/interfaces/project';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SmallModal } from '@/components/Modal/Small';
 import { formatShortName } from '@/_base/utils';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
 import { MdOutlineCheckBox, MdPendingActions } from 'react-icons/md';
-import { useAsyncCallback } from '@/_base/hooks';
+import { useAsyncCallback, useCustomRouter } from '@/_base/hooks';
 
 interface IProps {
   project: IProject;
@@ -39,6 +47,9 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
   const [missingStudents, setMissingStudents] = useState<string[]>([]);
   const [taxedStudents, setTaxedStudents] = useState<Record<string, string>>({});
   const [modalStep, setModalStep] = useState<ModalStep>('hidden');
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const router = useCustomRouter();
 
   const onCloseModal = () => {
     setMissingStudents([]);
@@ -82,6 +93,15 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
     };
     setModalStep(`hidden`);
     await handleSave(newProjectData, newRewards);
+    localStorage.setItem(
+      `pending_forms::${project.id}`,
+      JSON.stringify({ project: newProjectData, students: students.map((e) => ({ id: e.id, name: e.name })) }),
+    );
+    const tm = setTimeout(() => onOpen(), 750);
+
+    return () => {
+      clearTimeout(tm);
+    };
   }, []);
 
   return (
@@ -332,6 +352,24 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
           </Flex>
         </Flex>
       </SmallModal>
+
+      <SmallModal
+        title="Nova avaliação disponível"
+        show={isOpen}
+        onConfirm={() => router.push(`/exam?project=${project.id}`)}
+        size="md"
+        onCancel={onClose}
+        onCloseModal={onClose}
+        okText="Sim"
+        cancelText="Não"
+        topIcon="ray"
+      >
+        <Flex direction="column" gap="1rem" overflow="hidden auto">
+          <Text color="gray500" fontSize="15px">
+            Deseja realizar a avaliação de desempenho dos alunos sobre a atividade finalizada?
+          </Text>
+        </Flex>
+      </SmallModal>
     </motion.div>
   );
 };
@@ -349,6 +387,5 @@ const getActivityPattern = (color: string): string | undefined => {
     { color: `#ff515c`, pattern: `rockets-vermelho` },
   ];
 
-  console.log('colors.find((e) => e.color === color)?.pattern: ', colors.find((e) => e.color === color)?.pattern);
   return colors.find((e) => e.color === color)?.pattern;
 };

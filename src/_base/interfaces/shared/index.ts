@@ -8,3 +8,4 @@ export * from './HistoryDataType';
 export * from './InputValueType';
 export * from './IPageData';
 export * from './IPagingResponse';
+export * from './ITempFile';

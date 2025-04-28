@@ -8,7 +8,7 @@ import { HubUserType } from './HubUserType';
 export default interface IRegisterUser {
   primary_code: string;
   name: string;
-  email?: string;
+  email?: string | null;
   username: string;
   password: string;
   password_confirmation: string;
@@ -37,7 +37,7 @@ export const registerUserSchema: ZodCustomSchema<IRegisterUser> = z.object({
     .min(4, { message: zodSchemaErrors.CODE_ERROR })
     .max(4, { message: zodSchemaErrors.CODE_ERROR }),
   name: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim().min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
-  email: z.string().email().optional(),
+  email: z.string().max(0, `E-mail inválido`).or(z.string().email()),
   username: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim().min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
   password: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
   password_confirmation: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),

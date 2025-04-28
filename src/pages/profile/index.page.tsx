@@ -260,8 +260,8 @@ const Profile: React.FC<IProps> = ({ user }) => {
         color="gray600"
       >
         <Flex display="flex" justify="space-between" direction="row">
-          <Text>Modo noturno</Text>
-          <Switch onChange={toggleColorMode} isChecked={colorMode === 'dark'} colorScheme="yellow" />
+          <Text fontSize="16px">Modo noturno</Text>
+          <Switch onChange={toggleColorMode} isChecked={colorMode === 'dark'} colorScheme="orange" />
         </Flex>
       </Flex>
     </Flex>
