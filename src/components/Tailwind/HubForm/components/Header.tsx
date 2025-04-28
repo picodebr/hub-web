@@ -30,11 +30,6 @@ export const Header: React.FC<IProps> = ({ project, student }) => {
 
         <motion.div className="flex items-center space-x-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
           <span className="text-sm text-gray-500">{formatClassGrade(student?.hub_class.grade || ``)}</span>
-          <div className="h-6 w-px bg-gray-300"></div>
-          {/* <span className="text-sm font-medium text-education-primary">Tempo: 45 min</span> */}
-          <div className="bg-education-primary/10 px-3 py-1 rounded-full">
-            <span className="text-sm font-medium text-education-primary">Avaliação Quinzenal</span>
-          </div>
         </motion.div>
       </div>
     </motion.header>

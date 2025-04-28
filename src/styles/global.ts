@@ -85,6 +85,6 @@ export const dimensions = {
     height: '66px',
   },
   navbar: {
-    width: '24rem',
+    width: '22rem',
   },
 };

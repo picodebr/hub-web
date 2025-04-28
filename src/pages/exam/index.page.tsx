@@ -1,4 +1,17 @@
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Avatar, Box, Button, Flex, Text, Tooltip } from '@chakra-ui/react';
+import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Avatar,
+  Box,
+  Button,
+  Flex,
+  Text,
+  Tooltip,
+  useColorMode,
+} from '@chakra-ui/react';
 import { Progress } from 'antd';
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
@@ -11,6 +24,7 @@ import { cookieManager, formatCoin, formatShortName, logError } from '@/_base/ut
 import { CoinIcon } from '@/components/Logo';
 import { HiOutlineShieldCheck } from 'react-icons/hi';
 import { RatingQuestionProps } from '@/components/Tailwind/HubForm/components/RatingQuestion';
+import { IoChevronForward } from 'react-icons/io5';
 
 type TempProject = { project: IHubFactoryProject; students: Array<{ name: string; id: string }> };
 type TempStudent = IHubUser & { project: IHubFactoryProject };
@@ -89,7 +103,20 @@ const Exam: React.FC = () => {
           </Flex>
         </Flex>
         <Flex border="1px" borderColor="gray300" w="150px" h="100%" bg="white" borderRadius="8px" justify="center" align="center">
-          <Progress type="circle" percent={studentProgress} format={() => <Text color="text">{`${studentProgress}%`}</Text>} />
+          <Progress
+            type="circle"
+            percent={studentProgress}
+            format={() => (
+              <Flex direction="column" gap="0.1rem">
+                <Text color="text">
+                  {`${!studentProgress ? 0 : studentProgress === 100 ? 10 : (studentProgress / 10).toFixed(1)}`.replace(`.`, `,`)}
+                </Text>
+                <Text fontSize="13px" color="gray500">
+                  Média
+                </Text>
+              </Flex>
+            )}
+          />
         </Flex>
       </Flex>
       <Flex flex="1" border="1px" borderColor="gray300" bg="white" borderRadius="8px" overflow="hidden auto" maxH="calc(100vh - 19.5rem)">
@@ -100,7 +127,6 @@ const Exam: React.FC = () => {
                 <AccordionButton justifyContent="space-between">
                   <Box fontSize={{ base: `15px`, xl: '16px' }}>{project.title}</Box>
                   <AccordionIcon />
-                  {/* <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} /> */}
                 </AccordionButton>
               </h2>
               <AccordionPanel fontWeight="400" display="flex" flexDirection="column" gap="1rem" overflow="hidden">
