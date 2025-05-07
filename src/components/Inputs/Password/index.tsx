@@ -22,7 +22,8 @@ import { IInputProps } from '../interfaces';
 import { validatePassword } from '@/_base/utils';
 
 interface IPasswordProps {
-  passStrong?: 2 | 3 | 4;
+  value: string;
+  passStrong?: 0 | 1 | 2 | 3 | 4;
   onPassStrongReached?: () => void;
   onPassStrongUnreached?: () => void;
   minPassLength?: number;
@@ -34,7 +35,7 @@ export const PasswordInput: React.FC<IInputProps & IPasswordProps> = ({
   label,
   error,
   onInputChange,
-  passStrong,
+  passStrong = 0,
   onPassStrongReached,
   onPassStrongUnreached,
   minPassLength = 8,
@@ -42,7 +43,7 @@ export const PasswordInput: React.FC<IInputProps & IPasswordProps> = ({
   const [showPass, setShowPass] = useState(false);
 
   const passwordStrong = useMemo<number>(() => {
-    const isValid = validatePassword(value);
+    const isValid = !passStrong || validatePassword(value);
     const hasMinLength = value.length >= minPassLength;
 
     let score = 0;
@@ -53,7 +54,7 @@ export const PasswordInput: React.FC<IInputProps & IPasswordProps> = ({
   }, [value]);
 
   useUpdateEffect(() => {
-    if (onPassStrongReached && passStrong && value.length >= minPassLength && passwordStrong >= passStrong) onPassStrongReached();
+    if (onPassStrongReached && value.length >= minPassLength && passwordStrong >= passStrong) onPassStrongReached();
     else onPassStrongUnreached && onPassStrongUnreached();
   }, [passwordStrong]);
 
