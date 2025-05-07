@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 
-import { logError, cookieManager, formatShortName, formatCoin } from '@/_base/utils';
+import { logError, cookieManager, formatShortName, formatCoin, showErrorToClient } from '@/_base/utils';
 import {
   Accordion,
   AccordionButton,
@@ -8,22 +8,37 @@ import {
   AccordionItem,
   AccordionPanel,
   Flex,
+  Image,
   Img,
   Link,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
   Text,
   Tooltip,
   useColorMode,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { FiUsers } from 'react-icons/fi';
-import { getStudent } from '@/_base/services/user';
+import { getStudent, redefinePassword, redefineStudentPassword } from '@/_base/services/user';
 import { IHubUser } from '@/_base/interfaces/user';
 import { CoinIcon } from '@/components/Logo';
 import { FaPlus, FaMinus } from 'react-icons/fa6';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { SmallModal } from '@/components/Modal/Small';
 import { NumberScaleInput } from '@/components/Inputs/NumberScale';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { updateStudentData } from '@/_base/services/student/updateStudentData';
+import { GenericButton } from '@/components/Buttons/Generic';
+import { PasswordInput } from '@/components/Inputs/Password';
+import { InputValueType } from '@/_base/interfaces/shared';
+
+interface IRedefineData {
+  password: InputValueType<string>;
+  password_confirmation: InputValueType<string>;
+}
+
 
 interface IProps {
   student: IHubUser;
@@ -34,8 +49,17 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
   const [addCoinValue, setAddCoinValue] = useState<string | null>(null);
   const [removeCoinValue, setRemoveCoinValue] = useState<string | null>(null);
   const [student, setStudent] = useState<IHubUser>(_student);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [redefineData, setRedefineData] = useState<IRedefineData>({ password: { value: '' }, password_confirmation: { value: '' } });
+
 
   const toast = useCustomToast();
+  const { onOpen, isOpen, onClose } = useDisclosure()
+  const canSubmit = useMemo<boolean>(
+    () => !!redefineData.password.valid && redefineData.password_confirmation.value === redefineData.password.value,
+    [redefineData],
+  );
 
   const handleUpdateStudent = useAsyncCallback(async (coins: number) => {
     const toastMessage = `Moedas ${coins > (student.metadata.coins || 0) ? 'creditadas' : 'descontadas'} com sucesso!`;
@@ -45,6 +69,19 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
     setRemoveCoinValue(null);
     toast({ status: `success`, description: toastMessage });
   }, []);
+
+
+  const handleUpdatePassword = useAsyncCallback(async () => {
+    setIsLoading(true)
+    if (!redefineData.password.value) return;
+    try {
+      await redefineStudentPassword(student.id, redefineData.password.value);
+      toast({ description: `Senha redefinida com sucesso!`, status: `success` });
+      onClose()
+    } catch (err) {
+      showErrorToClient(err, toast);
+    }
+  }, [student, redefineData], true, () => setIsLoading(false));
 
   return (
     <Flex direction="column" w="100%" h="100%" overflow="auto">
@@ -79,10 +116,13 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
               {student.bio || `.`}
             </Text>
           </Flex>
-          <Flex direction="column" align="center" gap="0.5rem">
+          <Flex direction="column" align="center" gap="0.5rem" justify="space-between" h="100%">
             <Flex align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400">
               <CoinIcon />
               <Text fontSize="1rem">{formatCoin(student.metadata.coins)}</Text>
+            </Flex>
+            <Flex align="center" justify="space-between" gap="0.5rem" fontWeight="400" color="gray400" mt="1rem">
+              <GenericButton label="Resetar senha" onClick={onOpen} />
             </Flex>
           </Flex>
         </Flex>
@@ -188,6 +228,40 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
       >
         <NumberScaleInput value={removeCoinValue || ``} onInputChange={setRemoveCoinValue} max={student.metadata.coins || 0} />
       </SmallModal>
+
+      <Modal isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false} closeOnEsc={false} isCentered autoFocus>
+        <ModalOverlay />
+        <ModalContent bg="white" p="0.75rem" maxH="100%" overflow="hidden auto">
+          <ModalHeader opacity="0.9" display="flex" >
+            <Flex direction="column" gap="1.5rem" align="center" justify="center" w="100%">
+              <Text fontWeight="500" opacity="0.8" fontSize="18px">
+                {`Redefinição de senha de  ${student?.name?.split(` `)[0] || `PiCoder`}`}
+              </Text>
+              <Image src="/images/redefine-pass.png" border="1px" borderColor="gray200" borderRadius="md" h="12rem" />
+            </Flex>
+          </ModalHeader>
+          <Flex direction="column" p="1rem" gap="1rem">
+            <Text opacity="0.8">
+              Minímo de 8 caracteres
+            </Text>
+            <PasswordInput
+              label="Senha"
+              error={redefineData.password.error}
+              value={redefineData.password.value}
+              onInputChange={(value) => setRedefineData((e) => ({ ...e, password: { ...e.password, value } }))}
+              onPassStrongUnreached={() => setRedefineData((e) => ({ ...e, password: { ...e.password, valid: false } }))}
+              onPassStrongReached={() => setRedefineData((e) => ({ ...e, password: { ...e.password, valid: true } }))}
+            />
+            <PasswordInput
+              label="Confirmar Senha"
+              error={redefineData.password_confirmation.error}
+              value={redefineData.password_confirmation.value}
+              onInputChange={(value) => setRedefineData((e) => ({ ...e, password_confirmation: { value } }))}
+            />
+            <GenericButton label="Redefinir" mt="2rem" isDisabled={!canSubmit} onClick={() => handleUpdatePassword()} isLoading={isLoading} />
+          </Flex>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 };
