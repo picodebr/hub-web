@@ -1,7 +1,6 @@
 import { ChakraProvider, CSSReset } from '@chakra-ui/react';
 import type { AppProps } from 'next/app';
 import 'moment/locale/pt-br';
-import '../styles/globals.css';
 
 import { api } from '@/_base/classes/api';
 import { CustomRouterProvider } from '@/_base/hooks/CustomRouter';
