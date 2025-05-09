@@ -11,7 +11,13 @@ const nextConfig = {
     optimizeCss: true,
     optimizePackageImports: ['@chakra-ui/react', 'antd', 'rsuite', 'react-icons', '@emotion/react', '@emotion/styled'],
     outputFileTracingExcludes: {
-      '*': ['node_modules/tailwindcss', `node_modules/tailwindcss-animate`, `postcss`, `postcss-import`, `postcss-nesting`],
+      '*': [
+        'node_modules/tailwindcss',
+        `node_modules/tailwindcss-animate`,
+        `node_modules/postcss`,
+        `node_modules/postcss-import`,
+        `node_modules/postcss-nesting`,
+      ],
     },
   },
   typescript: { ignoreBuildErrors: true },
