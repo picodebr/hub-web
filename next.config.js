@@ -5,11 +5,25 @@ const { version } = require('./package.json');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  experimental: { newNextLinkBehavior: false, largePageDataBytes: 128 * 1000000 },
+  experimental: { 
+    newNextLinkBehavior: false, 
+    largePageDataBytes: 128 * 1000000,
+    optimizeCss: true,
+    optimizePackageImports: [
+      '@chakra-ui/react',
+      'antd',
+      'rsuite',
+      'react-icons',
+      '@emotion/react',
+      '@emotion/styled'
+    ]
+  },
   typescript: { ignoreBuildErrors: true },
   publicRuntimeConfig: { version },
   pageExtensions: ['page.tsx'],
   output: 'standalone',
+  compress: true,
+  swcMinify: true,
   images: {
     remotePatterns: [
       {
