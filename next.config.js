@@ -9,6 +9,7 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   publicRuntimeConfig: { version },
   pageExtensions: ['page.tsx'],
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
