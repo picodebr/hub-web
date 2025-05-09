@@ -23,12 +23,11 @@ import { getStudent } from '@/_base/services/user';
 import { cookieManager, formatCoin, formatShortName, logError } from '@/_base/utils';
 import { CoinIcon } from '@/components/Logo';
 import { HiOutlineShieldCheck } from 'react-icons/hi';
-import { RatingQuestionProps } from '@/components/Tailwind/HubForm/components/RatingQuestion';
-import { IoChevronForward } from 'react-icons/io5';
 
 type TempProject = { project: IHubFactoryProject; students: Array<{ name: string; id: string }> };
 type TempStudent = IHubUser & { project: IHubFactoryProject };
-type TempFinishedForms = { student_id: string; project_id: string; questions: (Omit<RatingQuestionProps, 'onRatingChange'> & { type: 'rating' })[] };
+// type TempFinishedForms = { student_id: string; project_id: string; questions: (Omit<RatingQuestionProps, 'onRatingChange'> & { type: 'rating' })[] };
+type TempFinishedForms = { student_id: string; project_id: string; questions: any[] };
 
 const Exam: React.FC = () => {
   const [projects, setProjects] = useState<TempProject[]>([]);
