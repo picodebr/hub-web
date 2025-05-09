@@ -5,7 +5,7 @@ const { version } = require('./package.json');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  experimental: { newNextLinkBehavior: false, largePageDataBytes: 128 * 1000000, outputFileTracingExcludes: { '*': ['node_modules'] } },
+  experimental: { newNextLinkBehavior: false, largePageDataBytes: 128 * 1000000 },
   typescript: { ignoreBuildErrors: true },
   publicRuntimeConfig: { version },
   pageExtensions: ['page.tsx'],
