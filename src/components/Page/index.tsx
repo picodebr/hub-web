@@ -41,7 +41,6 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
       bgImg={`/patterns/background-${colorMode}.svg`}
       bgRepeat="no-repeat"
       bgSize="cover"
-      
     >
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
@@ -98,7 +97,7 @@ const studentMenuItems: Array<MenuItemType> = [
 const teacherMenuItems: Array<MenuItemType> = [
   { name: 'Home', page: 'profile', icon: RiHome2Line },
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
-  { name: 'Avaliações', page: 'exam', icon: PiExamLight },
+  // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Turmas', page: 'classes', icon: FiUsers },
   { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
   { name: 'Estoque Maker', page: 'stock', icon: FiInbox },
