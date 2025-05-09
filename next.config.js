@@ -10,7 +10,9 @@ const nextConfig = {
     largePageDataBytes: 128 * 1000000,
     optimizeCss: true,
     optimizePackageImports: ['@chakra-ui/react', 'antd', 'rsuite', 'react-icons', '@emotion/react', '@emotion/styled'],
-    outputFileTracingExcludes: { '*': ['node_modules/tailwindcss', `node_modules/tailwindcss-animate`] },
+    outputFileTracingExcludes: {
+      '*': ['node_modules/tailwindcss', `node_modules/tailwindcss-animate`, `postcss`, `postcss-import`, `postcss-nesting`],
+    },
   },
   typescript: { ignoreBuildErrors: true },
   publicRuntimeConfig: { version },
