@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import { Header } from '@/components/Tailwind/HubForm/components/Header';
-import { AssessmentQuestionType, AssessmentSection } from '@/components/Tailwind/HubForm/components/AssessmentSection';
-import AnnouncementSection from '@/components/Tailwind/HubForm/components/AnnouncementSection';
+// import { Header } from '@/components/Tailwind/HubForm/components/Header';
+// import { AssessmentQuestionType, AssessmentSection } from '@/components/Tailwind/HubForm/components/AssessmentSection';
+// import AnnouncementSection from '@/components/Tailwind/HubForm/components/AnnouncementSection';
 import { GetServerSideProps } from 'next';
 import { cookieManager, logError } from '@/_base/utils';
 import { useEffect, useState } from 'react';
@@ -42,11 +42,11 @@ const ExamForm: React.FC<IPageProps> = ({ projectId, studentId }) => {
       animate={{ opacity: 1 }}
       style={{ overflow: `hidden auto`, borderRadius: `8px`, border: `1px solid #D0D5DD` }}
     >
-      <Header project={project} student={student} />
+      {/* <Header project={project} student={student} /> */}
 
       <div className="container max-w-4xl mx-auto px-4 py-6">
-        <AnnouncementSection project={project} student={student} />
-        <AssessmentSection project={project} student={student} questions={initialQuestions} />
+        {/* <AnnouncementSection project={project} student={student} /> */}
+        {/* <AssessmentSection project={project} student={student} questions={initialQuestions} /> */}
       </div>
     </motion.div>
   );
@@ -71,7 +71,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
   }
 };
 
-const initialQuestions: AssessmentQuestionType[] = [
+// const initialQuestions: AssessmentQuestionType[] = [
+const initialQuestions: any[] = [
   {
     id: 'q1',
     type: 'rating',
