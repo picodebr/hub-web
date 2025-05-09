@@ -5,18 +5,12 @@ const { version } = require('./package.json');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  experimental: { 
-    newNextLinkBehavior: false, 
+  experimental: {
+    newNextLinkBehavior: false,
     largePageDataBytes: 128 * 1000000,
     optimizeCss: true,
-    optimizePackageImports: [
-      '@chakra-ui/react',
-      'antd',
-      'rsuite',
-      'react-icons',
-      '@emotion/react',
-      '@emotion/styled'
-    ]
+    optimizePackageImports: ['@chakra-ui/react', 'antd', 'rsuite', 'react-icons', '@emotion/react', '@emotion/styled'],
+    outputFileTracingExcludes: { '*': ['node_modules/tailwindcss', `node_modules/tailwindcss-animate`] },
   },
   typescript: { ignoreBuildErrors: true },
   publicRuntimeConfig: { version },
