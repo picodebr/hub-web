@@ -14,13 +14,13 @@
     "commitprettier": "git add . && git commit -m \"chore(lint): Code Linted\""
   },
   "dependencies": {
+    "@types/node": "20.3.1",
     "@chakra-ui/react": "^2.8.2",
     "@dicebear/collection": "^7.0.1",
     "@dicebear/core": "^7.0.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@monaco-editor/react": "^4.6.0",
-    "@types/react-beautiful-dnd": "^13.1.8",
     "antd": "^5.12.5",
     "axios": "^1.4.0",
     "draft-js": "^0.11.7",
@@ -52,12 +52,12 @@
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.5",
-    "@types/node": "20.3.1",
     "@types/react": "18.2.13",
     "@types/react-dom": "18.2.6",
     "@types/react-draft-wysiwyg": "^1.13.8",
     "@types/w3c-web-serial": "^1.0.6",
     "@types/zxcvbn": "^4.4.1",
+    "@types/react-beautiful-dnd": "^13.1.8",
     "@typescript-eslint/eslint-plugin": "^6.8.0",
     "@typescript-eslint/parser": "^6.8.0",
     "autoprefixer": "10.4.14",
