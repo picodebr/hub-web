@@ -8,6 +8,7 @@ export * from './getStudent';
 export * from './listRelatedUsers';
 export * from './recoverPassword';
 export * from './redefinePassword';
+export * from './redefineStudentPassword';
 export * from './sendRecoveryToken';
 export * from './signup';
 export * from './updateProfile';

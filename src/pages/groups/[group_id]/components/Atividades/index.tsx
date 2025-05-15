@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { EditorProps } from 'react-draft-wysiwyg';
 
 import { IHubGroup } from '@/_base/interfaces/group';
+import { ITempFile } from '@/_base/interfaces/shared';
 
 const Editor = dynamic<EditorProps>(() => import('react-draft-wysiwyg').then((mod) => mod.Editor), { ssr: false });
 
@@ -13,9 +14,10 @@ interface IProps {
   group: IHubGroup;
   setGroup: Dispatch<SetStateAction<IHubGroup>>;
   canEdit: boolean;
+  setActivityFiles: Dispatch<SetStateAction<ITempFile[]>>;
 }
 
-export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit }) => {
+export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActivityFiles }) => {
   const [openEditor, setOpenEditor] = useState(false);
   const [editorValue, setEditorValue] = useState<EditorState>(EditorState.createEmpty());
   const [contentIsMounted, setContentIsMounted] = useState(false);
@@ -35,6 +37,20 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit }) => {
       setGroup((g) => ({ ...g, metadata: { ...g.metadata, annotation: JSON.stringify(convertToRaw(editorValue.getCurrentContent())) } }));
     else setContentIsMounted(true);
   }, [editorValue]);
+
+  const uploadCallback = (file: File) => {
+    return new Promise((resolve) => {
+      const reader = new window.FileReader();
+      reader.onloadend = async () => {
+        const form_data = new FormData();
+        form_data.append('file', file);
+        const path = URL.createObjectURL(file);
+        setActivityFiles((f) => [...f, { path, file }]);
+        resolve({ data: { link: path } });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   return (
     <Flex direction="column" gap="24px" overflow={openEditor ? `hidden` : 'auto'} flex="1">
@@ -90,11 +106,13 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit }) => {
         </Grid>
       )}
       {openEditor && (
-        <Flex bg="white" flex="1" sx={{ '.hub-editor-wrapper': { w: `100%` }, '.hub-editor-content': { p: `0 1rem` } }}>
+        <Flex bg="white" flex="1" sx={{ '.hub-editor-wrapper': { w: `100%` }, '.hub-editor-content': { p: `0 1rem` } }} overflow="hidden">
           <Editor
             toolbar={{
               image: {
                 uploadEnabled: true,
+                previewImage: true,
+                uploadCallback,
               },
             }}
             wrapperClassName="hub-editor-wrapper"

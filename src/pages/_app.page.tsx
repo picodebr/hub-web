@@ -1,7 +1,7 @@
 import { ChakraProvider, CSSReset } from '@chakra-ui/react';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import type { AppProps } from 'next/app';
 import 'moment/locale/pt-br';
+import '../styles/globals.css';
 
 import { api } from '@/_base/classes/api';
 import { CustomRouterProvider } from '@/_base/hooks/CustomRouter';
@@ -22,23 +22,21 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <ThemeProvider theme={themes.light}>
-      <GoogleOAuthProvider clientId="47490597990-gfmoh1pha85b9qi3b19fg3t75ebb0rm2.apps.googleusercontent.com">
-        <ChakraProvider theme={globalTheme}>
-          <PlatformProvider>
-            <StyledGlobal />
-            <LoadingProvider changeSignal={{}}>
-              <CustomRouterProvider>
-                <BlocklyProvider>
-                  <Page {...pageProps} setLoadingConfig={setLoadingConfig}>
-                    <Component {...pageProps} />
-                    <CSSReset />
-                  </Page>
-                </BlocklyProvider>
-              </CustomRouterProvider>
-            </LoadingProvider>
-          </PlatformProvider>
-        </ChakraProvider>
-      </GoogleOAuthProvider>
+      <ChakraProvider theme={globalTheme}>
+        <PlatformProvider>
+          <StyledGlobal />
+          <LoadingProvider changeSignal={{}}>
+            <CustomRouterProvider>
+              <BlocklyProvider>
+                <Page {...pageProps} setLoadingConfig={setLoadingConfig}>
+                  <Component {...pageProps} />
+                  <CSSReset />
+                </Page>
+              </BlocklyProvider>
+            </CustomRouterProvider>
+          </LoadingProvider>
+        </PlatformProvider>
+      </ChakraProvider>
     </ThemeProvider>
   );
 }

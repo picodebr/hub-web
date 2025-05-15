@@ -21,3 +21,7 @@ export const bucketFolders = <const>[
   `certificates`,
 ];
 export type BucketFolders = (typeof bucketFolders)[number];
+
+export const accessesControlList = <const>['private', 'public-read', 'public-read-write', 'authenticated-read'];
+
+export type AccessControlList = (typeof accessesControlList)[number];

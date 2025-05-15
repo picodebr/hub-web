@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import { Checkbox, Flex, Image, Link, Text } from '@chakra-ui/react';
-import { useGoogleLogin } from '@react-oauth/google';
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
 import { FiUser } from 'react-icons/fi';
@@ -68,14 +67,6 @@ const LoginPage: React.FC = () => {
     () => setSubmitLoading(false),
   );
 
-  const handleGoogleLogin = useGoogleLogin({
-    onSuccess: async (codeResponse) => await handleLogin(codeResponse.access_token),
-    onError: (error) => {
-      showErrorToClient(error, toast);
-      console.error('Google Login Failed:', error);
-    },
-  });
-
   return (
     <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md">
       <Flex w="400px" direction="column" bg="white" p="1rem" boxShadow="md" borderColor="gray300" borderRadius="10px" gap="1.15rem" align="center">
@@ -128,7 +119,7 @@ const LoginPage: React.FC = () => {
           </Text>
         </Flex>
 
-        <Flex direction="column" w="100%" gap="0.5rem">
+        {/* <Flex direction="column" w="100%" gap="0.5rem">
           <Flex position="relative" w="100%" align="center" justify="center">
             <Flex border="1px solid #F2F4F4" w="100%" position="absolute" zIndex="1" />
             <Text zIndex="2" px="1rem" textAlign="center" bg="white" fontSize="12.5px" color="gray300">
@@ -148,7 +139,7 @@ const LoginPage: React.FC = () => {
             isLoading={submitLoading}
             leftIcon={<Image src="/brands/google_logo_G.png" />}
           />
-        </Flex>
+        </Flex> */}
 
         {/* <AppReCaptcha onChange={(token) => setCaptcha({ token })} error={captcha?.error} /> */}
 

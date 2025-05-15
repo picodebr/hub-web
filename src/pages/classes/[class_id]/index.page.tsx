@@ -21,10 +21,9 @@ import {
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { IoMdArrowUp } from 'react-icons/io';
 import { FaPlus } from 'react-icons/fa6';
-import { FiCalendar, FiFileText, FiUsers } from 'react-icons/fi';
+import { FiCalendar, FiFileText } from 'react-icons/fi';
 import { CiUser } from 'react-icons/ci';
 import { Badge } from 'rsuite';
 import moment from 'moment';
@@ -232,11 +231,13 @@ const Class: React.FC<IProps> = ({ classId }) => {
       tools: oldTools,
       previousResponse: JSON.stringify(resultIA.response.content),
     });
+    // eslint-disable-next-line no-console
     console.log(oldTools);
+    // eslint-disable-next-line no-console
     console.log(newTools);
     const iaSteps = resultIA.response.content.steps;
     setNewProjectSteps(
-      iaSteps.map((step, i) => ({
+      iaSteps.map((step) => ({
         title: step.title || '',
         description: step.description || null,
         position: step.position,
