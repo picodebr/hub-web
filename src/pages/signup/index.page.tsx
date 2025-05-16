@@ -54,7 +54,7 @@ const SignUp: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (captcha.token && primaryCode.value) (async () => await handleCheckCode(primaryCode.value || ''))();
+    if (primaryCode.value) (async () => await handleCheckCode(primaryCode.value || ''))();
   }, [captcha.token, primaryCode.value]);
 
   const canSubmit = useMemo(
@@ -143,16 +143,7 @@ const SignUp: React.FC = () => {
 
   const PageStepElement: Record<SignUpPageStepsType, ReactNode> = {
     USER_TYPE: <UserTypeStep onUserTypeChange={handleUserTypeChange} />,
-    PRIMARY_CODE: (
-      <PrimaryCodeStep
-        captcha={captcha}
-        primaryCode={primaryCode}
-        userType={userType}
-        setCaptcha={setCaptcha}
-        setPrimaryCode={setPrimaryCode}
-        setStep={setStep}
-      />
-    ),
+    PRIMARY_CODE: <PrimaryCodeStep primaryCode={primaryCode} userType={userType} setPrimaryCode={setPrimaryCode} setStep={setStep} />,
     SCHOOL_CODE: <SchoolCodeStep availableSchools={availableSchools} onInputChange={onInputChange} primaryCode={primaryCode} setStep={setStep} />,
     FORM: (
       <FormStep
