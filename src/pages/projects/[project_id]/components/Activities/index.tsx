@@ -4,14 +4,7 @@ import {
   AccordionIcon,
   AccordionItem,
   AccordionPanel,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogOverlay,
   Box,
-  Button,
   Checkbox,
   Flex,
   Image,
@@ -23,9 +16,10 @@ import {
   Text,
   Tooltip,
   useDisclosure,
+  useUpdateEffect,
 } from '@chakra-ui/react';
 import { IHubProjectStep, IProject } from '@/_base/interfaces/project';
-import { Dispatch, SetStateAction, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SmallModal } from '@/components/Modal/Small';
 import { formatShortName } from '@/_base/utils';
@@ -33,17 +27,21 @@ import { FaMinus, FaPlus } from 'react-icons/fa';
 import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
 import { MdOutlineCheckBox, MdPendingActions } from 'react-icons/md';
 import { useAsyncCallback, useCustomRouter } from '@/_base/hooks';
+import { customEvents } from '@/_base/classes/events';
+import { eventsConfig } from '@/_base/config/events';
+import { IHubUser } from '@/_base/interfaces/user';
 
 interface IProps {
   project: IProject;
   setProject: Dispatch<SetStateAction<IProject>>;
   canEdit: boolean;
-  handleSave: (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward>) => Promise<void>;
+  handleSave: (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward[]>) => Promise<void>;
+  setButtonCustomLabel: (value: SetStateAction<{ label?: string; isDisabled: boolean }>) => void;
 }
 type ModalStep = 'hidden' | 'missing_students' | 'taxed_students' | 'students_rewarded';
 
-export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) => {
-  const [targetReward, setTargetReward] = useState<IHubProjectStep | null>(null);
+export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, setButtonCustomLabel }) => {
+  const [targetRewards, setTargetRewards] = useState<IHubProjectStep[]>([]);
   const [missingStudents, setMissingStudents] = useState<string[]>([]);
   const [taxedStudents, setTaxedStudents] = useState<Record<string, string>>({});
   const [modalStep, setModalStep] = useState<ModalStep>('hidden');
@@ -54,30 +52,61 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
   const onCloseModal = () => {
     setMissingStudents([]);
     setModalStep(`hidden`);
-    setTargetReward(null);
+    setTargetRewards([]);
   };
 
+  useEffect(() => {
+    customEvents.on(eventsConfig.CASHBACK_MODAL, () => {
+      setModalStep(`missing_students`);
+    });
+  }, []);
+
+  useUpdateEffect(() => {
+    const haveCashbackStep = !!targetRewards.find((e) => Number(e.cashback || `0`) > 0);
+    setButtonCustomLabel({ isDisabled: !targetRewards.length, label: haveCashbackStep ? `Distribuir cashback` : `Finalizar atividades` });
+  }, [targetRewards]);
+
   const onConfirmAcitivity = useAsyncCallback(async () => {
-    if (!targetReward) return;
-    const students = project.hub_class?.students?.filter((s) => !missingStudents.includes(s.id));
-    const newRewards: Record<string, ClassProjectMetadataReward> = {};
+    if (!targetRewards.length) return;
+    const students = project.hub_class?.students;
+    const newRewards: Record<string, ClassProjectMetadataReward[]> = {};
+
     const rewards = students.reduce(
       (acc, student) => {
         acc[student.id] ||= [];
+        newRewards[student.id] ||= [];
 
         const oldRewards = (project.metadata.rewards || {})[student.id];
         if (oldRewards?.length) acc[student.id].push(...oldRewards);
 
-        const newReward = {
-          reward_value: `${
-            Number(targetReward?.cashback || 0) - Number(targetReward.cashback || 0) * (Number(taxedStudents[student.id] || 0) / 100)
-          }`,
-          tax_value: `${taxedStudents[student.id] || 0}`,
-          activity_title: targetReward.title || ``,
-        };
+        if (
+          stepIsFinished(project, targetRewards[0]) &&
+          (!studentIsMissing(project, student, targetRewards[0]) || missingStudents.includes(student.id))
+        )
+          return acc;
 
-        acc[student.id].push(newReward);
-        newRewards[student.id] = newReward;
+        if (stepIsFinished(project, targetRewards[0]) && !missingStudents.includes(student.id)) {
+          acc[student.id].forEach((e) => {
+            if (e.activity_title === targetRewards[0].title) {
+              e.is_missing = false;
+              newRewards[student.id].push(e);
+            }
+          });
+
+          return acc;
+        }
+
+        targetRewards.forEach((reward) => {
+          const newReward = {
+            reward_value: `${Number(reward?.cashback || 0) - Number(reward.cashback || 0) * (Number(taxedStudents[student.id] || 0) / 100)}`,
+            tax_value: `${taxedStudents[student.id] || 0}`,
+            activity_title: reward.title || ``,
+            is_missing: missingStudents.includes(student.id),
+          };
+
+          acc[student.id].push(newReward);
+          newRewards[student.id].push(newReward);
+        });
         return acc;
       },
       {} as Record<string, ClassProjectMetadataReward[]>,
@@ -88,20 +117,23 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
       metadata: {
         ...project.metadata,
         rewards,
-        finished_activities: [...(project.metadata.finished_activities?.filter((e) => e !== targetReward.title) || []), targetReward?.title],
+        finished_activities: [...(project.metadata.finished_activities || []), ...targetRewards.map((e) => `${e.parent || `-`}.${e.title}`)].reduce(
+          (acc, s) => (acc.includes(s) ? acc : [...acc, s]),
+          [] as string[],
+        ),
       },
     };
-    setModalStep(`hidden`);
+    onCloseModal();
     await handleSave(newProjectData, newRewards);
     localStorage.setItem(
       `pending_forms::${project.id}`,
       JSON.stringify({ project: newProjectData, students: students.map((e) => ({ id: e.id, name: e.name })) }),
     );
-    const tm = setTimeout(() => onOpen(), 750);
+    // const tm = setTimeout(() => onOpen(), 750);
 
-    return () => {
-      clearTimeout(tm);
-    };
+    // return () => {
+    //   clearTimeout(tm);
+    // };
   }, []);
 
   return (
@@ -167,28 +199,34 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                           borderColor="gray300"
                         >
                           <Tooltip
-                            key={step.title}
                             label={
-                              project.metadata.finished_activities?.includes(step?.title || ``)
-                                ? 'Atividade concluída'
-                                : 'Clique para concluir a atividade'
+                              stepIsFinished(project, step)
+                                ? project.hub_class.students.filter((s) => studentIsMissing(project, s, step)).length
+                                  ? 'Atividade concluída, clique para reavaliar'
+                                  : 'Atividade concluída'
+                                : 'Marque a checkbox para concluir a atividade'
                             }
                             isDisabled={!canEdit}
                           >
                             <motion.button
-                              disabled={!canEdit || project.metadata.finished_activities?.includes(step?.title || ``)}
-                              whileHover={
-                                !canEdit || project.metadata.finished_activities?.includes(step?.title || ``)
-                                  ? undefined
-                                  : { scale: 1.02, backgroundColor: `#cccccc11` }
-                              }
-                              whileTap={!canEdit || project.metadata.finished_activities?.includes(step?.title || ``) ? undefined : { scale: 0.98 }}
-                              onClick={() => {
-                                if (!canEdit) return;
-                                setTargetReward(step);
-                                setModalStep(`missing_students`);
-                              }}
+                              disabled={!canEdit}
                               key={step.title}
+                              whileHover={{
+                                filter: `brightness(0.45)`,
+                              }}
+                              onClick={() => {
+                                const studentsMissing = project.hub_class.students.filter((s) => studentIsMissing(project, s, step));
+                                if (stepIsFinished(project, step)) {
+                                  if (!studentsMissing.length) return;
+                                  setTargetRewards([step]);
+                                  setModalStep(`missing_students`);
+                                } else
+                                  setTargetRewards((e) =>
+                                    e.find((r) => JSON.stringify(r) === JSON.stringify(step))
+                                      ? e.filter((r) => JSON.stringify(r) !== JSON.stringify(step))
+                                      : [...e, step],
+                                  );
+                              }}
                               style={{
                                 display: `flex`,
                                 width: `100%`,
@@ -200,7 +238,27 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                               }}
                             >
                               <Flex align="center" gap="0.4rem">
-                                {project.metadata.finished_activities?.includes(step?.title || ``) ? (
+                                <Checkbox
+                                  isDisabled={!canEdit || stepIsFinished(project, step)}
+                                  size="lg"
+                                  isChecked={!!targetRewards.find((e) => JSON.stringify(e) === JSON.stringify(step))}
+                                  visibility="visible"
+                                  border="2px"
+                                  p="0.25rem"
+                                  borderColor={getActivityColor(project, parent)}
+                                  borderRadius="4px"
+                                  sx={{
+                                    span: {
+                                      bg: `${getActivityColor(project, parent)}${targetRewards.find((e) => JSON.stringify(e) === JSON.stringify(step)) ? `` : `66`} !important`,
+                                    },
+                                  }}
+                                  onChange={(v) =>
+                                    setTargetRewards((r) =>
+                                      v.target.checked ? [...r, step] : r.filter((e) => JSON.stringify(e) !== JSON.stringify(step)),
+                                    )
+                                  }
+                                />
+                                {stepIsFinished(project, step) ? (
                                   <MdOutlineCheckBox fontSize="20px" color="#1db832" />
                                 ) : (
                                   <MdPendingActions fontSize="20px" color="#4d4f5cdd" />
@@ -241,22 +299,24 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
           </Text>
 
           <Flex direction="column" gap="0.5rem">
-            {project.hub_class?.students?.map((student) => (
-              <Flex key={student.id} padding="0.35rem 0.5rem" gap="1rem" justify="space-between">
-                <Text>{formatShortName(student.name, true)}</Text>
-                <Checkbox
-                  defaultChecked={missingStudents.includes(student.id)}
-                  size="md"
-                  visibility="visible"
-                  border="2px"
-                  p="0.25rem"
-                  color="primary900"
-                  colorScheme="red"
-                  borderRadius="4px"
-                  onChange={(v) => setMissingStudents((s) => (v.target.checked ? [...s, student.id] : s.filter((v) => v !== student.id)))}
-                />
-              </Flex>
-            ))}
+            {project.hub_class?.students
+              ?.filter((s) => !stepIsFinished(project, targetRewards[0]) || studentIsMissing(project, s, targetRewards[0]))
+              .map((student) => (
+                <Flex key={student.id} padding="0.35rem 0.5rem" gap="1rem" justify="space-between">
+                  <Text>{formatShortName(student.name, true)}</Text>
+                  <Checkbox
+                    defaultChecked={missingStudents.includes(student.id)}
+                    size="md"
+                    visibility="visible"
+                    border="2px"
+                    p="0.25rem"
+                    color="primary900"
+                    colorScheme="red"
+                    borderRadius="4px"
+                    onChange={(v) => setMissingStudents((s) => (v.target.checked ? [...s, student.id] : s.filter((v) => v !== student.id)))}
+                  />
+                </Flex>
+              ))}
           </Flex>
         </Flex>
       </SmallModal>
@@ -282,7 +342,10 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
 
           <Flex direction="column" gap="0.5rem">
             {project.hub_class.students
-              ?.filter((s) => !missingStudents.includes(s.id))
+              ?.filter(
+                (s) =>
+                  (!stepIsFinished(project, targetRewards[0]) || studentIsMissing(project, s, targetRewards[0])) && !missingStudents.includes(s.id),
+              )
               .map((student) => (
                 <Flex key={student.id} padding="0.35rem 0.5rem" gap="1rem" justify="space-between" align="center">
                   <Text flex="1" whiteSpace="nowrap">
@@ -331,14 +394,17 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
 
           <Flex direction="column" gap="0.5rem">
             {project.hub_class.students
-              ?.filter((s) => !missingStudents.includes(s.id))
+              ?.filter(
+                (s) =>
+                  (!stepIsFinished(project, targetRewards[0]) || studentIsMissing(project, s, targetRewards[0])) && !missingStudents.includes(s.id),
+              )
               .map((student) => (
                 <Flex key={student.id} padding="0.35rem 0.5rem" gap="1rem" justify="space-between" align="center">
                   <Text flex="1" whiteSpace="nowrap">
                     {formatShortName(student.name, true)}
                   </Text>
                   <Flex align="center" gap="0.5rem" justify="space-between">
-                    R$ {Number(targetReward?.cashback || 0) - Number(targetReward?.cashback || 0) * (Number(taxedStudents[student.id] || 0) / 100)}
+                    R$ {sumCashbacks(targetRewards) - sumCashbacks(targetRewards) * (Number(taxedStudents[student.id] || 0) / 100)}
                     ,00
                     <Flex position="relative">
                       <Image src="/icons/coin.svg" />
@@ -353,7 +419,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
         </Flex>
       </SmallModal>
 
-      {/* <SmallModal
+      <SmallModal
         title="Nova avaliação disponível"
         show={isOpen}
         onConfirm={() => router.push(`/exam?project=${project.id}`)}
@@ -369,7 +435,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
             Deseja realizar a avaliação de desempenho dos alunos sobre a atividade finalizada?
           </Text>
         </Flex>
-      </SmallModal> */}
+      </SmallModal>
     </motion.div>
   );
 };
@@ -388,4 +454,18 @@ const getActivityPattern = (color: string): string | undefined => {
   ];
 
   return colors.find((e) => e.color === color)?.pattern;
+};
+
+const sumCashbacks = (data: IHubProjectStep[]): number => data.reduce((acc, v) => (acc += Number(v.cashback || 0)), 0);
+
+const stepIsFinished = (project: IProject, step: IHubProjectStep): boolean =>
+  !!project.metadata.finished_activities?.includes(`${step?.parent || `-`}.${step?.title}`);
+
+const studentIsMissing = (project: IProject, student: IHubUser, targetReward: IHubProjectStep): boolean => {
+  return (
+    !Object.keys(project.metadata?.rewards || `{}`).find(
+      (studentId) =>
+        student.id === studentId && !project.metadata?.rewards?.[studentId]?.find((e) => e.is_missing && e.activity_title === targetReward.title),
+    ) && !!Number(targetReward.cashback)
+  );
 };

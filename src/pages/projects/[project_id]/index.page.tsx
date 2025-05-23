@@ -24,7 +24,9 @@ import { ICreateHubGroupParams, IHubGroup } from '@/_base/interfaces/group';
 import { acceptGroup, addGroupToProject, removeGroup } from '@/_base/services/group';
 import { Activities } from './components/Activities';
 import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
-import { updateStudentData } from '@/_base/services/student/updateStudentData';
+import { giveCashback } from '@/_base/services/project/giveCashback';
+import { customEvents } from '@/_base/classes/events';
+import { eventsConfig } from '@/_base/config/events';
 
 interface IProps {
   project: IProject;
@@ -34,6 +36,7 @@ interface IProps {
 const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const [savedProject, setSavedProject] = useState<IProject>(hubProject);
   const [pageView, setPageView] = useState<ProjectPageView>('Sobre');
+  const [buttonCustomLabel, setButtonCustomLabel] = useState<{ label?: string; isDisabled: boolean }>({ isDisabled: true });
   const [project, setProject] = useState<IProject>(hubProject);
   const [files, setFiles] = useState<File[]>([]);
 
@@ -43,7 +46,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const canEdit = user.id === hubProject.user_id;
   const needSave = useMemo<boolean>(() => JSON.stringify(project) !== JSON.stringify(savedProject) || !!files.length, [project, savedProject, files]);
 
-  const handleSave = useAsyncCallback(async (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward>) => {
+  const handleSave = useAsyncCallback(async (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward[]>) => {
     const _project = newProject || project;
     const dto: IUpdateProjectParams = {
       id: _project.id,
@@ -67,16 +70,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
 
     const updatedProject = await updateProject(dto);
 
-    if (newRewards) {
-      await Promise.all(
-        Object.keys(newRewards).map((studentId) =>
-          updateStudentData(
-            studentId,
-            Number(newRewards[studentId].reward_value) + (_project.hub_class.students.find((s) => s.id === studentId)?.metadata?.coins || 0),
-          ),
-        ),
-      );
-    }
+    if (newRewards) await giveCashback(hubProject.id, { rewards: newRewards });
 
     setProject((p) => ({ ...p, ...updatedProject, hub_class: p.hub_class, educator: p.educator }));
     setSavedProject((p) => ({ ...p, ...updatedProject, hub_class: p.hub_class, educator: p.educator }));
@@ -120,7 +114,9 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const PageViewComponent: Record<ProjectPageView, ReactNode> = {
     Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} canEdit={canEdit} />,
     Materiais: <Materials project={project} setProject={setProject} canEdit={canEdit} />,
-    Atividades: <Activities project={project} setProject={setProject} canEdit={canEdit} handleSave={handleSave} />,
+    Atividades: (
+      <Activities project={project} setProject={setProject} canEdit={canEdit} handleSave={handleSave} setButtonCustomLabel={setButtonCustomLabel} />
+    ),
     Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} />,
     Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} />,
   };
@@ -131,19 +127,26 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
           tabs={projectPageViews
             .filter((e) => (project.project?.book_id ? e : e !== `Atividades`))
             .map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
-          onSwitch={(view) => setPageView(view as any)}
+          onSwitch={(view) => {
+            setPageView(view as any);
+            setButtonCustomLabel((e) => (view === `Atividades` ? { ...e, label: `Finalizar atividades` } : { isDisabled: true }));
+          }}
           currentTabColor="primary700"
         />
 
         <GenericButton
-          label="Salvar"
-          onClick={() => handleSave()}
+          label={buttonCustomLabel.label || 'Salvar'}
+          onClick={() => {
+            if (pageView === `Atividades`) {
+              customEvents.emit(eventsConfig.CASHBACK_MODAL);
+            } else handleSave();
+          }}
           border="1px"
           borderColor="gray300"
           bg={needSave ? 'primary500' : 'primary700'}
           color="white"
           boxShadow="sm"
-          isDisabled={!canEdit}
+          isDisabled={!canEdit || (pageView === `Atividades` && buttonCustomLabel.isDisabled)}
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}
         />
