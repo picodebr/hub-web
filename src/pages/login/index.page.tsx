@@ -85,7 +85,7 @@ const LoginPage: React.FC = () => {
             error={errors.identifier}
             value={data?.identifier}
             color="gray900"
-            onInputChange={(v) => onInputChange('identifier', v)}
+            onInputChange={(v) => onInputChange('identifier', v.trim().toLowerCase())}
             leftElement={<FiUser style={{ color: 'gray300' }} />}
             placeholder="Nome de Usuário"
           />
