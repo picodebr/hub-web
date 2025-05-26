@@ -110,7 +110,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
           <Flex justify="space-between" direction={{ base: 'column', sm: 'row' }}>
             <Flex direction="column" p="20px" justify="space-between" align="center">
               <Img src={avatarURI} w={{ base: '170px', sm: '200px' }} h={{ base: '170px', sm: '200px' }} alt="Avatar" />
-              <GenericButton label="Download" w="fit-content" btntype="outline" size="xs" onClick={() => !!rawAvatar && downloadAvatar()} />
+              <GenericButton label="Atualizar Avatar" w="fit-content" btntype="outline" size="xs" onClick={() => !!rawAvatar && downloadAvatar()} />
             </Flex>
             <Flex gap="8px" overflow="visible" align="center" justify="center">
               <Grid
@@ -200,16 +200,49 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
           display={{ base: `none`, xl: `flex` }}
         >
           <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" color="gray900">
-            Seu ranking global
+            Meu extrato
           </Text>
-          <Flex p="20px">
-            <Flex gap="8px" align="center" flex="1">
-              <Avatar src={user.avatar || undefined} size="sm" />
-              <Text color="gray900">{user.username}</Text>
+          <Flex pt="20px" justify="space-between">
+            <Flex gap="8px" align="center">
+              <Text color="gray900">Compra Jumper</Text>
             </Flex>
-            <Text align="center" fontWeight="600" color="gray900">
-              #12
+            <Text align="center" color="gray600">
+              26/05/2025
             </Text>
+            <Flex>
+            <Text align="center" fontWeight="600" color="red">
+              - R$ 12,00
+            </Text>
+            <Image src="/icons/coin.svg" />
+            </Flex>
+          </Flex>
+          <Flex justify="space-between">
+            <Flex gap="8px" align="center">
+              <Text color="gray900">Atividade 22</Text>
+            </Flex>
+            <Text align="center" color="gray600">
+              23/05/2025
+            </Text>
+            <Flex>
+            <Text align="center" fontWeight="600" color="green">
+              + R$ 8,00
+            </Text>
+            <Image src="/icons/coin.svg" />
+            </Flex>
+          </Flex>
+          <Flex justify="space-between">
+            <Flex gap="8px" align="center">
+              <Text color="gray900">Atividade 21</Text>
+            </Flex>
+            <Text align="center" color="gray600">
+              22/05/2025
+            </Text>
+            <Flex>
+            <Text align="center" fontWeight="600" color="green">
+              + R$ 6,00
+            </Text>
+            <Image src="/icons/coin.svg" />
+            </Flex>
           </Flex>
           <Flex direction="column" gap="10px" flex="1" justify="flex-end">
             {/* <Text color="gray900">Suba seu ranking jogando os desafios diários!</Text> */}
