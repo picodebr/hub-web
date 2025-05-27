@@ -17,6 +17,9 @@ export interface IAuthResponse {
 
 /** Zod schemas */
 export const authSchema: ZodCustomSchema<IAuthRequest> = z.object({
-  identifier: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim().min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
+  identifier: z
+    .string({ required_error: zodSchemaErrors.REQUIRED_FIELD })
+    .trim()
+    .min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
   password: z.string({ required_error: 'Campo obrigatório' }).min(6, { message: zodSchemaErrors.MININUM_LENGTH_SIX }),
 });

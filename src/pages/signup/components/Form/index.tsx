@@ -38,6 +38,12 @@ export const FormStep: React.FC<IProps> = ({
   submitLoading,
   userType,
 }) => {
+
+  const handleUsernameChange = (value: string) => {
+    // trim() se quiser remover espaços e toLowerCase() para normalizar
+    onInputChange('username', value.toLowerCase());
+  };
+
   return (
     <Flex direction="column" h="100%" justify="space-between" align="center" gap="1.25rem" overflow="hidden">
       <Flex direction="column" gap="8px" marginTop="2rem">
@@ -68,7 +74,7 @@ export const FormStep: React.FC<IProps> = ({
           value={data.username}
           placeholder=""
           error={errors.username}
-          onInputChange={(value) => onInputChange('username', value)}
+          onInputChange={handleUsernameChange}
           leftElement={<FiUser />}
         />
         {userType === 'teacher' && (

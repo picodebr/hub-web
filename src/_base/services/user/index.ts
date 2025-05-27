@@ -5,6 +5,7 @@ export * from './checkUsername';
 export * from './getBnccSkills';
 export * from './getProfile';
 export * from './getStudent';
+export * from './getStudentExtract';
 export * from './listRelatedUsers';
 export * from './recoverPassword';
 export * from './redefinePassword';
