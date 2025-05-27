@@ -176,14 +176,14 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
                   <Image src="/icons/coin.svg" />
                   <Text>{formatCoin(user.metadata.coins || 0)}</Text>
                 </Flex>
-                <Flex align="center" justify="center" gap="0.45rem" onClick={() => router.push('/ranking')}>
+                {/* <Flex align="center" justify="center" gap="0.45rem" onClick={() => router.push('/ranking')}>
                   <Image src="/icons/medal.svg" />
                   <Text>#0</Text>
-                </Flex>
-                <Flex align="center" justify="center" gap="0.45rem">
+                </Flex> */}
+                {/* <Flex align="center" justify="center" gap="0.45rem">
                   <Image src="/icons/cash.svg" />
                   <Text>0</Text>
-                </Flex>
+                </Flex> */}
               </>
             </Flex>
           </Flex>

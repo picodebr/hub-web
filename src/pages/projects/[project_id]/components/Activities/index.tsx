@@ -25,7 +25,7 @@ import { SmallModal } from '@/components/Modal/Small';
 import { formatShortName } from '@/_base/utils';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
-import { MdOutlineCheckBox, MdPendingActions } from 'react-icons/md';
+import { MdOutlineCheckBox, MdOutlineFactCheck, MdPendingActions } from 'react-icons/md';
 import { useAsyncCallback, useCustomRouter } from '@/_base/hooks';
 import { customEvents } from '@/_base/classes/events';
 import { eventsConfig } from '@/_base/config/events';
@@ -259,7 +259,11 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
                                   }
                                 />
                                 {stepIsFinished(project, step) ? (
-                                  <MdOutlineCheckBox fontSize="20px" color="#1db832" />
+                                  project.hub_class.students.filter((s) => studentIsMissing(project, s, step)).length ? (
+                                    <MdOutlineFactCheck fontSize="20px" color="#1db832" />
+                                  ) : (
+                                    <MdOutlineCheckBox fontSize="20px" color="#1db832" />
+                                  )
                                 ) : (
                                   <MdPendingActions fontSize="20px" color="#4d4f5cdd" />
                                 )}

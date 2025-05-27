@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IoIosArrowDown } from 'react-icons/io';
-import { Avatar, Flex, Img, Text, useUpdateEffect } from '@chakra-ui/react';
+import { Flex, Img, Text, useUpdateEffect } from '@chakra-ui/react';
 import { Result, ResultConvertOptions, createAvatar } from '@dicebear/core';
 import { adventurer } from '@dicebear/collection';
 import { Button } from '@chakra-ui/react';
 import { Grid, GridItem } from '@chakra-ui/react';
 
 import { Image, Menu, MenuButton, MenuItem, MenuList, Switch } from '@chakra-ui/react';
-import { cookieManager } from '@/_base/utils';
+import { cookieManager, formatCoin } from '@/_base/utils';
 import { IAvatarOptions, IProfileComponentProps } from './interfaces';
 import { customAvatarOptions, defaultAvatarOptions } from './utils';
 import { GenericButton } from '@/components/Buttons/Generic';
-import { useAuth } from '@/_base/hooks';
+import { useAsyncCallback, useAuth } from '@/_base/hooks';
+import { getStudentExtract, IStudentExtract } from '@/_base/services/user';
+import moment from 'moment';
 
 export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({ skinColor: `ccc` });
   const [rawAvatar, setRawAvatar] = useState<(Result & ResultConvertOptions) | null>(null);
   const [avatarURI, setAvatarURI] = useState(``);
+  const [userExtract, setUserExtract] = useState<IStudentExtract[]>([]);
 
   const { setUser } = useAuth();
 
@@ -82,6 +85,12 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   useEffect(() => {
     const avatarTemp = cookieManager.getCookie(`${user.id}:avatar`, true) as IAvatarOptions;
     if (avatarTemp?.skinColor) setAvatarOptions(avatarTemp);
+    getExtract();
+  }, []);
+
+  const getExtract = useAsyncCallback(async () => {
+    const extract = await getStudentExtract();
+    setUserExtract(extract);
   }, []);
 
   const downloadAvatar = useCallback(async () => {
@@ -89,16 +98,17 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   }, [rawAvatar]);
 
   return (
-    <Flex w="100%" gap="24px" direction="column">
+    <Flex w="100%" gap="24px" direction="column" overflow="hidden">
       <Flex w="100%" direction="row" gap="12px">
         <Flex
           bgColor="white"
           direction="column"
           borderRadius="10px"
-          boxShadow="md"
           w="100%"
-          h="fit-content"
+          h="350px"
           padding="20px"
+          border="1px"
+          borderColor="#fafafa"
           gap="20px"
           textAlign="left"
           display="column"
@@ -110,7 +120,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
           <Flex justify="space-between" direction={{ base: 'column', sm: 'row' }}>
             <Flex direction="column" p="20px" justify="space-between" align="center">
               <Img src={avatarURI} w={{ base: '170px', sm: '200px' }} h={{ base: '170px', sm: '200px' }} alt="Avatar" />
-              <GenericButton label="Download" w="fit-content" btntype="outline" size="xs" onClick={() => !!rawAvatar && downloadAvatar()} />
+              <GenericButton label="Atualizar Avatar" w="fit-content" btntype="outline" size="xs" onClick={() => !!rawAvatar && downloadAvatar()} />
             </Flex>
             <Flex gap="8px" overflow="visible" align="center" justify="center">
               <Grid
@@ -192,28 +202,38 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
           bgColor="white"
           direction="column"
           borderRadius="10px"
-          boxShadow="md"
+          border="1px"
+          borderColor="#fafafa"
           w="100%"
           padding="20px"
           gap="20px"
+          h="350px"
           justify="space-between"
+          overflow="hidden"
           display={{ base: `none`, xl: `flex` }}
         >
           <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px" color="gray900">
-            Seu ranking global
+            Meu extrato
           </Text>
-          <Flex p="20px">
-            <Flex gap="8px" align="center" flex="1">
-              <Avatar src={user.avatar || undefined} size="sm" />
-              <Text color="gray900">{user.username}</Text>
-            </Flex>
-            <Text align="center" fontWeight="600" color="gray900">
-              #12
-            </Text>
-          </Flex>
-          <Flex direction="column" gap="10px" flex="1" justify="flex-end">
-            {/* <Text color="gray900">Suba seu ranking jogando os desafios diários!</Text> */}
-            {/* <Button onClick={() => router.push('/challenge')}>Jogar agora!</Button> */}
+          <Flex direction="column" overflow="hidden auto" h="100%" gap="1rem">
+            {userExtract.map((extract, i) => (
+              <Flex key={extract.label + i} gap="0.5rem" p="0.35rem" borderRadius="sm" _hover={{ bg: `#fafafa` }}>
+                <Text color="gray900" noOfLines={2} flex="1">
+                  {extract.label}
+                </Text>
+                <Flex align="center" gap="0.5rem" justify="space-between" minW="220px">
+                  <Text whiteSpace="nowrap" align="center" color="gray600">
+                    {moment(extract.date).format(`DD/MM/YYYY`)}
+                  </Text>
+                  <Flex align="center" gap="0.25rem">
+                    <Text whiteSpace="nowrap" align="center" fontWeight="600" color={extract.type === `plus` ? 'green' : 'red'}>
+                      {`${extract.type === `plus` ? `+` : `-`} ${formatCoin(extract.value)}`}
+                    </Text>
+                    <Image src="/icons/coin.svg" />
+                  </Flex>
+                </Flex>
+              </Flex>
+            ))}
           </Flex>
         </Flex>
       </Flex>
