@@ -40,4 +40,4 @@ const gpt = async () => {
   return {};
 };
 
-// gpt()
+gpt()
