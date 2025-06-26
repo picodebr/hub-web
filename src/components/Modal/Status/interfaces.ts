@@ -43,4 +43,8 @@ export const statusModalContent: Record<AppStatus, IStatusModalContent> = {
     message: 'Erro ao carregar. Por favor, reconecte dispositivo.',
     imageUrl: '/icons/error.png',
   },
+  upload_failed: {
+    message: 'Erro ao carregar. Por favor, reconecte dispositivo.',
+    imageUrl: '/icons/error.png',
+  },
 };

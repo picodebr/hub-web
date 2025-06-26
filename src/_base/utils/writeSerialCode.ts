@@ -77,6 +77,24 @@ export const writeSerialCode = async (
   code: number[],
   waitForDeviceSync: WaitForDeviceSync,
 ) => {
+  // Etapa opcional: tentar sincronizar com o bootloader
+  let synced = false;
+  for (let i = 0; i < 5; i++) {
+    try {
+      await serial.writeSTKCommands(stk.GET_SYNC, stk.SYNC_CRC_EOP);
+      await waitForDeviceSync();
+      synced = true;
+      break;
+    } catch {
+      await new Promise((res) => setTimeout(res, 200));
+    }
+  }
+
+  if (!synced) {
+    setAppStatus('reset_fail');
+  }
+
+  // Começa o processo padrão de upload
   await serial.writeSTKCommands(stk.ENTER_PROGMODE);
   await waitForDeviceSync();
 

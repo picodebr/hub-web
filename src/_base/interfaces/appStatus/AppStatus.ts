@@ -17,6 +17,7 @@ export const appStatus = <const>[
   'uploading',
   'uploaded',
   'upload_failed',
+  'reset_fail',
 ];
 
 export type AppStatus = (typeof appStatus)[number];
