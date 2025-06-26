@@ -81,7 +81,7 @@ export const writeSerialCode = async (
   let synced = false;
   for (let i = 0; i < 5; i++) {
     try {
-      await serial.writeSTKCommands(stk.GET_SYNC, stk.SYNC_CRC_EOP);
+      await serial.writeSTKCommands(stk.GET_SYNC, stk.CRC_EOP);
       await waitForDeviceSync();
       synced = true;
       break;
