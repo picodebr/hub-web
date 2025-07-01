@@ -14,7 +14,7 @@ export const statusModalContent: Record<AppStatus, IStatusModalContent> = {
   starting: {},
   waiting_to_connect: {},
   connection_failed: {
-    message: 'Falha ao connectar-se com o dispositivo.',
+    message: 'Falha ao conectar-se com o dispositivo.',
     imageUrl: '/icons/error.png',
   },
   ready_to_compile: {},
