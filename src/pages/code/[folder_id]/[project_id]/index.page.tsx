@@ -226,7 +226,7 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
     const upload = async () => {
       try {
         
-        // setAppStatus('uploading');
+        setAppStatus('uploading');
         
         await uploadCode(compiledCode.build_data);
         
@@ -242,7 +242,6 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
         serial.disconnect();
       }
     };
-    setAppStatus('wait_reset_click');
     upload();
   }, [appStatus, compiledCode, serial, uploadCode]);
 
