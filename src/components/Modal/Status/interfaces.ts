@@ -35,8 +35,10 @@ export const statusModalContent: Record<AppStatus, IStatusModalContent> = {
     rotateImage: true,
   },
   wait_reset_click: {
-    message: '',
-    imageUrl: '/loading/board-reset-click.gif',
+    message: 'Clique no botão RESET se estiver no tablet',
+    imageUrl: '/icons/o-loading.svg',
+    rotateImage: true,
+    // imageUrl: '/loading/board-reset-click.gif',
   },
   uploaded: { message: 'Pronto!', imageUrl: '/icons/done.png' },
   upload_failed: {
