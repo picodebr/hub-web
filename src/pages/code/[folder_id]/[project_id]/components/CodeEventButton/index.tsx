@@ -24,11 +24,11 @@ const buttonData: Record<CodeEventButtonType, IButtonInfo> = {
     title: '',
     icon: FiCopy,
   },
-  simulation: {
-    label: 'Simular',
-    title: '',
-    icon: IoPlayOutline,
-  },
+  // simulation: {
+  //   label: 'Simular',
+  //   title: '',
+  //   icon: IoPlayOutline,
+  // },
   debug: {
     label: 'Monitor',
     title: '',
