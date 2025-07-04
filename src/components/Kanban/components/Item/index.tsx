@@ -42,7 +42,7 @@ export const KanbanItem: React.FC<IProps> = ({ item, group, index, onItemClick, 
           transition="all 0.1s"
           _hover={{ boxShadow: 'md' }}
         >
-          <Flex direction="column" gap="0.25rem" justify="space-between">
+          <Flex direction="column" gap="0.25rem" justify="space-between" w="100%">
             <Flex align="center" gap="0.25rem">
               {columnType === `finished` && (
                 <Flex fontSize="1.15rem" color={!item.bgcolor ? `primary300` : isColorLight(item.bgcolor) ? `#4d4b5f` : `#fff`}>
@@ -53,9 +53,15 @@ export const KanbanItem: React.FC<IProps> = ({ item, group, index, onItemClick, 
                 {item.title}
               </Text>
             </Flex>
-            <Text noOfLines={1} fontSize="12px" minH="1.3rem">
-              {item.end_date && moment(item.end_date).format(`DD/MM/YYYY`)}
-            </Text>
+            <Flex justify="space-between" w="100%">
+              <Text whiteSpace="nowrap" fontSize="12px" minH="1.3rem">
+                {item.end_date && moment(item.end_date).format(`DD/MM/YYYY`)}
+              </Text>
+              <Text whiteSpace="nowrap" fontSize="12px" minH="1.3rem">
+                {item.end_date && Date.now() > new Date(item.end_date).getTime() && `Atividade vencida ${moment(item.end_date).fromNow()}`}
+                {item.end_date && Date.now() < new Date(item.end_date).getTime() && `Atividade vence ${moment(item.end_date).fromNow()}`}
+              </Text>
+            </Flex>
           </Flex>
           {!!group && (
             <Flex align="center" gap="0.5rem">

@@ -29,7 +29,7 @@ type ToolsGenerateFuncType = (data: ToolPrompts) => Promise<string[]>;
 export const generateProjectWithAI: RawGenerateFuncType = async ({ grade, topic }) => {
   console.log('grade: ', grade);
   try {
-    const gptKey = `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`;
+    const gptKey = `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`;
     if (!gptKey) throw new Error('Not found api key');
 
     const openai = new OpenAI({ apiKey: gptKey, dangerouslyAllowBrowser: true });
@@ -85,7 +85,7 @@ export const generateProjectWithAI: RawGenerateFuncType = async ({ grade, topic 
 
 export const generateProjectToolsWithAI: ToolsGenerateFuncType = async ({ tools, previousResponse }) => {
   try {
-    const gptKey = `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`;
+    const gptKey = `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`;
     if (!gptKey) throw new Error('Not found api key');
 
     const openai = new OpenAI({ apiKey: gptKey, dangerouslyAllowBrowser: true });

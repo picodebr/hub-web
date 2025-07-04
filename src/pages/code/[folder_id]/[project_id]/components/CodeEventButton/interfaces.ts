@@ -1,7 +1,7 @@
 import { HTMLAttributes } from 'react';
 import { IconType } from 'react-icons';
 
-export const codeEventButtonTypes = <const>['undo', 'redo', 'toText', 'debug', 'simulation', 'upload', 'save', 'duplicate'];
+export const codeEventButtonTypes = <const>['undo', 'redo', 'toText', 'debug', 'upload', 'save', 'duplicate'];
 export type CodeEventButtonType = (typeof codeEventButtonTypes)[number];
 
 export interface ICodeEventButtonProps extends HTMLAttributes<Omit<HTMLButtonElement, 'type'>> {

@@ -1,4 +1,4 @@
-import { Flex, Icon, Image, Spinner, Text, useColorMode } from '@chakra-ui/react';
+import { Flex, Icon, Image, Spinner, Text, Tooltip, useColorMode } from '@chakra-ui/react';
 import NextImage from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 import { FiEdit2 } from 'react-icons/fi';
@@ -16,7 +16,9 @@ import { MenuItemType } from '../../interfaces';
 import { iconList } from '@/_base/config/iconList';
 import { useSelectedSchool } from '../Header';
 import { CustomActions } from '@/_base/interfaces/customActions';
+import { KanbanColumnData, KanbanItemType } from '@/components/Kanban/interfaces';
 
+const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
 export interface INavbarProps {
   page: string;
   user?: IHubUser;
@@ -32,12 +34,23 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
   const [isUpdating, setIsUpdating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [actions, setActions] = useState<CustomActions[]>([]);
+  const [kanbanItemsDue, setKanbanItemsDue] = useState<KanbanItemType[]>([]);
 
   const { customActions } = useSelectedSchool();
 
   useEffect(() => {
     if (_user) setUser({ ...user, ..._user });
     setAvatar(_user?.avatar || user.avatar);
+
+    try {
+      const kanban: KanbanColumnData[] = JSON.parse(_user?.metadata?.kanban || user?.metadata?.kanban || `[]`);
+
+      if (kanban?.length)
+        setKanbanItemsDue(kanban.flatMap((e) => e.items.filter((k) => k.end_date && new Date(k.end_date).getTime() < Date.now() + ONE_WEEK)));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(`Individual kanban parse error`, err);
+    }
   }, [_user]);
 
   useEffect(() => {
@@ -229,7 +242,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
           <motion.div
             key={item.name}
             ref={item.ref as any}
-            style={{ width: `100%`, flexDirection: `column`, fontWeight: `600` }}
+            style={{ width: `100%`, flexDirection: `column`, fontWeight: `600`, position: `relative` }}
             // initial={{ opacity: 0, scale: 0 }}
             // animate={{ opacity: 1, scale: 1, x: [0, 100, 500, 100, 0] }}
 
@@ -242,6 +255,11 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
               closed: { opacity: 0, y: 20, transition: { duration: 0.2 } },
             }}
           >
+            {item.page === `planner` && kanbanItemsDue.length && (
+              <Tooltip label="Atividades á vencer" placement="right-end">
+                <Flex w="0.75rem" h="0.75rem" borderRadius="50%" bg="redDot" position="absolute" top="3px" right="3px" />
+              </Tooltip>
+            )}
             <Flex
               align="center"
               padding="10px 18px"
