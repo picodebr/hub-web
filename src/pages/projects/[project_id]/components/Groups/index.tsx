@@ -62,7 +62,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
       {project.groups
         .filter((group) => !group.approved_at)
         .map((group) => (
-          <Flex key={group.id} w="100%" direction="column" gap="24px" bgColor="warning25" borderRadius="10px" boxShadow="md" position="relative">
+          <Flex key={group.id} w="100%" direction="column" gap="24px" bgColor="warning25" borderRadius="10px"  position="relative">
             <Flex w="100%" h="108px" p="12px 32px" justify="space-between" align="center">
               <Flex direction="column">
                 <Text color="warning700" fontWeight="500">
@@ -162,7 +162,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               Selecione os membros do grupo
             </MenuButton>
-            <MenuList borderColor="gray300" boxShadow="md" maxH="350px" overflow="auto">
+            <MenuList borderColor="gray300"  maxH="350px" overflow="auto">
               <MenuOptionGroup type="checkbox">
                 {project.hub_class?.students?.length ? (
                   project.hub_class.students.map((student) => (

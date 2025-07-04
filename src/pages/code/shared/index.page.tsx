@@ -49,7 +49,7 @@ const SharedProjects: React.FC = () => {
             direction="column"
             bgColor="white"
             borderRadius="10px"
-            boxShadow="sm"
+            
             padding="1rem"
             color="primary700"
             border="1px"

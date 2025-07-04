@@ -175,7 +175,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
                 content={statusLabelMapper[project.status || 'stopped']}
               />
             </MenuButton>
-            <MenuList borderColor="gray300" boxShadow="md">
+            <MenuList borderColor="gray300" >
               {hubStatuses.map((status) => (
                 <MenuItem
                   key={status}
@@ -349,7 +349,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
             bg="white"
             w="fit-content"
             borderRadius="lg"
-            boxShadow="sm"
+            
             gap="0.65rem"
             cursor="pointer"
             transition="all 0.1s"
@@ -401,7 +401,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
               borderColor="gray300"
               borderRadius="md"
               p="1rem"
-              boxShadow="md"
+              
               onClick={() => router.push(`/projects/${project.id}`)}
             >
               <Flex

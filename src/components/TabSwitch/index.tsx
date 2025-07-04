@@ -14,7 +14,7 @@ export const TabSwitch: React.FC<ITabSwitchProps> = ({ tabs, onSwitch, currentTa
       bg="white"
       w="fit-content"
       borderRadius="lg"
-      boxShadow="sm"
+      
       gap="0.65rem"
       userSelect="none"
       direction={direction}

@@ -112,7 +112,7 @@ const CodeFolders: React.FC = () => {
               justify="space-between"
               bgColor="white"
               borderRadius="10px"
-              boxShadow="sm"
+              
               align="center"
               padding="20px 24px"
               color="primary700"
@@ -143,7 +143,7 @@ const CodeFolders: React.FC = () => {
                 >
                   <FiMoreVertical cursor="pointer" />
                 </MenuButton>
-                <MenuList borderColor="gray300" boxShadow="md" color="gray600">
+                <MenuList borderColor="gray300"  color="gray600">
                   <MenuItem
                     gap="0.5rem"
                     onClick={(e) => {
