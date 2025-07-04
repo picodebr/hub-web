@@ -20,7 +20,7 @@ import { Uploader } from 'rsuite';
 import { motion } from 'framer-motion';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
-import { formatShortName } from '@/_base/utils';
+import { formatClassGrade, formatCoin, formatShortName } from '@/_base/utils';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
 import { useAvatar, useProfile } from '../../hooks';
@@ -147,11 +147,22 @@ export const MobileMenu: React.FC<INavbarProps> = ({ page, user: _user, menuItem
                 )}
               />
             </Flex>
-            <Flex flex="1" mx="1rem" direction="column" gap="0.5rem">
+            <Flex flex="1" mx="1rem" direction="column" gap="0.25rem">
               <Text fontSize="18px">{formatShortName(user?.name || '', true)}</Text>
-              <Text fontSize="13px" fontWeight="400" color="gray400">
-                {user?.email}
-              </Text>
+              {user.role === `student` ? (
+                <>
+                  <Text fontSize="13px" fontWeight="400" color="gray400">
+                    {`${user.hub_class.display_name}`}
+                  </Text>
+                  <Text fontSize="13px" fontWeight="400" color="gray400">
+                    {`${formatClassGrade(user.hub_class.grade)}`}
+                  </Text>
+                </>
+              ) : (
+                <Text fontSize="13px" fontWeight="400" color="gray400">
+                  {user?.school_group.display_name}
+                </Text>
+              )}
             </Flex>
           </DrawerHeader>
 
@@ -172,16 +183,16 @@ export const MobileMenu: React.FC<INavbarProps> = ({ page, user: _user, menuItem
                 <>
                   <Flex align="center" justify="center" gap="0.45rem">
                     <Image src="/icons/coin.svg" />
-                    <Text>0</Text>
+                    <Text>{formatCoin(user.metadata.coins || 0)}</Text>
                   </Flex>
-                  <Flex align="center" justify="center" gap="0.45rem" onClick={() => router.push('/ranking')}>
+                  {/* <Flex align="center" justify="center" gap="0.45rem" onClick={() => router.push('/ranking')}>
                     <Image src="/icons/medal.svg" />
                     <Text>#0</Text>
                   </Flex>
                   <Flex align="center" justify="center" gap="0.45rem">
                     <Image src="/icons/cash.svg" />
                     <Text>0</Text>
-                  </Flex>
+                  </Flex> */}
                 </>
               ) : (
                 <>

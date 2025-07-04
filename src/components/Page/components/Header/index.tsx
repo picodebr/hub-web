@@ -1,8 +1,8 @@
-import { Flex, Image, Menu, MenuButton, MenuItem, MenuList, ScaleFade, Text, Tooltip, useColorMode, useUpdateEffect } from '@chakra-ui/react';
+import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, useUpdateEffect } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
 import { useCallback, useEffect, useState } from 'react';
 import { create } from 'zustand';
-import { FiBell, FiLogOut } from 'react-icons/fi';
+import { FiLogOut } from 'react-icons/fi';
 import { persist } from 'zustand/middleware';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
@@ -14,8 +14,8 @@ import { MenuItemType } from '../../interfaces';
 import { MobileMenu } from '../MobileMenu';
 import { CustomActions } from '@/_base/interfaces/customActions';
 import { getNotifications, markNotificationAsRead } from '@/_base/services/notifications';
-import { NotificationCard } from './components/NotificationCard';
 import { IHubNotification } from '@/_base/interfaces/notification';
+import NotificationMenu from '@/components/Tailwind/Notifications/NotificationMenu';
 
 interface IProps {
   user?: IHubUser;
@@ -93,11 +93,12 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
     }
   }, [user]);
 
-  const handleRemoveNotification = useCallback((id: string) => {
-    markNotificationAsRead(id);
-
-    setNotifications((e) => e.map((n) => (n.id === id ? { ...n, opened_by: [...n.opened_by, user?.id || ``] } : n)));
+  const handleNotificationClick = useCallback((notification: IHubNotification) => {
+    markNotificationAsRead(notification.id);
+    setNotifications((e) => e.map((n) => (n.id === notification.id ? { ...n, opened_by: [...n.opened_by, user?.id || ``] } : n)));
   }, []);
+
+  const handleReadAllNotifications = () => {};
 
   return (
     <Flex
@@ -139,42 +140,12 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
             onChange={(e) => setSelectedSchool(data.find((d) => d.value === e))}
           />
         )}
-        <Menu>
-          <Tooltip label="Notificações">
-            <MenuButton cursor="pointer" transition="0.12s" _hover={{ filter: 'brightness(0.7)' }}>
-              <FiBell />
-            </MenuButton>
-          </Tooltip>
-          <MenuList
-            border="none"
-            fontSize="16px"
-            boxShadow="none"
-            bg="transparent"
-            overflow="auto"
-            height="calc(100vh - 5rem)"
-            px="1rem"
-            sx={{
-              '&::-webkit-scrollbar-thumb': {
-                background: '#d8d8d8',
-                borderRadius: '24px',
-              },
-              '&::-webkit-scrollbar': {
-                width: '6px',
-              },
-              '&::-webkit-scrollbar-track': {
-                width: '6px',
-              },
-            }}
-          >
-            {notifications
-              .filter((n) => !n.opened_by.includes(user?.id || ``))
-              .map((notification) => (
-                <MenuItem key={notification.id} bg="transparent">
-                  <NotificationCard notification={notification} onRemoveNotification={() => handleRemoveNotification(notification.id)} />
-                </MenuItem>
-              ))}
-          </MenuList>
-        </Menu>
+        <NotificationMenu
+          notifications={notifications}
+          currentUserId={user?.id || ``}
+          onNotificationClick={handleNotificationClick}
+          onMarkAllAsRead={handleReadAllNotifications}
+        />
         <Tooltip label="Sair">
           <Flex
             cursor="pointer"
@@ -196,7 +167,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
           left: '0',
           bottom: '0',
           right: '0',
-          backgroundColor: `${colorMode === `light` ? `#FDFAFF` : `#18203D` }`,
+          backgroundColor: `${colorMode === `light` ? `#FDFAFF` : `#18203D`}`,
           height: '100%',
           width: '100%',
           pointerEvents: 'none',
@@ -205,7 +176,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
           transition: 'all 0.2s',
         }}
       >
-        <Flex height="100%" w="100%" bgColor={`${colorMode === `light` ? `#FDFAFF` : `#18203D` }`} bgRepeat="no-repeat" bgSize="cover">
+        <Flex height="100%" w="100%" bgColor={`${colorMode === `light` ? `#FDFAFF` : `#18203D`}`} bgRepeat="no-repeat" bgSize="cover">
           <Flex direction="column" margin="auto" gap="1rem" align="center">
             <Image src="/loading/rocket-loading.gif" h="100%" borderRadius="1rem" boxShadow="md" />
             <Text fontSize="24px" mt="-6rem">

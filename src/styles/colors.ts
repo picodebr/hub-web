@@ -1,4 +1,5 @@
 export const light = {
+  redDot: `#e93b3b`,
   transparentBG: '#FFFFFFcc',
   white: '#FFF',
   primary25: '#FCFAFF',
@@ -137,6 +138,7 @@ export const light = {
 };
 
 export const dark: typeof light = {
+  redDot: `#e93b3b`,
   transparentBG: '#00000099',
   white: '#101828',
   primary25: '#FCFAFF',
