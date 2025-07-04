@@ -14,7 +14,7 @@ export const statusModalContent: Record<AppStatus, IStatusModalContent> = {
   starting: {},
   waiting_to_connect: {},
   connection_failed: {
-    message: 'Falha ao connectar-se com o dispositivo.',
+    message: 'Falha ao conectar-se com o dispositivo.',
     imageUrl: '/icons/error.png',
   },
   ready_to_compile: {},
@@ -35,8 +35,10 @@ export const statusModalContent: Record<AppStatus, IStatusModalContent> = {
     rotateImage: true,
   },
   wait_reset_click: {
-    message: '',
-    imageUrl: '/loading/board-reset-click.gif',
+    message: 'Clique no botão RESET se estiver no tablet',
+    imageUrl: '/icons/o-loading.svg',
+    rotateImage: true,
+    // imageUrl: '/loading/board-reset-click.gif',
   },
   uploaded: { message: 'Pronto!', imageUrl: '/icons/done.png' },
   upload_failed: {
