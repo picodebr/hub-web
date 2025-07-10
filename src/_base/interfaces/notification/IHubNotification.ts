@@ -15,6 +15,7 @@ export interface IHubNotification {
   message: string | null;
   metadata: IHubNotificationMetadata;
   opened_by: string[];
+  hidden_by: string[];
   created_at: Date;
   updated_at: Date;
   user?: IHubUser;

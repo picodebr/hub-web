@@ -28,9 +28,10 @@ const Stock: React.FC = () => {
 
   useEffect(() => {
     (async () => {
+      if (!school?.hub_school_id) return;
       setIsLoading(true);
       try {
-        const results = await getStockMaker(school?.hub_school_id || ``);
+        const results = await getStockMaker(school.hub_school_id);
         setStock(results);
         setUnsavedStock(results);
       } catch {
@@ -39,7 +40,7 @@ const Stock: React.FC = () => {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [school]);
 
   const needSave = useMemo(() => JSON.stringify(unSavedstock) !== JSON.stringify(stock), [unSavedstock, stock]);
 

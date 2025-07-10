@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DragDropContext } from 'react-beautiful-dnd';
 import { uuid } from 'uuidv4';
 import {
@@ -40,9 +40,10 @@ interface IProps {
   onChange: (data: KanbanColumnData[]) => void;
   group?: IHubGroup;
   canEdit?: boolean;
+  selectedItemId?: string;
 }
 
-export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit = true }) => {
+export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit = true, selectedItemId }) => {
   const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>(initialData);
   const [itemToRemove, setItemToRemove] = useState<KanbanItemType | null>(null);
 
@@ -50,6 +51,14 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
     data: EMPTY_KANBAN_ITEM,
     schema: kanbanItemSchema,
   });
+
+  useEffect(() => {
+    initialData.forEach((e) => {
+      const target = e.items.find((x) => x.id === selectedItemId);
+
+      if (target) setData(target);
+    });
+  }, [selectedItemId]);
 
   const handleUpdateKanbanList = (_item?: KanbanItemType) => {
     const kanbanItem = _item || data;

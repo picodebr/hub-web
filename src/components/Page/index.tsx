@@ -1,4 +1,4 @@
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useState } from 'react';
 import { FiChevronLeft } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import { FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
@@ -12,7 +12,7 @@ import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 import { RedefinePass } from './components/RedefinePass';
 import { MenuItemType } from './interfaces';
-import { PiExamLight } from 'react-icons/pi';
+import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   selectedPage,
@@ -24,6 +24,8 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   hideHeaderOnMobile,
   fullScreenOnMobile,
 }) => {
+  const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
+
   const { colorMode } = useColorMode();
   const router = useRouter();
 
@@ -41,15 +43,21 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
       bgImg={`/patterns/background-${colorMode}.svg`}
       bgRepeat="no-repeat"
       bgSize="cover"
-      
     >
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
       ) : (
         <>
-          <Header user={user} headerLabel={headerLabel} menuItems={menuItems} page={selectedPage} hideOnMobile={hideHeaderOnMobile} />
+          <Header
+            user={user}
+            headerLabel={headerLabel}
+            menuItems={menuItems}
+            page={selectedPage}
+            hideOnMobile={hideHeaderOnMobile}
+            setStockItems={setStockItems}
+          />
           <Flex flex="1" overflow="hidden">
-            <Navbar page={selectedPage} user={user} menuItems={menuItems} />
+            <Navbar page={selectedPage} user={user} menuItems={menuItems} stockItems={stockItems} />
             <RedefinePass user={user} />
             <Flex
               flex="1"
