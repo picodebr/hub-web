@@ -95,7 +95,7 @@ const Classes: React.FC = () => {
           fontSize="16px"
           fontWeight="600"
           color="gray700"
-          boxShadow="sm"
+          
           cursor="pointer"
           onClick={() => setOpenOpt({ class_code: true })}
         >
@@ -112,7 +112,7 @@ const Classes: React.FC = () => {
               h="fit-content"
               bgColor="white"
               borderRadius="10px"
-              boxShadow="md"
+              
               align="center"
               padding="20px 24px"
               color="primary700"
@@ -185,7 +185,7 @@ const Classes: React.FC = () => {
               h="fit-content"
               bgColor="white"
               borderRadius="10px"
-              boxShadow="sm"
+              
               border="1px"
               borderColor="gray200"
               align="center"

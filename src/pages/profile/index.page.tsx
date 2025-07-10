@@ -83,7 +83,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
         bgColor="white"
         flexDirection="column"
         borderRadius="10px"
-        boxShadow="md"
+        
         w="100%"
         gap="1.25rem"
         textAlign="left"
@@ -153,7 +153,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
         bgColor="white"
         flexDirection="column"
         borderRadius="10px"
-        boxShadow="md"
+        
         w="100%"
         h="fit-content"
         gap="1.25rem"
@@ -249,7 +249,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
         bgColor="white"
         flexDirection="column"
         borderRadius="10px"
-        boxShadow="md"
+        
         w="100%"
         h="fit-content"
         padding="1.25rem"

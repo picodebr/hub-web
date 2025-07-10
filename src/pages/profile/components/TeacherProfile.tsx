@@ -72,7 +72,7 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
           direction="column"
           gap={{ base: `10px`, xl: '20px' }}
           borderRadius="10px"
-          boxShadow="md"
+          
           overflow="hidden"
         >
           <Flex direction="column" w="100%" borderBottom="1px" borderColor="gray300" justify="center">
@@ -116,7 +116,7 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
           gap={{ base: `10px`, xl: '20px' }}
           borderRadius="10px"
           marginBottom="1.25rem"
-          boxShadow="md"
+          
           overflow="hidden"
           className="only-desktop"
         >
@@ -137,7 +137,7 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
         bgColor="white"
         flexDirection="column"
         borderRadius="10px"
-        boxShadow="md"
+        
         w="100%"
         gap="1.25rem"
         textAlign="left"
@@ -160,7 +160,7 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
                   .map((project) => (
                     <Flex
                       key={project.id}
-                      boxShadow="md"
+                      
                       bgColor="primary50"
                       borderRadius="10px"
                       w="207px"

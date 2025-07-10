@@ -11,7 +11,7 @@ export function HubTable<T>({ columns, rows, onRowClick, columnSizes = [] }: IHu
       borderRadius="lg"
       border="1px"
       borderColor="gray300"
-      boxShadow="sm"
+      
       fontFamily={`'Inter' - sans-serif`}
     >
       <Table variant="simple">

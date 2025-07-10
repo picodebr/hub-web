@@ -79,7 +79,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         )}
 
         {loadingConfig.type === 'fullscreen-with-info' && (
-          <Flex h="100%" width="100%" justifyContent="center" alignItems="center" boxShadow="md" p={{ base: '1rem' }}>
+          <Flex h="100%" width="100%" justifyContent="center" alignItems="center"  p={{ base: '1rem' }}>
             <Flex
               bgColor="white"
               display="flex"
@@ -91,7 +91,6 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
               justifyContent="center"
               gap="2rem"
               borderRadius="12px"
-              boxShadow="md"
             >
               <Logo size="md"></Logo>
               <Image src="/loading/rocket-loading.gif" />

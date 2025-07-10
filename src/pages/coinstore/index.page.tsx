@@ -79,7 +79,7 @@ const CoinStore: React.FC = () => {
         bgColor="white"
         flexDirection="row"
         borderRadius="12px"
-        boxShadow="md"
+        
         w="762px"
         h="658px"
         padding="20px"
@@ -145,7 +145,7 @@ const CoinStore: React.FC = () => {
         h="618px"
         gap="2.5rem"
         borderRadius="10px"
-        boxShadow="md"
+        
         p="20px"
       >
         <Flex

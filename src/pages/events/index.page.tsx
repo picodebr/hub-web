@@ -18,7 +18,7 @@ const Events: React.FC = () => {
         align="center"
         h="fit-content"
         borderRadius="10px"
-        boxShadow="md"
+        
         color="primary700"
         gap="16px"
         fontSize="18px"

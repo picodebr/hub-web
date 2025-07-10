@@ -156,7 +156,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories, selectedItem
               borderColor="gray300"
               borderRadius="md"
               p="1rem"
-              boxShadow="md"
+              
               onClick={() => showBookFile(book)}
             >
               <Flex

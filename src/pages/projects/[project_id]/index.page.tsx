@@ -145,7 +145,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
           borderColor="gray300"
           bg={needSave ? 'primary500' : 'primary700'}
           color="white"
-          boxShadow="sm"
+          
           isDisabled={!canEdit || (pageView === `Atividades` && buttonCustomLabel.isDisabled)}
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}
