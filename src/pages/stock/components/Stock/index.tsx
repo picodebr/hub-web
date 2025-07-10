@@ -108,13 +108,13 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
               style={{
                 display: `flex`,
                 borderRadius: '8px',
-                backgroundColor: 'white',
+                backgroundColor: `${stock.quantity <= 3 ? '#ffe8e8' : 'white'}`,
                 boxShadow: 'md',
                 flexDirection: 'column',
                 padding: '20px',
                 justifyContent: 'space-between',
                 gap: '0.5rem',
-                border: `1px solid #cccccc66`,
+                border: `1px solid ${stock.quantity <= 3 ? '#f32a2a66' : '#cccccc66'}`,
               }}
             >
               <Image

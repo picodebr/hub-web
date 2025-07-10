@@ -1,5 +1,7 @@
 export interface IHubNotificationMetadata {
+  [x: string]: any;
   title?: string;
   author?: string;
-  [x: string]: any;
+  course_scope?: string;
+  book_scope?: string;
 }

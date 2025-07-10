@@ -1,11 +1,10 @@
 import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, useUpdateEffect } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
-import { useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { FiLogOut } from 'react-icons/fi';
 import { persist } from 'zustand/middleware';
 
-import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
@@ -16,6 +15,11 @@ import { CustomActions } from '@/_base/interfaces/customActions';
 import { getNotifications, markNotificationAsRead } from '@/_base/services/notifications';
 import { IHubNotification } from '@/_base/interfaces/notification';
 import NotificationMenu from '@/components/Tailwind/Notifications/NotificationMenu';
+import { readAllNotifications } from '@/_base/services/notifications/readAllNotifications';
+import { deleteAllNotifications } from '@/_base/services/notifications/deleteAllNotifications';
+import { KanbanItemType } from '@/components/Kanban/interfaces';
+import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
+import { useRouter } from 'next/router';
 
 interface IProps {
   user?: IHubUser;
@@ -23,6 +27,7 @@ interface IProps {
   menuItems: MenuItemType[];
   page: string;
   hideOnMobile?: boolean;
+  setStockItems?: Dispatch<SetStateAction<IStoreMakerSchool[]>>;
 }
 
 type TargetSchoolHookType = {
@@ -43,12 +48,13 @@ export const useSelectedSchool = create<TargetSchoolHookType>(
   ) as any,
 );
 
-export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, hideOnMobile }) => {
+export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, hideOnMobile, setStockItems: _setStockItems }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
   const [notifications, setNotifications] = useState<IHubNotification[]>([]);
+  const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
 
-  const router = useCustomRouter();
+  const router = useRouter();
   const { colorMode } = useColorMode();
   const { setSchool, school, setCustomActions } = useSelectedSchool();
 
@@ -57,7 +63,15 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
   useEffect(() => {
     if (!school?.hub_school_id) return;
     getNotifications(school.hub_school_id || ``).then((res) => {
-      setNotifications(res);
+      const filteredNotifications = res.notifications.results.reduce((acc, e) => {
+        const target = acc.find((x) => x.target_id === e.target_id);
+        if (target) target.opened_by.push(...e.opened_by);
+        else acc.push(e);
+        return acc;
+      }, [] as IHubNotification[]);
+      setNotifications(filteredNotifications);
+      setStockItems(res.stocks);
+      _setStockItems?.(res.stocks);
     });
   }, [school]);
 
@@ -93,12 +107,45 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
     }
   }, [user]);
 
-  const handleNotificationClick = useCallback((notification: IHubNotification) => {
-    markNotificationAsRead(notification.id);
-    setNotifications((e) => e.map((n) => (n.id === notification.id ? { ...n, opened_by: [...n.opened_by, user?.id || ``] } : n)));
-  }, []);
+  const handleNotificationClick = useCallback(
+    (notification: IHubNotification) => {
+      if (!user) return;
+      markNotificationAsRead(notification.id);
+      setNotifications((e) => e.map((n) => (n.id === notification.id ? { ...n, opened_by: [...n.opened_by, user.id] } : n)));
 
-  const handleReadAllNotifications = () => {};
+      switch (notification.target_type) {
+        case `book_added`:
+          router.push(`/library?id=${notification.target_id}`);
+          break;
+
+        case `course_added`:
+          router.push(`/courses/${notification.target_id}?_p=${notification.message}`);
+          break;
+
+        default:
+          break;
+      }
+    },
+    [user],
+  );
+  const handleKanbanClick = useCallback(
+    (kanban: KanbanItemType) => {
+      router.push(`/planner?id=${kanban.id}`);
+    },
+    [user],
+  );
+
+  const handleReadAllNotifications = useCallback(() => {
+    if (!user || !school?.hub_school_id) return;
+    readAllNotifications(school.hub_school_id);
+    setNotifications((e) => e.map((n) => (!n.opened_by.includes(user.id) ? { ...n, opened_by: [...n.opened_by, user.id] } : n)));
+  }, [user, school]);
+
+  const handleDeleteAllNotifications = useCallback(() => {
+    if (!user || !school?.hub_school_id) return;
+    deleteAllNotifications(school.hub_school_id);
+    setNotifications([]);
+  }, [user, school]);
 
   return (
     <Flex
@@ -142,9 +189,12 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
         )}
         <NotificationMenu
           notifications={notifications}
-          currentUserId={user?.id || ``}
+          user={user}
+          stockItems={stockItems}
           onNotificationClick={handleNotificationClick}
+          onKanbanClick={handleKanbanClick}
           onMarkAllAsRead={handleReadAllNotifications}
+          onRemoveAll={handleDeleteAllNotifications}
         />
         <Tooltip label="Sair">
           <Flex
