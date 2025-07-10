@@ -1,6 +1,7 @@
 export const hubNotificationContentTypes = <const>[
   `picode_project_activity_finished`,
-  `new_picode_project_added`,
+  `book_added`,
+  `course_added`,
   `course_certificate_available`,
   `alert`,
 ];

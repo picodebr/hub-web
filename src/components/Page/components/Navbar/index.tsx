@@ -5,7 +5,6 @@ import { FiEdit2 } from 'react-icons/fi';
 import { Uploader } from 'rsuite';
 import { motion } from 'framer-motion';
 
-import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { dimensions } from '@/styles/global';
 import { formatCoin, formatShortName } from '@/_base/utils';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
@@ -17,16 +16,19 @@ import { iconList } from '@/_base/config/iconList';
 import { useSelectedSchool } from '../Header';
 import { CustomActions } from '@/_base/interfaces/customActions';
 import { KanbanColumnData, KanbanItemType } from '@/components/Kanban/interfaces';
+import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
+import { useRouter } from 'next/router';
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
 export interface INavbarProps {
   page: string;
   user?: IHubUser;
   menuItems: MenuItemType[];
+  stockItems?: IStoreMakerSchool[];
 }
 
-export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems }) => {
-  const router = useCustomRouter();
+export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, stockItems }) => {
+  const router = useRouter();
   const { colorMode } = useColorMode();
   const { avatar, setAvatar } = useAvatar();
   const { user, setUser } = useProfile();
@@ -255,8 +257,13 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems })
               closed: { opacity: 0, y: 20, transition: { duration: 0.2 } },
             }}
           >
-            {item.page === `planner` && kanbanItemsDue.length && (
+            {item.page === `planner` && !!kanbanItemsDue.length && (
               <Tooltip label="Atividades á vencer" placement="right-end">
+                <Flex w="0.75rem" h="0.75rem" borderRadius="50%" bg="redDot" position="absolute" top="3px" right="3px" />
+              </Tooltip>
+            )}
+            {item.page === `stock` && !!stockItems?.length && (
+              <Tooltip label="Items com quantidade crítica" placement="right-end">
                 <Flex w="0.75rem" h="0.75rem" borderRadius="50%" bg="redDot" position="absolute" top="3px" right="3px" />
               </Tooltip>
             )}

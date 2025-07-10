@@ -12,7 +12,7 @@ interface NotificationCardProps {
 }
 
 const NotificationCard = ({ notification, currentUserId, onClick }: NotificationCardProps) => {
-  const isUnread = !notification.opened_by.includes(currentUserId);
+  const isUnread = !notification.opened_by?.includes(currentUserId);
   const timeAgo = moment(notification.created_at).fromNow();
 
   return (
@@ -32,7 +32,7 @@ const NotificationCard = ({ notification, currentUserId, onClick }: Notification
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             {notification.metadata.author && <span className="text-sm text-gray-500 font-medium">{notification.metadata.author}</span>}
-            {isUnread && <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>}
+            {isUnread && notification.opened_by && <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>}
           </div>
 
           {notification.metadata.title ? (
@@ -51,7 +51,7 @@ const NotificationCard = ({ notification, currentUserId, onClick }: Notification
             </div>
           )}
 
-          <div className="text-xs text-gray-400">{timeAgo}</div>
+          {notification.created_at && <div className="text-xs text-gray-400">{timeAgo}</div>}
         </div>
       </div>
     </motion.div>

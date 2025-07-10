@@ -1,5 +1,5 @@
 import { GetServerSideProps } from 'next';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { BiLeftArrowAlt } from 'react-icons/bi';
 import { MdOutlineZoomIn, MdOutlineZoomOut } from 'react-icons/md';
@@ -36,9 +36,10 @@ type VideoByGrade = Record<string, IHubVideo[]>;
 interface IProps {
   bookCategories: IHubBookCategory[];
   videoCategories: IHubVideoCategory[];
+  selectedItemId: string;
 }
 
-const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
+const Books: React.FC<IProps> = ({ bookCategories, videoCategories, selectedItemId }) => {
   const [bookCategory, setBookCategory] = useState<IHubBookCategory | null>(bookCategories[0]);
   const [videoCategory, setVideoCategory] = useState<IHubVideoCategory | null>(null);
   const [modalVideo, setModalVideo] = useState<IHubVideo | null>(null);
@@ -48,6 +49,13 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!selectedItemId) return;
+
+    const target = bookCategories.flatMap((e) => e.books).find((e) => e.id === selectedItemId);
+    if (target) setTargetBook(target);
+  }, [selectedItemId, bookCategories]);
 
   const handleCategoryView = (key: string) => {
     const targetBookCategory = bookCategories.find((e) => e.id === key);
@@ -374,7 +382,7 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories }) => {
 
 export default Books;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
   const selectedPage = 'library';
 
   try {
@@ -382,7 +390,16 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     // TODO: add in use effect
     const [{ results }, { results: videoCategories }] = await Promise.all([listBookCategories(), listVideoCategories()]);
 
-    return { props: { selectedPage, pageTitle: 'Meus livros', videoCategories, bookCategories: results, showBackButton: false } };
+    return {
+      props: {
+        selectedPage,
+        pageTitle: 'Meus livros',
+        videoCategories,
+        bookCategories: results,
+        showBackButton: false,
+        selectedItemId: query?.id || ``,
+      },
+    };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);

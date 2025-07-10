@@ -46,7 +46,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
   const [taxedStudents, setTaxedStudents] = useState<Record<string, string>>({});
   const [modalStep, setModalStep] = useState<ModalStep>('hidden');
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onClose } = useDisclosure();
   const router = useCustomRouter();
 
   const onCloseModal = () => {
@@ -252,11 +252,13 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
                                       bg: `${getActivityColor(project, parent)}${targetRewards.find((e) => JSON.stringify(e) === JSON.stringify(step)) ? `` : `66`} !important`,
                                     },
                                   }}
-                                  onChange={(v) =>
+                                  onChange={() => {
                                     setTargetRewards((r) =>
-                                      v.target.checked ? [...r, step] : r.filter((e) => JSON.stringify(e) !== JSON.stringify(step)),
-                                    )
-                                  }
+                                      !r.find((e) => JSON.stringify(e) === JSON.stringify(step))
+                                        ? [...r, step]
+                                        : r.filter((e) => JSON.stringify(e) !== JSON.stringify(step)),
+                                    );
+                                  }}
                                 />
                                 {stepIsFinished(project, step) ? (
                                   project.hub_class.students.filter((s) => studentIsMissing(project, s, step)).length ? (

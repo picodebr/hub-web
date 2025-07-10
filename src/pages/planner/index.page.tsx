@@ -14,9 +14,10 @@ import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 
 interface IProps {
   user: IHubUser;
+  selectedItemId: string;
 }
 
-const Planner: React.FC<IProps> = ({ user }) => {
+const Planner: React.FC<IProps> = ({ user, selectedItemId }) => {
   const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [profile, setProfile] = useState<IHubUser>(user);
@@ -71,14 +72,14 @@ const Planner: React.FC<IProps> = ({ user }) => {
           rightIcon={needSave ? <MdWarning /> : undefined}
         />
       </Flex>
-      {isMounted && <Kanban initialData={kanbanList} onChange={handleUpdateKanbanList} />}
+      {isMounted && <Kanban initialData={kanbanList} onChange={handleUpdateKanbanList} selectedItemId={selectedItemId} />}
     </Flex>
   );
 };
 
 export default Planner;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
   const selectedPage = 'planner';
 
   try {
@@ -86,7 +87,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
     const user = await validateSession();
 
-    return { props: { selectedPage, pageTitle: 'Meus planejamentos', user, showBackButton: false } };
+    return { props: { selectedPage, pageTitle: 'Meus planejamentos', user, showBackButton: false, selectedItemId: query?.id || `` } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
