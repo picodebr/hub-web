@@ -15,7 +15,7 @@ export const PlusButton: React.FC<IPlusButtonProps> = ({ label, warning, ...prop
       fontSize="16px"
       fontWeight="600"
       color={warning ? '#fff' : 'gray700'}
-      boxShadow="sm"
+      
       cursor="pointer"
       {...props}
       rightIcon={warning ? <MdWarning /> : props.rightIcon}

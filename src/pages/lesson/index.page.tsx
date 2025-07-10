@@ -66,7 +66,7 @@ const Lesson: React.FC<IProps> = ({ user }) => {
           isLoading={isLoading}
           bg={needSave ? 'primary500' : 'primary800'}
           color="white"
-          boxShadow="sm"
+          
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}
         />
@@ -77,7 +77,7 @@ const Lesson: React.FC<IProps> = ({ user }) => {
           h="400px"
           direction="column"
           bgColor="white"
-          boxShadow="md"
+          
           borderRadius="6px"
           mr="1.5rem"
           p="1.5rem"

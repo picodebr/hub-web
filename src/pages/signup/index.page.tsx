@@ -170,7 +170,7 @@ const SignUp: React.FC = () => {
       maxW="420px"
       margin="auto"
       borderRadius="12px"
-      boxShadow="md"
+      
       align="center"
       padding="24px"
       transition="all 0.2s"

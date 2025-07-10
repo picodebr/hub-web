@@ -215,7 +215,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
                   <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white" flex="1">
                     Atribuido à
                   </MenuButton>
-                  <MenuList borderColor="gray300" boxShadow="md">
+                  <MenuList borderColor="gray300" >
                     <MenuOptionGroup type="checkbox">
                       {group.students.length ? (
                         group.students.map((student) => (

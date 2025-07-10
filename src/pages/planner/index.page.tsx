@@ -66,7 +66,7 @@ const Planner: React.FC<IProps> = ({ user }) => {
           isLoading={isLoading}
           bg={needSave ? 'primary500' : 'primary800'}
           color="white"
-          boxShadow="sm"
+          
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}
         />

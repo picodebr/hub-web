@@ -83,7 +83,7 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
           fontSize="16px"
           fontWeight="600"
           color="gray700"
-          boxShadow="sm"
+          
           cursor="pointer"
           onClick={() => setOpenModal(true)}
         >
@@ -100,7 +100,7 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
               h="fit-content"
               bgColor="white"
               borderRadius="10px"
-              boxShadow="md"
+              
               align="center"
               padding="20px 24px"
               color="primary700"
@@ -148,7 +148,7 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               {availableProjects.find((e) => data.hub_project_class_id === e.id)?.title || `Selecione o projeto`}
             </MenuButton>
-            <MenuList borderColor="gray300" boxShadow="md">
+            <MenuList borderColor="gray300" >
               {availableProjects.length ? (
                 availableProjects.map((project) => (
                   <MenuItem key={project.id} onClick={() => handleChangeProject(project.id)}>
@@ -165,7 +165,7 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               Selecione os membros do grupo
             </MenuButton>
-            <MenuList borderColor="gray300" boxShadow="md" overflow="auto" maxH="300px">
+            <MenuList borderColor="gray300"  overflow="auto" maxH="300px">
               <MenuOptionGroup type="checkbox" >
                 {availableStudents.length ? (
                   availableStudents.map((student) => (

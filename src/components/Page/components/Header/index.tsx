@@ -112,7 +112,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
       borderColor="primary"
       bg="white"
       userSelect="none"
-      boxShadow="md"
+      
       position="relative"
       display={{ base: hideOnMobile ? `none` : `flex`, lg: `flex` }}
     >
@@ -178,7 +178,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
       >
         <Flex height="100%" w="100%" bgColor={`${colorMode === `light` ? `#FDFAFF` : `#18203D`}`} bgRepeat="no-repeat" bgSize="cover">
           <Flex direction="column" margin="auto" gap="1rem" align="center">
-            <Image src="/loading/rocket-loading.gif" h="100%" borderRadius="1rem" boxShadow="md" />
+            <Image src="/loading/rocket-loading.gif" h="100%" borderRadius="1rem"  />
             <Text fontSize="24px" mt="-6rem">
               {selectedSchool?.label}
             </Text>
