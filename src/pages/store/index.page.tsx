@@ -102,7 +102,7 @@ const Store: React.FC = () => {
         bgColor="white"
         flexDirection="row"
         borderRadius="12px"
-        boxShadow="md"
+        
         w="762px"
         h="658px"
         padding="20px"
@@ -168,7 +168,7 @@ const Store: React.FC = () => {
         h="auto"
         gap="2.5rem"
         borderRadius="10px"
-        boxShadow="md"
+        
         p="20px"
       >
         <Flex

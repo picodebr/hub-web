@@ -14,7 +14,7 @@ export const CommingSoon: React.FC = () => {
       h="100%"
       w="100%"
       borderRadius="md"
-      boxShadow="md"
+      
     >
       <Flex
         margin="auto"
@@ -23,7 +23,7 @@ export const CommingSoon: React.FC = () => {
         borderRadius="md"
         gap="1rem"
         align="center"
-        boxShadow="md"
+        
         transition="0.12s"
         _hover={{ boxShadow: `lg` }}
       >

@@ -94,7 +94,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
     >
       <Flex direction="column" gap={{ base: '0.5rem', xl: '1rem' }}>
         {/* Informações */}
-        <Flex bg="white" padding="1rem" gap="1rem" h="fit-content" borderRadius="8px" boxShadow="md">
+        <Flex bg="white" padding="1rem" gap="1rem" h="fit-content" borderRadius="8px" >
           <Flex position="relative" borderRadius="8px">
             <Flex
               title="Trocar foto de perfil"

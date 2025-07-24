@@ -166,7 +166,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       overflow="hidden"
       border="1px"
       borderColor="gray300"
-      boxShadow="md"
+      
     >
       {/* <Flex>{pdfUrl && <iframe src={pdfUrl} width="100%" height="1000px" style={{ border: 'none' }} title="PDF Preview"></iframe>}</Flex> */}
       <Flex align="center" justify="space-between" borderBottom="1px" borderColor="gray300" padding="0 20px 20px">

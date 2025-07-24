@@ -77,6 +77,7 @@ export const writeSerialCode = async (
   code: number[],
   waitForDeviceSync: WaitForDeviceSync,
 ) => {
+  
   await serial.writeSTKCommands(stk.ENTER_PROGMODE);
   await waitForDeviceSync();
 

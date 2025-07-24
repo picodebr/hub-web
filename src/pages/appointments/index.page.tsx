@@ -112,7 +112,7 @@ const Appointment: React.FC = () => {
             direction="column"
             gap={{ base: `10px`, xl: '20px' }}
             borderRadius="10px"
-            boxShadow="md"
+            
             overflow="hidden"
           >
             <Flex direction="column" w="100%" borderBottom="1px" borderColor="gray300" justify="center">
@@ -183,7 +183,7 @@ const Appointment: React.FC = () => {
                 transition="0.3s"
                 borderRadius="8px"
                 fontWeight="700"
-                boxShadow="md"
+                
                 onClick={() => setStep('TECH_CALENDAR')}
               >
                 <BiSupport />
@@ -207,7 +207,7 @@ const Appointment: React.FC = () => {
             color="white"
             borderRadius="8px"
             fontWeight="700"
-            boxShadow="md"
+            
             cursor="pointer"
             _hover={{ bgColor: 'error900' }}
             transition="0.2s"
@@ -247,7 +247,7 @@ const Appointment: React.FC = () => {
         borderBottom="1px solid gray300"
         border="1px"
         borderColor="gray300"
-        boxShadow="md"
+        
         color="gray600"
         overflow="auto"
       >

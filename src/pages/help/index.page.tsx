@@ -13,7 +13,7 @@ const Help: React.FC = () => {
         height="fit-content"
         margin="auto"
         borderRadius="12px"
-        boxShadow="md"
+        
         align="center"
         padding="24px"
         direction="column"

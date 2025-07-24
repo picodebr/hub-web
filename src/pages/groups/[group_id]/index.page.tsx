@@ -285,7 +285,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
             isLoading={isLoading}
             bg={needSave ? 'primary500' : 'primary700'}
             color="white"
-            boxShadow="sm"
+            
             minW="7rem"
             isDisabled={!canEdit || user.role !== `student`}
             _hover={{ filter: 'brightness(0.9)' }}
