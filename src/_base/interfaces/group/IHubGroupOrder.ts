@@ -18,10 +18,13 @@ export interface IHubGroupOrder {
   educator: IHubUser;
   items: IHubGroupOrderItem[];
 }
+export const hubOrderStatusTypes = <const>[`in_separation`, `waiting_group`, `delivered`, `forgotten`];
+export type HubOrderStatusType = (typeof hubOrderStatusTypes)[number];
 
 export interface IHubGroupOrderMetadata {
   denied_at?: string | null;
   is_resale?: boolean;
+  status: HubOrderStatusType;
 }
 
 export interface IHubGroupOrderItem {
