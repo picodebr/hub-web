@@ -167,17 +167,13 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
   {project.hub_class?.students?.length ? (
     project.hub_class.students
       .filter((student) => {
-        // Filtra apenas os grupos aprovados
         const approvedGroups = project.groups?.filter(
           (group) => group.approved_at !== null
         ) || [];
-
-        // Verifica se o aluno está em algum grupo aprovado
         const isInGroup = approvedGroups.some((group) =>
           group.students?.some((s) => s.id === student.id)
         );
-
-        return !isInGroup; // Inclui apenas alunos que não estão em grupos aprovados
+        return !isInGroup;
       })
       .map((student) => (
         <MenuItemOption
