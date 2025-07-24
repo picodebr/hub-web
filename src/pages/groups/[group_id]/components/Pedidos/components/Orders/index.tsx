@@ -151,9 +151,9 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder 
         show={!!order}
         disableOkButton={!order?.approved_at && (user.role !== `teacher` || group.project?.user_id !== user.id)}
         onConfirm={() => (!order?.approved_at ? handleApprove() : setOrder(null))}
-        okText={!order?.approved_at ? 'Aprovar' : 'OK'}
-        cancelText={!order?.approved_at && user.id === group.hub_user_id ? 'Rejeitar' : undefined}
-        onCancel={!order?.approved_at ? () => handleReject() : undefined}
+        okText={!order?.approved_at && user.role !== `student` ? 'Aprovar' : 'OK'}
+        cancelText={!order?.approved_at && user.role !== `student` ? 'Rejeitar' : undefined}
+        onCancel={!order?.approved_at && user.role !== `student` ? () => handleReject() : undefined}
         topIcon={'checked'}
         onCloseModal={() => setOrder(null)}
       >

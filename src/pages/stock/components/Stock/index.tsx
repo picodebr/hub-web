@@ -21,7 +21,7 @@ import type { UploadFile } from 'antd';
 
 import { TextInput } from '@/components/Inputs/Text';
 import { NumberInput } from '@/components/Inputs/Number';
-import { addStockMakerSchema, EMPTY_STOCK_MAKER_ITEM, IStockMaker } from '@/_base/interfaces/storeMaker';
+import { addStockMakerSchema, EMPTY_STOCK_MAKER_ITEM, IAddStockMakerParams, IStockMaker } from '@/_base/interfaces/storeMaker';
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { useAsyncCallback, useCustomToast, useInputHandler } from '@/_base/hooks';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
@@ -40,9 +40,11 @@ interface IProps {
 
 export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsLoading, setUnsavedStock, onCloseModal, modalIsOpen }) => {
   const [fileToUpload, setFileToUpload] = useState<UploadFile | null>(null);
-  const [isReusable, setIsReusable] = useState(false);
 
-  const { data, onInputChange, submit, errors } = useInputHandler({ schema: addStockMakerSchema, data: EMPTY_STOCK_MAKER_ITEM });
+  const { data, onInputChange, submit, errors } = useInputHandler<IAddStockMakerParams>({
+    schema: addStockMakerSchema,
+    data: EMPTY_STOCK_MAKER_ITEM,
+  });
   const toast = useCustomToast();
   const { school } = useSelectedSchool();
 
@@ -180,11 +182,19 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
                   label="Quantidade"
                 />
 
-                <Flex align="center" direction="column" justify="space-between" gap="0.5rem">
-                  <Text color="gray700" fontSize="13.5px" whiteSpace="nowrap" fontWeight="500">
-                    É Reutilizável?
-                  </Text>
-                  <Switch isChecked={isReusable} onChange={(e) => setIsReusable(e.target.checked)} flex="1" pt="0.5rem" />
+                <Flex flex="1" justify="space-between" gap="1rem">
+                  <Flex align="center" direction="column" justify="space-between" gap="0.5rem" flex="1">
+                    <Text color="gray700" fontSize="13.5px" whiteSpace="nowrap" fontWeight="500">
+                      É Reutilizável?
+                    </Text>
+                    <Switch isChecked={data.reusable} onChange={(e) => onInputChange(`reusable`, e.target.checked)} flex="1" pt="0.5rem" />
+                  </Flex>
+                  <Flex align="center" direction="column" justify="space-between" gap="0.5rem" flex="1">
+                    <Text color="gray700" fontSize="13.5px" whiteSpace="nowrap" fontWeight="500">
+                      É um serviço?
+                    </Text>
+                    <Switch isChecked={data.is_service} onChange={(e) => onInputChange(`is_service`, e.target.checked)} flex="1" pt="0.5rem" />
+                  </Flex>
                 </Flex>
               </Flex>
               <Upload beforeUpload={(file: UploadFile) => setFileToUpload(file)} fileList={fileToUpload ? [fileToUpload] : []}>

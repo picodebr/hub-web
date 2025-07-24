@@ -92,7 +92,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -10, opacity: 0 }}
       transition={{ duration: 0.2 }}
-      style={{ display: `flex`, width: `100%`, height: `100%` }}
+      style={{ display: `flex`, width: `100%`, height: `calc(100% - 3.6rem)` }}
     >
       <Flex overflow="hidden" gap="1rem" flex="1" direction={{ base: `column-reverse`, lg: `row` }}>
         <Flex
@@ -100,8 +100,8 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
           bgColor="white"
           flexDirection="row"
           borderRadius="12px"
-          padding="20px"
-          gap="20px"
+          padding="1rem"
+          gap="1rem"
           textAlign="left"
           display="flex"
           overflow="hidden auto"
@@ -249,19 +249,40 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
 
             <DrawerBody display="flex" flexDirection="column" overflow="hidden auto" gap="0.75rem" py="0.35rem">
               {cart.map((item, i) => (
-                <Flex key={`${item.id} - ${i}`} gap="12px" border="1px" borderColor="gray300" borderRadius="md" padding=".25rem">
-                  <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
-                  <Flex w="97.5px" display="column" align="center" justify="center" gap="9px" fontWeight="500" fontSize="14px" color="gray700">
-                    {item.name}
-                    <Flex display="flex" align="center" gap="9px" h="18px">
-                      <Image src="/icons/cash.svg" />
+                <Flex key={`${item.id} - ${i}`} direction="column" gap="12px" border="1px" borderColor="gray300" borderRadius="md" padding=".5rem">
+                  <Flex align="center" justify="center" fontWeight="500" fontSize="14px" color="gray700">
+                    <Text noOfLines={1} flex="1" fontWeight="400" fontSize="13px">
+                      {item.name}
+                    </Text>
+
+                    <Flex
+                      bgColor="error100"
+                      w="25px"
+                      h="25px"
+                      borderRadius="10px"
+                      color="error800"
+                      display="flex"
+                      justify="center"
+                      align="center"
+                      fontSize="14px"
+                      cursor="pointer"
+                      _hover={{ filter: `brightness(0.9)` }}
+                      onClick={() => setCart((e) => e.filter((cartItem) => cartItem.id !== item.id))}
+                    >
+                      <FiTrash />
+                    </Flex>
+                  </Flex>
+
+                  <Flex justify="space-between" align="end">
+                    <Flex display="flex" justify="center" align="center" gap="4px">
+                      <CoinIcon size="xs" />
                       <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
                         {item.price}
                       </Text>
                     </Flex>
-                  </Flex>
-                  <Flex display="flex" justify="center" align="center">
-                    <Flex w="97.5px" h="40px" display="flex" justify="space-between" align="center">
+                    <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
+
+                    <Flex gap="1rem" display="flex" justify="space-between" align="center">
                       <FaMinus
                         fontSize="10px"
                         color="gray300"
@@ -284,24 +305,6 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                           setCart((e) => e.map((cartItem) => (cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem)))
                         }
                       />
-                    </Flex>
-                  </Flex>
-                  <Flex display="flex" justify="center" align="center">
-                    <Flex
-                      bgColor="error100"
-                      w="25px"
-                      h="25px"
-                      borderRadius="10px"
-                      color="error800"
-                      display="flex"
-                      justify="center"
-                      align="center"
-                      fontSize="14px"
-                      cursor="pointer"
-                      _hover={{ filter: `brightness(0.9)` }}
-                      onClick={() => setCart((e) => e.filter((cartItem) => cartItem.id !== item.id))}
-                    >
-                      <FiTrash />
                     </Flex>
                   </Flex>
                 </Flex>

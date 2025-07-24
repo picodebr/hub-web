@@ -72,7 +72,6 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
           direction="column"
           gap={{ base: `10px`, xl: '20px' }}
           borderRadius="10px"
-          
           overflow="hidden"
         >
           <Flex direction="column" w="100%" borderBottom="1px" borderColor="gray300" justify="center">
@@ -116,7 +115,6 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
           gap={{ base: `10px`, xl: '20px' }}
           borderRadius="10px"
           marginBottom="1.25rem"
-          
           overflow="hidden"
           className="only-desktop"
         >
@@ -137,7 +135,6 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
         bgColor="white"
         flexDirection="column"
         borderRadius="10px"
-        
         w="100%"
         gap="1.25rem"
         textAlign="left"
@@ -158,17 +155,7 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
                 {projects
                   .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
                   .map((project) => (
-                    <Flex
-                      key={project.id}
-                      
-                      bgColor="primary50"
-                      borderRadius="10px"
-                      w="207px"
-                      h="183px"
-                      p="12px"
-                      direction="column"
-                      gap="8px"
-                    >
+                    <Flex key={project.id} bgColor="primary50" borderRadius="10px" w="207px" h="183px" p="12px" direction="column" gap="8px">
                       <Flex
                         direction="row"
                         align="center"
