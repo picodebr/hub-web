@@ -163,28 +163,38 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
               Selecione os membros do grupo
             </MenuButton>
             <MenuList borderColor="gray300"  maxH="350px" overflow="auto">
-              <MenuOptionGroup type="checkbox">
-                {project.hub_class?.students?.length ? (
-                  project.hub_class.students.map((student) => (
-                    <MenuItemOption
-                      key={student.id}
-                      value={student.id}
-                      onClick={() =>
-                        onInputChange(
-                          `users`,
-                          data.users?.find((id) => id === student.id)
-                            ? data.users?.filter((id) => id !== student.id)
-                            : [...(data?.users || []), student.id],
-                        )
-                      }
-                    >
-                      {student.name}
-                    </MenuItemOption>
-                  ))
-                ) : (
-                  <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
-                )}
-              </MenuOptionGroup>
+             <MenuOptionGroup type="checkbox">
+  {project.hub_class?.students?.length ? (
+    project.hub_class.students
+      .filter((student) => {
+        const approvedGroups = project.groups?.filter(
+          (group) => group.approved_at !== null
+        ) || [];
+        const isInGroup = approvedGroups.some((group) =>
+          group.students?.some((s) => s.id === student.id)
+        );
+        return !isInGroup;
+      })
+      .map((student) => (
+        <MenuItemOption
+          key={student.id}
+          value={student.id}
+          onClick={() =>
+            onInputChange(
+              `users`,
+              data.users?.find((id) => id === student.id)
+                ? data.users?.filter((id) => id !== student.id)
+                : [...(data?.users || []), student.id]
+            )
+          }
+        >
+          {student.name}
+        </MenuItemOption>
+      ))
+  ) : (
+    <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
+  )}
+</MenuOptionGroup>
             </MenuList>
           </Menu>
           <Flex align="center" gap="0.5rem">
