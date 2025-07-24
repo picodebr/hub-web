@@ -15,6 +15,7 @@ import {
   NumberInputStepper,
   Text,
   Tooltip,
+  useColorMode,
   useDisclosure,
   useUpdateEffect,
 } from '@chakra-ui/react';
@@ -48,6 +49,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
 
   const { isOpen, onClose } = useDisclosure();
   const router = useCustomRouter();
+  const {  colorMode  } = useColorMode()
 
   const onCloseModal = () => {
     setMissingStudents([]);
@@ -308,8 +310,8 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
             {project.hub_class?.students
               ?.filter((s) => !stepIsFinished(project, targetRewards[0]) || studentIsMissing(project, s, targetRewards[0]))
               .map((student) => (
-                <Flex key={student.id} padding="0.35rem 0.5rem" gap="1rem" justify="space-between">
-                  <Text>{formatShortName(student.name, true)}</Text>
+                <Flex key={student.id} padding="0.35rem 0.5rem" gap="1rem" justify="space-between" color={colorMode === `dark` ? `#FFF` : `#1D2939`}>
+                  <Text >{formatShortName(student.name, true)}</Text>
                   <Checkbox
                     defaultChecked={missingStudents.includes(student.id)}
                     size="md"
@@ -346,7 +348,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
             Defina a porcentagem de imposto para os alunos que não se comportaram:
           </Text>
 
-          <Flex direction="column" gap="0.5rem">
+          <Flex direction="column" gap="0.5rem" color={colorMode === `dark` ? `#FFF` : `#1D2939`}>
             {project.hub_class.students
               ?.filter(
                 (s) =>
@@ -398,7 +400,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
             distribuir as moedas.
           </Text>
 
-          <Flex direction="column" gap="0.5rem">
+          <Flex direction="column" gap="0.5rem" color={colorMode === `dark` ? `#FFF` : `#1D2939`}>
             {project.hub_class.students
               ?.filter(
                 (s) =>

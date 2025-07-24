@@ -1,4 +1,4 @@
-import { Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Text } from '@chakra-ui/react';
+import { Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Text, useColorMode } from '@chakra-ui/react';
 import moment from 'moment';
 import { motion } from 'framer-motion';
 
@@ -22,6 +22,7 @@ interface IProps {
 
 export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup }) => {
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
+  const { colorMode } = useColorMode()
 
   const router = useCustomRouter();
   const { errors, onInputChange, data, submit, setData } = useInputHandler<ICreateHubGroupParams>({
@@ -152,6 +153,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
         <Flex direction="column" minW="350px" gap="1rem">
           <TextInput
             placeholder="Informe o nome do grupo"
+            color={colorMode === `dark` ? `#FFF` : `#1D2939`}
             _placeholder={{ fontSize: '14px' }}
             value={data?.display_name}
             onInputChange={(v) => onInputChange('display_name', v)}
@@ -163,12 +165,13 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
               Selecione os membros do grupo
             </MenuButton>
             <MenuList borderColor="gray300"  maxH="350px" overflow="auto">
-              <MenuOptionGroup type="checkbox">
+              <MenuOptionGroup type="checkbox" color={colorMode === `dark` ? `#FFF` : `#1D2939`}>
                 {project.hub_class?.students?.length ? (
                   project.hub_class.students.map((student) => (
                     <MenuItemOption
                       key={student.id}
                       value={student.id}
+                      color={colorMode === `dark` ? `#FFF` : `#1D2939`}
                       onClick={() =>
                         onInputChange(
                           `users`,
@@ -188,7 +191,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
             </MenuList>
           </Menu>
           <Flex align="center" gap="0.5rem">
-            <Text fontSize="15px" fontWeight="500">
+            <Text fontSize="15px" fontWeight="500" color={colorMode === `dark` ? `#FFF` : `#1D2939`}>
               Membros:
             </Text>
             <AvatarList

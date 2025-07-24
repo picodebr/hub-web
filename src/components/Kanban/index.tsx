@@ -17,6 +17,7 @@ import {
   MenuList,
   MenuOptionGroup,
   Text,
+  useColorMode,
 } from '@chakra-ui/react';
 import { FaRegTrashCan } from 'react-icons/fa6';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
@@ -46,6 +47,7 @@ interface IProps {
 export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit = true, selectedItemId }) => {
   const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>(initialData);
   const [itemToRemove, setItemToRemove] = useState<KanbanItemType | null>(null);
+  const { colorMode } = useColorMode()
 
   const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<KanbanItemType>({
     data: EMPTY_KANBAN_ITEM,
@@ -180,6 +182,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
             <TextInput
               isDisabled={!canEdit}
               flex="1"
+              color={colorMode === `dark` ? `#FFF` : `#1D2939`}
               label="Título"
               placeholder="Informe o título da tarefa"
               _placeholder={{ fontSize: '14px' }}
@@ -190,6 +193,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
             <DateInput
               isDisabled={!canEdit}
               label="Data limite"
+              color={colorMode === `dark` ? `#FFF` : `#1D2939`}
               value={formatDateInput(data.end_date)}
               error={errors.end_date}
               onInputChange={(value) => onInputChange('end_date', value ? new Date(value).toString() : '')}
@@ -197,7 +201,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
             {!group && (
               <Flex gap="1rem" align="center" mb="0.45rem">
                 <ColorPicker onChange={(value) => onInputChange('bgcolor', value)} enableInput={false} color={data?.bgcolor} />
-                <Text fontWeight="500" whiteSpace="nowrap">
+                <Text fontWeight="500" whiteSpace="nowrap" color={colorMode === `dark` ? `#FFF` : `#1D2939`}>
                   Cor de fundo
                 </Text>
               </Flex>
@@ -207,6 +211,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
             label="Descrição da tarefa"
             isDisabled={!canEdit}
             placeholder="Informe a descrição da tarefa"
+            color={colorMode === `dark` ? `#FFF` : `#1D2939`}
             _placeholder={{ fontSize: '14px' }}
             error={errors.content}
             value={data?.content || ``}
@@ -224,13 +229,14 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
                   <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white" flex="1">
                     Atribuido à
                   </MenuButton>
-                  <MenuList borderColor="gray300" >
+                  <MenuList borderColor="gray300" maxH="250px" overflow="auto" >
                     <MenuOptionGroup type="checkbox">
                       {group.students.length ? (
                         group.students.map((student) => (
                           <MenuItemOption
                             key={student.id}
                             value={student.id}
+                            color={colorMode === `dark` ? `#FFF` : `#1D2939`}
                             onClick={(e) =>
                               onInputChange(
                                 'users',
