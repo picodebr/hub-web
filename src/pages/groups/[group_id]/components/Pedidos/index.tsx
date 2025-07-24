@@ -15,6 +15,7 @@ interface IProps {
   handleFinishResaleOrder: (data: IStoreMakerResale[]) => void;
   handleApproveOrder: (data: IHubGroupOrder) => void;
   handleRejectOrder: (data: IHubGroupOrder) => void;
+  handleChangeStatus: (data: IHubGroupOrder) => void;
   refreshStock: () => void;
   canEdit: boolean;
   group: IHubGroup;
@@ -27,6 +28,7 @@ export const GroupRequests: React.FC<IProps> = ({
   handleFinishOrder,
   handleFinishResaleOrder,
   handleApproveOrder,
+  handleChangeStatus,
   group,
   canEdit,
   storeMakerList,
@@ -42,7 +44,7 @@ export const GroupRequests: React.FC<IProps> = ({
   }, [pageView]);
 
   const Views: Record<GroupOrdersPageView, React.ReactElement> = {
-    Pedidos: <Orders group={group} onApproveOrder={handleApproveOrder} onRejectOrder={handleRejectOrder} />,
+    Pedidos: <Orders group={group} onApproveOrder={handleApproveOrder} onRejectOrder={handleRejectOrder} onChangeStatus={handleChangeStatus} />,
     'Loja PiCode': (
       <Store
         onChangeView={setPageView}
