@@ -12,6 +12,7 @@ import {
   ModalCloseButton,
   Button,
   Switch,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import { FaMinus, FaPlus } from 'react-icons/fa';
@@ -27,6 +28,9 @@ import { useAsyncCallback, useCustomToast, useInputHandler } from '@/_base/hooks
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { addItemInStockMaker } from '@/_base/services/storeMaker';
 import { useSelectedSchool } from '@/components/Page/components/Header';
+import { LuPin } from 'react-icons/lu';
+import { TbChartInfographic } from 'react-icons/tb';
+import { formatClassGrade, formatShortName } from '@/_base/utils';
 
 interface IProps {
   isLoading: boolean;
@@ -40,6 +44,7 @@ interface IProps {
 
 export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsLoading, setUnsavedStock, onCloseModal, modalIsOpen }) => {
   const [fileToUpload, setFileToUpload] = useState<UploadFile | null>(null);
+  const [stockToView, setStockToView] = useState<IStockMaker | null>(null);
 
   const { data, onInputChange, submit, errors } = useInputHandler<IAddStockMakerParams>({
     schema: addStockMakerSchema,
@@ -92,7 +97,7 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
         gridTemplateColumns="repeat(auto-fill, minmax(240px, 1fr))"
         gridTemplateRows="minmax(min-content, max-content)"
         borderRadius="md"
-        pb="1rem"
+        p="1rem 1rem 1rem 0"
         flex="1"
       >
         {stock
@@ -119,6 +124,46 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
                 border: `1px solid ${stock.quantity <= 3 ? '#f32a2a66' : '#cccccc66'}`,
               }}
             >
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.75 }}
+                style={{
+                  display: `flex`,
+                  position: 'absolute',
+                  top: '-0.4rem',
+                  right: '-0.4rem',
+                  width: '28px',
+                  height: '28px',
+                  backgroundColor: `#529dff`,
+                  borderRadius: '6px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: '1',
+                  color: 'white',
+                  cursor: 'pointer',
+                  padding: '1px 1px 0 0 ',
+                }}
+                onClick={() => setStockToView(stock)}
+              >
+                <TbChartInfographic fontSize="19px" />
+                <Flex
+                  position="absolute"
+                  top="-0.5rem"
+                  right="-0.5rem"
+                  zIndex="20"
+                  border="1px"
+                  w="1.1rem"
+                  h="1.1rem"
+                  justify="center"
+                  align="center"
+                  borderColor={`#529dff`}
+                  color={`#529dff`}
+                  borderRadius="50%"
+                  bg="white"
+                >
+                  {stock.interested_users?.length + stock.cart_additions?.length}
+                </Flex>
+              </motion.button>
               <Image
                 src={stock.hub_user_id ? stock.metadata.image : stock.store_item.picture}
                 height="180"
@@ -209,6 +254,62 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
             </Button>
             <Button onClick={onCloseModal}>Cancelar</Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={!!stockToView} onClose={() => setStockToView(null)} size="3xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>{`${stockToView?.store_item?.name} | Métricas`}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Flex w="100%" h="100%" gap="1rem">
+              <Flex flex="1" direction="column" border="1px" borderColor="gray300" overflow="hidden" borderRadius="md">
+                <Text align="center" fontWeight="500" fontSize="18px" p="0.5rem">
+                  No carrinho
+                </Text>
+
+                <Flex p="0.5rem" direction="column" maxH="600px" overflow="auto" gap="1rem">
+                  {stockToView?.cart_additions?.map((student) => (
+                    <Flex direction="column" gap="0.25rem" key={student.id} borderBottom="1px" borderColor="gray300" pb="1rem">
+                      <Flex justify="space-between" align="center">
+                        <Text fontWeight="500">{formatShortName(student.name, true)}</Text>
+                        <Text fontWeight="500" color="primary700">
+                          {formatClassGrade(student.grade)}
+                        </Text>
+                      </Flex>
+                      <Flex justify="space-between" align="center" color="gray600" fontSize="14px">
+                        <Text>{student.group_name}</Text>
+                        <Text>{student.class_name}</Text>
+                      </Flex>
+                    </Flex>
+                  ))}
+                </Flex>
+              </Flex>
+              <Flex flex="1" direction="column" border="1px" borderColor="gray300" overflow="hidden" borderRadius="md">
+                <Text align="center" fontWeight="500" fontSize="18px" p="0.5rem">
+                  Demonstrou interesse
+                </Text>
+
+                <Flex p="0.5rem" direction="column" maxH="600px" overflow="auto" gap="1rem">
+                  {stockToView?.interested_users?.map((student) => (
+                    <Flex direction="column" gap="0.25rem" key={student.id} borderBottom="1px" borderColor="gray300" pb="1rem">
+                      <Flex justify="space-between" align="center">
+                        <Text></Text>
+                        <Text fontWeight="500" color="primary700">
+                          {formatClassGrade(student.grade)}
+                        </Text>
+                      </Flex>
+                      <Flex justify="space-between" align="center" color="gray600" fontSize="14px">
+                        <Text fontWeight="500">{formatShortName(student.name, true)}</Text>
+                        <Text>{student.class_name}</Text>
+                      </Flex>
+                    </Flex>
+                  ))}
+                </Flex>
+              </Flex>
+            </Flex>
+          </ModalBody>
         </ModalContent>
       </Modal>
     </motion.div>

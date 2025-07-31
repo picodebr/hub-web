@@ -65,7 +65,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
       setIsLoading(true);
       try {
         const results = await getStockMaker(school?.hub_school_id || ``);
-        setStock(results.filter((e) => e.quantity));
+        setStock(results);
       } finally {
         setIsLoading(false);
       }
@@ -103,7 +103,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const handleRefreshStock = useAsyncCallback(async () => {
     const [results, updatedGroup] = await Promise.all([getStockMaker(school?.hub_school_id || ``), getGroupById(group.id)]);
 
-    setStock(results.filter((e) => e.quantity));
+    setStock(results);
     setGroup(updatedGroup);
     setSavedGroup(updatedGroup);
   }, [school]);

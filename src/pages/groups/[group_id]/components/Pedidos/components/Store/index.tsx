@@ -30,11 +30,14 @@ import { motion } from 'framer-motion';
 import { IHubGroup } from '@/_base/interfaces/group';
 import { SmallModal } from '@/components/Modal/Small';
 import { IStockMaker, IStoreMakerItem } from '@/_base/interfaces/storeMaker';
-import { useAuth, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { cookieManager, formatCoin, formatShortName } from '@/_base/utils';
 import { CoinIcon } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
 import { GroupOrdersPageView } from '@/pages/groups/[group_id]/interfaces';
+import { updateProfile } from '@/_base/services/user';
+import { IHubUser } from '@/_base/interfaces/user';
+import { LuPin, LuPinOff } from 'react-icons/lu';
 
 type CustomStoreItem = IStoreMakerItem & { quantity: number };
 interface IProps {
@@ -44,25 +47,36 @@ interface IProps {
   storeMakerList: IStockMaker[];
   group: IHubGroup;
   cartIsOpened: boolean;
+  user: IHubUser;
 }
 
-export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList, group, cartIsOpened }) => {
-  const [cart, setCart] = useState<CustomStoreItem[]>(cookieManager.getCookie(`cart:${group.id}`, true) || []);
+export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList, group, cartIsOpened, user }) => {
+  const [cart, setCart] = useState<CustomStoreItem[]>(
+    (storeList
+      .map((item) => {
+        const target = user.metadata.cart?.[group.id]?.find((cartItem) => item.store_item.id === cartItem.id);
+
+        return target && !!item.quantity ? { ...item.store_item, quantity: target.quantity } : undefined;
+      })
+      .filter(Boolean) as CustomStoreItem[]) || [],
+  );
   const [orderPayload, setOrderPayload] = useState<{ id: string; quantity: number }[] | null>(null);
   const [itemsWithoutStock, setItemsWithoutStock] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>(user.metadata.store_interests || []);
 
   const storeMakerList = storeList.filter((e) => !e.hub_user_id).map((e) => e.store_item);
 
   const toast = useCustomToast();
   const { isOpen, onOpen, onClose } = useDisclosure({ defaultIsOpen: cartIsOpened || !!cookieManager.getCookie(`cart:${group.id}`) });
-  const { user } = useAuth();
 
   useUpdateEffect(() => {
     onOpen();
   }, [cartIsOpened]);
 
   useUpdateEffect(() => {
-    cookieManager.setCookie(`cart:${group.id}`, JSON.stringify(cart));
+    (async () => {
+      await updateProfile({ cart: { ...(user.metadata.cart || {}), [group.id]: cart.map((e) => ({ id: e.id, quantity: e.quantity })) } });
+    })();
   }, [cart]);
 
   const addItemInCart = (item: IStoreMakerItem) => {
@@ -80,6 +94,22 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
     else setCart((e) => [...e, { ...item, quantity: 1 }]);
     toast({ status: `success`, description: `Item adicionado ao carrinho`, position: `top` });
   };
+
+  const showInterestInItem = useAsyncCallback(
+    async (item: IStoreMakerItem) => {
+      const alreadyItemInterest = interests.find((e) => e === item.id);
+
+      const store_interests = alreadyItemInterest ? interests.filter((e) => e !== item.id) : [...interests, item.id];
+      setInterests(store_interests);
+      await updateProfile({ store_interests });
+      toast({
+        status: alreadyItemInterest ? `info` : `success`,
+        description: `Item ${alreadyItemInterest ? 'removido da' : 'adicionado à'} lista de interesses`,
+        position: `top`,
+      });
+    },
+    [user, interests],
+  );
 
   const totalPrice = useMemo(() => cart.reduce((acc, { price, quantity }) => (acc += Number(price) * quantity), 0), [cart]);
 
@@ -119,82 +149,107 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
             flex="1"
             overflow="hidden auto"
           >
-            {storeMakerList.map((item, i) => (
-              <Flex key={`${item.id} - ${i}`} position="relative" w="fit-content" h="fit-content">
-                {user.role === `student` && (
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.75 }}
-                    style={{
-                      display: `flex`,
-                      position: 'absolute',
-                      top: '-0.4rem',
-                      right: '-0.4rem',
-                      width: '28px',
-                      height: '28px',
-                      backgroundColor: cart.find((e) => e.id === item.id) ? `#32D583` : `#FF525C`,
-                      borderRadius: '6px',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: '1',
-                      color: 'white',
-                      cursor: 'pointer',
-                      padding: '1px 1px 0 0 ',
-                    }}
-                    onClick={() => addItemInCart(item)}
-                  >
-                    <MdAddTask fontSize="19px" />
-                    <Flex
-                      position="absolute"
-                      top="-0.5rem"
-                      right="-0.5rem"
-                      zIndex="20"
-                      border="1px"
-                      w="1.1rem"
-                      h="1.1rem"
-                      justify="center"
-                      align="center"
-                      borderColor={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
-                      color={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
-                      borderRadius="50%"
-                      bg="white"
+            {storeMakerList.map((item, i) => {
+              const targetItemInStore = storeList.find((e) => e.store_maker_item_id === item.id);
+              const alreadyInterest = interests?.find((e) => e === item.id);
+              return (
+                <Flex key={`${item.id} - ${i}`} position="relative" w="fit-content" h="fit-content">
+                  {user.role === `student` && (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.75 }}
+                      style={{
+                        display: `flex`,
+                        position: 'absolute',
+                        top: '-0.4rem',
+                        right: '-0.4rem',
+                        width: '28px',
+                        height: '28px',
+                        backgroundColor: targetItemInStore?.quantity
+                          ? cart.find((e) => e.id === item.id)
+                            ? `#32D583`
+                            : `#FF525C`
+                          : alreadyInterest
+                            ? `#32D583`
+                            : `#529dff`,
+                        borderRadius: '6px',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: '1',
+                        color: 'white',
+                        cursor: 'pointer',
+                        padding: '1px 1px 0 0 ',
+                      }}
+                      onClick={() => (targetItemInStore?.quantity ? addItemInCart(item) : showInterestInItem(item))}
                     >
-                      {cart.find((e) => e.id === item.id)?.quantity || 0}
-                    </Flex>
-                  </motion.button>
-                )}
+                      {targetItemInStore?.quantity ? (
+                        <MdAddTask fontSize="19px" />
+                      ) : alreadyInterest ? (
+                        <LuPinOff fontSize="19px" />
+                      ) : (
+                        <LuPin fontSize="19px" />
+                      )}
+                      {/* <TiPin  fontSize="19px" /> */}
+                      {!!targetItemInStore?.quantity && (
+                        <Flex
+                          position="absolute"
+                          top="-0.5rem"
+                          right="-0.5rem"
+                          zIndex="20"
+                          border="1px"
+                          w="1.1rem"
+                          h="1.1rem"
+                          justify="center"
+                          align="center"
+                          borderColor={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
+                          color={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
+                          borderRadius="50%"
+                          bg="white"
+                        >
+                          {cart.find((e) => e.id === item.id)?.quantity || 0}
+                        </Flex>
+                      )}
+                    </motion.button>
+                  )}
 
-                <Flex
-                  direction="column"
-                  gap="0.5rem"
-                  cursor="pointer"
-                  fontWeight="500"
-                  color="gray700"
-                  fontSize="14px"
-                  align="center"
-                  justify="space-between"
-                  height={{ base: `12.5rem`, lg: '14.5rem' }}
-                  width={{ base: `10rem`, lg: '12rem' }}
-                  border="1px"
-                  borderColor={itemsWithoutStock.includes(item.id) ? `primary500` : 'gray300'}
-                  borderRadius="md"
-                  overflow="hidden"
-                >
-                  <Image src={item.picture} maxHeight={{ base: `8rem`, lg: `10rem` }} w="100%" />
-                  <Flex display="flex" justify="space-between" align="center" gap="9px" minH="3.5rem" maxH="3.5rem" w="100%">
-                    <Text noOfLines={2} px="0.5rem" flex="1">
-                      {item.name}
-                    </Text>
-                    <Flex display="flex" align="center" justify="center" gap="0.25rem" pr="0.5rem">
-                      <Image src="/icons/coin.svg" />
-                      <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
-                        {item.price}
+                  <Flex
+                    direction="column"
+                    gap="0.5rem"
+                    cursor="pointer"
+                    fontWeight="500"
+                    color="gray700"
+                    fontSize="14px"
+                    align="center"
+                    justify="space-between"
+                    height={{ base: `12.5rem`, lg: '14.5rem' }}
+                    width={{ base: `10rem`, lg: '12rem' }}
+                    border="1px"
+                    borderColor={itemsWithoutStock.includes(item.id) || !targetItemInStore?.quantity ? `#f8acb0` : 'gray300'}
+                    borderRadius="md"
+                    filter={targetItemInStore?.quantity ? `` : `grayscale(0.9)`}
+                    overflow="hidden"
+                  >
+                    {!targetItemInStore?.quantity && (
+                      <Text px="0.5rem" fontSize="13px" flex="1" color="gray400">
+                        Item em falta
                       </Text>
+                    )}
+                    <Image src={item.picture} maxHeight={targetItemInStore?.quantity ? { base: `8rem`, lg: `10rem` } : `6rem`} />
+                    <Flex display="flex" justify="space-between" align="center" gap="9px" minH="3.5rem" maxH="3.5rem" w="100%">
+                      <Text noOfLines={2} px="0.5rem" flex="1">
+                        {item.name}
+                      </Text>
+                      <Flex display="flex" align="center" justify="center" gap="0.25rem" pr="0.5rem">
+                        <Image src="/icons/coin.svg" />
+                        <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
+                          {item.price}
+                        </Text>
+                      </Flex>
                     </Flex>
                   </Flex>
                 </Flex>
-              </Flex>
-            ))}
+              );
+            })}
           </Grid>
         </Flex>
 
