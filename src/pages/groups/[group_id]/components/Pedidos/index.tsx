@@ -8,6 +8,7 @@ import { Flex, Tab, TabList, Tabs } from '@chakra-ui/react';
 import { GroupOrdersPageView, groupOrdersPageViews } from '../../interfaces';
 import { Resale } from './components/Resale';
 import { GroupItems } from './components/GroupItems';
+import { useAuth } from '@/_base/hooks';
 
 interface IProps {
   handleSave: (metadata: IHubGroupMetadata) => void;
@@ -39,6 +40,8 @@ export const GroupRequests: React.FC<IProps> = ({
 }) => {
   const [pageView, setPageView] = useState<GroupOrdersPageView>(`Pedidos`);
 
+  const { user } = useAuth();
+
   useEffect(() => {
     setStoreIsOpened([`Loja PiCode`, `Marketplace`].includes(pageView));
   }, [pageView]);
@@ -51,6 +54,7 @@ export const GroupRequests: React.FC<IProps> = ({
         group={group}
         onFinishOrder={handleFinishOrder}
         canEdit={canEdit}
+        user={user}
         storeMakerList={storeMakerList}
         cartIsOpened={cartIsOpened}
       />
