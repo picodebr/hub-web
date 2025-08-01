@@ -16,6 +16,8 @@ export interface IStockMaker {
 export interface IStockInterest {
   id: string;
   name: string;
+  class_name: string;
+  grade: string;
   group_id?: string;
   group_name?: string;
 }
