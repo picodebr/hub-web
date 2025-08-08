@@ -1,23 +1,45 @@
 import moment from 'moment';
-import { useState } from 'react';
-import { Avatar, Badge, Flex, Text } from '@chakra-ui/react';
+import React, { useCallback, useState } from 'react';
+import { Badge, Flex, Text } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 
 import { SmallModal } from '@/components/Modal/Small';
-import { IHubGroup, IHubGroupOrder } from '@/_base/interfaces/group';
+import { HubOrderStatusType, hubOrderStatusTypes, IHubGroup, IHubGroupOrder } from '@/_base/interfaces/group';
 import { useAuth } from '@/_base/hooks';
-import { GenericButton } from '@/components/Buttons/Generic';
+import { SelectInput } from '@/components/Inputs/Select';
 
 interface IProps {
   onApproveOrder: (order: IHubGroupOrder) => void;
   onRejectOrder: (order: IHubGroupOrder) => void;
+  onChangeStatus: (order: IHubGroupOrder) => void;
   group: IHubGroup;
 }
 
-export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder }) => {
+const LABEL_STATUSES: Record<HubOrderStatusType, string> = {
+  in_separation: 'Em separação',
+  waiting_group: 'Aguardando retirada',
+  delivered: 'Entregue',
+  forgotten: 'Esquecido',
+};
+const COLOR_STATUSES: Record<HubOrderStatusType, string> = {
+  in_separation: 'yellow',
+  waiting_group: 'green',
+  delivered: 'blue',
+  forgotten: 'gray',
+};
+
+export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder, onChangeStatus }) => {
   const [order, setOrder] = useState<IHubGroupOrder | null>(null);
+  const [status, setStatus] = useState<HubOrderStatusType | null>(null);
 
   const { user } = useAuth();
+
+  const handleStatusChange = useCallback(() => {
+    if (!order || !status) return;
+    onChangeStatus({ ...order, metadata: { ...order.metadata, status } });
+    setOrder(null);
+    setStatus(null);
+  }, [status]);
 
   const handleApprove = () => {
     if (!order) return;
@@ -29,7 +51,7 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder 
   const handleReject = () => {
     if (!order) return;
 
-    if (user.id === group.hub_user_id) onRejectOrder(order);
+    if (user.id === group.project?.user_id) onRejectOrder(order);
     setOrder(null);
   };
 
@@ -40,122 +62,297 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder 
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -10, opacity: 0 }}
       transition={{ duration: 0.2 }}
-      style={{ display: `flex`, overflow: `auto`, flexDirection: `column`, gap: `1.5rem`, userSelect: `none`, height: `100%` }}
+      style={{ display: `flex`, overflow: `auto`, flexDirection: `column`, userSelect: `none`, height: `100%` }}
     >
-      <Flex
-        direction="column"
-        borderRadius="10px"
-        border="1px"
-        p="1rem"
-        maxH="50%"
-        borderColor="gray300"
-        overflow="hidden auto"
-        gap="1rem"
-        bgColor="warning25"
-        h={group.orders.filter((data) => !!data.approved_at)?.length ? 'auto' : '100%'}
-      >
-        {group.orders.filter((data) => !data.approved_at && !data.metadata.denied_at).length ? (
-          group.orders
-            .filter((data) => !data.approved_at && !data.metadata.denied_at)
-            .map((order) => (
-              <Flex key={order.id} w="100%" overflow="hidden" direction="column" py="0.25rem" minH="3rem">
-                <Flex w="100%" justify="space-between" align="center">
+      <Flex w="100%" h="100%" gap="1.5rem" flex="1" align="stretch">
+        {/* Pendentes */}
+        <Flex
+          direction="column"
+          borderRadius="10px"
+          border="1px"
+          p="1rem"
+          flex="1"
+          borderColor="gray300"
+          overflow="hidden auto"
+          gap="1rem"
+          bgColor="warning25"
+          minW="0"
+        >
+          <Text fontSize="18px" fontWeight="700" color="warning700" mb="0.5rem">
+            Pendentes
+          </Text>
+          {group.orders.filter((data) => !data.approved_at && !data.metadata.denied_at).length ? (
+            group.orders
+              .filter((data) => !data.approved_at && !data.metadata.denied_at)
+              .map((order) => (
+                <Flex
+                  key={order.id}
+                  w="100%"
+                  h="auto"
+                  justify="space-between"
+                  align="center"
+                  p="0.25rem 0.5rem"
+                  borderRadius="5px"
+                  cursor="pointer"
+                  transition="all 0.1s"
+                  _hover={{ bg: `gray200` }}
+                  onClick={() => {
+                    setOrder(order);
+                    setStatus(order.metadata.status || `in_separation`);
+                  }}
+                >
                   <Flex align="center" gap="12px" w="14rem">
-                    <Avatar
-                      size="sm"
-                      src="https://images.tcdn.com.br/img/img_prod/650361/10x_cabo_jumper_macho_x_femea_10_cm_de_20_unidades_cada_200_jumpers_no_total_1757_1_20200903185441.jpg"
-                    ></Avatar>
-                    <Badge bg="yellow.300" color="warning700">
-                      {`Pedido ${order.readable_id}: Aguardando aprovação`}
-                    </Badge>
+                    <Flex position="relative" minW="45px" h="45px" align="center">
+                      {order.items.slice(0, 3).map((item, idx, arr) => {
+                        // Posições: 0 = topo centro, 1 = canto inf. esq., 2 = canto inf. dir.
+                        const style: React.CSSProperties = {
+                          width: 30,
+                          height: 30,
+                          borderRadius: 8,
+                          border: '2px solid #fff',
+                          objectFit: 'cover',
+                          position: 'absolute',
+                          background: '#eee',
+                        };
+                        if (arr.length <= 1) {
+                          style.top = 8;
+                        } else if (idx === 0) {
+                          style.top = 0;
+                          style.left = '50%';
+                          style.transform = 'translateX(-50%)';
+                          style.zIndex = 3;
+                        } else if (idx === 1) {
+                          style.bottom = 0;
+                          style.left = 0;
+                          style.zIndex = 2;
+                        } else if (idx === 2) {
+                          style.bottom = 0;
+                          style.right = 0;
+                          style.zIndex = 1;
+                        }
+                        return <img key={item.id} src={item.store_item.picture} alt={item.store_item.name} style={style} />;
+                      })}
+                    </Flex>
+                    <Text color="gray700" fontWeight="500">
+                      {`Pedido ${order.readable_id}`}
+                    </Text>
                   </Flex>
                   <Flex color="warning500" fontSize="14px" flex="1" justify="center">
                     {moment(order.created_at).format(`DD/MM/YYYY`)}
                   </Flex>
-                  <Flex w={user.role === `teacher` ? undefined : '12rem'} justify="flex-end" gap="0.75rem">
-                    <GenericButton
-                      label="Visualizar"
-                      size="sm"
-                      bg="success600"
-                      color="white"
-                      onClick={() => setOrder(order)}
-                      _hover={{ filter: `brightness(0.9)` }}
-                    />
+                  <Flex w="12rem" justify="flex-end">
+                    <Badge fontSize="10px" bg="yellow.300" color="warning700" p="0.25rem" borderRadius="md">
+                      Aguardando aprovação
+                    </Badge>
                   </Flex>
                 </Flex>
-              </Flex>
-            ))
-        ) : (
-          <Text fontSize="16px" fontWeight="500" color="warning700">
-            Não há pedidos pendentes
+              ))
+          ) : (
+            <Text fontSize="16px" fontWeight="500" color="warning700">
+              Não há pedidos pendentes
+            </Text>
+          )}
+        </Flex>
+        {/* Aprovados */}
+        <Flex
+          direction="column"
+          borderRadius="10px"
+          border="1px"
+          p="1rem"
+          flex="1"
+          borderColor="gray300"
+          overflow="hidden auto"
+          gap="1rem"
+          bg="white"
+          minW="0"
+        >
+          <Text fontSize="18px" fontWeight="700" color="green.700" mb="0.5rem">
+            Aprovados
           </Text>
-        )}
-      </Flex>
-
-      <Flex
-        w="100%"
-        p="1rem"
-        maxH="50%"
-        h={group.orders.filter((data) => !!data.approved_at)?.length ? 'auto' : '100%'}
-        overflow="hidden auto"
-        display="flex"
-        direction="column"
-        bg="white"
-        borderRadius="10px"
-        border="1px"
-        borderColor="gray300"
-        gap="1rem"
-      >
-        {group.orders.filter((data) => !!data.approved_at).length ? (
-          group.orders
-            .filter((data) => !!data.approved_at)
-            .map((order) => (
-              <Flex
-                key={order.id}
-                w="100%"
-                h="auto"
-                justify="space-between"
-                align="center"
-                p="0.25rem 0.5rem"
-                borderRadius="5px"
-                cursor="pointer"
-                transition="all 0.1s"
-                _hover={{ bg: `gray200` }}
-                onClick={() => setOrder(order)}
-              >
-                <Flex align="center" gap="12px" w="14rem">
-                  <Avatar size="sm" src="https://www.makerhero.com/wp-content/uploads/2017/07/1AC01-9-1-min.jpeg"></Avatar>
-                  <Text color="gray700" fontWeight="500">
-                    Pedido solicitado
-                  </Text>
+          {group.orders.filter((data) => !!data.approved_at).length ? (
+            group.orders
+              .filter((data) => !!data.approved_at)
+              .map((order) => (
+                <Flex
+                  key={order.id}
+                  w="100%"
+                  h="auto"
+                  justify="space-between"
+                  align="center"
+                  p="0.25rem 0.5rem"
+                  borderRadius="5px"
+                  cursor="pointer"
+                  transition="all 0.1s"
+                  _hover={{ bg: `gray200` }}
+                  onClick={() => setOrder(order)}
+                >
+                  <Flex align="center" gap="12px" w="14rem">
+                    <Flex position="relative" minW="45px" h="45px" align="center" justify="center">
+                      {order.items.slice(0, 3).map((item, idx, arr) => {
+                        // Posições: 0 = topo centro, 1 = canto inf. esq., 2 = canto inf. dir.
+                        const style: React.CSSProperties = {
+                          width: 30,
+                          height: 30,
+                          borderRadius: 8,
+                          border: '2px solid #fff',
+                          objectFit: 'cover',
+                          position: 'absolute',
+                          background: '#eee',
+                        };
+                        if (arr.length <= 1) {
+                          style.top = 8;
+                        } else if (idx === 0) {
+                          style.top = 0;
+                          style.left = '50%';
+                          style.transform = 'translateX(-50%)';
+                          style.zIndex = 3;
+                        } else if (idx === 1) {
+                          style.bottom = 0;
+                          style.left = 0;
+                          style.zIndex = 2;
+                        } else if (idx === 2) {
+                          style.bottom = 0;
+                          style.right = 0;
+                          style.zIndex = 1;
+                        }
+                        return <img key={item.id} src={item.store_item.picture} alt={item.store_item.name} style={style} />;
+                      })}
+                    </Flex>
+                    <Text color="gray700" fontWeight="500">
+                      {`Pedido ${order.readable_id}`}
+                    </Text>
+                  </Flex>
+                  <Flex color="gray500" fontSize="14px" flex="1" justify="center">
+                    {moment(order.created_at).format(`DD/MM/YYYY`)}
+                  </Flex>
+                  <Flex w="12rem" justify="flex-end">
+                    <Badge
+                      fontSize="10px"
+                      p="0.25rem"
+                      borderRadius="md"
+                      bg={`${COLOR_STATUSES[order.metadata?.status || 'in_separation']}.300`}
+                      color={`${COLOR_STATUSES[order.metadata?.status || 'in_separation']}.700`}
+                    >
+                      {/* Exibe o status customizado se existir, senão 'Em separação' */}
+                      {LABEL_STATUSES[order.metadata?.status || `in_separation`]}
+                    </Badge>
+                  </Flex>
                 </Flex>
-                <Flex color="gray500" fontSize="14px" flex="1" justify="center">
-                  {moment(order.created_at).format(`DD/MM/YYYY`)}
-                </Flex>
-                <Flex w="12rem" justify="flex-end">
-                  <Badge bg="yellow.300" color="yellow.700">
-                    Em separação
-                  </Badge>
-                </Flex>
-              </Flex>
-            ))
-        ) : (
-          <Text fontSize="16px" fontWeight="500" color="gray700">
-            Esse grupo ainda não realizou nenhum pedido
+              ))
+          ) : (
+            <Text fontSize="16px" fontWeight="500" color="gray700">
+              Esse grupo ainda não realizou nenhum pedido aprovado
+            </Text>
+          )}
+        </Flex>
+        {/* Negados */}
+        <Flex
+          direction="column"
+          borderRadius="10px"
+          border="1px"
+          p="1rem"
+          flex="1"
+          borderColor="gray300"
+          overflow="hidden auto"
+          gap="1rem"
+          bg="red.50"
+          minW="0"
+        >
+          <Text fontSize="18px" fontWeight="700" color="red.700" mb="0.5rem">
+            Negados
           </Text>
-        )}
+          {group.orders.filter((data) => !!data.metadata.denied_at).length ? (
+            group.orders
+              .filter((data) => !!data.metadata.denied_at)
+              .map((order) => (
+                <Flex
+                  key={order.id}
+                  w="100%"
+                  h="auto"
+                  justify="space-between"
+                  align="center"
+                  p="0.25rem 0.5rem"
+                  borderRadius="5px"
+                  cursor="pointer"
+                  transition="all 0.1s"
+                  _hover={{ bg: `gray200` }}
+                  onClick={() => setOrder(order)}
+                >
+                  <Flex align="center" gap="12px" w="14rem">
+                    <Flex position="relative" minW="45px" h="45px" align="center">
+                      {order.items.slice(0, 3).map((item, idx, arr) => {
+                        // Posições: 0 = topo centro, 1 = canto inf. esq., 2 = canto inf. dir.
+                        const style: React.CSSProperties = {
+                          width: 30,
+                          height: 30,
+                          borderRadius: 8,
+                          border: '2px solid #fff',
+                          objectFit: 'cover',
+                          position: 'absolute',
+                          background: '#eee',
+                        };
+                        if (arr.length <= 1) {
+                          style.top = 8;
+                        } else if (idx === 0) {
+                          style.top = 0;
+                          style.left = '50%';
+                          style.transform = 'translateX(-50%)';
+                          style.zIndex = 3;
+                        } else if (idx === 1) {
+                          style.bottom = 0;
+                          style.left = 0;
+                          style.zIndex = 2;
+                        } else if (idx === 2) {
+                          style.bottom = 0;
+                          style.right = 0;
+                          style.zIndex = 1;
+                        }
+                        return <img key={item.id} src={item.store_item.picture} alt={item.store_item.name} style={style} />;
+                      })}
+                    </Flex>
+                    <Text color="gray700" fontWeight="500">
+                      {`Pedido ${order.readable_id}`}
+                    </Text>
+                  </Flex>
+                  <Flex color="red.500" fontSize="14px" flex="1" justify="center">
+                    {order.metadata.denied_at ? moment(order.metadata.denied_at).format(`DD/MM/YYYY`) : '-'}
+                  </Flex>
+                  <Flex w="12rem" justify="flex-end">
+                    <Badge fontSize="10px" bg="red.300" color="red.700" p="0.25rem" borderRadius="md">
+                      Negado
+                    </Badge>
+                  </Flex>
+                </Flex>
+              ))
+          ) : (
+            <Text fontSize="16px" fontWeight="500" color="red.700">
+              Não há pedidos negados
+            </Text>
+          )}
+        </Flex>
       </Flex>
       <SmallModal
         size="lg"
-        title={!order?.approved_at ? 'Aprovar Pedido' : `Pedido aprovado em ${moment(order.approved_at).format(`DD/MM/YYYY`)}`}
+        title={
+          !order?.approved_at && !order?.metadata?.denied_at
+            ? 'Aprovar Pedido'
+            : order?.approved_at
+              ? `Pedido aprovado em ${moment(order.approved_at).format(`DD/MM/YYYY`)}`
+              : order?.metadata?.denied_at
+                ? `Pedido negado em ${moment(order.metadata.denied_at).format(`DD/MM/YYYY`)}`
+                : ''
+        }
         show={!!order}
-        disableOkButton={!order?.approved_at && (user.role !== `teacher` || group.project?.user_id !== user.id)}
-        onConfirm={() => (!order?.approved_at ? handleApprove() : setOrder(null))}
-        okText={!order?.approved_at ? 'Aprovar' : 'OK'}
-        cancelText={!order?.approved_at && user.id === group.hub_user_id ? 'Rejeitar' : undefined}
-        onCancel={!order?.approved_at ? () => handleReject() : undefined}
-        topIcon={'checked'}
-        onCloseModal={() => setOrder(null)}
+        disableOkButton={!order?.approved_at && !order?.metadata?.denied_at && (user.role !== `teacher` || group.project?.user_id !== user.id)}
+        onConfirm={() => (!order?.approved_at && !order?.metadata?.denied_at ? handleApprove() : status ? handleStatusChange() : setOrder(null))}
+        okText={!order?.approved_at && !order?.metadata?.denied_at && user.id === group.project?.user_id ? 'Aprovar' : 'OK'}
+        cancelText={!order?.approved_at && !order?.metadata?.denied_at && user.id === group.project?.user_id ? 'Rejeitar' : undefined}
+        onCancel={!order?.approved_at && !order?.metadata?.denied_at && user.id === group.project?.user_id ? () => handleReject() : undefined}
+        topIcon={order?.approved_at ? 'checked' : order?.metadata?.denied_at ? 'warning' : 'checked'}
+        onCloseModal={() => {
+          setOrder(null);
+          setStatus(null);
+        }}
       >
         <Flex direction="column">
           {(order as any)?.student?.name && <Text mb="1rem">Feito por {(order as any).student?.name}</Text>}
@@ -166,6 +363,27 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder 
               <Text>R$ {order.metadata?.is_resale ? order.total : item.store_item.price}</Text>
             </Flex>
           ))}
+          {/* Se for pedido aprovado, e o professor pertencer ao grupo, mostra o select de status */}
+          {order?.approved_at && !order?.metadata?.denied_at && user.id === group.project?.user_id && (
+            <Flex mt="1.5rem" direction="column" gap="0.5rem" minH="15rem">
+              <Text fontWeight="500">Status do pedido:</Text>
+              <SelectInput
+                instanceId="order-status-select"
+                options={hubOrderStatusTypes.map((status) => ({ value: status, label: LABEL_STATUSES[status] }))}
+                initialValue={[
+                  {
+                    value: order.metadata?.status || 'in_separation',
+                    label: LABEL_STATUSES[order.metadata?.status as HubOrderStatusType] || LABEL_STATUSES['in_separation'],
+                  },
+                ]}
+                onSelectChange={([value]) => setStatus(value as HubOrderStatusType)}
+                placeholder="Selecione o status"
+                isMultiSelect={false}
+                maxMenuHeight={200}
+                styles={{ menu: (provided: any) => ({ ...provided, zIndex: 9999 }) }}
+              />
+            </Flex>
+          )}
         </Flex>
       </SmallModal>
     </motion.div>

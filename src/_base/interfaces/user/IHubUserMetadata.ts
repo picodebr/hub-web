@@ -1,5 +1,6 @@
 import { IDailyChallenge } from '../challenges';
 import { HistoryDataType } from '../shared';
+import { IStoreCart } from '../store';
 
 export interface IHubUserMetadata {
   engagement?: HistoryDataType;
@@ -10,4 +11,6 @@ export interface IHubUserMetadata {
   coins?: number;
   kanban?: string;
   daily_challenges?: IDailyChallenge;
+  cart?: Record<string, IStoreCart[]>;
+  store_interests?: string[];
 }

@@ -1,7 +1,13 @@
-import { Flex } from '@chakra-ui/react';
+import { Flex, HTMLChakraProps } from '@chakra-ui/react';
 import { ITabSwitchProps } from './interfaces';
 
-export const TabSwitch: React.FC<ITabSwitchProps> = ({ tabs, onSwitch, currentTabColor = 'primary300', direction = `row` }) => {
+export const TabSwitch: React.FC<ITabSwitchProps & Partial<HTMLChakraProps<'div'>>> = ({
+  tabs,
+  onSwitch,
+  currentTabColor = 'primary300',
+  direction = `row`,
+  ...rest
+}) => {
   return (
     <Flex
       minH="52px"
@@ -14,7 +20,6 @@ export const TabSwitch: React.FC<ITabSwitchProps> = ({ tabs, onSwitch, currentTa
       bg="white"
       w="fit-content"
       borderRadius="lg"
-      
       gap="0.65rem"
       userSelect="none"
       direction={direction}
@@ -31,6 +36,7 @@ export const TabSwitch: React.FC<ITabSwitchProps> = ({ tabs, onSwitch, currentTa
           borderRadius: '24px',
         },
       }}
+      {...rest}
     >
       {tabs.map((tab) => (
         <Flex

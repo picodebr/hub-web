@@ -77,137 +77,136 @@ const Profile: React.FC<IProps> = ({ user }) => {
   const ComponentUser = user?.role === 'student' ? StudentProfile : TeacherProfile;
 
   return (
-    <Flex direction="column" flex="1" gap="24px" overflow="auto">
+    <Flex direction="column" flex="1" gap="1rem" overflow="auto">
       <ComponentUser projects={projects} user={profile} />
-      <Flex
-        bgColor="white"
-        flexDirection="column"
-        borderRadius="10px"
-        
-        w="100%"
-        gap="1.25rem"
-        textAlign="left"
-        display="column"
-        justify="center"
-        color="gray600"
-      >
-        <Accordion allowMultiple>
-          <AccordionItem border="none" borderRadius="10px">
-            <AccordionButton className="my-data-btn" borderRadius="md">
-              <Text flex="1" textAlign="left" padding="0.65rem 0.35rem" fontSize={{ base: `15px`, xl: '16px' }}>
-                Meus dados
-              </Text>
-              <AccordionIcon />
-            </AccordionButton>
-            <AccordionPanel>
-              <Flex pb={5} direction="column">
-                <Text>Nome Completo</Text>
-                <EditableTextInput
-                  onInputChange={(name) => setProfile((e) => ({ ...e, name }))}
-                  value={profile.name}
-                  onOk={handleUpdateProfile}
-                  onCancel={() => setProfile((e) => ({ ...e, name: user.name }))}
-                />
-              </Flex>
-              <Flex pb={5} direction="column">
-                <Text>Nome de Usuário</Text>
-                <EditableTextInput
-                  onInputChange={(username) => setProfile((e) => ({ ...e, username }))}
-                  value={profile.username}
-                  onOk={handleUpdateProfile}
-                  onCancel={() => setProfile((e) => ({ ...e, username: user.username }))}
-                />
-              </Flex>
-              <Flex pb={5} direction="column">
-                <Text>Biografia</Text>
-                <EditableTextInput
-                  placeholder="Biografia"
-                  onInputChange={(bio) => setProfile((e) => ({ ...e, bio }))}
-                  value={profile.bio || ''}
-                  onOk={handleUpdateProfile}
-                  onCancel={() => setProfile((e) => ({ ...e, bio: user.bio }))}
-                />
-              </Flex>
-              <Flex pb={5} direction="column">
-                <Text>E-mail (opcional)</Text>
-                <EditableTextInput
-                  placeholder="Seu e-mail"
-                  onInputChange={(email) => setProfile((e) => ({ ...e, email }))}
-                  value={profile.email || ''}
-                  isDisabled
-                />
-              </Flex>
-              <Flex direction="column">
-                <Text>Data de Nascimento</Text>
-                <DateInput
-                  value={formatDateInput(profile.birthdate)}
-                  isDisabled
-                  onInputChange={(birthdate) => setProfile((e) => ({ ...e, birthdate: birthdate ? new Date(birthdate) : e.birthdate }))}
-                />
-              </Flex>
-            </AccordionPanel>
-          </AccordionItem>
-        </Accordion>
-      </Flex>
-      <Flex
-        bgColor="white"
-        flexDirection="column"
-        borderRadius="10px"
-        
-        w="100%"
-        h="fit-content"
-        gap="1.25rem"
-        textAlign="left"
-        color="gray600"
-        userSelect="none"
-      >
-        <Accordion allowMultiple w="100%">
-          <AccordionItem border="none">
-            <AccordionButton borderRadius="md">
-              <Text flex="1" textAlign="left" padding="0.65rem 0.35rem" fontSize={{ base: `15px`, xl: '16px' }}>
-                Certificados
-              </Text>
-              <AccordionIcon />
-            </AccordionButton>
-            <AccordionPanel pb={4}>
-              {certificates.length ? (
-                <Flex direction="column" gap="1rem">
-                  {certificates.map((certificate) => (
-                    <Flex
-                      key={certificate.id}
-                      justify="space-between"
-                      align="center"
-                      gap="0.5rem"
-                      w="100%"
-                      _notLast={{ borderBottom: '1px', borderColor: '#4B4F5C33', paddingBottom: '1rem' }}
-                    >
-                      <Flex align="center" gap="20px">
-                        <Img src={certificate.thumbnail} w="40px" />
-                        <Text fontWeight="500" fontSize="15px">
-                          {certificate.title}
-                        </Text>
-                      </Flex>
-                      <Box
-                        as="a"
-                        href={certificate.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        bgColor="primary"
-                        borderRadius="5px"
-                        cursor="pointer"
-                        textAlign="center"
-                      >
-                        <FiExternalLink fontSize="22px" />
-                      </Box>
-                    </Flex>
-                  ))}
+      <Flex flex="1" flexDirection="column" gap="1rem">
+        <Flex
+          bgColor="white"
+          flexDirection="column"
+          borderRadius="10px"
+          w="100%"
+          gap="1.25rem"
+          textAlign="left"
+          display="column"
+          justify="center"
+          color="gray600"
+        >
+          <Accordion allowMultiple>
+            <AccordionItem border="none" borderRadius="10px">
+              <AccordionButton className="my-data-btn" borderRadius="md">
+                <Text flex="1" textAlign="left" padding="0.65rem 0.35rem" fontSize={{ base: `15px`, xl: '16px' }}>
+                  Meus dados
+                </Text>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel>
+                <Flex pb={5} direction="column">
+                  <Text>Nome Completo</Text>
+                  <EditableTextInput
+                    onInputChange={(name) => setProfile((e) => ({ ...e, name }))}
+                    value={profile.name}
+                    onOk={handleUpdateProfile}
+                    onCancel={() => setProfile((e) => ({ ...e, name: user.name }))}
+                  />
                 </Flex>
-              ) : (
-                <Text color="gray500">Você ainda não possui nenhum certificado</Text>
-              )}
-            </AccordionPanel>
+                <Flex pb={5} direction="column">
+                  <Text>Nome de Usuário</Text>
+                  <EditableTextInput
+                    onInputChange={(username) => setProfile((e) => ({ ...e, username }))}
+                    value={profile.username}
+                    onOk={handleUpdateProfile}
+                    onCancel={() => setProfile((e) => ({ ...e, username: user.username }))}
+                  />
+                </Flex>
+                <Flex pb={5} direction="column">
+                  <Text>Biografia</Text>
+                  <EditableTextInput
+                    placeholder="Biografia"
+                    onInputChange={(bio) => setProfile((e) => ({ ...e, bio }))}
+                    value={profile.bio || ''}
+                    onOk={handleUpdateProfile}
+                    onCancel={() => setProfile((e) => ({ ...e, bio: user.bio }))}
+                  />
+                </Flex>
+                <Flex pb={5} direction="column">
+                  <Text>E-mail (opcional)</Text>
+                  <EditableTextInput
+                    placeholder="Seu e-mail"
+                    onInputChange={(email) => setProfile((e) => ({ ...e, email }))}
+                    value={profile.email || ''}
+                    isDisabled
+                  />
+                </Flex>
+                <Flex direction="column">
+                  <Text>Data de Nascimento</Text>
+                  <DateInput
+                    value={formatDateInput(profile.birthdate)}
+                    isDisabled
+                    onInputChange={(birthdate) => setProfile((e) => ({ ...e, birthdate: birthdate ? new Date(birthdate) : e.birthdate }))}
+                  />
+                </Flex>
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
+        </Flex>
+        <Flex
+          bgColor="white"
+          flexDirection="column"
+          borderRadius="10px"
+          w="100%"
+          h="fit-content"
+          gap="1.25rem"
+          textAlign="left"
+          color="gray600"
+          userSelect="none"
+        >
+          <Accordion allowMultiple w="100%">
+            <AccordionItem border="none">
+              <AccordionButton borderRadius="md">
+                <Text flex="1" textAlign="left" padding="0.65rem 0.35rem" fontSize={{ base: `15px`, xl: '16px' }}>
+                  Certificados
+                </Text>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel pb={4}>
+                {certificates.length ? (
+                  <Flex direction="column" gap="1rem">
+                    {certificates.map((certificate) => (
+                      <Flex
+                        key={certificate.id}
+                        justify="space-between"
+                        align="center"
+                        gap="0.5rem"
+                        w="100%"
+                        _notLast={{ borderBottom: '1px', borderColor: '#4B4F5C33', paddingBottom: '1rem' }}
+                      >
+                        <Flex align="center" gap="20px">
+                          <Img src={certificate.thumbnail} w="40px" />
+                          <Text fontWeight="500" fontSize="15px">
+                            {certificate.title}
+                          </Text>
+                        </Flex>
+                        <Box
+                          as="a"
+                          href={certificate.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          bgColor="primary"
+                          borderRadius="5px"
+                          cursor="pointer"
+                          textAlign="center"
+                        >
+                          <FiExternalLink fontSize="22px" />
+                        </Box>
+                      </Flex>
+                    ))}
+                  </Flex>
+                ) : (
+                  <Text color="gray500">Você ainda não possui nenhum certificado</Text>
+                )}
+              </AccordionPanel>
 
-            {/* <AccordionPanel pb={4}>
+              {/* <AccordionPanel pb={4}>
               <Flex w="100%" justify="space-between" p="20px" borderTop="1px" borderBottom="1px" borderColor="gray300">
                 <Flex align="center" gap="20px">
                   <Img src="/icons/medal.svg" w="40px" />
@@ -242,26 +241,26 @@ const Profile: React.FC<IProps> = ({ user }) => {
                 </CircularProgress>
               </Flex>
             </AccordionPanel> */}
-          </AccordionItem>
-        </Accordion>
-      </Flex>
-      <Flex
-        bgColor="white"
-        flexDirection="column"
-        borderRadius="10px"
-        
-        w="100%"
-        h="fit-content"
-        padding="1.25rem"
-        gap="1.25rem"
-        textAlign="left"
-        display="column"
-        justify="space-between"
-        color="gray600"
-      >
-        <Flex display="flex" justify="space-between" direction="row">
-          <Text fontSize="16px">Modo noturno</Text>
-          <Switch onChange={toggleColorMode} isChecked={colorMode === 'dark'} colorScheme="orange" />
+            </AccordionItem>
+          </Accordion>
+        </Flex>
+        <Flex
+          bgColor="white"
+          flexDirection="column"
+          borderRadius="10px"
+          w="100%"
+          h="fit-content"
+          padding="1.25rem"
+          gap="1.25rem"
+          textAlign="left"
+          display="column"
+          justify="space-between"
+          color="gray600"
+        >
+          <Flex display="flex" justify="space-between" direction="row">
+            <Text fontSize="16px">Modo noturno</Text>
+            <Switch onChange={toggleColorMode} isChecked={colorMode === 'dark'} colorScheme="orange" />
+          </Flex>
         </Flex>
       </Flex>
     </Flex>

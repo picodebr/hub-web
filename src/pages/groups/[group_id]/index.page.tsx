@@ -22,6 +22,7 @@ import { makeDonation } from '@/_base/services/student/makeDonation';
 import { AnimatePresence } from 'framer-motion';
 import { ITempFile } from '@/_base/interfaces/shared';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
+import { updateOrderStatus } from '@/_base/services/group/updateOrder';
 
 interface IProps {
   group: IHubGroup;
@@ -51,6 +52,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
     const groupAssets = group.orders
       .filter((o) => !!o.approved_at)
       .flatMap((e) => e.items.map((i) => ({ ...e, ...i, ...i.store_item })))
+      .filter((e) => !e.store_item?.metadata?.is_service)
       .reduce((acc, v) => (acc += v.quantity * Number(v.price)), 0);
 
     const groupBalance = group.students.reduce((acc, v) => (acc += Number(v.metadata.coins)), 0);
@@ -63,7 +65,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
       setIsLoading(true);
       try {
         const results = await getStockMaker(school?.hub_school_id || ``);
-        setStock(results.filter((e) => e.quantity));
+        setStock(results);
       } finally {
         setIsLoading(false);
       }
@@ -101,7 +103,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   const handleRefreshStock = useAsyncCallback(async () => {
     const [results, updatedGroup] = await Promise.all([getStockMaker(school?.hub_school_id || ``), getGroupById(group.id)]);
 
-    setStock(results.filter((e) => e.quantity));
+    setStock(results);
     setGroup(updatedGroup);
     setSavedGroup(updatedGroup);
   }, [school]);
@@ -141,9 +143,19 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
     await rejectOrder({ order_id: order.id, group_id: group.id });
 
     setGroup((e) => {
-      e.orders = e.orders.map((o) => (o.id === order.id ? { ...o, metadata: { denied_at: new Date().toISOString() } } : o));
+      e.orders = e.orders.map((o) => (o.id === order.id ? { ...o, metadata: { ...o.metadata, denied_at: new Date().toISOString() } } : o));
       setSavedGroup(e);
 
+      return e;
+    });
+  }, []);
+
+  const handleChangeStatus = useAsyncCallback(async (order: IHubGroupOrder) => {
+    await updateOrderStatus({ order_id: order.id, status: order.metadata.status || `in_separation` });
+
+    setGroup((e) => {
+      e.orders = e.orders.map((o) => (o.id === order.id ? order : o));
+      setSavedGroup(e);
       return e;
     });
   }, []);
@@ -164,8 +176,8 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
               student.id === data.student?.id
                 ? (student.metadata.coins || 0) + Number(data.donation)
                 : student.id === user.id
-                ? (student.metadata.coins || 0) - Number(data.donation)
-                : student.metadata.coins,
+                  ? (student.metadata.coins || 0) - Number(data.donation)
+                  : student.metadata.coins,
           },
         })),
       };
@@ -220,6 +232,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
         handleFinishOrder={handleFinishOrder}
         handleFinishResaleOrder={handleFinishResaleOrder}
         handleSave={handleSaveGroup}
+        handleChangeStatus={handleChangeStatus}
         group={group}
         handleApproveOrder={handleApproveOrder}
         handleRejectOrder={handleRejectOrder}
@@ -285,7 +298,6 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
             isLoading={isLoading}
             bg={needSave ? 'primary500' : 'primary700'}
             color="white"
-            
             minW="7rem"
             isDisabled={!canEdit || user.role !== `student`}
             _hover={{ filter: 'brightness(0.9)' }}

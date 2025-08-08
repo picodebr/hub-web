@@ -10,4 +10,14 @@ export interface IStockMaker {
   quantity: number;
   store_item: IStoreMakerItem;
   updated_at: string;
+  interested_users: IStockInterest[];
+  cart_additions: IStockInterest[];
+}
+export interface IStockInterest {
+  id: string;
+  name: string;
+  class_name: string;
+  grade: string;
+  group_id?: string;
+  group_name?: string;
 }

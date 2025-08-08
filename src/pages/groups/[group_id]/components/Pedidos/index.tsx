@@ -8,6 +8,7 @@ import { Flex, Tab, TabList, Tabs } from '@chakra-ui/react';
 import { GroupOrdersPageView, groupOrdersPageViews } from '../../interfaces';
 import { Resale } from './components/Resale';
 import { GroupItems } from './components/GroupItems';
+import { useAuth } from '@/_base/hooks';
 
 interface IProps {
   handleSave: (metadata: IHubGroupMetadata) => void;
@@ -15,6 +16,7 @@ interface IProps {
   handleFinishResaleOrder: (data: IStoreMakerResale[]) => void;
   handleApproveOrder: (data: IHubGroupOrder) => void;
   handleRejectOrder: (data: IHubGroupOrder) => void;
+  handleChangeStatus: (data: IHubGroupOrder) => void;
   refreshStock: () => void;
   canEdit: boolean;
   group: IHubGroup;
@@ -27,6 +29,7 @@ export const GroupRequests: React.FC<IProps> = ({
   handleFinishOrder,
   handleFinishResaleOrder,
   handleApproveOrder,
+  handleChangeStatus,
   group,
   canEdit,
   storeMakerList,
@@ -37,18 +40,21 @@ export const GroupRequests: React.FC<IProps> = ({
 }) => {
   const [pageView, setPageView] = useState<GroupOrdersPageView>(`Pedidos`);
 
+  const { user } = useAuth();
+
   useEffect(() => {
     setStoreIsOpened([`Loja PiCode`, `Marketplace`].includes(pageView));
   }, [pageView]);
 
   const Views: Record<GroupOrdersPageView, React.ReactElement> = {
-    Pedidos: <Orders group={group} onApproveOrder={handleApproveOrder} onRejectOrder={handleRejectOrder} />,
+    Pedidos: <Orders group={group} onApproveOrder={handleApproveOrder} onRejectOrder={handleRejectOrder} onChangeStatus={handleChangeStatus} />,
     'Loja PiCode': (
       <Store
         onChangeView={setPageView}
         group={group}
         onFinishOrder={handleFinishOrder}
         canEdit={canEdit}
+        user={user}
         storeMakerList={storeMakerList}
         cartIsOpened={cartIsOpened}
       />

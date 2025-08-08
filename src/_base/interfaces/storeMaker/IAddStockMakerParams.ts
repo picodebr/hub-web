@@ -8,6 +8,7 @@ export interface IAddStockMakerParams {
   hub_school_id: string;
   quantity: number;
   reusable: boolean;
+  is_service: boolean;
 }
 
 export const addStockMakerSchema: ZodCustomSchema<IAddStockMakerParams> = z.object({
@@ -16,6 +17,7 @@ export const addStockMakerSchema: ZodCustomSchema<IAddStockMakerParams> = z.obje
   hub_school_id: z.any(),
   quantity: z.number({ required_error: zodSchemaErrors.REQUIRED_FIELD }).min(1),
   reusable: z.boolean().default(false),
+  is_service: z.boolean().default(false),
 });
 
 export const EMPTY_STOCK_MAKER_ITEM: IAddStockMakerParams = {
@@ -24,4 +26,5 @@ export const EMPTY_STOCK_MAKER_ITEM: IAddStockMakerParams = {
   hub_school_id: ``,
   quantity: 1,
   reusable: false,
+  is_service: false,
 };
