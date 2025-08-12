@@ -25,6 +25,7 @@ import { TextInput } from '@/components/Inputs/Text';
 import { InputHandlerErrorType } from '@/_base/hooks/InputHandler/interfaces';
 import { CommentReply } from '../CommentReply';
 import { getTime } from '@/_base/utils/getTime';
+import { capitalizeString } from '@/_base/utils';
 
 interface IProps {
   user: IHubUser;
@@ -73,7 +74,7 @@ export const PostReply: React.FC<IProps> = ({
         <Flex direction="column" flex="1">
           <Flex direction="column" flex="1" mt="-0.25rem">
             <Text fontWeight="600" color="primary500">
-              {reply.user.name}
+              {capitalizeString(reply.user.name)}
             </Text>
             <Text fontSize="14px" color="gray600">
               {reply.user.hub_class?.display_name || reply.user.school_group?.display_name || ``}

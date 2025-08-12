@@ -1,4 +1,5 @@
 import { IStockMaker } from './IStockMaker';
+import { IStoreMakerSchoolMetadata } from './IStoreMakerSchoolMetadata';
 
 export interface IStoreMakerItem {
   id: string;
@@ -8,7 +9,5 @@ export interface IStoreMakerItem {
   video_url: string | null;
   price: string;
   stock_schools: IStockMaker[];
-  metadata: {
-    is_service?: boolean;
-  };
+  metadata: IStoreMakerSchoolMetadata;
 }

@@ -115,13 +115,13 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
               style={{
                 display: `flex`,
                 borderRadius: '8px',
-                backgroundColor: `${stock.quantity <= 3 ? '#ffe8e8' : 'white'}`,
+                backgroundColor: `${stock.quantity <= 3 && !(stock.store_item?.metadata?.is_service || stock.metadata.is_service) ? '#ffe8e8' : 'white'}`,
                 boxShadow: 'md',
                 flexDirection: 'column',
                 padding: '20px',
                 justifyContent: 'space-between',
                 gap: '0.5rem',
-                border: `1px solid ${stock.quantity <= 3 ? '#f32a2a66' : '#cccccc66'}`,
+                border: `1px solid ${stock.quantity <= 3 && !(stock.store_item?.metadata?.is_service || stock.metadata.is_service) ? '#f32a2a66' : '#cccccc66'}`,
               }}
             >
               <motion.button
@@ -174,37 +174,43 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
               <Flex direction="column" gap="0.75rem" w="100%">
                 <Text color="gray600">{stock.hub_user_id ? stock.metadata.name : stock.store_item.name}</Text>
                 <Divider />
-                <Flex justify="space-between" align="center" w="100%" color="gray500">
-                  <Flex
-                    fontSize="12px"
-                    cursor="pointer"
-                    onClick={() => onChangeQuantity({ ...stock, quantity: stock.quantity - 1 })}
-                    transition="all 0.1s"
-                    _hover={{ transform: `scale(1.15)` }}
-                  >
-                    <FaMinus />
+                {stock.store_item?.metadata?.is_service || stock.metadata.is_service ? (
+                  <Flex>
+                    <Text>•➤ Serviço</Text>
                   </Flex>
-                  <Flex w="50px">
-                    <TextInput
-                      value={stock.quantity?.toString() || ''}
-                      onInputChange={(value) => onChangeQuantity({ ...stock, quantity: Number(value.replace(/\D/g, '')) })}
-                      fontSize="14px"
-                      fontWeight="500"
-                      color="gray500"
-                      p="0"
-                      textAlign="center"
-                    />
+                ) : (
+                  <Flex justify="space-between" align="center" w="100%" color="gray500">
+                    <Flex
+                      fontSize="12px"
+                      cursor="pointer"
+                      onClick={() => onChangeQuantity({ ...stock, quantity: stock.quantity - 1 })}
+                      transition="all 0.1s"
+                      _hover={{ transform: `scale(1.15)` }}
+                    >
+                      <FaMinus />
+                    </Flex>
+                    <Flex w="50px">
+                      <TextInput
+                        value={stock.quantity?.toString() || ''}
+                        onInputChange={(value) => onChangeQuantity({ ...stock, quantity: Number(value.replace(/\D/g, '')) })}
+                        fontSize="14px"
+                        fontWeight="500"
+                        color="gray500"
+                        p="0"
+                        textAlign="center"
+                      />
+                    </Flex>
+                    <Flex
+                      fontSize="12px"
+                      cursor="pointer"
+                      onClick={() => onChangeQuantity({ ...stock, quantity: stock.quantity + 1 })}
+                      transition="all 0.1s"
+                      _hover={{ transform: `scale(1.15)` }}
+                    >
+                      <FaPlus />
+                    </Flex>
                   </Flex>
-                  <Flex
-                    fontSize="12px"
-                    cursor="pointer"
-                    onClick={() => onChangeQuantity({ ...stock, quantity: stock.quantity + 1 })}
-                    transition="all 0.1s"
-                    _hover={{ transform: `scale(1.15)` }}
-                  >
-                    <FaPlus />
-                  </Flex>
-                </Flex>
+                )}
               </Flex>
             </motion.div>
           ))}
