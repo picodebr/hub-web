@@ -17,6 +17,7 @@ import {
   DrawerFooter,
   useDisclosure,
   useUpdateEffect,
+  Tooltip,
 } from '@chakra-ui/react';
 import { FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
@@ -37,7 +38,7 @@ import { dimensions } from '@/styles/global';
 import { GroupOrdersPageView } from '@/pages/groups/[group_id]/interfaces';
 import { updateProfile } from '@/_base/services/user';
 import { IHubUser } from '@/_base/interfaces/user';
-import { LuPin, LuPinOff } from 'react-icons/lu';
+import { IoHeartOutline, IoHeartDislikeOutline } from 'react-icons/io5';
 
 type CustomStoreItem = IStoreMakerItem & { quantity: number };
 interface IProps {
@@ -183,11 +184,19 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                       onClick={() => (targetItemInStore?.quantity ? addItemInCart(item) : showInterestInItem(item))}
                     >
                       {targetItemInStore?.quantity ? (
-                        <MdAddTask fontSize="19px" />
+                          <MdAddTask fontSize="19px" />
                       ) : alreadyInterest ? (
-                        <LuPinOff fontSize="19px" />
+                        <Tooltip label="Remover da lista de desejos" hasArrow>
+                          <span>
+                            <IoHeartDislikeOutline fontSize="19px" />
+                          </span>
+                        </Tooltip>
                       ) : (
-                        <LuPin fontSize="19px" />
+                        <Tooltip label="Adicionar à lista de desejos" hasArrow>
+                          <span>
+                            <IoHeartOutline fontSize="19px" />
+                          </span>
+                        </Tooltip>
                       )}
                       {/* <TiPin  fontSize="19px" /> */}
                       {!!targetItemInStore?.quantity && (
@@ -242,7 +251,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                       <Flex display="flex" align="center" justify="center" gap="0.25rem" pr="0.5rem">
                         <Image src="/icons/coin.svg" />
                         <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
-                          {item.price}
+                          R$ {item.price}
                         </Text>
                       </Flex>
                     </Flex>
@@ -332,7 +341,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                     <Flex display="flex" justify="center" align="center" gap="4px">
                       <CoinIcon size="xs" />
                       <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
-                        {item.price}
+                         R$ {item.price}
                       </Text>
                     </Flex>
                     <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
@@ -372,7 +381,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                   <Text fontSize="20px">Total</Text>
                   <Image src="/icons/coin.svg" height="40px" />
                   <Text fontSize="40px" fontWeight="700" color="primary900">
-                    {totalPrice}
+                     R$ {totalPrice}
                   </Text>
                 </Flex>
                 <Flex direction="column" gap="1.35rem">

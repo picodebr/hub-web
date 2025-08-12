@@ -7,6 +7,7 @@ import { IHubCommunityPost } from '@/_base/interfaces/community';
 import { IHubUser } from '@/_base/interfaces/user';
 import { reactionsElements } from '@/_base/utils/reactionsElements';
 import { PostReaction, PostReactionKey } from '@/_base/interfaces/community/PostReaction';
+import { capitalizeString } from '@/_base/utils';
 
 interface IProps {
   user: IHubUser;
@@ -34,7 +35,7 @@ export const CommentReply: React.FC<IProps> = ({ reply, user, handleUpdateReacti
         <Flex direction="column" flex="1">
           <Flex direction="column" flex="1" mt="-0.25rem">
             <Text fontWeight="600" color="primary500">
-              {reply.user.name}
+              {capitalizeString(reply.user.name)}
             </Text>
             <Text fontSize="14px" color="gray600">
               {reply.user.hub_class?.display_name || reply.user.school_group?.display_name || ``}
