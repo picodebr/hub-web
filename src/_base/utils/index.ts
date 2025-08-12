@@ -37,3 +37,4 @@ export * from './tokenManager';
 export * from './validateEmail';
 export * from './validatePassword';
 export * from './writeSerialCode';
+export * from './capitalizeString';
