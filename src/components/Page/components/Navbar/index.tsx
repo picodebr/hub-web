@@ -6,7 +6,7 @@ import { Uploader } from 'rsuite';
 import { motion } from 'framer-motion';
 
 import { dimensions } from '@/styles/global';
-import { formatCoin, formatShortName } from '@/_base/utils';
+import { formatClassGrade, formatCoin, formatShortName } from '@/_base/utils';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
 import { useAvatar, useProfile } from '../../hooks';
@@ -18,6 +18,7 @@ import { CustomActions } from '@/_base/interfaces/customActions';
 import { KanbanColumnData, KanbanItemType } from '@/components/Kanban/interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { useRouter } from 'next/router';
+import { IHubUserSchool } from '@/_base/interfaces/school';
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
 export interface INavbarProps {
@@ -25,9 +26,10 @@ export interface INavbarProps {
   user?: IHubUser;
   menuItems: MenuItemType[];
   stockItems?: IStoreMakerSchool[];
+  school: IHubUserSchool | null;
 }
 
-export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, stockItems }) => {
+export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, stockItems, school }) => {
   const router = useRouter();
   const { colorMode } = useColorMode();
   const { avatar, setAvatar } = useAvatar();
@@ -94,7 +96,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
     >
       <Flex direction="column" gap={{ base: '0.5rem', xl: '1rem' }}>
         {/* Informações */}
-        <Flex bg="white" padding="1rem" gap="1rem" h="fit-content" borderRadius="8px" >
+        <Flex bg="white" padding="1rem" gap="1rem" h="fit-content" borderRadius="8px">
           <Flex position="relative" borderRadius="8px">
             <Flex
               title="Trocar foto de perfil"
@@ -139,13 +141,13 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                   p="0.25rem"
                   bg="white"
                   position="absolute"
-                  right="0"
+                  left="0"
                   cursor={'pointer'}
                   _hover={{ filter: `brightness(0.9)` }}
-                  bottom="0"
+                  top="-0.5rem"
                   onClick={() => e.onClick(e)}
                 >
-                  <FiEdit2 size="1rem" color="#98A2B3" />
+                  <FiEdit2 size="0.875rem" color="#98A2B3" />
                 </Flex>
               )}
             />
@@ -162,11 +164,30 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                 <FiEdit2 size="1rem" color="#98A2B3" />
               </Flex>
             </Flex>
-            <Flex fontSize="12px" fontWeight="400" color="gray400" h="18px" display="column">
-              {user?.email}
+
+            <Flex
+              fontSize="12px"
+              color="gray600"
+              fontWeight="500"
+              marginTop="0.5rem"
+              maxH="8rem"
+              overflow="auto"
+              opacity={user?.hub_class?.display_name || school ? '1' : '0'}
+            >
+              {user?.role === `student` ? `${user.hub_class?.hub_school?.display_name}` : user.email}
             </Flex>
-            <Flex fontSize="13px" color="gray600" fontWeight="400" marginTop="0.5rem" maxH="8rem" overflow="auto" opacity={user?.bio ? '1' : '0'}>
-              {user?.bio || '.'}
+            <Flex
+              fontSize="13px"
+              color="gray600"
+              fontWeight="400"
+              marginTop="0.5rem"
+              maxH="8rem"
+              overflow="auto"
+              opacity={user?.hub_class?.display_name || school ? '1' : '0'}
+            >
+              {user?.role === `student`
+                ? `Turma: ${user.hub_class?.display_name} - ${formatClassGrade(user.hub_class?.grade)}`
+                : school?.display_name || '.'}
             </Flex>
           </Flex>
         </Flex>

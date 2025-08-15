@@ -4,6 +4,7 @@ import { IHubNotification } from '@/_base/interfaces/notification';
 import moment from 'moment';
 import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
 import { Image } from '@chakra-ui/react';
+import { formatCoin } from '@/_base/utils';
 
 interface NotificationCardProps {
   notification: IHubNotification;
@@ -48,6 +49,12 @@ const NotificationCard = ({ notification, currentUserId, onClick }: Notification
             <div className="text-sm text-gray-500 mb-2 flex items-center gap-[2px]">
               <Image src="/icons/coin.svg" w="17px" h="17px" />
               {`${sumCashbacks(notification.metadata.cashback_steps)} moedas recebidas em ${notification.metadata.cashback_steps?.length || 0} atividades`}
+            </div>
+          )}
+          {notification.target_type === `received_coins` && !!notification.metadata.coins && (
+            <div className="text-sm text-gray-500 mb-2 flex items-center gap-[2px]">
+              <Image src="/icons/coin.svg" w="17px" h="17px" />
+              {`${formatCoin(notification.metadata.coins)}`}
             </div>
           )}
 

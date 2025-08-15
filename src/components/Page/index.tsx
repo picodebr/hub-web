@@ -13,6 +13,7 @@ import { Navbar } from './components/Navbar';
 import { RedefinePass } from './components/RedefinePass';
 import { MenuItemType } from './interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
+import { IHubUserSchool } from '@/_base/interfaces/school';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   selectedPage,
@@ -25,6 +26,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   fullScreenOnMobile,
 }) => {
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
+  const [school, setSchool] = useState<IHubUserSchool | null>(null);
 
   const { colorMode } = useColorMode();
   const router = useRouter();
@@ -55,9 +57,10 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
             page={selectedPage}
             hideOnMobile={hideHeaderOnMobile}
             setStockItems={setStockItems}
+            setSchool={setSchool}
           />
           <Flex flex="1" overflow="hidden">
-            <Navbar page={selectedPage} user={user} menuItems={menuItems} stockItems={stockItems} />
+            <Navbar page={selectedPage} user={user} menuItems={menuItems} stockItems={stockItems} school={school} />
             <RedefinePass user={user} />
             <Flex
               flex="1"

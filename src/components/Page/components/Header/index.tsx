@@ -28,6 +28,7 @@ interface IProps {
   page: string;
   hideOnMobile?: boolean;
   setStockItems?: Dispatch<SetStateAction<IStoreMakerSchool[]>>;
+  setSchool: (school: IHubUserSchool) => void;
 }
 
 type TargetSchoolHookType = {
@@ -48,7 +49,15 @@ export const useSelectedSchool = create<TargetSchoolHookType>(
   ) as any,
 );
 
-export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, hideOnMobile, setStockItems: _setStockItems }) => {
+export const Header: React.FC<IProps> = ({
+  user,
+  headerLabel,
+  menuItems,
+  page,
+  hideOnMobile,
+  setStockItems: _setStockItems,
+  setSchool: _setSchool,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
   const [notifications, setNotifications] = useState<IHubNotification[]>([]);
@@ -81,6 +90,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
 
     if (target) {
       setSchool(target);
+      _setSchool(target);
       if (user?.role === `teacher`)
         setCustomActions(
           target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
@@ -98,6 +108,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
 
     if (!school && target) {
       setSchool(target);
+      _setSchool(target);
       if (user?.role === `teacher`)
         setCustomActions(
           target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
@@ -159,7 +170,6 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
       borderColor="primary"
       bg="white"
       userSelect="none"
-      
       position="relative"
       display={{ base: hideOnMobile ? `none` : `flex`, lg: `flex` }}
     >
@@ -228,7 +238,7 @@ export const Header: React.FC<IProps> = ({ user, headerLabel, menuItems, page, h
       >
         <Flex height="100%" w="100%" bgColor={`${colorMode === `light` ? `#FDFAFF` : `#18203D`}`} bgRepeat="no-repeat" bgSize="cover">
           <Flex direction="column" margin="auto" gap="1rem" align="center">
-            <Image src="/loading/rocket-loading.gif" h="100%" borderRadius="1rem"  />
+            <Image src="/loading/rocket-loading.gif" h="100%" borderRadius="1rem" />
             <Text fontSize="24px" mt="-6rem">
               {selectedSchool?.label}
             </Text>
