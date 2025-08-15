@@ -10,7 +10,7 @@ import { MdCheck, MdNavigateBefore, MdNavigateNext, MdTaskAlt } from 'react-icon
 import { AlgorithmPage } from './Algorithm';
 import { cookieManager } from '@/_base/utils';
 import { FINISHED_DAILY_CHALLENGES_STORAGE_KEY } from '@/_base/config/storage';
-import { AnswerResultType } from '@/_base/interfaces/challenges';
+import { AnswerResultType, IHubChallenge } from '@/_base/interfaces/challenges';
 
 export const LessonPage: React.FC<ILessonPageProps> = ({
   challenge,
@@ -22,6 +22,9 @@ export const LessonPage: React.FC<ILessonPageProps> = ({
   lessonChallenges,
   currentLessonIndex,
 }) => {
+  if (!challenge) return;
+  const challenges: IHubChallenge[] = (dailyGame ? dailyGame?.challenges : lessonChallenges) || [];
+
   // const [clearFields, setClearFields] = useState(false);
 
   // const [workspaceCode, setWorkspaceCode] = useState('');
@@ -80,6 +83,11 @@ export const LessonPage: React.FC<ILessonPageProps> = ({
     video: <QuizPage challenge={challenge} registerAnswer={onRegisterAnswer} answers={answers} />,
   };
 
+  const canPreviousClick = dailyGame ? !!dailyGame?.currentIndex : !!currentLessonIndex;
+  const canNextClick = !(
+    !finishedAnswers?.includes(challenge.id) || (dailyGame ? dailyGame.currentIndex : currentLessonIndex || 0) + 1 === challenges.length
+  );
+
   return (
     <Flex flex="1" bg="white" direction="column" borderRadius="md" p="1rem" gap="1rem" overflow="hidden auto" h="100%">
       <Flex direction="column" gap={{ base: `1rem` }} maxH="50%" overflow="hidden">
@@ -97,8 +105,8 @@ export const LessonPage: React.FC<ILessonPageProps> = ({
               {dailyGame
                 ? `${(dailyGame.currentIndex || 0) + 1}/${dailyGame.challenges.length}`
                 : lessonChallenges?.length
-                ? `${currentLessonIndex || 1}/${lessonChallenges.length || 1} `
-                : '1/1'}
+                  ? `${(currentLessonIndex || 0) + 1}/${lessonChallenges.length || 1} `
+                  : '1/1'}
             </Text>
           </Flex>
         </Flex>
@@ -145,15 +153,15 @@ export const LessonPage: React.FC<ILessonPageProps> = ({
       >
         <motion.button
           className="btn"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => onPageChange && onPageChange(`previous`)}
-          disabled={dailyGame ? !dailyGame?.currentIndex : !currentLessonIndex}
+          whileHover={canPreviousClick ? { scale: 1.05 } : {}}
+          whileTap={canPreviousClick ? { scale: 0.9 } : {}}
+          style={{ opacity: canPreviousClick ? 1 : 0.5 }}
+          onClick={() => canPreviousClick && onPageChange && onPageChange(`previous`)}
         >
           <MdNavigateBefore />
           Anterior
         </motion.button>
-        {finishedAnswers?.length === (dailyGame ? dailyGame?.challenges || [] : lessonChallenges || []).length && (
+        {finishedAnswers?.length === challenges.length && (
           <Tooltip label="Enviar desafios" placement="top">
             <motion.button className="confirm-btn" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => onFinish()}>
               <MdCheck />
@@ -162,13 +170,10 @@ export const LessonPage: React.FC<ILessonPageProps> = ({
         )}
         <motion.button
           className="btn"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => onPageChange && onPageChange(`next`)}
-          disabled={
-            !finishedAnswers?.includes(challenge.id) ||
-            (dailyGame ? dailyGame.currentIndex : currentLessonIndex || 0) + 1 === (dailyGame ? dailyGame.challenges : lessonChallenges || []).length
-          }
+          whileHover={canNextClick ? { scale: 1.05 } : {}}
+          whileTap={canNextClick ? { scale: 0.9 } : {}}
+          style={{ opacity: canNextClick ? 1 : 0.5 }}
+          onClick={() => canNextClick && onPageChange && onPageChange(`next`)}
         >
           Próximo
           <MdNavigateNext />

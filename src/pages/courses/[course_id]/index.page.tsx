@@ -55,9 +55,11 @@ const Course: React.FC<IProps> = ({ courseId }) => {
           getCertificateByCourse(courseId),
           listUserCertificates(),
         ]);
+        const targetCourse = coursesResponse.results.find((c) => c.id === courseId) || null;
+
         setCertificateTemplate(certTemplate?.templates[0] || null);
         setUserCertificates(userCerts);
-        setCourse(coursesResponse.results.find((c) => c.id === courseId) || null);
+        setCourse(targetCourse);
         setModules(
           results.map((r) => ({
             ...r,
@@ -129,7 +131,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
           rotate: degrees(0),
         });
         const pdfBytes = await pdfDoc.save();
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
         pdfUrl = URL.createObjectURL(blob);
         const presigned = await getPresignedUrl(`application/pdf`, `certificates`);
         const file = new File([blob], presigned.path.split(`/`).at(-1) || `doc.pdf`, { type: 'application/pdf' });
@@ -166,7 +168,6 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       overflow="hidden"
       border="1px"
       borderColor="gray300"
-      
     >
       {/* <Flex>{pdfUrl && <iframe src={pdfUrl} width="100%" height="1000px" style={{ border: 'none' }} title="PDF Preview"></iframe>}</Flex> */}
       <Flex align="center" justify="space-between" borderBottom="1px" borderColor="gray300" padding="0 20px 20px">

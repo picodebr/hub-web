@@ -103,7 +103,6 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
             direction="column"
             bgColor="white"
             borderRadius="10px"
-            
             padding="1rem"
             color="primary700"
             border="1px"
@@ -151,7 +150,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
                 >
                   <FiMoreVertical cursor="pointer" />
                 </MenuButton>
-                <MenuList borderColor="gray300"  color="gray600">
+                <MenuList borderColor="gray300" color="gray600">
                   <MenuItem
                     gap="0.5rem"
                     onClick={(e) => {
@@ -218,7 +217,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               Selecionar
             </MenuButton>
-            <MenuList borderColor="gray300"  maxH="15rem" overflow="hidden auto">
+            <MenuList borderColor="gray300" maxH="15rem" overflow="hidden auto">
               <MenuOptionGroup type="checkbox">
                 {relatedUsers.length ? (
                   relatedUsers.map((user) => (

@@ -43,6 +43,11 @@ const Courses: React.FC = () => {
     [coursesActivity],
   );
 
+  const handleCourseClick = (course: IHubCourse) => {
+    if (course?.modules?.length === 1) router.push(`/courses/${course.id}/${course?.modules[0].id}`);
+    else router.push(`/courses/${course.id}?_p=${course.title}`);
+  };
+
   return (
     <Flex
       flex="1"
@@ -56,7 +61,6 @@ const Courses: React.FC = () => {
       borderBottom="1px solid gray300"
       border="1px"
       borderColor="gray300"
-      
       color="gray600"
     >
       <Text borderBottom="1px" borderColor="gray300" padding="0 20px 20px">
@@ -81,7 +85,7 @@ const Courses: React.FC = () => {
               overflow="hidden"
               cursor="pointer"
               _hover={{ filter: 'brightness(0.95)' }}
-              onClick={() => router.push(`/courses/${course.id}?_p=${course.title}`)}
+              onClick={() => handleCourseClick(course)}
               bg="gray50"
               border="1px"
               borderColor="gray200"

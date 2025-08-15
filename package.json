@@ -9,6 +9,7 @@
     "push": "npm run project:lint && git push origin",
     "push:dev": "npm run project:lint && git push origin development",
     "project:lint": "npm run lint && npm run prettier",
+    "eslint:fix": "eslint --fix --ext .js,.ts src",
     "lint": "next lint",
     "prettier": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "commitprettier": "git add . && git commit -m \"chore(lint): Code Linted\""

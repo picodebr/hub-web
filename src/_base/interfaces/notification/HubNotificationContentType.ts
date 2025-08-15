@@ -4,5 +4,6 @@ export const hubNotificationContentTypes = <const>[
   `course_added`,
   `course_certificate_available`,
   `alert`,
+  `received_coins`,
 ];
 export type HubNotificationContentType = (typeof hubNotificationContentTypes)[number];

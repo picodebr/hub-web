@@ -1,6 +1,6 @@
 import { api } from '@/_base/classes/api';
 import { AnswerResultType } from '@/_base/interfaces/challenges';
-import { IHubCourseActivity } from '@/_base/interfaces/course';
+import { IHubCourseActivity, ILessonActivity } from '@/_base/interfaces/course';
 
 interface IProps {
   course_id: string;
@@ -11,6 +11,7 @@ interface IProps {
 
 export interface ILessonResult extends IHubCourseActivity {
   is_finished: boolean;
+  lessonData: ILessonActivity;
 }
 
 export const sendModuleLesson = async ({ course_id, lesson_id, module_id, answers }: IProps): Promise<ILessonResult> => {

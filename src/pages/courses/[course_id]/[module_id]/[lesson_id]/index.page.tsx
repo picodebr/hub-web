@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 
-import { useCustomToast } from '@/_base/hooks';
+import { useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { IHubModuleLesson } from '@/_base/interfaces/module';
 import { getCourseActivity, getModuleLesson, ILessonResult, sendModuleLesson } from '@/_base/services/course';
 import { VideoLesson } from './components/video';
 import { LessonPage } from '@/components/LessonPage';
-import { AnswerResultType } from '@/_base/interfaces/challenges';
+import { AnswerResultType, IHubChallenge } from '@/_base/interfaces/challenges';
 import { SmallModal } from '@/components/Modal/Small';
 import { Flex, Image, ListItem, Text, UnorderedList } from '@chakra-ui/react';
 import { IHubCourseActivity } from '@/_base/interfaces/course';
 import React from 'react';
+import moment from 'moment';
 
 interface IProps {
   courseId: string;
@@ -28,8 +29,13 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
   const [customResult, setCustomResult] = useState<CustomResult | null>(null);
   const [activity, setActivity] = useState<IHubCourseActivity | null>(null);
   const [sendingLesson, setSendingLesson] = useState(false);
+  const [startTimestamp, setStartTimestamp] = useState(0);
+
+  const [currentChallenge, setCurrentChallenge] = useState<(IHubChallenge & { index: number }) | null>(null);
 
   const toast = useCustomToast();
+  const router = useCustomRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     (async () => {
@@ -38,7 +44,9 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
         const [moduleLesson, activity] = await Promise.all([getModuleLesson(courseId, moduleId, lessonId), getCourseActivity(courseId)]);
         setActivity(activity);
         setLesson(moduleLesson);
+        setCurrentChallenge({ ...moduleLesson.challenges[0], index: 0 });
         setLessonIsFinished(!!activity.metadata?.find((m) => m.lessons.find((l) => l.entity_id === lessonId && !!l.finished_at)));
+        setStartTimestamp(Date.now());
       } catch {
         toast({ status: `error`, description: `Não foi possível listar as atividades disponíveis no momento` });
       } finally {
@@ -50,10 +58,8 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
   const handleSubmitLesson = useCallback(async () => {
     if (sendingLesson) return;
     setSendingLesson(true);
-    if (lessonIsFinished) {
-      if (activity && lesson?.lesson_type === 'quiz') setCustomResult({ ...activity, is_finished: true, openSuccessModal: true });
-      return;
-    }
+    if (lessonIsFinished && lesson?.lesson_type !== 'quiz') return;
+
     try {
       const r = await sendModuleLesson({ course_id: courseId, module_id: moduleId, lesson_id: lessonId, answers });
 
@@ -70,30 +76,45 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
     } finally {
       setSendingLesson(false);
     }
-  }, [lessonIsFinished, activity]);
+  }, [lessonIsFinished, activity, answers, sendingLesson]);
+
+  const handleChangeChallenge = useCallback(
+    (action: `next` | `previous`) => {
+      if (!currentChallenge || !lesson) return;
+      const newIndex = action === `next` ? Math.min(lesson.challenges.length, currentChallenge.index + 1) : Math.max(0, currentChallenge.index - 1);
+      const newChallenge = lesson.challenges[newIndex];
+
+      if (newChallenge) setCurrentChallenge({ ...newChallenge, index: newIndex });
+    },
+    [currentChallenge],
+  );
 
   return (
     <>
       {lesson?.lesson_type === `quiz` ? (
         <LessonPage
-          challenge={lesson.challenges[0]}
-          registerAnswer={(answer) =>
+          challenge={currentChallenge}
+          registerAnswer={(answer) => {
+            console.log('answer: ', answer);
+
             setAnswers((s) =>
               s.find((e) => e.hub_challenge_id === answer.hub_challenge_id)
                 ? s.map((v) => (v.hub_challenge_id === answer.hub_challenge_id ? answer : v))
                 : [...s, answer],
-            )
-          }
+            );
+          }}
           answers={answers}
           onFinish={handleSubmitLesson}
           lessonChallenges={lesson.challenges}
+          onPageChange={handleChangeChallenge}
+          currentLessonIndex={currentChallenge?.index}
         />
       ) : (
         <VideoLesson lesson={lesson} isLoading={isLoading} handleSubmitLesson={handleSubmitLesson} lessonIsFinished={lessonIsFinished} />
       )}
       <SmallModal
         show={!!(customResult?.openSuccessModal || customResult?.openFailModal)}
-        onConfirm={() => setCustomResult((e) => ({ ...(e || ({} as any)), openFailModal: false, openSuccessModal: false }))}
+        onConfirm={() => router.back()}
         size="lg"
         okText={
           <Flex color={customResult?.openFailModal ? `warning600` : `success600`} gap="0.5rem">
@@ -123,27 +144,31 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
             <Flex direction="column" gap="0.5rem" justify="center">
               <Flex gap="0.5rem" align="center">
                 <Text>Questões:</Text>
-                <Text fontWeight="500">5</Text>
+                <Text fontWeight="500">{lesson?.challenges.length}</Text>
               </Flex>
               <Flex gap="0.5rem" align="center">
                 <Text>Acertos:</Text>
-                <Text fontWeight="500">4</Text>
+                <Text fontWeight="500">{customResult?.lessonData?.correctAnswersCount || 0}</Text>
               </Flex>
               <Flex gap="0.5rem" align="center">
                 <Text>Tempo:</Text>
-                <Text fontWeight="500">14 minutos</Text>
+                <Text fontWeight="500">
+                  {moment(Date.now() - startTimestamp).minutes()
+                    ? `${moment(Date.now() - startTimestamp).minutes()} ${moment(Date.now() - startTimestamp).minutes() === 1 ? `minuto` : `minutos`}`
+                    : `${moment(Date.now() - startTimestamp).seconds() + 1} segundos`}
+                </Text>
               </Flex>
             </Flex>
             <Flex flex="1" justify="flex-end">
               <Flex align="center" justify="center" direction="column" gap="0.5rem">
                 <Text fontSize="16px">Aproveitamento</Text>
                 <Flex border="2px" borderRadius="50%" w="5rem" h="5rem" align="center" justify="center">
-                  80%
+                  {(((customResult?.lessonData?.correctAnswersCount || 0) / (lesson?.challenges?.length || 1)) * 100).toFixed()}%
                 </Flex>
               </Flex>
             </Flex>
           </Flex>
-          {customResult?.openSuccessModal && (
+          {customResult?.openSuccessModal && lesson?.metadata?.completion_coins && (
             <Flex borderRadius="md" p="1rem" direction="column" gap="1rem" border="1px" borderColor="gray300">
               <Flex gap="0.5rem">
                 <Image src="/icons/medal.svg" />
@@ -152,8 +177,8 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
                 </Text>
               </Flex>
               <UnorderedList fontSize="16px">
-                <ListItem>+ 500 Moedas</ListItem>
-                <ListItem>
+                {lesson?.metadata?.completion_coins && <ListItem>{`${lesson.metadata.completion_coins} moedas`}</ListItem>}
+                {/* <ListItem>
                   <Flex gap="0.5rem" align="center">
                     <Text>Novo módulo desbloqueado</Text>
                     <Text fontWeight="500">(Modulo 2)</Text>
@@ -164,7 +189,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
                     <Text>Novo certificado conquistado</Text>
                     <Text fontWeight="500">(PiMaker pro)</Text>
                   </Flex>
-                </ListItem>
+                </ListItem> */}
               </UnorderedList>
             </Flex>
           )}

@@ -4,7 +4,6 @@ import '../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 
 import { dark, light } from './colors';
-import { overflow } from 'html2canvas/dist/types/css/property-descriptors/overflow';
 
 type SemanticTokenColors = Record<string, { default: string; _dark: string }>;
 type SemanticTokenType = { colors: SemanticTokenColors };
