@@ -54,7 +54,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
   }, []);
 
   return (
-    <Flex direction="column" bgColor="white" borderRadius="md" flex="1" border="1px" borderColor="gray300" overflow="hidden" >
+    <Flex direction="column" bgColor="white" borderRadius="md" flex="1" border="1px" borderColor="gray300" overflow="hidden">
       <Flex p="1rem" gap="1rem" borderBottom="1px" borderColor="gray300" align="center" direction={{ base: 'column', lg: 'row' }}>
         <Skeleton
           isLoaded={!isLoading}
@@ -113,7 +113,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
       <Flex direction="column" flex="1" overflow="hidden auto" p={{ base: `1rem`, xl: '2rem' }} gap={{ base: `1rem`, xl: '2rem' }}>
         {(lessons.length ? lessons : [{} as IHubModuleLesson & { finished?: boolean }])
           .sort((a, b) => (a?.position || 1) - (b?.position || 1))
-          .map((lesson, i) =>
+          .map((lesson, i, arr) =>
             lesson.id ? (
               <Flex
                 key={lesson.id + i}
@@ -144,10 +144,23 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
                 </Flex>
                 <Flex align="center">
                   <GenericButton
-                    label={finishedLessons.find((l) => l.entity_id === lesson.id) ? 'Ver novamente' : 'Iniciar'}
+                    isDisabled={hubModule?.metadata?.respect_hierarchy && !!i && !arr[i - 1].finished}
+                    label={
+                      finishedLessons.find((l) => l.entity_id === lesson.id)
+                        ? lesson.lesson_type === `video`
+                          ? 'Ver novamente'
+                          : 'Refazer'
+                        : 'Iniciar'
+                    }
                     bg="primary700"
                     color="#fff"
-                    leftIcon={lessonTypeInfoMapper[lesson.lesson_type].icon({ fontSize: `1.15rem` })}
+                    leftIcon={
+                      finishedLessons.find((l) => l.entity_id === lesson.id) ? (
+                        <PiSealCheckFill fontSize="1.2rem" filter="brightness(0.93)" />
+                      ) : (
+                        lessonTypeInfoMapper[lesson.lesson_type].icon({ fontSize: `1.15rem` })
+                      )
+                    }
                     onClick={() => router.push(`/courses/${courseId}/${moduleId}/${lesson.id}?_p=${lesson.title}`)}
                   />
                 </Flex>

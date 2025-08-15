@@ -1,5 +1,6 @@
 import { IHubCourse } from '../course';
 import { IHubModuleLesson } from './IHubModuleLesson';
+import { IHubModuleMetadata } from './IHubModuleMetadata';
 
 export interface IHubModule {
   id: string;
@@ -9,6 +10,7 @@ export interface IHubModule {
   is_available?: boolean;
   title: string;
   position: number;
+  metadata: IHubModuleMetadata;
   description: string | null;
   created_at: Date;
   updated_at: Date;

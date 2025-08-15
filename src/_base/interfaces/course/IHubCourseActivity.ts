@@ -25,4 +25,5 @@ interface IActivityRegister {
   points_earned?: string;
   coins_earned?: string;
   tries?: number;
+  correctAnswersCount?: number;
 }
