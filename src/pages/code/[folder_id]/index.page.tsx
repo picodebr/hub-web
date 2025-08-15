@@ -3,7 +3,7 @@ import { FaPlus, FaRegShareSquare } from 'react-icons/fa';
 import { FiMoreVertical, FiTrash } from 'react-icons/fi';
 import moment from 'moment';
 
-import { cookieManager, formatShortName } from '@/_base/utils';
+import { capitalizeString, cookieManager, formatShortName } from '@/_base/utils';
 import { Avatar, Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Skeleton, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { PlusButton } from '@/components/Buttons/Plus';
@@ -240,7 +240,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
                           border="1px"
                           borderColor="gray200 !important"
                         />
-                        <Text>{user.name}</Text>
+                        <Text>{capitalizeString(user.name)}</Text>
                       </Flex>
                     </MenuItemOption>
                   ))

@@ -111,7 +111,7 @@ export const ResaleOrders: React.FC<IProps> = () => {
                           <Flex align="center" justify="center" gap="0.25rem" pr="0.5rem">
                             <Image src="/icons/coin.svg" />
                             <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
-                              {item.price}
+                               R$ {item.price}
                             </Text>
                           </Flex>
                         </Flex>

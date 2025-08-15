@@ -1,4 +1,4 @@
-import { Flex, Image, Modal, ModalContent, ModalHeader, ModalOverlay, Text, useToast } from '@chakra-ui/react';
+import { Flex, Image, Modal, ModalContent, ModalHeader, ModalOverlay, Text, useColorMode, useToast } from '@chakra-ui/react';
 import { IRedefinePassProps } from './interfaces';
 import { useCallback, useMemo, useState } from 'react';
 import { InputValueType } from '@/_base/interfaces/shared';
@@ -18,6 +18,7 @@ export const RedefinePass: React.FC<IRedefinePassProps> = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const toast = useToast();
+  const { colorMode } = useColorMode();
 
   const handleUpdatePassword = useCallback(async () => {
     if (!redefineData.password.value) return;
@@ -43,12 +44,12 @@ export const RedefinePass: React.FC<IRedefinePassProps> = ({ user }) => {
       <ModalOverlay />
       <ModalContent bg="white" p="0.75rem" maxH="100%" overflow="hidden auto">
         <ModalHeader opacity="0.9" display="flex" maxH="12rem">
-          <Flex direction="column" gap="1.5rem">
+          <Flex direction="column" gap="1.5rem" color={colorMode === `light` ? `#1D2939` : `#FFFFFF`}>
             <Flex gap="0.35rem">
               <Text fontWeight="500" opacity="0.8">
                 Olá,
               </Text>
-              <Text>{user?.name?.split(` `)[0] || `PiCoder`}!</Text>
+              <Text>{user?.name?.split(` `)[0] || `PiCode`}!</Text>
             </Flex>
             <Text fontWeight="500" opacity="0.8" fontSize="18px">
               Vamos redefinir sua senha?
@@ -72,7 +73,7 @@ export const RedefinePass: React.FC<IRedefinePassProps> = ({ user }) => {
             value={redefineData.password_confirmation.value}
             onInputChange={(value) => setRedefineData((e) => ({ ...e, password_confirmation: { value } }))}
           />
-          <GenericButton label="Redefinir" mt="2rem" isDisabled={!canSubmit} onClick={() => handleUpdatePassword()} isLoading={isLoading} />
+          <GenericButton label="Redefinir" color="#FFFFFF" mt="2rem" isDisabled={!canSubmit} onClick={() => handleUpdatePassword()} isLoading={isLoading} />
         </Flex>
       </ModalContent>
     </Modal>

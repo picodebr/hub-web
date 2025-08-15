@@ -175,7 +175,7 @@ export const Resale: React.FC<IProps> = ({ onChangeView, onFinishResaleOrder, gr
                       <Flex align="center" justify="center" gap="0.25rem" pr="0.5rem">
                         <Image src="/icons/coin.svg" />
                         <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
-                          {item.price}
+                          R$ {item.price}
                         </Text>
                       </Flex>
                     </Flex>
@@ -244,7 +244,7 @@ export const Resale: React.FC<IProps> = ({ onChangeView, onFinishResaleOrder, gr
                     <Flex align="center" gap="9px" h="18px">
                       <Image src="/icons/coin.svg" />
                       <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
-                        {item.price}
+                         R$ {item.price}
                       </Text>
                     </Flex>
                   </Flex>
@@ -276,7 +276,7 @@ export const Resale: React.FC<IProps> = ({ onChangeView, onFinishResaleOrder, gr
                   <Text fontSize="20px">Total</Text>
                   <Image src="/icons/coin.svg" height="40px" />
                   <Text fontSize="40px" fontWeight="700" color="primary900">
-                    {totalPrice}
+                     R$ {totalPrice}
                   </Text>
                 </Flex>
                 <Flex direction="column" gap="1.35rem">

@@ -37,6 +37,7 @@ import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { MediaGallery } from '@/components/MediaGallery';
 import { PostReply } from './components/PostReply';
 import { getTime } from '@/_base/utils/getTime';
+import { capitalizeString } from '@/_base/utils';
 
 const Community: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -244,7 +245,7 @@ const Community: React.FC = () => {
                   <Avatar src={post.user.avatar || ''} name={post.user.name} />
                   <Flex direction="column">
                     <Text fontWeight="600" color="primary500">
-                      {post.user.name}
+                      {capitalizeString(post.user.name)}
                     </Text>
                     <Text fontSize="14px" color="gray700">
                       {post.user.hub_class?.display_name || post.user.school_group?.display_name || ``}
