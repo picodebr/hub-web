@@ -12,7 +12,6 @@ import {
   ModalCloseButton,
   Button,
   Switch,
-  useDisclosure,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import { FaMinus, FaPlus } from 'react-icons/fa';
@@ -28,7 +27,6 @@ import { useAsyncCallback, useCustomToast, useInputHandler } from '@/_base/hooks
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { addItemInStockMaker } from '@/_base/services/storeMaker';
 import { useSelectedSchool } from '@/components/Page/components/Header';
-import { LuPin } from 'react-icons/lu';
 import { TbChartInfographic } from 'react-icons/tb';
 import { formatClassGrade, formatShortName } from '@/_base/utils';
 
