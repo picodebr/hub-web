@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 
-import { useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { IHubModuleLesson } from '@/_base/interfaces/module';
 import { getCourseActivity, getModuleLesson, ILessonResult, sendModuleLesson } from '@/_base/services/course';
 import { VideoLesson } from './components/video';
@@ -35,7 +35,6 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
 
   const toast = useCustomToast();
   const router = useCustomRouter();
-  const { user } = useAuth();
 
   useEffect(() => {
     (async () => {

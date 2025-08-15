@@ -22,7 +22,7 @@ interface IProps {
 
 export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup }) => {
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
-  const { colorMode } = useColorMode()
+  const { colorMode } = useColorMode();
 
   const router = useCustomRouter();
   const { errors, onInputChange, data, submit, setData } = useInputHandler<ICreateHubGroupParams>({
@@ -63,7 +63,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
       {project.groups
         .filter((group) => !group.approved_at)
         .map((group) => (
-          <Flex key={group.id} w="100%" direction="column" gap="24px" bgColor="warning25" borderRadius="10px"  position="relative">
+          <Flex key={group.id} w="100%" direction="column" gap="24px" bgColor="warning25" borderRadius="10px" position="relative">
             <Flex w="100%" h="108px" p="12px 32px" justify="space-between" align="center">
               <Flex direction="column">
                 <Text color="warning700" fontWeight="500">
@@ -164,65 +164,35 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               Selecione os membros do grupo
             </MenuButton>
-            <MenuList borderColor="gray300"  maxH="350px" overflow="auto">
-<<<<<<< HEAD
-              <MenuOptionGroup type="checkbox" color={colorMode === `dark` ? `#FFF` : `#1D2939`}>
+            <MenuList borderColor="gray300" maxH="350px" overflow="auto">
+              <MenuOptionGroup type="checkbox">
                 {project.hub_class?.students?.length ? (
-                  project.hub_class.students.map((student) => (
-                    <MenuItemOption
-                      key={student.id}
-                      value={student.id}
-                      color={colorMode === `dark` ? `#FFF` : `#1D2939`}
-                      onClick={() =>
-                        onInputChange(
-                          `users`,
-                          data.users?.find((id) => id === student.id)
-                            ? data.users?.filter((id) => id !== student.id)
-                            : [...(data?.users || []), student.id],
-                        )
-                      }
-                    >
-                      {student.name}
-                    </MenuItemOption>
-                  ))
+                  project.hub_class.students
+                    .filter((student) => {
+                      const approvedGroups = project.groups?.filter((group) => group.approved_at !== null) || [];
+                      const isInGroup = approvedGroups.some((group) => group.students?.some((s) => s.id === student.id));
+                      return !isInGroup;
+                    })
+                    .map((student) => (
+                      <MenuItemOption
+                        key={student.id}
+                        value={student.id}
+                        onClick={() =>
+                          onInputChange(
+                            `users`,
+                            data.users?.find((id) => id === student.id)
+                              ? data.users?.filter((id) => id !== student.id)
+                              : [...(data?.users || []), student.id],
+                          )
+                        }
+                      >
+                        {student.name}
+                      </MenuItemOption>
+                    ))
                 ) : (
                   <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
                 )}
               </MenuOptionGroup>
-=======
-             <MenuOptionGroup type="checkbox">
-  {project.hub_class?.students?.length ? (
-    project.hub_class.students
-      .filter((student) => {
-        const approvedGroups = project.groups?.filter(
-          (group) => group.approved_at !== null
-        ) || [];
-        const isInGroup = approvedGroups.some((group) =>
-          group.students?.some((s) => s.id === student.id)
-        );
-        return !isInGroup;
-      })
-      .map((student) => (
-        <MenuItemOption
-          key={student.id}
-          value={student.id}
-          onClick={() =>
-            onInputChange(
-              `users`,
-              data.users?.find((id) => id === student.id)
-                ? data.users?.filter((id) => id !== student.id)
-                : [...(data?.users || []), student.id]
-            )
-          }
-        >
-          {student.name}
-        </MenuItemOption>
-      ))
-  ) : (
-    <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
-  )}
-</MenuOptionGroup>
->>>>>>> cd5f9721c7a2c408fd05aea34648e84d5758129f
             </MenuList>
           </Menu>
           <Flex align="center" gap="0.5rem">

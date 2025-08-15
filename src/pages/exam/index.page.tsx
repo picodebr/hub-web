@@ -1,17 +1,4 @@
-import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Avatar,
-  Box,
-  Button,
-  Flex,
-  Text,
-  Tooltip,
-  useColorMode,
-} from '@chakra-ui/react';
+import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Avatar, Box, Button, Flex, Text, Tooltip } from '@chakra-ui/react';
 import { Progress } from 'antd';
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
@@ -24,7 +11,6 @@ import { cookieManager, formatCoin, formatShortName, logError } from '@/_base/ut
 import { CoinIcon } from '@/components/Logo';
 import { HiOutlineShieldCheck } from 'react-icons/hi';
 import { RatingQuestionProps } from '@/components/Tailwind/HubForm/components/RatingQuestion';
-import { IoChevronForward } from 'react-icons/io5';
 
 type TempProject = { project: IHubFactoryProject; students: Array<{ name: string; id: string }> };
 type TempStudent = IHubUser & { project: IHubFactoryProject };
