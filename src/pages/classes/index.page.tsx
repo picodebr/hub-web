@@ -139,7 +139,7 @@ const Classes: React.FC = () => {
                   <AvatarList users={hubClass.students} max={10} />
                 </Flex>
                 <Badge h="fit-content" fontSize="14px" colorScheme="purple">
-                  #{hubClass.code}
+                  {["6", "7", "8", "9"].includes(hubClass.grade) && `#${hubClass.code}`}
                 </Badge>
               </Flex>
               <Popover placement="left">
