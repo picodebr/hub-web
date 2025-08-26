@@ -1,5 +1,5 @@
 import { GetServerSideProps } from 'next';
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Flex, useDisclosure } from '@chakra-ui/react';
 import { FaSave } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
@@ -14,10 +14,15 @@ import { StockPageView, stockPageViews } from './interfaces';
 import { StockPage } from './components/Stock';
 import { ResaleOrders } from './components/ResaleOrders';
 import { AnimatePresence } from 'framer-motion';
+import { Reserves } from './components/Reserves';
+import { IHubGroup, IHubGroupOrder } from '@/_base/interfaces/group';
+import { acceptOrder, listTeacherGroups, rejectOrder, updateOrderStatus } from '@/_base/services/group';
+import { Orders } from '../groups/[group_id]/components/Pedidos/components/Orders';
 
 const Stock: React.FC = () => {
   const [unSavedstock, setUnsavedStock] = useState<IStockMaker[]>([]);
   const [stock, setStock] = useState<IStockMaker[]>([]);
+  const [groups, setGroups] = useState<IHubGroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pageView, setPageView] = useState<StockPageView>('Estoque');
 
@@ -26,20 +31,23 @@ const Stock: React.FC = () => {
   const toast = useCustomToast();
   const { school } = useSelectedSchool();
 
+  const loadData = useCallback(async () => {
+    if (!school?.hub_school_id) return;
+    setIsLoading(true);
+    try {
+      const [results, teacherGroups] = await Promise.all([getStockMaker(school.hub_school_id), listTeacherGroups(school.hub_school_id)]);
+      setGroups(teacherGroups);
+      setStock(results);
+      setUnsavedStock(results);
+    } catch {
+      toast({ status: `error`, description: `Não foi possível listar o estoque` });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [school]);
+
   useEffect(() => {
-    (async () => {
-      if (!school?.hub_school_id) return;
-      setIsLoading(true);
-      try {
-        const results = await getStockMaker(school.hub_school_id);
-        setStock(results);
-        setUnsavedStock(results);
-      } catch {
-        toast({ status: `error`, description: `Não foi possível listar o estoque` });
-      } finally {
-        setIsLoading(false);
-      }
-    })();
+    loadData();
   }, [school]);
 
   const needSave = useMemo(() => JSON.stringify(unSavedstock) !== JSON.stringify(stock), [unSavedstock, stock]);
@@ -55,6 +63,39 @@ const Stock: React.FC = () => {
     () => setIsLoading(false),
   );
 
+  const handleChangeStatus = useAsyncCallback(async (order: IHubGroupOrder) => {
+    await updateOrderStatus({ order_id: order.id, status: order.metadata.status || `in_separation` });
+
+    setGroups((e) => {
+      e.forEach((group) => {
+        if (order.hub_group_id === group.id) group.orders = group.orders.map((o) => (o.id === order.id ? order : o));
+      });
+      return e;
+    });
+  }, []);
+
+  const handleApproveOrder = useAsyncCallback(async (order: IHubGroupOrder) => {
+    await acceptOrder({ order_id: order.id, group_id: order.hub_group_id });
+
+    setGroups((e) => {
+      e.forEach((group) => {
+        if (order.hub_group_id === group.id) group.orders = group.orders.map((o) => (o.id === order.id ? order : o));
+      });
+      return e;
+    });
+  }, []);
+
+  const handleRejectOrder = useAsyncCallback(async (order: IHubGroupOrder) => {
+    await rejectOrder({ order_id: order.id, group_id: order.hub_group_id });
+
+    setGroups((e) => {
+      e.forEach((group) => {
+        if (order.hub_group_id === group.id) group.orders = group.orders.map((o) => (o.id === order.id ? order : o));
+      });
+      return e;
+    });
+  }, []);
+
   const PageViewComponent: Record<StockPageView, ReactNode> = {
     Estoque: (
       <StockPage
@@ -68,6 +109,8 @@ const Stock: React.FC = () => {
       />
     ),
     'Solicitações de revenda': <ResaleOrders />,
+    Reservas: <Reserves groups={groups} refreshStock={loadData} />,
+    Pedidos: <Orders groups={groups} onApproveOrder={handleApproveOrder} onRejectOrder={handleRejectOrder} onChangeStatus={handleChangeStatus} />,
   };
 
   return (

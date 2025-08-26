@@ -47,7 +47,7 @@ export const GroupRequests: React.FC<IProps> = ({
   }, [pageView]);
 
   const Views: Record<GroupOrdersPageView, React.ReactElement> = {
-    Pedidos: <Orders group={group} onApproveOrder={handleApproveOrder} onRejectOrder={handleRejectOrder} onChangeStatus={handleChangeStatus} />,
+    Pedidos: <Orders groups={[group]} onApproveOrder={handleApproveOrder} onRejectOrder={handleRejectOrder} onChangeStatus={handleChangeStatus} />,
     'Loja PiCode': (
       <Store
         onChangeView={setPageView}

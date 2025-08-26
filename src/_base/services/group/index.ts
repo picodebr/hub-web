@@ -6,6 +6,7 @@ export * from './createGroup';
 export * from './getGroupById';
 export * from './listAvailableUsersForGroupByProject';
 export * from './listStudentGroups';
+export * from './listTeacherGroups';
 export * from './rejectOrder';
 export * from './removeGroup';
 export * from './updateGroup';
