@@ -31,7 +31,16 @@ export interface IHubGroupOrderItem {
   id: string;
   hub_group_order_id: string;
   store_maker_item_id: string;
+  metadata: IHubGroupOrderItemMetadata;
   quantity: number;
   order: IHubGroupOrder;
   store_item: IStoreMakerItem;
+}
+
+export interface IHubGroupOrderItemMetadata {
+  hub_store_maker_resale_id?: string;
+
+  // Only items of type "service"
+  service_consumed_at?: Date;
+  service_consumed_quantity?: number;
 }

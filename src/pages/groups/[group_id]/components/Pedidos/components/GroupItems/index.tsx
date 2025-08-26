@@ -1,8 +1,8 @@
-import { Flex, Grid, Text, Image, Tooltip, Button } from '@chakra-ui/react';
+import { Flex, Grid, Text, Image, Tooltip } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 
-import { IHubGroup, IHubGroupOrder, IHubGroupOrderItem } from '@/_base/interfaces/group';
+import { IHubGroup, IHubGroupOrder, IHubGroupOrderItem, IHubGroupOrderItemMetadata } from '@/_base/interfaces/group';
 import { SmallModal } from '@/components/Modal/Small';
 import { IStoreMakerItem } from '@/_base/interfaces/storeMaker';
 import { useAsyncCallback, useAuth, useCustomToast, useInputHandler } from '@/_base/hooks';
@@ -10,11 +10,22 @@ import { NumberInput } from '@/components/Inputs/Number';
 import { EMPTY_RESALE_STOCK_ITEM, IResaleStockParams, resaleStockSchema } from '@/_base/interfaces/storeMaker/IResaleStockMakerParams';
 import { resaleStockItem } from '@/_base/services/storeMaker';
 import { useSelectedSchool } from '@/components/Page/components/Header';
-import { formatCurrency } from '@/_base/utils';
+import { formatCurrency, formatDateInput } from '@/_base/utils';
 import { MdOutlineShoppingCart } from 'react-icons/md';
 import { TabSwitch } from '@/components/TabSwitch';
+import { DateInput } from '@/components/Inputs/Date';
+import { updateOrderItem } from '@/_base/services/group';
 
-type CustomStoreResale = IStoreMakerItem & IHubGroupOrderItem & IHubGroupOrder & { hub_group_order_item_id: string };
+type CustomStoreItem = IStoreMakerItem &
+  IHubGroupOrderItem &
+  IHubGroupOrder & {
+    hub_group_order_item_id: string;
+    consumed_at?: Date | null;
+    consumed_quantity?: number;
+    order_item_metadata: IHubGroupOrderItemMetadata;
+    order_item_id: string;
+    order_id: string;
+  };
 
 interface IProps {
   group: IHubGroup;
@@ -26,7 +37,8 @@ type ModalStepType = 'default' | 'sell.teacher' | 'sell.group';
 export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [modalStep, setModalStep] = useState<ModalStepType | null>(null);
-  const [selectedStoreItem, setSelectedStoreItem] = useState<CustomStoreResale | null>(null);
+  const [selectedStoreItem, setSelectedStoreItem] = useState<CustomStoreItem | null>(null);
+  const [itemToUpdate, setItemToUpdate] = useState<CustomStoreItem | null>(null);
   const [tab, setTab] = useState<'consumables' | 'services'>('consumables');
 
   const recommendedPrice = useMemo(
@@ -38,15 +50,25 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
 
   const storeMakerList = group.orders
     .filter((o) => !!o.approved_at)
-    .flatMap((e) => e.items.map((i) => ({ ...e, ...i, ...i.store_item, hub_group_order_item_id: i.id })))
+    .flatMap((order) =>
+      order.items.map((orderItem) => ({
+        ...order,
+        ...orderItem,
+        ...orderItem.store_item,
+        hub_group_order_item_id: orderItem.id,
+        order_item_metadata: orderItem.metadata,
+        order_id: order.id,
+        order_item_id: orderItem.id,
+      })),
+    )
     .reduce((acc, v) => {
       if (!v.quantity) return acc;
       const target = acc.find((e) => e.id === v.id);
       if (target) target.quantity += v.quantity || 1;
-      else acc.push(v as CustomStoreResale);
+      else acc.push(v as CustomStoreItem);
 
       return acc;
-    }, [] as CustomStoreResale[]);
+    }, [] as CustomStoreItem[]);
 
   // Separar itens por tipo
   const consumableItems = storeMakerList.filter((item) => !item.store_item?.metadata?.is_service);
@@ -74,6 +96,7 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
 
   const handleResaleItem = useAsyncCallback(
     async () => {
+      if (!itemToUpdate) return;
       setIsLoading(true);
       await resaleStockItem({
         ...data,
@@ -89,9 +112,30 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
     () => setIsLoading(false),
   );
 
+  const handleUpdateItem = useAsyncCallback(
+    async () => {
+      if (!itemToUpdate) return;
+      if (!((itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0))) return;
+      setIsLoading(true);
+      await updateOrderItem({
+        item_id: itemToUpdate.order_item_id,
+        order_id: itemToUpdate.order_id,
+        service_consumed_at: itemToUpdate.consumed_at,
+        service_consumed_quantity: itemToUpdate.consumed_quantity,
+      });
+      refreshStock();
+      handleCloseModal();
+      toast({ status: `success`, title: `O professor vai aprovar a sua solicitação de revenda`, position: `top` });
+    },
+    [modalStep, recommendedPrice, data],
+    true,
+    () => setIsLoading(false),
+  );
+
   const handleCloseModal = () => {
     setSelectedStoreItem(null);
     setModalStep(null);
+    setItemToUpdate(null);
   };
 
   return (
@@ -164,7 +208,7 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
                     overflow="hidden"
                   >
                     <Tooltip label={item.name}>
-                      <Image src={item.picture} minHeight={{ base: `8rem`, lg: `10rem` }} h="100%" w="100%" />
+                      <Image src={item.picture} maxHeight={{ base: `8rem`, lg: `10rem` }} />
                     </Tooltip>
                     <Flex display="flex" align="center" w="100%" h="4.35rem">
                       <Flex direction="column" gap="0.75rem" justify="space-between" h="100%" overflow="hidden" flex="1">
@@ -194,33 +238,36 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
                         </Text>
                       </Flex>
                     </Flex>
-                    {!item.store_item?.metadata?.is_service && user.role === `student` && (
+                    {((user.role === `student` && !item.store_item?.metadata?.is_service) ||
+                      (user.role === `teacher` && item.store_item?.metadata?.is_service)) && (
                       <Flex>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.75 }}
                           style={{
                             display: `flex`,
+                            background: `#3356B7`,
+                            color: `#fff`,
+                            borderRadius: `6px`,
+                            padding: `0.15rem 0.75rem`,
+                            alignItems: `center`,
+                            gap: `0.15rem`,
                           }}
                           onClick={() => {
-                            setSelectedStoreItem(item);
-                            setData((e) => ({
-                              ...e,
-                              price: `${Math.round(Number(item?.price) - Number(item?.price) * (modalStep?.endsWith(`teacher`) ? 0.2 : 0.1))}`,
-                            }));
-                            setModalStep(`default`);
+                            if (item.store_item?.metadata?.is_service) setItemToUpdate(item);
+                            else {
+                              setSelectedStoreItem(item);
+                              setData((e) => ({
+                                ...e,
+                                price: `${Math.round(Number(item?.price) - Number(item?.price) * (modalStep?.endsWith(`teacher`) ? 0.2 : 0.1))}`,
+                              }));
+                              setModalStep(`default`);
+                            }
                           }}
                         >
-                          <Button
-                            size="xs"
-                            bg="primary700"
-                            color="#fff"
-                            _hover={{}}
-                            fontWeight={400}
-                            leftIcon={<MdOutlineShoppingCart fontSize="16px" />}
-                          >
-                            Vender
-                          </Button>
+                          <MdOutlineShoppingCart fontSize="16px" />
+
+                          {item.store_item?.metadata?.is_service ? `Atualizar` : `Vender`}
                         </motion.button>
                       </Flex>
                     )}
@@ -229,6 +276,8 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
               </Grid>
             </Flex>
           </Flex>
+
+          {/* Resale Order Item Modal 1 */}
           <SmallModal
             title={selectedStoreItem?.name}
             show={!!selectedStoreItem && modalStep === `default`}
@@ -260,6 +309,7 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
             </Flex>
           </SmallModal>
 
+          {/* Resale Order Item Modal 2 */}
           <SmallModal
             title={selectedStoreItem?.name}
             show={!!selectedStoreItem && !!modalStep?.startsWith(`sell`)}
@@ -347,6 +397,61 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
                   {(Number(data?.price || 0) * (data?.quantity || 0)).toFixed(2)}
                 </Text>
                 <Image src="/icons/coin.svg" />
+              </Flex>
+            </Flex>
+          </SmallModal>
+
+          {/* Update Order Item Modal */}
+          <SmallModal
+            title={itemToUpdate?.name}
+            show={!!itemToUpdate}
+            onConfirm={handleUpdateItem}
+            onCloseModal={() => setItemToUpdate(null)}
+            onCancel={() => setItemToUpdate(null)}
+            cancelText="Voltar"
+            showCloseButton
+            okText="Atualizar"
+            size="md"
+            isLoading={isLoading}
+            disableOkButton={user.role === `student`}
+            disableCancelButton={user.role === `student`}
+          >
+            <Flex direction="column" gap="1rem" w="25rem" maxW="25rem" align="center" overflow="hidden">
+              <Flex
+                bgImage={itemToUpdate?.picture}
+                bgPosition="center"
+                bgRepeat="no-repeat"
+                bgSize="cover"
+                w="15rem"
+                h="15rem"
+                border="1px"
+                borderRadius="md"
+                borderColor="gray300"
+              />
+
+              <Text textAlign="center" fontSize="13px">
+                Defina o consumo do item
+              </Text>
+              <Flex direction="column" alignSelf="start">
+                <Text>Data do consumo</Text>
+                <DateInput
+                  value={formatDateInput(itemToUpdate?.consumed_at?.toString() || itemToUpdate?.order_item_metadata?.service_consumed_at?.toString())}
+                  onInputChange={(input) => setItemToUpdate((e) => ({ ...(e || ({} as any)), consumed_at: input ? new Date(input) : null }))}
+                />
+              </Flex>
+              <Flex display="flex" align="center" gap="8px" justify="space-between" w="100%">
+                <Text whiteSpace="nowrap">Descontar</Text>
+                <Flex>
+                  <NumberInput
+                    value={itemToUpdate?.consumed_quantity || ``}
+                    min={1}
+                    max={(itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0)}
+                    onInputChange={(value) =>
+                      Number(value) <= (itemToUpdate?.quantity || 1) && setItemToUpdate((e) => ({ ...(e || ({} as any)), consumed_quantity: value }))
+                    }
+                  />
+                </Flex>
+                <Text whiteSpace="nowrap">{`${(itemToUpdate?.store_item.metadata.unit || `hora`).concat((itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0) === 1 ? `` : `s`)} do total de ${(itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0)} ${(itemToUpdate?.store_item.metadata.unit || `hora`).concat((itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0) === 1 ? `` : `s`)}`}</Text>
               </Flex>
             </Flex>
           </SmallModal>

@@ -3,4 +3,5 @@ export interface IStoreMakerSchoolMetadata {
   image?: string;
   reusable?: boolean;
   is_service?: boolean;
+  unit?: string;
 }
