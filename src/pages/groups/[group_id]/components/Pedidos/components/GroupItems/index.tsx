@@ -15,6 +15,7 @@ import { MdOutlineShoppingCart } from 'react-icons/md';
 import { TabSwitch } from '@/components/TabSwitch';
 import { DateInput } from '@/components/Inputs/Date';
 import { updateOrderItem } from '@/_base/services/group';
+import { FaCheckDouble } from 'react-icons/fa6';
 
 type CustomStoreItem = IStoreMakerItem &
   IHubGroupOrderItem &
@@ -125,9 +126,9 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
       });
       refreshStock();
       handleCloseModal();
-      toast({ status: `success`, title: `O professor vai aprovar a sua solicitação de revenda`, position: `top` });
+      toast({ status: `success`, title: `Consumo do item atualizado`, position: `top` });
     },
-    [modalStep, recommendedPrice, data],
+    [itemToUpdate],
     true,
     () => setIsLoading(false),
   );
@@ -207,6 +208,11 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
                     borderRadius="md"
                     overflow="hidden"
                   >
+                    {!((item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0)) && (
+                      <Flex position="absolute" top="0.5rem" right="0.5rem" color="primary300">
+                        <FaCheckDouble fontSize="20px" />
+                      </Flex>
+                    )}
                     <Tooltip label={item.name}>
                       <Image src={item.picture} maxHeight={{ base: `8rem`, lg: `10rem` }} />
                     </Tooltip>
@@ -246,7 +252,9 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
                           whileTap={{ scale: 0.75 }}
                           style={{
                             display: `flex`,
-                            background: `#3356B7`,
+                            background: !!((item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0))
+                              ? `#3356B7`
+                              : `#05AD7D`,
                             color: `#fff`,
                             borderRadius: `6px`,
                             padding: `0.15rem 0.75rem`,
@@ -265,9 +273,13 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
                             }
                           }}
                         >
-                          <MdOutlineShoppingCart fontSize="16px" />
+                          {item.store_item?.metadata?.is_service ? <FaCheckDouble fontSize="16px" /> : <MdOutlineShoppingCart fontSize="16px" />}
 
-                          {item.store_item?.metadata?.is_service ? `Atualizar` : `Vender`}
+                          {item.store_item?.metadata?.is_service
+                            ? !!((item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0))
+                              ? `Atualizar`
+                              : `Finalizado`
+                            : `Vender`}
                         </motion.button>
                       </Flex>
                     )}
@@ -413,7 +425,7 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
             okText="Atualizar"
             size="md"
             isLoading={isLoading}
-            disableOkButton={user.role === `student`}
+            disableOkButton={user.role === `student` || !itemToUpdate?.consumed_quantity}
             disableCancelButton={user.role === `student`}
           >
             <Flex direction="column" gap="1rem" w="25rem" maxW="25rem" align="center" overflow="hidden">
@@ -432,27 +444,35 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
               <Text textAlign="center" fontSize="13px">
                 Defina o consumo do item
               </Text>
-              <Flex direction="column" alignSelf="start">
-                <Text>Data do consumo</Text>
-                <DateInput
-                  value={formatDateInput(itemToUpdate?.consumed_at?.toString() || itemToUpdate?.order_item_metadata?.service_consumed_at?.toString())}
-                  onInputChange={(input) => setItemToUpdate((e) => ({ ...(e || ({} as any)), consumed_at: input ? new Date(input) : null }))}
-                />
-              </Flex>
-              <Flex display="flex" align="center" gap="8px" justify="space-between" w="100%">
-                <Text whiteSpace="nowrap">Descontar</Text>
-                <Flex>
-                  <NumberInput
-                    value={itemToUpdate?.consumed_quantity || ``}
-                    min={1}
-                    max={(itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0)}
-                    onInputChange={(value) =>
-                      Number(value) <= (itemToUpdate?.quantity || 1) && setItemToUpdate((e) => ({ ...(e || ({} as any)), consumed_quantity: value }))
-                    }
+              <Flex justify="space-between" align="flex-end" w="100%">
+                <Flex direction="column" alignSelf="start">
+                  <Text>Data do consumo</Text>
+                  <DateInput
+                    value={formatDateInput(
+                      itemToUpdate?.consumed_at?.toString() || itemToUpdate?.order_item_metadata?.service_consumed_at?.toString(),
+                    )}
+                    onInputChange={(input) => setItemToUpdate((e) => ({ ...(e || ({} as any)), consumed_at: input ? new Date(input) : null }))}
                   />
                 </Flex>
-                <Text whiteSpace="nowrap">{`${(itemToUpdate?.store_item.metadata.unit || `hora`).concat((itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0) === 1 ? `` : `s`)} do total de ${(itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0)} ${(itemToUpdate?.store_item.metadata.unit || `hora`).concat((itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0) === 1 ? `` : `s`)}`}</Text>
+                <Text whiteSpace="nowrap">{`${itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0} ${(itemToUpdate?.store_item.metadata.unit || `hora`).concat(itemToUpdate?.order_item_metadata?.service_consumed_quantity === 1 ? `` : `s`)} usadas`}</Text>
               </Flex>
+              {!!((itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0)) && (
+                <Flex display="flex" align="center" gap="8px" justify="space-between" w="100%">
+                  <Text whiteSpace="nowrap">Descontar</Text>
+                  <Flex>
+                    <NumberInput
+                      value={itemToUpdate?.consumed_quantity || `0`}
+                      min={0}
+                      max={(itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0)}
+                      onInputChange={(value) =>
+                        Number(value) <= (itemToUpdate?.quantity || 1) &&
+                        setItemToUpdate((e) => ({ ...(e || ({} as any)), consumed_quantity: value }))
+                      }
+                    />
+                  </Flex>
+                  <Text whiteSpace="nowrap">{`${(itemToUpdate?.store_item.metadata.unit || `hora`).concat((itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0) === 1 ? `` : `s`)} do total de ${(itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0)} ${(itemToUpdate?.store_item.metadata.unit || `hora`).concat((itemToUpdate?.quantity || 0) - (itemToUpdate?.order_item_metadata?.service_consumed_quantity || 0) === 1 ? `` : `s`)}`}</Text>
+                </Flex>
+              )}
             </Flex>
           </SmallModal>
         </Flex>

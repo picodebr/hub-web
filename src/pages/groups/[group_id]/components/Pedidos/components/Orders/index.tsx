@@ -12,7 +12,7 @@ interface IProps {
   onApproveOrder: (order: IHubGroupOrder) => void;
   onRejectOrder: (order: IHubGroupOrder) => void;
   onChangeStatus: (order: IHubGroupOrder) => void;
-  group: IHubGroup;
+  groups: IHubGroup[];
 }
 
 const LABEL_STATUSES: Record<HubOrderStatusType, string> = {
@@ -28,7 +28,7 @@ const COLOR_STATUSES: Record<HubOrderStatusType, string> = {
   forgotten: 'gray',
 };
 
-export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder, onChangeStatus }) => {
+export const Orders: React.FC<IProps> = ({ groups, onApproveOrder, onRejectOrder, onChangeStatus }) => {
   const [order, setOrder] = useState<IHubGroupOrder | null>(null);
   const [status, setStatus] = useState<HubOrderStatusType | null>(null);
 
@@ -51,7 +51,7 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
   const handleReject = () => {
     if (!order) return;
 
-    if (user.id === group.project?.user_id) onRejectOrder(order);
+    if (user.id === order.group.project?.user_id) onRejectOrder(order);
     setOrder(null);
   };
 
@@ -81,9 +81,11 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
           <Text fontSize="18px" fontWeight="700" color="warning700" mb="0.5rem">
             Pendentes
           </Text>
-          {group.orders.filter((data) => !data.approved_at && !data.metadata.denied_at).length ? (
-            group.orders
+          {groups.flatMap((e) => e.orders.map((o) => ({ ...o, group: e }))).filter((data) => !data.approved_at && !data.metadata.denied_at).length ? (
+            groups
+              .flatMap((e) => e.orders.map((o) => ({ ...o, group: e })))
               .filter((data) => !data.approved_at && !data.metadata.denied_at)
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
               .map((order) => (
                 <Flex
                   key={order.id}
@@ -133,14 +135,14 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
                         return <img key={item.id} src={item.store_item.picture} alt={item.store_item.name} style={style} />;
                       })}
                     </Flex>
-                    <Text color="gray700" fontWeight="500">
+                    <Text color="gray700" fontSize="13px" fontWeight="500">
                       {`Pedido ${order.readable_id}`}
                     </Text>
                   </Flex>
-                  <Flex color="warning500" fontSize="14px" flex="1" justify="center">
+                  <Flex color="warning500" fontSize="13px" flex="1" justify="center">
                     {moment(order.created_at).format(`DD/MM/YYYY`)}
                   </Flex>
-                  <Flex w="12rem" justify="flex-end">
+                  <Flex justify="flex-end" pl="0.5rem">
                     <Badge fontSize="10px" bg="yellow.300" color="warning700" p="0.25rem" borderRadius="md">
                       Aguardando aprovação
                     </Badge>
@@ -169,9 +171,11 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
           <Text fontSize="18px" fontWeight="700" color="green.700" mb="0.5rem">
             Aprovados
           </Text>
-          {group.orders.filter((data) => !!data.approved_at).length ? (
-            group.orders
+          {groups.flatMap((e) => e.orders.map((o) => ({ ...o, group: e }))).filter((data) => !!data.approved_at).length ? (
+            groups
+              .flatMap((e) => e.orders.map((o) => ({ ...o, group: e })))
               .filter((data) => !!data.approved_at)
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
               .map((order) => (
                 <Flex
                   key={order.id}
@@ -218,11 +222,11 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
                         return <img key={item.id} src={item.store_item.picture} alt={item.store_item.name} style={style} />;
                       })}
                     </Flex>
-                    <Text color="gray700" fontWeight="500">
+                    <Text color="gray700" fontSize="13px" fontWeight="500">
                       {`Pedido ${order.readable_id}`}
                     </Text>
                   </Flex>
-                  <Flex color="gray500" fontSize="14px" flex="1" justify="center">
+                  <Flex color="gray500" fontSize="13px" flex="1" justify="center">
                     {moment(order.created_at).format(`DD/MM/YYYY`)}
                   </Flex>
                   <Flex w="12rem" justify="flex-end">
@@ -261,9 +265,11 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
           <Text fontSize="18px" fontWeight="700" color="red.700" mb="0.5rem">
             Negados
           </Text>
-          {group.orders.filter((data) => !!data.metadata.denied_at).length ? (
-            group.orders
+          {groups.flatMap((e) => e.orders.map((o) => ({ ...o, group: e }))).filter((data) => !!data.metadata.denied_at).length ? (
+            groups
+              .flatMap((e) => e.orders.map((o) => ({ ...o, group: e })))
               .filter((data) => !!data.metadata.denied_at)
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
               .map((order) => (
                 <Flex
                   key={order.id}
@@ -310,11 +316,11 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
                         return <img key={item.id} src={item.store_item.picture} alt={item.store_item.name} style={style} />;
                       })}
                     </Flex>
-                    <Text color="gray700" fontWeight="500">
+                    <Text color="gray700" fontSize="13px" fontWeight="500">
                       {`Pedido ${order.readable_id}`}
                     </Text>
                   </Flex>
-                  <Flex color="red.500" fontSize="14px" flex="1" justify="center">
+                  <Flex color="red.500" fontSize="13px" flex="1" justify="center">
                     {order.metadata.denied_at ? moment(order.metadata.denied_at).format(`DD/MM/YYYY`) : '-'}
                   </Flex>
                   <Flex w="12rem" justify="flex-end">
@@ -333,7 +339,7 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
       </Flex>
       <SmallModal
         size="lg"
-        title={
+        title={`${order?.group.display_name} - ${
           !order?.approved_at && !order?.metadata?.denied_at
             ? 'Aprovar Pedido'
             : order?.approved_at
@@ -341,13 +347,15 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
               : order?.metadata?.denied_at
                 ? `Pedido negado em ${moment(order.metadata.denied_at).format(`DD/MM/YYYY`)}`
                 : ''
-        }
+        }`}
         show={!!order}
-        disableOkButton={!order?.approved_at && !order?.metadata?.denied_at && (user.role !== `teacher` || group.project?.user_id !== user.id)}
+        disableOkButton={
+          !order?.approved_at && !order?.metadata?.denied_at && (user.role !== `teacher` || order?.group?.project?.user_id !== user.id)
+        }
         onConfirm={() => (!order?.approved_at && !order?.metadata?.denied_at ? handleApprove() : status ? handleStatusChange() : setOrder(null))}
-        okText={!order?.approved_at && !order?.metadata?.denied_at && user.id === group.project?.user_id ? 'Aprovar' : 'OK'}
-        cancelText={!order?.approved_at && !order?.metadata?.denied_at && user.id === group.project?.user_id ? 'Rejeitar' : undefined}
-        onCancel={!order?.approved_at && !order?.metadata?.denied_at && user.id === group.project?.user_id ? () => handleReject() : undefined}
+        okText={!order?.approved_at && !order?.metadata?.denied_at && user.id === order?.group?.project?.user_id ? 'Aprovar' : 'OK'}
+        cancelText={!order?.approved_at && !order?.metadata?.denied_at && user.id === order?.group?.project?.user_id ? 'Rejeitar' : undefined}
+        onCancel={!order?.approved_at && !order?.metadata?.denied_at && user.id === order?.group?.project?.user_id ? () => handleReject() : undefined}
         topIcon={order?.approved_at ? 'checked' : order?.metadata?.denied_at ? 'warning' : 'checked'}
         onCloseModal={() => {
           setOrder(null);
@@ -364,7 +372,7 @@ export const Orders: React.FC<IProps> = ({ group, onApproveOrder, onRejectOrder,
             </Flex>
           ))}
           {/* Se for pedido aprovado, e o professor pertencer ao grupo, mostra o select de status */}
-          {order?.approved_at && !order?.metadata?.denied_at && user.id === group.project?.user_id && (
+          {order?.approved_at && !order?.metadata?.denied_at && user.id === order?.group?.project?.user_id && (
             <Flex mt="1.5rem" direction="column" gap="0.5rem" minH="15rem">
               <Text fontWeight="500">Status do pedido:</Text>
               <SelectInput
