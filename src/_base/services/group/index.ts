@@ -9,3 +9,5 @@ export * from './listStudentGroups';
 export * from './rejectOrder';
 export * from './removeGroup';
 export * from './updateGroup';
+export * from './updateOrder';
+export * from './updateOrderItem';
