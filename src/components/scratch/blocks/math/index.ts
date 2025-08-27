@@ -46,6 +46,18 @@ const notParser: IBlockParser = (block, { scratchParser, wrapParens }) => {
   return value ? `! ${value}` : '';
 };
 
+const mapParser: IBlockParser = (block, { scratchParser, wrapParens }) => {
+  const { VAL, NUM1, NUM2, NUM3, NUM4 } = block.fields;
+
+  const parsedVal = wrapParens(scratchParser(VAL, true));
+  const parsedN1 = wrapParens(scratchParser(NUM1, true));
+  const parsedN2 = wrapParens(scratchParser(NUM2, true));
+  const parsedN3 = wrapParens(scratchParser(NUM3, true));
+  const parsedN4 = wrapParens(scratchParser(NUM4, true));
+
+  return parsedVal && parsedN1 && parsedN2 && parsedN3 && parsedN4 ? `map(${parsedVal}, ${parsedN1}, ${parsedN2}, ${parsedN3}, ${parsedN4})` : '';
+};
+
 export const mathBlocks: IBlock[] = [
   {
     name: `${category}_comparison`,
@@ -203,5 +215,41 @@ export const mathBlocks: IBlock[] = [
     },
     parserCpp: notParser,
     parserJs: notParser,
+  },
+
+  name: `${category}_map`,
+    init() {
+      // @ts-ignore
+      this.jsonInit({
+        message0: 'map %1 de ( %2 a %3 ) para ( %4 a %5 )',
+        args0: [
+          {
+            type: 'input_value',
+            name: 'VAL',
+          },
+          {
+            type: 'input_value',
+            name: 'NUM1',
+          },
+          {
+            type: 'input_value',
+            name: 'NUM2',
+          },
+          {
+            type: 'input_value',
+            name: 'NUM3',
+          },
+          {
+            type: 'input_value',
+            name: 'NUM4',
+          },
+        ],
+        colour,
+        category,
+        extensions: ['output_number'],
+      });
+    },
+    parserCpp: mapParser,
+    parserJs: mapParser,
   },
 ];
