@@ -17,6 +17,12 @@ const analogReadParser: IBlockParser = (block) => {
   return PIN ? `analogRead(${PIN})` : '';
 };
 
+const analogRead1Parser: IBlockParser = (block) => {
+  const { PIN } = block.fields;
+
+  return PIN ? `analogRead1(${PIN})` : '';
+};
+
 export const inputBlocksFactories: IOBlocksFactory[] = [
   (pins) => ({
     name: `${category}_digital_read`,
@@ -60,5 +66,27 @@ export const inputBlocksFactories: IOBlocksFactory[] = [
     },
     parserCpp: analogReadParser,
     parserJs: analogReadParser,
+  }),
+
+  (pins) => ({
+    name: `${category}_analog_read_1`,
+    init() {
+      // @ts-ignore
+      this.jsonInit({
+        message0: 'leitura analógica 1 no pino %1',
+        args0: [
+          {
+            type: 'field_dropdown',
+            name: 'PIN',
+            options: pins.filter((pin) => pin.isAnalog).map((pin) => [pin.value, pin.value]),
+          },
+        ],
+        colour,
+        category,
+        extensions: ['output_number'],
+      });
+    },
+    parserCpp: analogRead1Parser,
+    parserJs: analogRead1Parser,
   }),
 ];
