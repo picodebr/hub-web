@@ -217,6 +217,7 @@ export const mathBlocks: IBlock[] = [
     parserJs: notParser,
   },
 
+  {
   name: `${category}_map`,
     init() {
       // @ts-ignore
