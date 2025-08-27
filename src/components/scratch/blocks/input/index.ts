@@ -17,10 +17,10 @@ const analogReadParser: IBlockParser = (block) => {
   return PIN ? `analogRead(${PIN})` : '';
 };
 
-const analogRead1Parser: IBlockParser = (block) => {
+const pinModeParser: IBlockParser = (block) => {
   const { PIN } = block.fields;
 
-  return PIN ? `analogRead1(${PIN})` : '';
+  return PIN ? `pinMode(${PIN}, INPUT_PULLUP);` : '';
 };
 
 export const inputBlocksFactories: IOBlocksFactory[] = [
@@ -69,24 +69,24 @@ export const inputBlocksFactories: IOBlocksFactory[] = [
   }),
 
   (pins) => ({
-    name: `${category}_analog_read_1`,
+    name: `${category}_pin_Mode`,
     init() {
       // @ts-ignore
       this.jsonInit({
-        message0: 'leitura analógica 1 no pino %1',
+        message0: 'ligar pullup no pino %1',
         args0: [
           {
             type: 'field_dropdown',
             name: 'PIN',
-            options: pins.filter((pin) => pin.isAnalog).map((pin) => [pin.value, pin.value]),
+            options: pins.map((pin) => [pin.value, pin.value]),
           },
         ],
         colour,
         category,
-        extensions: ['output_number'],
+        extensions: ['shape_statement'],
       });
     },
-    parserCpp: analogRead1Parser,
-    parserJs: analogRead1Parser,
+    parserCpp: pinModeParser,
+    parserJs: pinModeParser,
   }),
 ];
