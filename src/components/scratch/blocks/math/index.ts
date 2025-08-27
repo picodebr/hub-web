@@ -250,6 +250,30 @@ export const mathBlocks: IBlock[] = [
         extensions: ['output_number'],
       });
     },
+    toolboxXml: `
+    <block type="${category}_map">
+      <value name="NUM1">
+        <shadow type="math_number">
+          <field name="NUM"></field>
+        </shadow>
+      </value>
+      <value name="NUM2">
+        <shadow type="math_number">
+          <field name="NUM"></field>
+        </shadow>
+      </value>
+      <value name="NUM3">
+        <shadow type="math_number">
+          <field name="NUM"></field>
+        </shadow>
+      </value>
+      <value name="NUM4">
+        <shadow type="math_number">
+          <field name="NUM"></field>
+        </shadow>
+      </value>
+    </block>
+    `,
     parserCpp: mapParser,
     parserJs: mapParser,
   },
