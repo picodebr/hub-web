@@ -175,7 +175,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
                 content={statusLabelMapper[project.status || 'stopped']}
               />
             </MenuButton>
-            <MenuList borderColor="gray300" >
+            <MenuList borderColor="gray300">
               {hubStatuses.map((status) => (
                 <MenuItem
                   key={status}
@@ -310,7 +310,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
           <Text color="gray500">@{student.username}</Text>
         </Flex>
       ),
-      avatar: (<Avatar name={formatShortName(student.name, true)} title={student.name} h="40px" w="40px" />) as any,
+      avatar: (<Avatar name={formatShortName(student.name, true)} title={student.name} src={student.avatar || ``} h="40px" w="40px" />) as any,
       groups: (
         <Flex align="center" gap="0.25rem">
           <Text noOfLines={1}>{student.groups.map((group) => group.display_name).join(', ')}</Text>
@@ -349,7 +349,6 @@ const Class: React.FC<IProps> = ({ classId }) => {
             bg="white"
             w="fit-content"
             borderRadius="lg"
-            
             gap="0.65rem"
             cursor="pointer"
             transition="all 0.1s"
@@ -401,7 +400,6 @@ const Class: React.FC<IProps> = ({ classId }) => {
               borderColor="gray300"
               borderRadius="md"
               p="1rem"
-              
               onClick={() => router.push(`/projects/${project.id}`)}
             >
               <Flex

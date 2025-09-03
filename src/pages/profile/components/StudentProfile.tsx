@@ -12,9 +12,11 @@ import { IAvatarOptions, IProfileComponentProps } from './interfaces';
 import { customAvatarOptions, defaultAvatarOptions } from './utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useAuth } from '@/_base/hooks';
-import { getStudentExtract, IStudentExtract } from '@/_base/services/user';
+import { getStudentExtract, IStudentExtract, updateProfile } from '@/_base/services/user';
 import moment from 'moment';
 import { SmallModal } from '@/components/Modal/Small';
+import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
+import { useAvatar } from '@/components/Page/hooks';
 
 export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({ skinColor: `ccc` });
@@ -24,6 +26,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   const [avatarEditorIsOpen, setAvatarEditorIsOpen] = useState(false);
 
   const { setUser } = useAuth();
+  const { setAvatar } = useAvatar();
 
   const avatar = useMemo(() => {
     const raw = createAvatar(adventurer, {
@@ -44,9 +47,6 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   }, [avatarOptions]);
 
   useUpdateEffect(() => {
-    if (user.role === `student`) setUser({ ...user, avatar });
-    cookieManager.setCookie(`${user.id}:avatar:uri`, avatar, undefined, false);
-    cookieManager.setCookie(`${user.id}:avatar`, JSON.stringify(avatarOptions));
     const raw = createAvatar(adventurer, {
       size: 200,
       skinColor: [avatarOptions?.skinColor] as any,
@@ -96,7 +96,18 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
   }, []);
 
   const downloadAvatar = useCallback(async () => {
-    if (rawAvatar) await rawAvatar?.png().toFile(`${user?.name?.split(` `)[0] || ``} avatar picode`);
+    if (!rawAvatar) return;
+    const arrayBuffer = await rawAvatar?.png().toArrayBuffer();
+    const { link, path } = await getPresignedUrl(`image/png`, `avatars`);
+    const blob = new Blob([arrayBuffer as any], { type: 'application/octet-stream' });
+    const file = new File([blob], 'avatar.png', {
+      type: 'application/octet-stream', // or appropriate MIME type
+      lastModified: Date.now(),
+    });
+    await uploadFile(link, file);
+
+    const updatedUser = await updateProfile({ avatar: path });
+    setAvatar(updatedUser.avatar || ``);
   }, [rawAvatar]);
 
   return (
@@ -169,7 +180,7 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
         }}
         onCancel={() => setAvatarEditorIsOpen(false)}
         topIcon="ray"
-        size="xl"
+        size={{ base: `full`, sm: 'xl' }}
       >
         <Flex justify="space-between" direction={{ base: 'column', sm: 'row' }}>
           <Flex direction="column" justify="space-between" align="center">
