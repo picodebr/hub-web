@@ -106,6 +106,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
             padding="1rem"
             color="primary700"
             border="1px"
+            h="fit-content"
             gap="0.5rem"
             borderColor="gray200"
             fontSize="18px"
@@ -125,7 +126,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
               bgSize={project.source_code.mode === `block` ? 'cover' : 'contain'}
               bgPosition={project.source_code.mode === `block` ? undefined : `center`}
               bgColor="gray50"
-            ></Flex>
+            />
             <Flex w="100%" justify="space-between">
               <Flex gap="0.5rem" justify="center" direction="column">
                 <Flex gap="16px" align="center">

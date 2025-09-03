@@ -44,28 +44,30 @@ export const KanbanColumn: React.FC<IProps> = ({ column, index, group, onItemCli
             {column.title}
           </Flex>
           <Flex className="KANBAN-LIST" direction="column" flex="1" gap="1rem">
-            <Flex
-              className="ADD-ITEM"
-              border="1px"
-              borderColor="gray300"
-              p="0.75rem"
-              m="0 0.75rem"
-              justify="space-between"
-              align="center"
-              gap="0.5rem"
-              borderRadius="md"
-              bg="white"
-              mb="1rem"
-              transition="0.1s"
-              cursor={canEdit ? 'pointer' : 'not-allowed'}
-              _hover={canEdit ? { boxShadow: 'sm', borderColor: 'gray400' } : undefined}
-              onClick={() => canEdit && onItemClick({ ...EMPTY_KANBAN_ITEM, column: column.type })}
-            >
-              <Text color='gray600'>Adicionar</Text>
-              <Flex color={`primary${index === 0 ? 700 : index === 1 ? 800 : 300}`}>
-                <FaPlusCircle />
+            {!index && (
+              <Flex
+                className="ADD-ITEM"
+                border="1px"
+                borderColor="gray300"
+                p="0.75rem"
+                m="0 0.75rem"
+                justify="space-between"
+                align="center"
+                gap="0.5rem"
+                borderRadius="md"
+                bg="white"
+                mb="1rem"
+                transition="0.1s"
+                cursor={canEdit ? 'pointer' : 'not-allowed'}
+                _hover={canEdit ? { boxShadow: 'sm', borderColor: 'gray400' } : undefined}
+                onClick={() => canEdit && onItemClick({ ...EMPTY_KANBAN_ITEM, column: column.type })}
+              >
+                <Text color="gray600">Adicionar</Text>
+                <Flex color={`primary${index === 0 ? 700 : index === 1 ? 800 : 300}`}>
+                  <FaPlusCircle />
+                </Flex>
               </Flex>
-            </Flex>
+            )}
             {column.items.map((item, index) => (
               <KanbanItem key={item.id} item={item} index={index} group={group} onItemClick={onItemClick} columnType={column.type} />
             ))}
