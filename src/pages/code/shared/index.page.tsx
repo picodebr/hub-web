@@ -109,7 +109,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
   cookieManager.updateToken(req);
 
-  const pageTitle = 'Compartilhados comigo';
+  const pageTitle = 'Compartilhados Comigo';
 
   return { props: { selectedPage, pageTitle } };
 };
