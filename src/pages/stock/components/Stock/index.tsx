@@ -167,7 +167,7 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
                 height="180"
                 width="180"
                 alt="test"
-                style={{ alignSelf: 'center', justifySelf: 'center' }}
+                style={{ alignSelf: 'center', justifySelf: 'center', maxHeight: `280px` }}
               />
               <Flex direction="column" gap="0.75rem" w="100%">
                 <Text color="gray600">{stock.hub_user_id ? stock.metadata.name : stock.store_item.name}</Text>

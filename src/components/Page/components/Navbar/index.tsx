@@ -61,6 +61,11 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
     setActions(customActions);
   }, [_user, customActions]);
 
+  useEffect(() => {
+    setIsUpdating(true);
+    setTimeout(() => setIsUpdating(false), 1000);
+  }, [avatar]);
+
   const handleUploadAvatar = useCallback(async (file?: File) => {
     if (file) {
       setIsUpdating(true);
