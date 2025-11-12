@@ -245,7 +245,7 @@ export const Orders: React.FC<IProps> = ({ groups, onApproveOrder, onRejectOrder
               ))
           ) : (
             <Text fontSize="16px" fontWeight="500" color="gray700">
-              Esse grupo ainda não realizou nenhum pedido aprovado
+              Não há pedidos aprovados
             </Text>
           )}
         </Flex>

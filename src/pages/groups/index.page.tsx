@@ -108,6 +108,7 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
               fontSize="18px"
               minH="5.5rem"
               maxH="5.5rem"
+              overflowY="hidden"
             >
               <Flex flex="1" gap="1rem">
                 <Link href={`/groups/${group.id}`} transition="color 0.1s" color="#21E080" _hover={{ color: '#36c27c' }}>
