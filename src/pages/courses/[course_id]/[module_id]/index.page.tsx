@@ -80,6 +80,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
               format={() => (isLoading ? `` : `${finishedLessons.length}/${lessons.length}`)}
             />
           </Flex>
+          
         </Skeleton>
         <Flex direction="column" gap="1rem" flex="1" h="100%" w="100%">
           <Skeleton isLoaded={!isLoading} maxW={{ base: undefined, xl: '30%' }}>
