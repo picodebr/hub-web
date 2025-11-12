@@ -16,6 +16,7 @@ import { getCertificateByCourse, listUserCertificates, registerCertificate } fro
 import { ICertificateTemplate } from '@/_base/interfaces/certificate/ICertificateTemplate';
 import { IHubCertificate } from '@/_base/interfaces/certificate';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
+import { link } from 'fs';
 
 interface IProps {
   courseId: string;
@@ -44,6 +45,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
   const { user } = useProfile();
   const toast = useCustomToast();
   const router = useCustomRouter();
+
 
   useEffect(() => {
     (async () => {
@@ -74,6 +76,30 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       }
     })();
   }, []);
+  useEffect(() => {
+    if (allModulesFinished && certificateTemplate) {
+      handleGeneratePDF();
+    }
+  }, [allModulesFinished, certificateTemplate]);
+
+  const downloadCertificate = (pdfUrl: string, fileName: string, state: string) => {
+    const link = document.createElement('a');
+      link.setAttribute(`target`, `_blank`);
+      if (state === `a`) {
+        link.href = pdfUrl;
+        link.download = fileName;
+      }
+      link.click();
+  }
+
+  const handleDownloadCertificate = () => {
+    const ownCert = userCertificates.find((c) => c.hub_course_id === courseId);
+    if (ownCert?.link) {
+      downloadCertificate(ownCert.link, `Certificado ${course?.title || 'curso'}.pdf`, 'a');
+    } else {
+      toast({ status: `error`, description: `Certificado não gerado.` });
+    }
+  }
 
   const handleGeneratePDF = useCallback(async () => {
     if (!course || !certificateTemplate) return;
@@ -89,9 +115,8 @@ const Course: React.FC<IProps> = ({ courseId }) => {
 const existingPdfBytes = await response.arrayBuffer();
 const pdfDoc = await PDFDocument.load(existingPdfBytes);
 pdfDoc.registerFontkit(fontkit);
-// const fontBytes = await fetch('/fonts/field-gothic.otf').then(res => res.arrayBuffer());
+
 const fontBytes2 = await fetch('/fonts/noteworthy.ttf').then(res => res.arrayBuffer());
-// const fieldGothicFont = await pdfDoc.embedFont(fontBytes);
 const noteWorthyFont = await pdfDoc.embedFont(fontBytes2);
 
 const pages = pdfDoc.getPages();
@@ -145,11 +170,8 @@ const centeredX = 115 + (maxWidth - textWidth) / 2;
         const newCertificate = await registerCertificate(courseId, presigned.path);
         setUserCertificates((e) => [...e, newCertificate]);
       }
-      const link = document.createElement('a');
-      link.setAttribute(`target`, `_blank`);
-      link.href = pdfUrl;
-      link.download = `Certificado ${course.title}.pdf`;
-      link.click();
+      downloadCertificate(pdfUrl, `Certificado ${course.title}.pdf`, 'b');
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       alert('Erro ao carregar PDF: ' + errorMessage);
@@ -179,7 +201,7 @@ const centeredX = 115 + (maxWidth - textWidth) / 2;
         <Text color="gray600">Módulos</Text>
         {allModulesFinished && certificateTemplate && (
           <Button
-            onClick={handleGeneratePDF}
+            onClick={handleDownloadCertificate}
             leftIcon={<PiCertificate fontSize="18px" />}
             colorScheme="blue"
             variant="outline"
