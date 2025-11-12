@@ -153,7 +153,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
         ) as any,
         name: (
           <Flex align="center" gap="1rem">
-            {!!project.project_id && <Image src="/logo/pi-logo-dark.svg" maxH="1.5rem" minH="1.5rem" title="Projeto da PiCode" />}
+            {!!project.project_id}
             <Text color="gray800" fontWeight={project.project_id ? `500` : `400`}>
               {project.title}
             </Text>
