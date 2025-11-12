@@ -14,41 +14,41 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
   const guides: GuideType[] = [
     {
       label: 'Como navegar pela plataforma?',
-      instructions: 'Você pode navegar pela plataforma utilizando o menu à esquerda, selecionando a sessão que deseja ver.',
+      instructions: 'Você pode navegar pelo Hub utilizando o menu à esquerda e selecionando a sessão que deseja ver.',
     },
     {
       label: 'Como abrir o livro na plataforma?',
       instructions:
-        'Para abrir um livro pela plataforma, basta entrar na sessão "Biblioteca" e selecionar no menu superior o tipo do livro (Professor ou Aluno), logo após será possível selecionar o ano e então aparecerá os livros da opção correspondente',
+        'Para abrir um livro, basta entrar na sessão "Biblioteca" e selecionar, no menu superior, o tipo do livro desejado - Professor ou Aluno. Os livros aparecerão separados por série/ano. Caso deseje consultar um planejamento de aulas, este se encontrará na aba “Materiais Complementares".',
     },
     {
       label: 'Como criar um novo projeto?',
       instructions:
-        'Para criar um novo projeto, basta entrar em "Turmas", após selecionar a turma que deseja criar o projeto, você conseguirá criar um novo projeto na aba "Projetos" na aba superior',
+        'Para criar um novo projeto, basta entrar em "Turmas", selecionar a turma em que deseja criar o projeto, navegar até a aba “Projetos” e clicar em “Adicionar novo”. Você poderá criar um projeto manualmente ou usando nossa IA, que te ajudará a mapear ferramentas, planejamentos, tempo e temas.',
     },
     {
       label: 'Como acessar minhas turmas?',
       instructions:
-        'Para acessar suas turmas, certifique-se que está na escola correta (caso lecione em mais de uma), e então selecione "Turmas" no menu à esquerda para visualizar suas turmas',
+        'Para acessar suas turmas, certifique-se que está na escola correta (caso lecione em mais de uma), e então selecione "Turmas" no menu à esquerda para visualizar suas turmas. Se as turmas não aparecerem, lembre-se: talvez você ainda não tenha adicionado elas. Para isso, basta clicar em “Adicionar turmas” e dar um check nas que você é o professor responsável.',
     },
     {
       label: 'O que fazer se meu aluno esquecer a senha?',
       instructions:
-        'Caso algum aluno esquecer sua própria senha, ele pode solicitar a recuperação através da plataforma e o seu professor pode fazer a liberação e alteração de senha através da notificação enviada por email após a solicitação do aluno.',
+        'Caso algum aluno esqueça a senha, você pode acessar a sessão “Turmas”, entrar na turma desse aluno e clicar na aba “Alunos”. Em seguida, clique no aluno desejado e, ao abrir o perfil, clique no botão “Resetar Senha” para inserir uma nova senha.',
     },
     {
       label: 'Como começar um novo curso?',
-      instructions: 'Basta selecionar no menu à esquerda a sessão "Cursos", selecionar o curso, o módulo e então a lição.',
+      instructions: 'Basta selecionar no menu à esquerda a sessão "Cursos", selecionar o curso, o módulo e então a atividade.',
     },
     {
       label: 'Como entrar em contato com o suporte da PiCode?',
       instructions:
-        'A plataforma tem duas opções de canal de contato, estando logado ou não. Sem estar logado em sua conta, você pode solicitar ajuda preenchendo o formulário que aparece na tela de login após clicar no botão "Não estou conseguindo acessar", Caso você esteja conectado em sua conta, você pode solicitar suporte através da sessão do menu à esquerda: "Suporte".',
+        'A plataforma tem duas opções de canal de contato, estando logado ou não. Se não estiver logado em sua conta, você poderá solicitar ajuda preenchendo o formulário que aparece na tela de login, após clicar no botão "Não estou conseguindo acessar”. Caso você esteja já esteja conectado em sua conta, você poderá solicitar suporte através da sessão "Suporte”, no menu lateral esquerdo.',
     },
     {
       label: 'Como pedir um novo produto através da loja?',
       instructions:
-        'Os alunos só poderão comprar os itens que estiverem disponíveis aos professores, essa compra é feita quando o grupo estiver criado e já vinculado á um projeto',
+        'Os alunos só poderão comprar os itens que estiverem disponíveis no seu estoque. Para efetuarem a compra, devem acessar o ambiente do projeto (Meus Grupos > Projeto YYYY > Loja Online > Loja PiCode), adicionar os itens no carrinho, finalizar a compra e aguardar sua aprovação.Lembre-se de aprovar o pedido dos grupos no Hub, para que as moedas sejam debitadas/creditadas corretamente! Você pode fazer isso rapidamente pela sessão “Estoque Maker”, na aba “Pedidos”, ou acessando cada grupo individualmente.',
     },
   ];
 
@@ -120,7 +120,7 @@ export const TeacherProfile: React.FC<IProfileComponentProps> = ({ projects }) =
         >
           <Flex direction="column" w="100%" h="fit-content" borderBottom="1px" borderColor="gray300" justify="center">
             <Flex fontSize="0.875rem" color="gray600" mb={{ base: '8px', xl: '20px' }}>
-              Boas vindas à PiCode 🚀
+              Boas-vindas à PiCode 🚀
             </Flex>
           </Flex>
           <Flex flex="1" align="center" gap="0.75rem" w="100%" pb="1.25rem">
