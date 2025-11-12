@@ -72,7 +72,7 @@ const Appointment: React.FC = () => {
     {
       label: 'Como pedir um novo produto através da loja?',
       instructions:
-        'Os alunos só poderão comprar os itens que estiverem disponíveis no seu estoque. Para efetuarem a compra, devem acessar o ambiente do projeto (Meus Grupos > Projeto YYYY > Loja Online > Loja PiCode), adicionar os itens no carrinho, finalizar a compra e aguardar sua aprovação.Lembre-se de aprovar o pedido dos grupos no Hub, para que as moedas sejam debitadas/creditadas corretamente! Você pode fazer isso rapidamente pela sessão “Estoque Maker”, na aba “Pedidos”, ou acessando cada grupo individualmente.',
+        'Os alunos só poderão comprar os itens que estiverem disponíveis no seu estoque. Para efetuarem a compra, devem acessar o ambiente do projeto (Meus Grupos > Projeto YYYY > Loja Online > Loja PiCode), adicionar os itens no carrinho, finalizar a compra e aguardar sua aprovação. Lembre-se de aprovar o pedido dos grupos no Hub, para que as moedas sejam debitadas/creditadas corretamente! Você pode fazer isso rapidamente pela sessão “Estoque Maker”, na aba “Pedidos”, ou acessando cada grupo individualmente.',
     },
   ];
 
