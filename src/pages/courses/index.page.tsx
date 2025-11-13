@@ -44,8 +44,9 @@ const Courses: React.FC = () => {
   );
 
   const handleCourseClick = (course: IHubCourse) => {
-    if (course?.modules?.length === 1) router.push(`/courses/${course.id}/${course?.modules[0].id}`);
-    else router.push(`/courses/${course.id}?_p=${course.title}`);
+    // if (course?.modules?.length === 1) router.push(`/courses/${course.id}/${course?.modules[0].id}`);
+    // else router.push(`/courses/${course.id}?_p=${course.title}`);
+    router.push(`/courses/${course.id}?_p=${course.title}`);
   };
 
   return (

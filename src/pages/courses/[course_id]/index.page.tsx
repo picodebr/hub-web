@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { IHubModule } from '@/_base/interfaces/module';
 import { getCourseActivity, listCourses, listModules } from '@/_base/services/course';
 import { degrees, PDFDocument, rgb } from 'pdf-lib';
-import fontkit from '@pdf-lib/fontkit'
+import fontkit from '@pdf-lib/fontkit';
 import { MdBlock } from 'react-icons/md';
 import { IHubCourse } from '@/_base/interfaces/course';
 import { formatShortName } from '@/_base/utils';
@@ -16,7 +16,6 @@ import { getCertificateByCourse, listUserCertificates, registerCertificate } fro
 import { ICertificateTemplate } from '@/_base/interfaces/certificate/ICertificateTemplate';
 import { IHubCertificate } from '@/_base/interfaces/certificate';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
-import { link } from 'fs';
 
 interface IProps {
   courseId: string;
@@ -84,12 +83,12 @@ const Course: React.FC<IProps> = ({ courseId }) => {
 
   const downloadCertificate = (pdfUrl: string, fileName: string, state: string) => {
     const link = document.createElement('a');
-      link.setAttribute(`target`, `_blank`);
-      if (state === `a`) {
-        link.href = pdfUrl;
-        link.download = fileName;
-      }
-      link.click();
+    link.setAttribute(`target`, `_blank`);
+    if (state === `a`) {
+      link.href = pdfUrl;
+      link.download = fileName;
+    }
+    link.click();
   }
 
   const handleDownloadCertificate = () => {
@@ -112,20 +111,20 @@ const Course: React.FC<IProps> = ({ courseId }) => {
 
       if (!pdfUrl) {
         const response = await fetch(certificateTemplate.link);
-const existingPdfBytes = await response.arrayBuffer();
-const pdfDoc = await PDFDocument.load(existingPdfBytes);
-pdfDoc.registerFontkit(fontkit);
+        const existingPdfBytes = await response.arrayBuffer();
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        pdfDoc.registerFontkit(fontkit);
 
-const fontBytes2 = await fetch('/fonts/noteworthy.ttf').then(res => res.arrayBuffer());
-const noteWorthyFont = await pdfDoc.embedFont(fontBytes2);
+        const fontBytes2 = await fetch('/fonts/noteworthy.ttf').then(res => res.arrayBuffer());
+        const noteWorthyFont = await pdfDoc.embedFont(fontBytes2);
 
-const pages = pdfDoc.getPages();
-const firstPage = pages[0];
-const text = formatShortName(user?.name, true);
-const fontSize = 40;
-const maxWidth = 612;
-const textWidth = noteWorthyFont.widthOfTextAtSize(text, fontSize);
-const centeredX = 115 + (maxWidth - textWidth) / 2;
+        const pages = pdfDoc.getPages();
+        const firstPage = pages[0];
+        const text = formatShortName(user?.name, true);
+        const fontSize = 40;
+        const maxWidth = 612;
+        const textWidth = noteWorthyFont.widthOfTextAtSize(text, fontSize);
+        const centeredX = 115 + (maxWidth - textWidth) / 2;
         // const { day, month, year } = getFormattedDate();
         firstPage.drawText(`${formatShortName(user?.name, true)}`, {
           x: centeredX,
@@ -135,8 +134,8 @@ const centeredX = 115 + (maxWidth - textWidth) / 2;
           color: rgb(0.122, 0.114, 0.239),
           rotate: degrees(0),
           maxWidth: maxWidth,
-          
-          
+
+
         });
         // firstPage.drawText(
         //   `concluiu com êxito o curso ${course.title}, na PiCode, com carga horária total de ${course.hours} horas, desenvolvendo habilidades essenciais para aplicar metodologias e ferramentas PiCode® em sala de aula.`,
@@ -152,7 +151,7 @@ const centeredX = 115 + (maxWidth - textWidth) / 2;
 
         //   },
         // );
-      
+
         // firstPage.drawText(`Sorocaba, ${day} de ${month} de ${year}`, {
         //   x: 450,
         //   y: 165,
@@ -240,9 +239,7 @@ const centeredX = 115 + (maxWidth - textWidth) / 2;
                       </Text>
                     </>
                   ) : (
-                    <>
-                      <MdBlock fontSize="20px" />
-                    </>
+                    <MdBlock fontSize="20px" />
                   )}
                 </Flex>
               </Flex>
