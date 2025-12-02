@@ -22,7 +22,7 @@ import {
 import { FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
 import { FaRegTrashCan } from 'react-icons/fa6';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Avatar } from '@chakra-ui/react';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { MdAddTask } from 'react-icons/md';
@@ -36,9 +36,10 @@ import { cookieManager, formatCoin, formatShortName } from '@/_base/utils';
 import { CoinIcon } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
 import { GroupOrdersPageView } from '@/pages/groups/[group_id]/interfaces';
-import { updateProfile } from '@/_base/services/user';
+import { getProfile, updateProfile } from '@/_base/services/user';
 import { IHubUser } from '@/_base/interfaces/user';
 import { IoHeartOutline, IoHeartDislikeOutline } from 'react-icons/io5';
+import { validateSession } from '@/_base/services/auth';
 
 type CustomStoreItem = IStoreMakerItem & { quantity: number };
 interface IProps {
@@ -52,15 +53,7 @@ interface IProps {
 }
 
 export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMakerList: storeList, group, cartIsOpened, user }) => {
-  const [cart, setCart] = useState<CustomStoreItem[]>(
-    (storeList
-      .map((item) => {
-        const target = user.metadata.cart?.[group.id]?.find((cartItem) => item.store_item.id === cartItem.id);
-
-        return target && !!item.quantity ? { ...item.store_item, quantity: target.quantity } : undefined;
-      })
-      .filter(Boolean) as CustomStoreItem[]) || [],
-  );
+  const [cart, setCart] = useState<CustomStoreItem[]>([]);
   const [orderPayload, setOrderPayload] = useState<{ id: string; quantity: number }[] | null>(null);
   const [itemsWithoutStock, setItemsWithoutStock] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>(user.metadata.store_interests || []);
@@ -68,16 +61,30 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
   const storeMakerList = storeList.filter((e) => !e.hub_user_id).map((e) => e.store_item);
 
   const toast = useCustomToast();
-  const { isOpen, onOpen, onClose } = useDisclosure({ defaultIsOpen: cartIsOpened || !!cookieManager.getCookie(`cart:${group.id}`) });
+  const { isOpen, onOpen, onClose } = useDisclosure({ defaultIsOpen: cartIsOpened });
+
+  useEffect(() => {
+    if (!group) return;
+    (async () => {
+      const _user = await validateSession();
+
+      setCart(storeList
+        .map((item) => {
+          const target = _user.metadata.cart?.[group.id]?.find((cartItem) => item.store_item.id === cartItem.id);
+
+          return target && !!item.quantity ? { ...item.store_item, quantity: target.quantity } : undefined;
+        })
+        .filter(Boolean) as CustomStoreItem[] || [])
+    })()
+
+  }, [group])
 
   useUpdateEffect(() => {
     onOpen();
   }, [cartIsOpened]);
 
   useUpdateEffect(() => {
-    (async () => {
-      await updateProfile({ cart: { ...(user.metadata.cart || {}), [group.id]: cart.map((e) => ({ id: e.id, quantity: e.quantity })) } });
-    })();
+    updateProfile({ cart: { ...(user.metadata.cart || {}), [group.id]: cart.map((e) => ({ id: e.id, quantity: e.quantity })) } });
   }, [cart]);
 
   const addItemInCart = (item: IStoreMakerItem) => {
@@ -115,6 +122,15 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
   const totalPrice = useMemo(() => cart.reduce((acc, { price, quantity }) => (acc += Number(price) * quantity), 0), [cart]);
 
   const haveMemberWithNegativeBalance = !!group.students.find((e) => (e.metadata.coins || 0) <= 0);
+
+  const handleConfirmOrder = useAsyncCallback(async () => {
+    if (!orderPayload) return;
+    onFinishOrder(orderPayload);
+    setOrderPayload(null);
+    updateProfile({ cart: { ...(user.metadata.cart || {}), [group.id]: [] } });
+    onClose();
+    // onChangeView(`Pedidos`);
+  }, [])
 
   return (
     <motion.div
@@ -184,7 +200,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                       onClick={() => (targetItemInStore?.quantity ? addItemInCart(item) : showInterestInItem(item))}
                     >
                       {targetItemInStore?.quantity ? (
-                          <MdAddTask fontSize="19px" />
+                        <MdAddTask fontSize="19px" />
                       ) : alreadyInterest ? (
                         <Tooltip label="Remover da lista de desejos" hasArrow>
                           <span>
@@ -341,7 +357,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                     <Flex display="flex" justify="center" align="center" gap="4px">
                       <CoinIcon size="xs" />
                       <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
-                         R$ {item.price}
+                        R$ {item.price}
                       </Text>
                     </Flex>
                     <Flex w="40px" h="40px" bgImage={item.picture} bgSize="cover" bgPosition="center" />
@@ -381,7 +397,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                   <Text fontSize="20px">Total</Text>
                   <Image src="/icons/coin.svg" height="40px" />
                   <Text fontSize="40px" fontWeight="700" color="primary900">
-                     R$ {totalPrice}
+                    R$ {totalPrice}
                   </Text>
                 </Flex>
                 <Flex direction="column" gap="1.35rem">
@@ -437,12 +453,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
           topIcon="checked"
           title="Finalizar pedido"
           show={!!orderPayload}
-          onConfirm={() => {
-            if (!orderPayload) return;
-            onFinishOrder(orderPayload);
-            setOrderPayload(null);
-            onChangeView(`Pedidos`);
-          }}
+          onConfirm={handleConfirmOrder}
           onCancel={() => setOrderPayload(null)}
           disableOkButton={haveMemberWithNegativeBalance}
         >

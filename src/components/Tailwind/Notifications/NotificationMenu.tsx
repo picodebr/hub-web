@@ -210,7 +210,7 @@ const NotificationMenu = ({
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 </div>
-              ) : !notifications.length && !kanbanItemsDue.length ? (
+              ) : !notifications.length && !kanbanItemsDue.length && !stockItems.length ? (
                 <div className="text-center py-8 text-gray-500">
                   <FiBell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                   <p style={{ fontSize: `16px` }}>Nenhuma notificação disponível</p>
