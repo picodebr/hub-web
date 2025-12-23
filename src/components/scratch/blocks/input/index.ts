@@ -17,6 +17,12 @@ const analogReadParser: IBlockParser = (block) => {
   return PIN ? `analogRead(${PIN})` : '';
 };
 
+const pinModeParser: IBlockParser = (block) => {
+  const { PIN } = block.fields;
+
+  return PIN ? `pinMode(${PIN}, INPUT_PULLUP);` : '';
+};
+
 export const inputBlocksFactories: IOBlocksFactory[] = [
   (pins) => ({
     name: `${category}_digital_read`,
@@ -60,5 +66,27 @@ export const inputBlocksFactories: IOBlocksFactory[] = [
     },
     parserCpp: analogReadParser,
     parserJs: analogReadParser,
+  }),
+
+  (pins) => ({
+    name: `${category}_pin_Mode`,
+    init() {
+      // @ts-ignore
+      this.jsonInit({
+        message0: 'ligar pullup no pino %1',
+        args0: [
+          {
+            type: 'field_dropdown',
+            name: 'PIN',
+            options: pins.map((pin) => [pin.value, pin.value]),
+          },
+        ],
+        colour,
+        category,
+        extensions: ['shape_statement'],
+      });
+    },
+    parserCpp: pinModeParser,
+    parserJs: pinModeParser,
   }),
 ];

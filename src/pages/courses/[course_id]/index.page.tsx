@@ -5,7 +5,8 @@ import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { useCallback, useEffect, useState } from 'react';
 import { IHubModule } from '@/_base/interfaces/module';
 import { getCourseActivity, listCourses, listModules } from '@/_base/services/course';
-import { degrees, PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { degrees, PDFDocument, rgb } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 import { MdBlock } from 'react-icons/md';
 import { IHubCourse } from '@/_base/interfaces/course';
 import { formatShortName } from '@/_base/utils';
@@ -21,15 +22,15 @@ interface IProps {
   certificate: string;
 }
 
-const getFormattedDate = () => {
-  const today = new Date();
+// const getFormattedDate = () => {
+//   const today = new Date();
 
-  const day = today.getDate();
-  const month = today.toLocaleString('pt-BR', { month: 'long' });
-  const year = today.getFullYear();
+//   const day = today.getDate();
+//   const month = today.toLocaleString('pt-BR', { month: 'long' });
+//   const year = today.getFullYear();
 
-  return { day, month, year };
-};
+//   return { day, month, year };
+// };
 
 const Course: React.FC<IProps> = ({ courseId }) => {
   const [modules, setModules] = useState<(IHubModule & { finished_lessons: number })[]>([]);
@@ -43,6 +44,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
   const { user } = useProfile();
   const toast = useCustomToast();
   const router = useCustomRouter();
+
 
   useEffect(() => {
     (async () => {
@@ -73,6 +75,30 @@ const Course: React.FC<IProps> = ({ courseId }) => {
       }
     })();
   }, []);
+  useEffect(() => {
+    if (allModulesFinished && certificateTemplate) {
+      handleGeneratePDF();
+    }
+  }, [allModulesFinished, certificateTemplate]);
+
+  const downloadCertificate = (pdfUrl: string, fileName: string, state: string) => {
+    const link = document.createElement('a');
+    link.setAttribute(`target`, `_blank`);
+    if (state === `a`) {
+      link.href = pdfUrl;
+      link.download = fileName;
+    }
+    link.click();
+  }
+
+  const handleDownloadCertificate = () => {
+    const ownCert = userCertificates.find((c) => c.hub_course_id === courseId);
+    if (ownCert?.link) {
+      downloadCertificate(ownCert.link, `Certificado ${course?.title || 'curso'}.pdf`, 'a');
+    } else {
+      toast({ status: `error`, description: `Certificado não gerado.` });
+    }
+  }
 
   const handleGeneratePDF = useCallback(async () => {
     if (!course || !certificateTemplate) return;
@@ -85,51 +111,55 @@ const Course: React.FC<IProps> = ({ courseId }) => {
 
       if (!pdfUrl) {
         const response = await fetch(certificateTemplate.link);
-        if (!response.ok) {
-          throw new Error('Failed to fetch the PDF');
-        }
         const existingPdfBytes = await response.arrayBuffer();
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
-        const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        pdfDoc.registerFontkit(fontkit);
+
+        const fontBytes2 = await fetch('/fonts/noteworthy.ttf').then(res => res.arrayBuffer());
+        const noteWorthyFont = await pdfDoc.embedFont(fontBytes2);
+
         const pages = pdfDoc.getPages();
         const firstPage = pages[0];
-        const { day, month, year } = getFormattedDate();
+        const text = formatShortName(user?.name, true);
+        const fontSize = 40;
+        const maxWidth = 612;
+        const textWidth = noteWorthyFont.widthOfTextAtSize(text, fontSize);
+        const centeredX = 115 + (maxWidth - textWidth) / 2;
+        // const { day, month, year } = getFormattedDate();
         firstPage.drawText(`${formatShortName(user?.name, true)}`, {
-          x: 470,
-          y: 325,
-          size: 40,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
+          x: centeredX,
+          y: 298,
+          size: fontSize,
+          font: noteWorthyFont,
+          color: rgb(0.122, 0.114, 0.239),
           rotate: degrees(0),
+          maxWidth: maxWidth,
+
+
         });
-        firstPage.drawText(
-          `Por sua participação e conclusão no
-  curso de ${course.title}, na PiCode,`,
-          {
-            x: 414,
-            y: 267,
-            size: 20,
-            font: helveticaFont,
-            color: rgb(0, 0, 0),
-            rotate: degrees(0),
-          },
-        );
-        // firstPage.drawText(`Tendo duração de 20 horas`, {
-        //   x: 453,
-        //   y: 220,
+        // firstPage.drawText(
+        //   `concluiu com êxito o curso ${course.title}, na PiCode, com carga horária total de ${course.hours} horas, desenvolvendo habilidades essenciais para aplicar metodologias e ferramentas PiCode® em sala de aula.`,
+        //   {
+        //     x: 276,
+        //     y: 265,
+        //     size: 14,
+        //     lineHeight: 24,
+        //     font: fieldGothicFont,
+        //     color: rgb(0.122, 0.114, 0.239),
+        //     rotate: degrees(0),
+        //     maxWidth: 470,
+
+        //   },
+        // );
+
+        // firstPage.drawText(`Sorocaba, ${day} de ${month} de ${year}`, {
+        //   x: 450,
+        //   y: 165,
         //   size: 20,
         //   font: helveticaFont,
         //   color: rgb(0, 0, 0),
         //   rotate: degrees(0),
         // });
-        firstPage.drawText(`Sorocaba, ${day} de ${month} de ${year}`, {
-          x: 450,
-          y: 165,
-          size: 20,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-          rotate: degrees(0),
-        });
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
         pdfUrl = URL.createObjectURL(blob);
@@ -139,12 +169,8 @@ const Course: React.FC<IProps> = ({ courseId }) => {
         const newCertificate = await registerCertificate(courseId, presigned.path);
         setUserCertificates((e) => [...e, newCertificate]);
       }
+      downloadCertificate(pdfUrl, `Certificado ${course.title}.pdf`, 'b');
 
-      const link = document.createElement('a');
-      link.setAttribute(`target`, `_blank`);
-      link.href = pdfUrl;
-      link.download = `Certificado ${course.title}.pdf`;
-      link.click();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       alert('Erro ao carregar PDF: ' + errorMessage);
@@ -174,7 +200,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
         <Text color="gray600">Módulos</Text>
         {allModulesFinished && certificateTemplate && (
           <Button
-            onClick={handleGeneratePDF}
+            onClick={handleDownloadCertificate}
             leftIcon={<PiCertificate fontSize="18px" />}
             colorScheme="blue"
             variant="outline"
@@ -213,9 +239,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
                       </Text>
                     </>
                   ) : (
-                    <>
-                      <MdBlock fontSize="20px" />
-                    </>
+                    <MdBlock fontSize="20px" />
                   )}
                 </Flex>
               </Flex>

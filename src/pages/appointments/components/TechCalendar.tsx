@@ -15,7 +15,7 @@ const TechCalendar = () => {
   return (
     <div
       className="calendly-inline-widget"
-      data-url="https://calendly.com/dulcesichieri/tech-picode"
+      data-url="https://calendly.com/giovanni-marin-picode/30min"
       style={{ minWidth: '320px', height: '700px' }}
     />
   );

@@ -15,7 +15,7 @@ const PedagoCalendar = () => {
   return (
     <div
       className="calendly-inline-widget"
-      data-url="https://calendly.com/andersonfelixmsouza/teste"
+      data-url="https://calendly.com/moises-silva-picode/30min"
       style={{ minWidth: '320px', height: '700px' }}
     />
   );

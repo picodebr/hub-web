@@ -100,8 +100,8 @@ const CodeFolders: React.FC = () => {
   return (
     <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
       <Flex align="center" justify="flex-end" h="fit-content" gap="1rem">
-        <PlusButton label="Compartilhados comigo" leftIcon={<RiFolderSharedFill />} onClick={() => router.push(`/code/shared`)} />
-        <PlusButton label="Nova pasta" leftIcon={<FaPlus />} onClick={() => setOpenCreateModal(true)} />
+        <PlusButton label="Compartilhados Comigo" leftIcon={<RiFolderSharedFill />} onClick={() => router.push(`/code/shared`)} />
+        <PlusButton label="Nova Pasta" leftIcon={<FaPlus />} onClick={() => setOpenCreateModal(true)} />
       </Flex>
       <Skeleton display="flex" flexDirection="column" gap="1rem" overflow="hidden auto" isLoaded={!isLoading}>
         {folders.length ? (
@@ -189,7 +189,7 @@ const CodeFolders: React.FC = () => {
         show={openCreateModal}
         onCancel={onCloseModal}
         onConfirm={() => submit(handleAddFolder)}
-        title="Nova pasta"
+        title="Nova Pasta"
         okText="Adicionar"
         isLoading={isLoading}
       >

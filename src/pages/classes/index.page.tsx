@@ -177,6 +177,39 @@ const Classes: React.FC = () => {
         topIcon="ray"
         disableOkButton={!selectedClasses.length}
       >
+    {/* SELECIONAR TODAS */}
+    <Flex
+      align="center"
+      justify="space-between"
+      bg="gray50"
+      p="16px"
+      borderRadius="10px"
+      border="1px"
+      borderColor="gray200"
+    >
+      <Text fontWeight="700" color="primary700">
+        Selecionar todas as turmas
+      </Text>
+      <Checkbox
+        size="lg"
+        colorScheme="blue"
+        isChecked={
+          sortGradesByClass(allClasses)
+            .filter(classIsAvailable)
+            .every((c) => selectedClasses.find((s) => s.id === c.id))
+        }
+        isDisabled={classes._isLoading}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          if (checked) {
+            const allAvailable = sortGradesByClass(allClasses).filter(classIsAvailable);
+            setSelectedClasses(allAvailable);
+          } else {
+            setSelectedClasses([]);
+          }
+        }}
+      />
+    </Flex>
         <Flex direction="column" gap="1rem">
           {sortGradesByClass(allClasses).map((hubClass) => (
             <Flex

@@ -15,4 +15,5 @@ export interface IHubCourse {
   updated_at: Date;
   dependency: IHubCourse | null;
   modules: IHubModule[];
+  hours: number;
 }
