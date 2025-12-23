@@ -14,8 +14,8 @@ export interface IHubSchool {
 }
 export interface IHubUserSchool {
   id: string;
-  hub_school_id: string | null;
-  hub_school_group_id: string | null;
+  hub_school_id: string;
+  hub_school_group_id: string;
   display_name: string;
   hub_school_group: IHubSchoolGroup;
   description: string | null;

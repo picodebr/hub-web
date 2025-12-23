@@ -38,7 +38,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
   const { school } = useSelectedSchool();
 
   useEffect(() => {
-    if (user.role === `teacher` && school?.hub_school_id)
+    if ((user.role === `teacher` || user.role === `master`) && school?.hub_school_id)
       (async () => {
         const myProjects = school?.id ? await getMyProjects(school?.hub_school_id || ``) : [];
         setProjects(myProjects);

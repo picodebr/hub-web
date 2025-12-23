@@ -5,7 +5,7 @@ import { FaPlus, FaTrash } from 'react-icons/fa';
 import { FiMoreVertical, FiUsers } from 'react-icons/fi';
 
 import { Flex, Text } from '@chakra-ui/react';
-import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomToast } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
 import { IHubClass } from '@/_base/interfaces/class';
 import { addClasses, listAllClasses, listMyClasses, removeClass } from '@/_base/services/class';
@@ -24,13 +24,14 @@ const Classes: React.FC = () => {
   const [selectedClasses, setSelectedClasses] = useState<IHubClass[]>([]);
 
   const { school } = useSelectedSchool();
+  const { user } = useAuth();
   const toast = useCustomToast();
 
   const getClasses = useAsyncCallback(async (school_id: string) => {
     if (!school_id) return;
     const [userClasses, schoolClasses] = await Promise.all([listMyClasses(school_id), listAllClasses(school_id)]);
     setAllClasses(schoolClasses);
-    setClasses({ _isLoading: false, data: userClasses });
+    setClasses({ _isLoading: false, data: user.role === `master` ? allClasses : userClasses });
   }, []);
 
   useEffect(() => {
@@ -95,7 +96,6 @@ const Classes: React.FC = () => {
           fontSize="16px"
           fontWeight="600"
           color="gray700"
-          
           cursor="pointer"
           onClick={() => setOpenOpt({ class_code: true })}
         >
@@ -112,7 +112,6 @@ const Classes: React.FC = () => {
               h="fit-content"
               bgColor="white"
               borderRadius="10px"
-              
               align="center"
               padding="20px 24px"
               color="primary700"
@@ -139,7 +138,7 @@ const Classes: React.FC = () => {
                   <AvatarList users={hubClass.students} max={10} />
                 </Flex>
                 <Badge h="fit-content" fontSize="14px" colorScheme="purple">
-                  {["6", "7", "8", "9"].includes(hubClass.grade) && `#${hubClass.code}`}
+                  {['6', '7', '8', '9'].includes(hubClass.grade) && `#${hubClass.code}`}
                 </Badge>
               </Flex>
               <Popover placement="left">
@@ -185,7 +184,6 @@ const Classes: React.FC = () => {
               h="fit-content"
               bgColor="white"
               borderRadius="10px"
-              
               border="1px"
               borderColor="gray200"
               align="center"

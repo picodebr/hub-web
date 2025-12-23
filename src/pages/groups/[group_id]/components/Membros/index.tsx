@@ -70,7 +70,6 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
       borderColor="gray300"
       borderRadius="10px"
       bg="white"
-      
       overflow="auto"
     >
       <Flex justify="space-between" align="center" p="10px 20px" borderBottom="1px" borderColor="gray300">
@@ -185,7 +184,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
             >
               Adicionar membros ao grupo
             </MenuButton>
-            <MenuList borderColor="gray300"  overflow="auto" maxH="300px">
+            <MenuList borderColor="gray300" overflow="auto" maxH="300px">
               <MenuOptionGroup type="checkbox">
                 {availableStudents.length ? (
                   availableStudents.map((student) => (
@@ -226,7 +225,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
             >
               Remover membros do grupo
             </MenuButton>
-            <MenuList borderColor="gray300"  overflow="auto" maxH="300px">
+            <MenuList borderColor="gray300" overflow="auto" maxH="300px">
               <MenuOptionGroup type="checkbox">
                 {group.students.length ? (
                   group.students.map((student) => (
