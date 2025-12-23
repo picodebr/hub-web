@@ -166,15 +166,16 @@ export const Resale: React.FC<IProps> = ({ onChangeView, onFinishResaleOrder, gr
                   overflow="hidden"
                 >
                   <Image src={item.store_maker_item.picture} maxHeight={{ base: `8rem`, lg: `10rem` }} w="100%" />
-                  <Flex direction="column" gap="9px" minH="3.5rem" maxH="3.5rem" w="100%">
-                    <Text noOfLines={2} px="0.5rem" flex="1" fontSize="13px" fontWeight="400">
+                  <Flex direction="column" p="0.15rem 0.5rem" fontSize="13px" minH="5rem" maxH="5rem" w="100%">
+                    <Text noOfLines={2} flex="1" fontWeight="400">
                       {item.store_maker_item.name}
                     </Text>
-                    <Flex align="center" justify="space-between" p="0 0.5rem 0 1rem">
+                    <Text fontSize="12px" textAlign="right">{`${item.seller_group.display_name}`}</Text>
+                    <Flex align="center" justify="space-between" fontSize="13px">
                       <Text>{`${item?.quantity || 0} ${item?.quantity === 1 ? 'unidade' : 'unidades'}`}</Text>
-                      <Flex align="center" justify="center" gap="0.25rem" pr="0.5rem">
-                        <Image src="/icons/coin.svg" />
-                        <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
+                      <Flex align="center" justify="center" gap="0.25rem">
+                        <Image src="/icons/coin.svg" h="18px" w="18px" />
+                        <Text w="fit-content" fontSize="13px" display="flex" color="primary700" fontWeight="400" whiteSpace="nowrap">
                           R$ {item.price}
                         </Text>
                       </Flex>
@@ -244,7 +245,7 @@ export const Resale: React.FC<IProps> = ({ onChangeView, onFinishResaleOrder, gr
                     <Flex align="center" gap="9px" h="18px">
                       <Image src="/icons/coin.svg" />
                       <Text w="fit-content" fontSize="15px" display="flex" align="center" gap="9px" color="primary700" fontWeight="500">
-                         R$ {item.price}
+                        R$ {item.price}
                       </Text>
                     </Flex>
                   </Flex>
@@ -276,7 +277,7 @@ export const Resale: React.FC<IProps> = ({ onChangeView, onFinishResaleOrder, gr
                   <Text fontSize="20px">Total</Text>
                   <Image src="/icons/coin.svg" height="40px" />
                   <Text fontSize="40px" fontWeight="700" color="primary900">
-                     R$ {totalPrice}
+                    R$ {totalPrice}
                   </Text>
                 </Flex>
                 <Flex direction="column" gap="1.35rem">

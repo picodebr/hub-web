@@ -1,6 +1,6 @@
 import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, useUpdateEffect } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { create } from 'zustand';
 import { FiLogOut } from 'react-icons/fi';
 import { persist } from 'zustand/middleware';
@@ -8,7 +8,7 @@ import { persist } from 'zustand/middleware';
 import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
 import { dimensions } from '@/styles/global';
-import { IHubUserSchool } from '@/_base/interfaces/school';
+import { IHubSchool, IHubSchoolGroup, IHubUserSchool } from '@/_base/interfaces/school';
 import { MenuItemType } from '../../interfaces';
 import { MobileMenu } from '../MobileMenu';
 import { CustomActions } from '@/_base/interfaces/customActions';
@@ -20,6 +20,7 @@ import { deleteAllNotifications } from '@/_base/services/notifications/deleteAll
 import { KanbanItemType } from '@/components/Kanban/interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { useRouter } from 'next/router';
+import { listSchoolGroups, listSchoolsByGroupCode } from '@/_base/services/school';
 
 interface IProps {
   user?: IHubUser;
@@ -37,17 +38,12 @@ type TargetSchoolHookType = {
   setSchool: (school: IHubUserSchool) => void;
   setCustomActions: (customActions: CustomActions[]) => void;
 };
-export const useSelectedSchool = create<TargetSchoolHookType>(
-  persist(
-    (set) => ({
-      school: null,
-      customActions: [],
-      setSchool: (data: IHubUserSchool) => set(() => ({ school: data })),
-      setCustomActions: (data: CustomActions) => set(() => ({ customActions: data })),
-    }),
-    { name: `context-storage` },
-  ) as any,
-);
+export const useSelectedSchool = create<TargetSchoolHookType>((set) => ({
+  school: null,
+  customActions: [],
+  setSchool: (data: IHubUserSchool) => set(() => ({ school: data })),
+  setCustomActions: (data: CustomActions[]) => set(() => ({ customActions: data })),
+}));
 
 export const Header: React.FC<IProps> = ({
   user,
@@ -59,15 +55,21 @@ export const Header: React.FC<IProps> = ({
   setSchool: _setSchool,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [schools, setSchools] = useState<IHubUserSchool[]>(user?.schools || []);
   const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
   const [notifications, setNotifications] = useState<IHubNotification[]>([]);
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
+  const [schoolGroups, setSchoolGroups] = useState<IHubSchoolGroup[]>([]);
+  const [selectedSchoolGroup, setSelectedSchoolGroup] = useState(
+    user?.schools?.map((item) => ({ label: item.hub_school_group.display_name, value: item.hub_school_group_id }))[0],
+  );
 
   const router = useRouter();
   const { colorMode } = useColorMode();
   const { setSchool, school, setCustomActions } = useSelectedSchool();
 
-  const data = user?.schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
+  const schoolList = schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
+  const schoolGroupList = useMemo(() => schoolGroups.map((item) => ({ label: item.display_name, value: item.id })), [schoolGroups]);
 
   useEffect(() => {
     if (!school?.hub_school_id) return;
@@ -84,32 +86,61 @@ export const Header: React.FC<IProps> = ({
     });
   }, [school]);
 
+  useEffect(() => {
+    if (user?.role !== `master`) return;
+    listSchoolGroups().then((res) => {
+      setSchoolGroups(res);
+    });
+  }, [user]);
+
   useUpdateEffect(() => {
     setIsLoading(true);
-    const target = user?.schools.find((e) => e.id === selectedSchool?.value);
+    const target = schools.find((e) => e.id === selectedSchool?.value);
 
     if (target) {
       setSchool(target);
       _setSchool(target);
-      if (user?.role === `teacher`)
+      localStorage.setItem(`selected-school`, JSON.stringify(target));
+      if (user?.role !== `student`)
         setCustomActions(
           target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
             [],
         );
       setTimeout(() => {
         setIsLoading(false);
+        router.reload();
       }, 3000);
     }
   }, [selectedSchool]);
 
+  useUpdateEffect(() => {
+    const target = schoolGroups.find((e) => e.id === selectedSchoolGroup?.value);
+
+    if (target) {
+      localStorage.setItem(`selected-network`, JSON.stringify(target));
+      listSchoolsByGroupCode(target.code)
+        .then((res) => {
+          setSchools(res);
+          if (res[0]) setSelectedSchool({ label: res[0].display_name, value: res[0].id });
+        })
+        .catch(() => console.error('Error loading schools'));
+    }
+  }, [selectedSchoolGroup]);
+
   useEffect(() => {
-    const storage = JSON.parse(localStorage.getItem(`context-storage`) || `{}`);
-    const target: IHubUserSchool = user?.schools.find((e) => e.id === selectedSchool?.value) || user?.schools[0] || storage?.state?.school;
+    setSchools(user?.schools || []);
+    const storageNetworkData: IHubSchoolGroup = JSON.parse(localStorage.getItem(`selected-network`) || `{}`);
+    const storageSchoolData: IHubUserSchool = JSON.parse(localStorage.getItem(`selected-school`) || `{}`);
+    const target = storageSchoolData.hub_school_group ? storageSchoolData : schools.find((e) => e.id === selectedSchool?.value) || schools[0];
+
+    if (storageNetworkData.id) setSelectedSchoolGroup({ label: storageNetworkData.display_name, value: storageNetworkData.id });
 
     if (!school && target) {
       setSchool(target);
       _setSchool(target);
-      if (user?.role === `teacher`)
+      if (!storageSchoolData) localStorage.setItem(`selected-school`, JSON.stringify(target));
+
+      if (user?.role !== `student`)
         setCustomActions(
           target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
             [],
@@ -185,17 +216,32 @@ export const Header: React.FC<IProps> = ({
         </Flex>
       )}
       <Flex gap="1rem" align="center" fontSize="1.75rem">
-        {user?.role === `teacher` && (
-          <SelectPicker
-            data={data}
-            value={selectedSchool?.value || school?.id}
-            size="sm"
-            style={{ paddingBottom: 5 }}
-            appearance="subtle"
-            searchable={false}
-            cleanable={false}
-            onChange={(e) => setSelectedSchool(data.find((d) => d.value === e))}
-          />
+        {(user?.role === `teacher` || user?.role === `master`) && (
+          <>
+            {user?.role === `master` && (
+              <SelectPicker
+                data={schoolGroupList}
+                value={selectedSchoolGroup?.value}
+                size="sm"
+                style={{ paddingBottom: 5, marginRight: 5 }}
+                appearance="subtle"
+                searchable={false}
+                label="Rede"
+                cleanable={false}
+                onChange={(e) => setSelectedSchoolGroup(schoolGroupList.find((d) => d.value === e))}
+              />
+            )}
+            <SelectPicker
+              data={schoolList}
+              value={selectedSchool?.value || school?.id}
+              size="sm"
+              style={{ paddingBottom: 5 }}
+              appearance="subtle"
+              searchable={false}
+              cleanable={false}
+              onChange={(e) => setSelectedSchool(schoolList.find((d) => d.value === e))}
+            />
+          </>
         )}
         <NotificationMenu
           notifications={notifications}

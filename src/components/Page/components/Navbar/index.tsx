@@ -61,6 +61,11 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
     setActions(customActions);
   }, [_user, customActions]);
 
+  useEffect(() => {
+    setIsUpdating(true);
+    setTimeout(() => setIsUpdating(false), 1000);
+  }, [avatar]);
+
   const handleUploadAvatar = useCallback(async (file?: File) => {
     if (file) {
       setIsUpdating(true);
@@ -284,7 +289,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
               </Tooltip>
             )}
             {item.page === `stock` && !!stockItems?.length && (
-              <Tooltip label="Items com quantidade crítica" placement="right-end">
+              <Tooltip label="Itens com quantidade crítica" placement="right-end">
                 <Flex w="0.75rem" h="0.75rem" borderRadius="50%" bg="redDot" position="absolute" top="3px" right="3px" />
               </Tooltip>
             )}

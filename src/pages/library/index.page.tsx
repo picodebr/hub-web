@@ -24,10 +24,11 @@ import { logError, cookieManager, formatClassGrade, sortGrades } from '@/_base/u
 import { TabSwitch } from '@/components/TabSwitch';
 import { listBookCategories } from '@/_base/services/book';
 import { IHubBook, IHubBookCategory } from '@/_base/interfaces/book';
-import { useAuth } from '@/_base/hooks';
+import { useAsyncCallback, useAuth } from '@/_base/hooks';
 import { IHubVideo, IHubVideoCategory } from '@/_base/interfaces/video';
 import { listVideoCategories } from '@/_base/services/video';
 import { FiDownload } from 'react-icons/fi';
+import { useSelectedSchool } from '@/components/Page/components/Header';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -39,8 +40,10 @@ interface IProps {
   selectedItemId: string;
 }
 
-const Books: React.FC<IProps> = ({ bookCategories, videoCategories, selectedItemId }) => {
-  const [bookCategory, setBookCategory] = useState<IHubBookCategory | null>(bookCategories[0]);
+const Books: React.FC<IProps> = ({ selectedItemId }) => {
+  const [bookCategories, setBookCategories] = useState<IHubBookCategory[]>([]);
+  const [videoCategories, setVideoCategories] = useState<IHubVideoCategory[]>([]);
+  const [bookCategory, setBookCategory] = useState<IHubBookCategory | null>(null);
   const [videoCategory, setVideoCategory] = useState<IHubVideoCategory | null>(null);
   const [modalVideo, setModalVideo] = useState<IHubVideo | null>(null);
   const [targetBook, setTargetBook] = useState<IHubBook | null>(null);
@@ -49,6 +52,27 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories, selectedItem
   const [isLoading, setIsLoading] = useState(false);
 
   const { user } = useAuth();
+  const { school } = useSelectedSchool();
+
+  const getBooks = useAsyncCallback(
+    async () => {
+      setIsLoading(true);
+      const [{ results: bookCategoryRes }, { results: videoCategoryRes }] = await Promise.all([
+        listBookCategories(school?.id),
+        listVideoCategories(),
+      ]);
+      setBookCategory(bookCategoryRes[0]);
+      setVideoCategories(videoCategoryRes);
+      setBookCategories(bookCategoryRes);
+    },
+    [school],
+    true,
+    () => setIsLoading(false),
+  );
+
+  useEffect(() => {
+    getBooks();
+  }, [school]);
 
   useEffect(() => {
     if (!selectedItemId) return;
@@ -156,7 +180,6 @@ const Books: React.FC<IProps> = ({ bookCategories, videoCategories, selectedItem
               borderColor="gray300"
               borderRadius="md"
               p="1rem"
-              
               onClick={() => showBookFile(book)}
             >
               <Flex
@@ -387,15 +410,11 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
 
   try {
     cookieManager.updateToken(req);
-    // TODO: add in use effect
-    const [{ results }, { results: videoCategories }] = await Promise.all([listBookCategories(), listVideoCategories()]);
 
     return {
       props: {
         selectedPage,
         pageTitle: 'Meus livros',
-        videoCategories,
-        bookCategories: results,
         showBackButton: false,
         selectedItemId: query?.id || ``,
       },

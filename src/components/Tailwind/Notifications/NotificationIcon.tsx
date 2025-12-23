@@ -14,8 +14,8 @@ const NotificationIcon = ({ targetType, className = 'w-5 h-5' }: NotificationIco
         return { Icon: FiFileText, color: 'text-blue-500 bg-blue-100' };
       case 'picode_project_activity_finished':
         return { Icon: FiZap, color: 'text-yellow-500 bg-yellow-100' };
-      case 'course_added':
-        return { Icon: FiList, color: 'text-yellow-500 bg-yellow-100' };
+      // case 'course_added':
+      //   return { Icon: FiList, color: 'text-yellow-500 bg-yellow-100' };
       case 'book_added':
         return { Icon: FiBook, color: 'text-yellow-500 bg-yellow-100' };
       case 'received_coins':
