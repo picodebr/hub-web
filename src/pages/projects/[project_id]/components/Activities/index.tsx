@@ -46,6 +46,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
   const [missingStudents, setMissingStudents] = useState<string[]>([]);
   const [taxedStudents, setTaxedStudents] = useState<Record<string, string>>({});
   const [modalStep, setModalStep] = useState<ModalStep>('hidden');
+  
 
   const { isOpen, onClose } = useDisclosure();
   const router = useCustomRouter();
@@ -131,6 +132,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
       `pending_forms::${project.id}`,
       JSON.stringify({ project: newProjectData, students: students.map((e) => ({ id: e.id, name: e.name })) }),
     );
+    
     // const tm = setTimeout(() => onOpen(), 750);
 
     // return () => {
@@ -412,8 +414,13 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
                     {formatShortName(student.name, true)}
                   </Text>
                   <Flex align="center" gap="0.5rem" justify="space-between">
-                    R$ {sumCashbacks(targetRewards) - sumCashbacks(targetRewards) * (Number(taxedStudents[student.id] || 0) / 100)}
-                    ,00
+                    {(
+                      sumCashbacks(targetRewards) -
+                      sumCashbacks(targetRewards) * (Number(taxedStudents[student.id] || 0) / 100)
+                    ).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL"
+                    })}
                     <Flex position="relative">
                       <Image src="/icons/coin.svg" />
                       <Flex position="absolute" right="-0.5rem">
