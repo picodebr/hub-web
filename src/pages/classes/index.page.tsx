@@ -1,4 +1,4 @@
-import { Badge, Checkbox, Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Skeleton } from '@chakra-ui/react';
+import { Badge, Checkbox, Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, SimpleGrid, Skeleton } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
@@ -80,36 +80,55 @@ const Classes: React.FC = () => {
     if (!adding) setSelectedClasses((s) => s.filter((e) => e.id !== hubClass.id));
   };
 
-  return (
-    <Flex direction="column" w="100%" h="100%" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden auto">
-      <Flex align="center" justify="flex-end" h="fit-content">
-        <Flex
-          bgColor="white"
-          w="fit-content"
-          h="fit-content"
-          border="1px"
-          borderColor="gray300"
-          padding="8px 14px"
-          align="center"
-          gap="8px"
-          borderRadius="8px"
-          fontSize="16px"
-          fontWeight="600"
-          color="gray700"
-          cursor="pointer"
-          onClick={() => setOpenOpt({ class_code: true })}
-        >
-          <FaPlus />
-          Adicionar Turma
-        </Flex>
+return (
+  <Flex
+    direction="column"
+    w="100%"
+    h="100%"
+    padding="20px 0"
+    gap="20px"
+    textAlign="left"
+    whiteSpace="nowrap"
+    overflow="hidden auto"
+  >
+    <Flex align="center" justify="flex-end" h="fit-content">
+      <Flex
+        bgColor="white"
+        w="fit-content"
+        h="fit-content"
+        border="1px"
+        borderColor="gray300"
+        padding="8px 14px"
+        align="center"
+        gap="8px"
+        borderRadius="8px"
+        fontSize="16px"
+        fontWeight="600"
+        color="gray700"
+        cursor="pointer"
+        onClick={() => setOpenOpt({ class_code: true })}
+      >
+        <FaPlus />
+        Adicionar Turma
       </Flex>
-      {!classes.data.length && !classes._isLoading ? (
-        <EmptyPageData />
-      ) : (
-        classes.data.map((hubClass) => (
-          <Skeleton key={hubClass.id} rounded="lg" isLoaded={!classes._isLoading}>
+    </Flex>
+    {!classes.data.length && !classes._isLoading ? (
+      <EmptyPageData />
+    ) : (
+      <SimpleGrid
+        columns={{ base: 1, md: 2, lg: 3 }}
+        spacing="24px"
+        alignItems="stretch"
+      >
+        {classes.data.map((hubClass) => (
+          <Skeleton
+            key={hubClass.id}
+            rounded="lg"
+            isLoaded={!classes._isLoading}
+          >
             <Flex
-              h="fit-content"
+              w="100%"
+              h="100%"
               bgColor="white"
               borderRadius="10px"
               align="center"
@@ -118,43 +137,64 @@ const Classes: React.FC = () => {
               gap="16px"
               fontSize="18px"
               minH="5.5rem"
-              maxH="5.5rem"
             >
-              <Flex flex="1" gap="1rem">
+              <Flex flex="1" gap="1rem" align="center" minW={0}>
                 <Link
                   href={`/classes/${hubClass.id}?_p=${hubClass.display_name}`}
                   transition="color 0.1s"
                   color="#21E080"
-                  _hover={{ color: '#36c27c' }}
+                  _hover={{ color: "#36c27c" }}
                 >
                   <FiUsers fontSize="40px" />
                 </Link>
-                <Flex display="column" justify="space-between">
-                  <Link href={`/classes/${hubClass.id}?_p=${hubClass.display_name}`}>
-                    <Text fontWeight="700" transition="color 0.1s" _hover={{ color: 'indigo600' }}>
+
+                <Flex direction="column" justify="space-between" minW={0}>
+                  <Link
+                    href={`/classes/${hubClass.id}?_p=${hubClass.display_name}`}
+                  >
+                    <Text
+                      fontWeight="700"
+                      noOfLines={1}
+                      transition="color 0.1s"
+                      _hover={{ color: "indigo600" }}
+                    >
                       {hubClass.display_name}
                     </Text>
                   </Link>
+
                   <AvatarList users={hubClass.students} max={10} />
                 </Flex>
+
                 <Badge h="fit-content" fontSize="14px" colorScheme="purple">
-                  {['6', '7', '8', '9'].includes(hubClass.grade) && `#${hubClass.code}`}
+                  {["6", "7", "8", "9"].includes(hubClass.grade) &&
+                    `#${hubClass.code}`}
                 </Badge>
               </Flex>
+
               <Popover placement="left">
                 <PopoverTrigger>
                   <Flex justify="flex-end" color="gray300">
                     <FiMoreVertical cursor="pointer" />
                   </Flex>
                 </PopoverTrigger>
-                <PopoverContent borderColor="gray300" w="fit-content" _hover={{ borderColor: 'error400' }}>
+
+                <PopoverContent
+                  borderColor="gray300"
+                  w="fit-content"
+                  _hover={{ borderColor: "error400" }}
+                >
                   <PopoverArrow />
                   <PopoverBody cursor="pointer">
                     <Flex
                       align="center"
                       gap="0.5rem"
                       color="error400"
-                      onClick={() => setOpenOpt({ confirm_remove: true, classCodeToRemove: hubClass.code })}
+                      onClick={() =>
+                        setOpenOpt({
+                          confirm_remove: true,
+                          classCodeToRemove: hubClass.code,
+                        })
+                      }
                     >
                       <Text>Remover Turma</Text>
                       <FaTrash />
@@ -164,108 +204,122 @@ const Classes: React.FC = () => {
               </Popover>
             </Flex>
           </Skeleton>
-        ))
-      )}
-      <SmallModal
-        title={`Turmas da escola ${school?.display_name}`}
-        show={!!modalOpt.class_code}
-        onConfirm={handleAddClasses}
-        okText="Confirmar"
-        size="lg"
-        isLoading={classes._isLoading}
-        onCancel={onCloseModal}
-        topIcon="ray"
-        disableOkButton={!selectedClasses.length}
-      >
-    {/* SELECIONAR TODAS */}
-    <Flex
-      align="center"
-      justify="space-between"
-      bg="gray50"
-      p="16px"
-      borderRadius="10px"
-      border="1px"
-      borderColor="gray200"
+        ))}
+      </SimpleGrid>
+    )}
+    <SmallModal
+      title={`Turmas da escola ${school?.display_name}`}
+      show={!!modalOpt.class_code}
+      onConfirm={handleAddClasses}
+      okText="Confirmar"
+      size="lg"
+      isLoading={classes._isLoading}
+      onCancel={onCloseModal}
+      topIcon="ray"
+      disableOkButton={!selectedClasses.length}
     >
-      <Text fontWeight="700" color="primary700">
-        Selecionar todas as turmas
-      </Text>
-      <Checkbox
-        size="lg"
-        colorScheme="blue"
-        isChecked={
-          sortGradesByClass(allClasses)
-            .filter(classIsAvailable)
-            .every((c) => selectedClasses.find((s) => s.id === c.id))
-        }
-        isDisabled={classes._isLoading}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          if (checked) {
-            const allAvailable = sortGradesByClass(allClasses).filter(classIsAvailable);
-            setSelectedClasses(allAvailable);
-          } else {
-            setSelectedClasses([]);
-          }
-        }}
-      />
-    </Flex>
-        <Flex direction="column" gap="1rem">
-          {sortGradesByClass(allClasses).map((hubClass) => (
-            <Flex
-              key={hubClass.id}
-              h="fit-content"
-              bgColor="white"
-              borderRadius="10px"
-              border="1px"
-              borderColor="gray200"
-              align="center"
-              padding="20px 24px"
-              color="primary700"
-              gap="16px"
-              fontSize="18px"
-              minH="5.5rem"
-              maxH="5.5rem"
-            >
-              <Flex flex="1" gap="1rem" justify="space-between" filter={classIsAvailable(hubClass) ? '' : 'grayscale(0.7)'} overflow="hidden">
-                <Text fontWeight="700" overflow="hidden" whiteSpace="nowrap" textOverflow="ellipsis" title={hubClass.display_name}>
-                  {hubClass.display_name}
-                </Text>
-                <Checkbox
-                  defaultChecked={!classIsAvailable(hubClass)}
-                  isDisabled={!classIsAvailable(hubClass)}
-                  size="lg"
-                  visibility="visible"
-                  border="2px"
-                  p="0.25rem"
-                  color="primary700"
-                  colorScheme="blue"
-                  borderRadius="4px"
-                  onChange={(v) => handleChangeSelectedClass(hubClass, v.target.checked)}
-                />
-              </Flex>
-            </Flex>
-          ))}
-        </Flex>
-      </SmallModal>
-      <SmallModal
-        title="Remover turma"
-        show={!!modalOpt.confirm_remove}
-        onConfirm={handleRemoveClass}
-        okText="Confirmar"
-        isLoading={classes._isLoading}
-        onCancel={onCloseModal}
-        topIcon="warning"
+      <Flex
+        align="center"
+        justify="space-between"
+        bg="gray50"
+        p="16px"
+        borderRadius="10px"
+        border="1px"
+        borderColor="gray200"
       >
-        <Flex direction="column" gap="1rem">
-          <Text color="gray500" fontSize="15px">
-            Tem certeza que deseja remover essa turma?
-          </Text>
-        </Flex>
-      </SmallModal>
-    </Flex>
-  );
+        <Text fontWeight="700" color="primary700">
+          Selecionar todas as turmas
+        </Text>
+        <Checkbox
+          size="lg"
+          colorScheme="blue"
+          isChecked={sortGradesByClass(allClasses)
+            .filter(classIsAvailable)
+            .every((c) =>
+              selectedClasses.find((s) => s.id === c.id)
+            )}
+          isDisabled={classes._isLoading}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedClasses(
+                sortGradesByClass(allClasses).filter(classIsAvailable)
+              );
+            } else {
+              setSelectedClasses([]);
+            }
+          }}
+        />
+      </Flex>
+      <Flex direction="column" gap="1rem">
+        {sortGradesByClass(allClasses).map((hubClass) => (
+          <Flex
+            key={hubClass.id}
+            bgColor="white"
+            borderRadius="10px"
+            border="1px"
+            borderColor="gray200"
+            align="center"
+            padding="20px 24px"
+            gap="16px"
+            minH="5.5rem"
+          >
+            <Flex
+              flex="1"
+              gap="1rem"
+              justify="space-between"
+              filter={
+                classIsAvailable(hubClass) ? "" : "grayscale(0.7)"
+              }
+              overflow="hidden"
+            >
+              <Text
+                fontWeight="700"
+                overflow="hidden"
+                whiteSpace="nowrap"
+                textOverflow="ellipsis"
+                title={hubClass.display_name}
+              >
+                {hubClass.display_name}
+              </Text>
+              <Checkbox
+                defaultChecked={!classIsAvailable(hubClass)}
+                isDisabled={!classIsAvailable(hubClass)}
+                size="lg"
+                border="2px"
+                p="0.25rem"
+                colorScheme="blue"
+                borderRadius="4px"
+                onChange={(v) =>
+                  handleChangeSelectedClass(
+                    hubClass,
+                    v.target.checked
+                  )
+                }
+              />
+            </Flex>
+          </Flex>
+        ))}
+      </Flex>
+    </SmallModal>
+    <SmallModal
+      title="Remover turma"
+      show={!!modalOpt.confirm_remove}
+      onConfirm={handleRemoveClass}
+      okText="Confirmar"
+      isLoading={classes._isLoading}
+      onCancel={onCloseModal}
+      topIcon="warning"
+    >
+      <Flex direction="column" gap="1rem">
+        <Text color="gray500" fontSize="15px">
+          Tem certeza que deseja remover essa turma?
+        </Text>
+      </Flex>
+    </SmallModal>
+  </Flex>
+);
 };
+
 
 export default Classes;
 
