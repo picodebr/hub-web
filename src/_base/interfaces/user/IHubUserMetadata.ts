@@ -13,4 +13,5 @@ export interface IHubUserMetadata {
   daily_challenges?: IDailyChallenge;
   cart?: Record<string, IStoreCart[]>;
   store_interests?: string[];
+  chosen_school_group_id?: string | null;
 }

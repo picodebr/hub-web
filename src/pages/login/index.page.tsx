@@ -14,6 +14,7 @@ import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { IAuthRequest, authSchema } from '@/_base/interfaces/auth';
 import { api } from '@/_base/classes/api';
+import { useSelectedSchool } from '@/components/Page/components/Header';
 
 const LoginPage: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -68,8 +69,8 @@ const LoginPage: React.FC = () => {
   );
 
   return (
-    <Flex h="100%" width="100%" justifyContent="center" alignItems="center" >
-      <Flex w="400px" direction="column" bg="white" p="1rem"  borderColor="gray300" borderRadius="10px" gap="1.15rem" align="center">
+    <Flex h="100%" width="100%" justifyContent="center" alignItems="center">
+      <Flex w="400px" direction="column" bg="white" p="1rem" borderColor="gray300" borderRadius="10px" gap="1.15rem" align="center">
         <Flex direction="column" gap="1rem" alignSelf="center" w="100%">
           <Logo size="sm" />
 

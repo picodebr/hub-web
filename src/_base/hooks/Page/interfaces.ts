@@ -11,4 +11,5 @@ export interface IPageProps {
   backButtonPath?: string;
   isOpen: boolean;
   stopTour: () => void;
+  setUser: (user: IHubUser) => void;
 }

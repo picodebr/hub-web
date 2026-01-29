@@ -21,6 +21,8 @@ import { KanbanItemType } from '@/components/Kanban/interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { useRouter } from 'next/router';
 import { listSchoolGroups, listSchoolsByGroupCode } from '@/_base/services/school';
+import { OptionType } from '@/components/Inputs/interfaces';
+import { updateChosenSchool } from '@/_base/services/user';
 
 interface IProps {
   user?: IHubUser;
@@ -29,7 +31,8 @@ interface IProps {
   page: string;
   hideOnMobile?: boolean;
   setStockItems?: Dispatch<SetStateAction<IStoreMakerSchool[]>>;
-  setSchool: (school: IHubUserSchool) => void;
+  onUpdateSchool: (school: IHubUserSchool) => void;
+  onUpdateUser: (user: IHubUser) => void;
 }
 
 type TargetSchoolHookType = {
@@ -46,34 +49,82 @@ export const useSelectedSchool = create<TargetSchoolHookType>((set) => ({
 }));
 
 export const Header: React.FC<IProps> = ({
-  user,
+  user: _user,
   headerLabel,
   menuItems,
   page,
   hideOnMobile,
   setStockItems: _setStockItems,
-  setSchool: _setSchool,
+  onUpdateSchool,
+  onUpdateUser,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState<OptionType | null>(null);
+  const [user, setUser] = useState<IHubUser | undefined>(_user);
   const [schools, setSchools] = useState<IHubUserSchool[]>(user?.schools || []);
-  const [selectedSchool, setSelectedSchool] = useState(user?.schools?.map((item) => ({ label: item.display_name, value: item.id }))[0]);
+
   const [notifications, setNotifications] = useState<IHubNotification[]>([]);
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
   const [schoolGroups, setSchoolGroups] = useState<IHubSchoolGroup[]>([]);
-  const [selectedSchoolGroup, setSelectedSchoolGroup] = useState(
-    user?.schools?.map((item) => ({ label: item.hub_school_group.display_name, value: item.hub_school_group_id }))[0],
-  );
+  const [selectedSchoolGroup, setSelectedSchoolGroup] = useState<OptionType | null>(null);
 
   const router = useRouter();
   const { colorMode } = useColorMode();
   const { setSchool, school, setCustomActions } = useSelectedSchool();
 
-  const schoolList = schools.map((item) => ({ label: item.display_name, value: item.id })) || [];
+  const schoolList = useMemo(() => schools.map((item) => ({ label: item.display_name, value: item.hub_school_id })) || [], [schools]);
   const schoolGroupList = useMemo(() => schoolGroups.map((item) => ({ label: item.display_name, value: item.id })), [schoolGroups]);
 
+  const updateSchoolChoice = useCallback(async (school_id: string) => {
+    setIsLoading(true);
+    try {
+      const updatedUser = await updateChosenSchool(school_id);
+      setUser(updatedUser);
+      // onUpdateUser(updatedUser);
+    } finally {
+      router.push(`/profile`);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    }
+  }, []);
+
+  // Set schools and school groups for master users
   useEffect(() => {
-    if (!school?.hub_school_id) return;
-    getNotifications(school.hub_school_id || ``).then((res) => {
+    console.log('user: ', user);
+    if (user?.role !== `master` || schoolGroups.length) return;
+    listSchoolGroups().then((res) => {
+      setSchoolGroups(res);
+      const chosenGroup = res.find((e) => e.id === user.metadata.chosen_school_group_id);
+      if (chosenGroup) {
+        setSelectedSchoolGroup({ label: chosenGroup.display_name, value: chosenGroup.id });
+        setSchools(chosenGroup.schools.map((s) => ({ ...s, hub_school_id: s.id, approved_at: new Date() })) || []);
+        const targetSchool = chosenGroup.schools.find((s) => s.id === user.chosen_school_id);
+        if (targetSchool) {
+          setSelectedSchool({ label: targetSchool.display_name, value: targetSchool.id });
+          setSchool({ ...targetSchool, hub_school_id: targetSchool.id, approved_at: new Date() });
+        }
+      }
+    });
+  }, [user, schoolGroups]);
+
+  // Set selected school based on user choice (for teachers only)
+  useEffect(() => {
+    if (user?.role !== `teacher`) return;
+    const schoolID = user?.chosen_school_id;
+    const userSchools = user?.schools || [];
+    if (!schoolID || !userSchools.length) return;
+    const targetSchool = userSchools.find((e) => e.hub_school_id === schoolID);
+    if (!targetSchool) return;
+    setSelectedSchool({ label: targetSchool.display_name, value: targetSchool.hub_school_id });
+    setSchool(targetSchool);
+    onUpdateSchool(targetSchool);
+    setSchools(userSchools);
+  }, [user]);
+
+  useEffect(() => {
+    if (!selectedSchool) return;
+    getNotifications(selectedSchool.value).then((res) => {
       const filteredNotifications = res.notifications.results.reduce((acc, e) => {
         const target = acc.find((x) => x.target_id === e.target_id);
         if (target) target.opened_by.push(...e.opened_by);
@@ -84,70 +135,36 @@ export const Header: React.FC<IProps> = ({
       setStockItems(res.stocks);
       _setStockItems?.(res.stocks);
     });
-  }, [school]);
-
-  useEffect(() => {
-    if (user?.role !== `master`) return;
-    listSchoolGroups().then((res) => {
-      setSchoolGroups(res);
-    });
-  }, [user]);
-
-  useUpdateEffect(() => {
-    setIsLoading(true);
-    const target = schools.find((e) => e.id === selectedSchool?.value);
-
-    if (target) {
-      setSchool(target);
-      _setSchool(target);
-      localStorage.setItem(`selected-school`, JSON.stringify(target));
-      if (user?.role !== `student`)
-        setCustomActions(
-          target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
-            [],
-        );
-      setTimeout(() => {
-        setIsLoading(false);
-        router.reload();
-      }, 3000);
-    }
   }, [selectedSchool]);
 
-  useUpdateEffect(() => {
-    const target = schoolGroups.find((e) => e.id === selectedSchoolGroup?.value);
-
-    if (target) {
-      localStorage.setItem(`selected-network`, JSON.stringify(target));
-      listSchoolsByGroupCode(target.code)
-        .then((res) => {
-          setSchools(res);
-          if (res[0]) setSelectedSchool({ label: res[0].display_name, value: res[0].id });
-        })
-        .catch(() => console.error('Error loading schools'));
-    }
-  }, [selectedSchoolGroup]);
-
   useEffect(() => {
-    setSchools(user?.schools || []);
-    const storageNetworkData: IHubSchoolGroup = JSON.parse(localStorage.getItem(`selected-network`) || `{}`);
-    const storageSchoolData: IHubUserSchool = JSON.parse(localStorage.getItem(`selected-school`) || `{}`);
-    const target = storageSchoolData.hub_school_group ? storageSchoolData : schools.find((e) => e.id === selectedSchool?.value) || schools[0];
+    if (!user || !schools.length || !selectedSchool) return;
 
-    if (storageNetworkData.id) setSelectedSchoolGroup({ label: storageNetworkData.display_name, value: storageNetworkData.id });
+    const targetSchool = schools.find((e) => e.hub_school_id === selectedSchool.value);
 
-    if (!school && target) {
-      setSchool(target);
-      _setSchool(target);
-      if (!storageSchoolData) localStorage.setItem(`selected-school`, JSON.stringify(target));
+    if (user?.role !== `student`)
+      setCustomActions(
+        targetSchool?.hub_school_group?.metadata?.custom_actions?.filter(
+          (action) => !action.school_id || action.school_id === targetSchool.hub_school_id,
+        ) || [],
+      );
+    else setCustomActions([]);
+  }, [user, schools, selectedSchool]);
 
-      if (user?.role !== `student`)
-        setCustomActions(
-          target?.hub_school_group?.metadata?.custom_actions?.filter((action) => !action.school_id || action.school_id === target.hub_school_id) ||
-            [],
-        );
-      else setCustomActions([]);
+  const onSchoolChange = (schoolID: string) => {
+    const targetSchool = schools.find((e) => e.hub_school_id === schoolID);
+    if (targetSchool) {
+      onUpdateSchool(targetSchool);
+      updateSchoolChoice(targetSchool.hub_school_id);
     }
-  }, [user]);
+  };
+  const onSchoolGroupChange = (schoolGroupID: string) => {
+    const targetSchoolGroup = schoolGroups.find((e) => e.id === schoolGroupID);
+    if (targetSchoolGroup) {
+      setSelectedSchoolGroup({ label: targetSchoolGroup.display_name, value: targetSchoolGroup.id });
+      setSchools(targetSchoolGroup.schools.map((s) => ({ ...s, hub_school_id: s.id, approved_at: new Date() })) || []);
+    }
+  };
 
   const handleNotificationClick = useCallback(
     (notification: IHubNotification) => {
@@ -178,8 +195,8 @@ export const Header: React.FC<IProps> = ({
   );
 
   const handleReadAllNotifications = useCallback(() => {
-    if (!user || !school?.hub_school_id) return;
-    readAllNotifications(school.hub_school_id);
+    if (!user) return;
+    readAllNotifications(user.chosen_school_id);
     setNotifications((e) => e.map((n) => (!n.opened_by.includes(user.id) ? { ...n, opened_by: [...n.opened_by, user.id] } : n)));
   }, [user, school]);
 
@@ -220,6 +237,7 @@ export const Header: React.FC<IProps> = ({
           <>
             {user?.role === `master` && (
               <SelectPicker
+                id="master-picker"
                 data={schoolGroupList}
                 value={selectedSchoolGroup?.value}
                 size="sm"
@@ -228,18 +246,19 @@ export const Header: React.FC<IProps> = ({
                 searchable={false}
                 label="Rede"
                 cleanable={false}
-                onChange={(e) => setSelectedSchoolGroup(schoolGroupList.find((d) => d.value === e))}
+                onChange={(e) => onSchoolGroupChange(e as string)}
               />
             )}
             <SelectPicker
+              id="teacher-picker"
               data={schoolList}
-              value={selectedSchool?.value || school?.id}
+              value={selectedSchool?.value}
               size="sm"
               style={{ paddingBottom: 5 }}
               appearance="subtle"
               searchable={false}
               cleanable={false}
-              onChange={(e) => setSelectedSchool(schoolList.find((d) => d.value === e))}
+              onChange={(e) => onSchoolChange(e as string)}
             />
           </>
         )}

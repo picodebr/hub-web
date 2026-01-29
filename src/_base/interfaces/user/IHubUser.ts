@@ -10,6 +10,7 @@ export interface IHubUser {
   id: string;
   hub_class_id: string | null;
   hub_school_group_id: string;
+  chosen_school_id: string;
   name: string;
   email: string;
   username: string;
