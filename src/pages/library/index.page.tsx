@@ -58,7 +58,7 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
     async () => {
       setIsLoading(true);
       const [{ results: bookCategoryRes }, { results: videoCategoryRes }] = await Promise.all([
-        listBookCategories(school?.id),
+        listBookCategories(school?.hub_school_id),
         listVideoCategories(),
       ]);
       setBookCategory(bookCategoryRes[0]);

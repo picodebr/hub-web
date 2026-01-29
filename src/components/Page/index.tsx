@@ -24,6 +24,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   backButtonPath,
   hideHeaderOnMobile,
   fullScreenOnMobile,
+  setUser,
 }) => {
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
   const [school, setSchool] = useState<IHubUserSchool | null>(null);
@@ -57,7 +58,8 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
             page={selectedPage}
             hideOnMobile={hideHeaderOnMobile}
             setStockItems={setStockItems}
-            setSchool={setSchool}
+            onUpdateSchool={setSchool}
+            onUpdateUser={setUser}
           />
           <Flex flex="1" overflow="hidden">
             <Navbar page={selectedPage} user={user} menuItems={menuItems} stockItems={stockItems} school={school} />
