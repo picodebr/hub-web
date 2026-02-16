@@ -72,7 +72,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               position="relative"
               p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem 1rem 1rem 0', xl: '1.5rem 1.5rem 1.5rem 0' }}
             >
-              {/* {showBackButton && (
+              {showBackButton && (
                 <Flex
                   userSelect="none"
                   cursor="pointer"
@@ -85,7 +85,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
                   <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
                   <Text textAlign="left">Voltar</Text>
                 </Flex>
-              )} */}
+              )}
               {children}
             </Flex>
           </Flex>

@@ -103,11 +103,11 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
             direction="column"
             bgColor="white"
             borderRadius="10px"
-            padding="0.75rem 1rem 1rem"
+            padding="1rem"
             color="primary700"
             border="1px"
             h="fit-content"
-            gap="1rem"
+            gap="0.5rem"
             borderColor="gray200"
             fontSize="18px"
             cursor="pointer"
@@ -115,10 +115,27 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
             _hover={{ boxShadow: `md` }}
             onClick={() => router.push(`/code/${folderId}/${project.id}?_p=${project.name}`)}
           >
+            <Flex
+              border="1px"
+              borderColor="gray200"
+              borderRadius="md"
+              h="8rem"
+              w="100%"
+              bgImage={project.source_code.mode === `block` ? project.snapshot || `` : `/icons/source-code.svg`}
+              bgRepeat="no-repeat"
+              bgSize={project.source_code.mode === `block` ? 'cover' : 'contain'}
+              bgPosition={project.source_code.mode === `block` ? undefined : `center`}
+              bgColor="gray50"
+            />
             <Flex w="100%" justify="space-between">
-              <Flex gap="16px" align="center">
-                {project.source_code.mode === `block` ? <BsMotherboard fontSize="24px" /> : <LuSquareDashedBottomCode fontSize="29px" />}
-                <Text fontWeight="700">{project.name}</Text>
+              <Flex gap="0.5rem" justify="center" direction="column">
+                <Flex gap="16px" align="center">
+                  {project.source_code.mode === `block` ? <BsMotherboard fontSize="24px" /> : <LuSquareDashedBottomCode fontSize="29px" />}
+                  <Text fontWeight="700">{project.name}</Text>
+                </Flex>
+                <Text fontSize="14px" fontWeight="400" color="gray500" gap="16px">
+                  {moment(project.updated_at).fromNow()}
+                </Text>
               </Flex>
               <Menu>
                 <MenuButton
@@ -162,21 +179,6 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
                 </MenuList>
               </Menu>
             </Flex>
-            <Flex
-              border="1px"
-              borderColor="gray200"
-              borderRadius="md"
-              h="8rem"
-              w="100%"
-              bgImage={project.source_code.mode === `block` ? project.snapshot || `` : `/icons/source-code.svg`}
-              bgRepeat="no-repeat"
-              bgSize={project.source_code.mode === `block` ? 'cover' : 'contain'}
-              bgPosition={project.source_code.mode === `block` ? undefined : `center`}
-              bgColor="gray50"
-            />
-            <Text fontSize="14px" fontWeight="400" color="gray500" gap="16px">
-              {moment(project.updated_at).fromNow()}
-            </Text>
           </Flex>
         ))}
       </Skeleton>

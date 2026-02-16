@@ -42,7 +42,6 @@ import { CodeEventMenu } from './components/CodeEventMenu';
 import { isUuid } from 'uuidv4';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
-import { useNavbar } from '@/components/Page/components/Navbar';
 
 const getDefaultSourceCode = (project: ICodeProject | null) =>
   project?.source_code ||
@@ -94,12 +93,6 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
   const [allowUpload, setAllowUpload] = useState(true);
   const [isTextMode, setIsTextMode] = useState(false);
   const [mobileView, setMobileView] = useState(false);
-
-  const { setIsSidebarOpen } = useNavbar();
-
-  useEffect(() => {
-    setIsSidebarOpen(false);
-  }, []);
 
   useEffect(() => {
     setIsTextMode(!!(project?.source_code?.mode === 'text'));
@@ -232,13 +225,14 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
 
     const upload = async () => {
       try {
+        
         setAppStatus('uploading');
-
+        
         await uploadCode(compiledCode.build_data);
-
+        
         setAppStatus('uploaded');
         await delay(uploadConfig.MESSAGE_VISIBILITY_TIME);
-
+        
         await serial.disconnect();
         setAppStatus('ready_to_compile');
       } catch {

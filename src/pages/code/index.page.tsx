@@ -103,88 +103,73 @@ const CodeFolders: React.FC = () => {
         <PlusButton label="Compartilhados Comigo" leftIcon={<RiFolderSharedFill />} onClick={() => router.push(`/code/shared`)} />
         <PlusButton label="Nova Pasta" leftIcon={<FaPlus />} onClick={() => setOpenCreateModal(true)} />
       </Flex>
-      <Skeleton
-        display="grid"
-        overflow="hidden auto"
-        isLoaded={!isLoading}
-        gap="1rem"
-        gridTemplateColumns="repeat(auto-fill, minmax(240px, 1fr))"
-        gridTemplateRows="minmax(min-content, max-content)"
-        borderRadius="md"
-        flex="1"
-      >
+      <Skeleton display="flex" flexDirection="column" gap="1rem" overflow="hidden auto" isLoaded={!isLoading}>
         {folders.length ? (
           folders.map((folder) => (
             <Flex
               key={folder.id}
-              direction="column"
+              h="69px"
+              justify="space-between"
               bgColor="white"
               borderRadius="10px"
-              padding="0.75rem 1rem 1rem"
+              
+              align="center"
+              padding="20px 24px"
               color="primary700"
               border="1px"
-              h="12rem"
-              justify="space-between"
-              gap="0.5rem"
               borderColor="gray200"
+              gap="16px"
               fontSize="18px"
               cursor="pointer"
               transition="all 0.1s"
               _hover={{ boxShadow: `md` }}
               onClick={() => router.push(`/code/${folder.id}?_p=${folder.name}`)}
             >
-              <Flex gap="0.5rem" align="center">
+              <Flex gap="16px" align="center">
                 <FaRegFolder fontSize="29px" />
-                <Text fontWeight="700" w="100%">
-                  {folder.name}
-                </Text>
-                <Menu>
-                  <MenuButton
-                    onClick={(e) => e.stopPropagation()}
-                    color="gray300"
-                    p="0.45rem"
-                    borderRadius="50%"
-                    transition="0.1s"
-                    _hover={{ bg: 'gray300', color: 'white' }}
-                  >
-                    <FiMoreVertical cursor="pointer" />
-                  </MenuButton>
-                  <MenuList borderColor="gray300" color="gray600">
-                    <MenuItem
-                      gap="0.5rem"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTargetFolderToUpdate(folder);
-                      }}
-                    >
-                      <Flex color="gray400">
-                        <FiEdit3 />
-                      </Flex>
-                      <Text fontSize="15px">Editar</Text>
-                    </MenuItem>
-                    <MenuItem
-                      gap="0.5rem"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTargetFolderToRemove(folder);
-                      }}
-                    >
-                      <Flex color="gray400">
-                        <FiTrash />
-                      </Flex>
-                      <Text fontSize="15px">Remover</Text>
-                    </MenuItem>
-                  </MenuList>
-                </Menu>
-              </Flex>
-              <Flex justify="space-between">
+                <Text fontWeight="700">{folder.name}</Text>
                 <Text fontSize="14px" fontWeight="400" color="gray500" gap="16px">
                   {moment(getLastActivityFromFolder(folder)).fromNow()}
                 </Text>
-                <Text fontSize="14px" fontWeight="400" color="gray500" gap="16px">
-                  {`${folder.projects?.length || 0} ${folder.projects?.length === 1 ? 'projeto' : 'projetos'}`}
-                </Text>
               </Flex>
+              <Menu>
+                <MenuButton
+                  onClick={(e) => e.stopPropagation()}
+                  color="gray300"
+                  p="0.45rem"
+                  borderRadius="50%"
+                  transition="0.1s"
+                  _hover={{ bg: 'gray300', color: 'white' }}
+                >
+                  <FiMoreVertical cursor="pointer" />
+                </MenuButton>
+                <MenuList borderColor="gray300"  color="gray600">
+                  <MenuItem
+                    gap="0.5rem"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTargetFolderToUpdate(folder);
+                    }}
+                  >
+                    <Flex color="gray400">
+                      <FiEdit3 />
+                    </Flex>
+                    <Text fontSize="15px">Editar</Text>
+                  </MenuItem>
+                  <MenuItem
+                    gap="0.5rem"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTargetFolderToRemove(folder);
+                    }}
+                  >
+                    <Flex color="gray400">
+                      <FiTrash />
+                    </Flex>
+                    <Text fontSize="15px">Remover</Text>
+                  </MenuItem>
+                </MenuList>
+              </Menu>
             </Flex>
           ))
         ) : (
