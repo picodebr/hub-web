@@ -185,7 +185,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
                   }}
                 >
                   <Badge
-                    style={{ padding: `0.25rem 0.5rem` }}
+                    style={{ padding: `0.25rem 0.6rem` }}
                     color={status === 'running' ? 'green' : status === 'stopped' ? 'red' : 'blue'}
                     content={statusLabelMapper[status || 'stopped']}
                   />
