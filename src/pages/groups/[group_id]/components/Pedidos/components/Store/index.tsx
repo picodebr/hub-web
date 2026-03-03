@@ -68,16 +68,17 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
     (async () => {
       const _user = await validateSession();
 
-      setCart(storeList
-        .map((item) => {
-          const target = _user.metadata.cart?.[group.id]?.find((cartItem) => item.store_item.id === cartItem.id);
+      setCart(
+        (storeList
+          .map((item) => {
+            const target = _user.metadata.cart?.[group.id]?.find((cartItem) => item.store_item.id === cartItem.id);
 
-          return target && !!item.quantity ? { ...item.store_item, quantity: target.quantity } : undefined;
-        })
-        .filter(Boolean) as CustomStoreItem[] || [])
-    })()
-
-  }, [group])
+            return target && !!item.quantity ? { ...item.store_item, quantity: target.quantity } : undefined;
+          })
+          .filter(Boolean) as CustomStoreItem[]) || [],
+      );
+    })();
+  }, [group]);
 
   useUpdateEffect(() => {
     onOpen();
@@ -130,7 +131,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
     updateProfile({ cart: { ...(user.metadata.cart || {}), [group.id]: [] } });
     onClose();
     // onChangeView(`Pedidos`);
-  }, [])
+  }, []);
 
   return (
     <motion.div

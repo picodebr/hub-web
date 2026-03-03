@@ -5,7 +5,7 @@ import moment from 'moment';
 
 import { capitalizeString, cookieManager, formatShortName } from '@/_base/utils';
 import { Avatar, Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Skeleton, Text } from '@chakra-ui/react';
-import { useAsyncCallback, useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { PlusButton } from '@/components/Buttons/Plus';
 import { BsMotherboard } from 'react-icons/bs';
 import { useEffect, useState } from 'react';
@@ -19,6 +19,7 @@ import { IHubUser } from '@/_base/interfaces/user';
 import { listRelatedUsers } from '@/_base/services/user';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 import { AvatarList } from '@/components/AvatarList';
+import { BiCode } from 'react-icons/bi';
 
 interface IProps {
   folderId: string;
@@ -34,6 +35,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
 
   const toast = useCustomToast();
   const router = useCustomRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     (async () => {
@@ -159,6 +161,20 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
                     </Flex>
                     <Text fontSize="15px">Compartilhar</Text>
                   </MenuItem>
+                  {user.role === `master` && (
+                    <MenuItem
+                      gap="0.5rem"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/code/${folderId}/${project.id}?_p=${project.name}&allow-new-code=true`);
+                      }}
+                    >
+                      <Flex color="blue.400">
+                        <BiCode />
+                      </Flex>
+                      <Text fontSize="15px">Abrir novo code</Text>
+                    </MenuItem>
+                  )}
                 </MenuList>
               </Menu>
             </Flex>

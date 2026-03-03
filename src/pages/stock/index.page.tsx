@@ -6,7 +6,7 @@ import { IoMdAdd } from 'react-icons/io';
 
 import { getStockMaker, updateStockMaker } from '@/_base/services/storeMaker';
 import { IStockMaker } from '@/_base/interfaces/storeMaker';
-import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomToast } from '@/_base/hooks';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { PlusButton } from '@/components/Buttons/Plus';
 import { TabSwitch } from '@/components/TabSwitch';
@@ -30,12 +30,14 @@ const Stock: React.FC = () => {
 
   const toast = useCustomToast();
   const { school } = useSelectedSchool();
+  const { user } = useAuth();
 
   const loadData = useCallback(async () => {
-    if (!school?.hub_school_id) return;
+    const schoolId = school?.hub_school_id || user.chosen_school_id;
+    if (!schoolId) return;
     setIsLoading(true);
     try {
-      const [results, teacherGroups] = await Promise.all([getStockMaker(school.hub_school_id), listTeacherGroups(school.hub_school_id)]);
+      const [results, teacherGroups] = await Promise.all([getStockMaker(schoolId), listTeacherGroups(schoolId)]);
       setGroups(teacherGroups);
       setStock(results);
       setUnsavedStock(results);
@@ -44,11 +46,11 @@ const Stock: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [school]);
+  }, [school, user]);
 
   useEffect(() => {
     loadData();
-  }, [school]);
+  }, [school, user]);
 
   const needSave = useMemo(() => JSON.stringify(unSavedstock) !== JSON.stringify(stock), [unSavedstock, stock]);
 

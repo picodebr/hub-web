@@ -43,6 +43,7 @@ import { isUuid } from 'uuidv4';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { useNavbar } from '@/components/Page/components/Navbar';
+import NewCode from './index.page.new';
 
 const getDefaultSourceCode = (project: ICodeProject | null) =>
   project?.source_code ||
@@ -59,9 +60,12 @@ interface IProps {
   iframeUrl: string;
   projectId: string;
   folderId: string;
+  openNewCode: boolean;
 }
 
-const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, iframeUrl, folderId }) => {
+const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, iframeUrl, folderId, openNewCode }) => {
+  if (openNewCode) return <NewCode />;
+
   const sourceCodeRef = useRef(getDefaultSourceCode(_project));
   const board = useMemo(() => supportedBoards[0], []);
   const usbFilters = useMemo(() => usbVendorIds.map((usbVendorId) => ({ usbVendorId })), []);
@@ -547,6 +551,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
       iframeUrl: process.env.NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL || '',
       hideHeaderOnMobile: true,
       fullScreenOnMobile: true,
+      openNewCode: !!query[`allow-new-code`],
     },
   };
 };

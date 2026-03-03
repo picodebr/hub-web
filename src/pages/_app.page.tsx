@@ -15,6 +15,7 @@ import { StyledGlobal } from '@/styles/StyledGlobal';
 import { BlocklyProvider, PlatformProvider } from '@/_base/hooks';
 import { ThemeProvider } from 'styled-components';
 import { themes } from '@/styles/themes';
+import { CombinedProviders } from '@/_base/context/CombinedProviders';
 
 export default function App({ Component, pageProps }: AppProps) {
   const token = cookieManager.getToken();
@@ -29,12 +30,14 @@ export default function App({ Component, pageProps }: AppProps) {
           <StyledGlobal />
           <LoadingProvider changeSignal={{}}>
             <CustomRouterProvider>
-              <BlocklyProvider>
-                <Page {...pageProps} setLoadingConfig={setLoadingConfig}>
-                  <Component {...pageProps} />
-                  <CSSReset />
-                </Page>
-              </BlocklyProvider>
+              <CombinedProviders>
+                <BlocklyProvider>
+                  <Page {...pageProps} setLoadingConfig={setLoadingConfig}>
+                    <Component {...pageProps} />
+                    <CSSReset />
+                  </Page>
+                </BlocklyProvider>
+              </CombinedProviders>
             </CustomRouterProvider>
           </LoadingProvider>
         </PlatformProvider>

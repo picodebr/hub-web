@@ -15,6 +15,9 @@
     "commitprettier": "git add . && git commit -m \"chore(lint): Code Linted\""
   },
   "dependencies": {
+    "@blockly/continuous-toolbox": "^7.0.8",
+    "@blockly/field-angle": "^6.0.8",
+    "@blockly/field-slider": "^8.0.8",
     "@chakra-ui/react": "^2.8.2",
     "@dicebear/collection": "^7.0.1",
     "@dicebear/core": "^7.0.1",
@@ -26,6 +29,7 @@
     "antd": "^5.12.5",
     "autoprefixer": "10.4.14",
     "axios": "^1.4.0",
+    "blockly": "^12.4.1",
     "draft-js": "^0.11.7",
     "framer-motion": "^11.2.2",
     "html2canvas": "^1.4.1",

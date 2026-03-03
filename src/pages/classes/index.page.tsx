@@ -1,6 +1,6 @@
 import { Badge, Checkbox, Link, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, SimpleGrid, Skeleton } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import { FiMoreVertical, FiUsers } from 'react-icons/fi';
 
@@ -27,6 +27,8 @@ const Classes: React.FC = () => {
   const { user } = useAuth();
   const toast = useCustomToast();
 
+  const sortedClasses = useMemo(() => sortGradesByClass([...classes.data]), [classes.data]);
+
   const getClasses = useAsyncCallback(
     async (school_id: string) => {
       if (!school_id) return;
@@ -39,8 +41,8 @@ const Classes: React.FC = () => {
 
   useEffect(() => {
     setClasses(() => ({ data: [{ id: '1' }, { id: '2' }, { id: '3' }] as any, _isLoading: true }));
-    getClasses(school?.hub_school_id || ``);
-  }, [school]);
+    getClasses(school?.hub_school_id || user.chosen_school_id || ``);
+  }, [school, user]);
 
   const handleAddClasses = useAsyncCallback(async () => {
     try {
@@ -110,7 +112,7 @@ const Classes: React.FC = () => {
         <EmptyPageData />
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing="24px" alignItems="stretch">
-          {classes.data.map((hubClass) => (
+          {sortedClasses.map((hubClass) => (
             <Skeleton key={hubClass.id} rounded="lg" isLoaded={!classes._isLoading}>
               <Flex
                 w="100%"
@@ -145,7 +147,17 @@ const Classes: React.FC = () => {
                   </Flex>
 
                   <Badge h="fit-content" fontSize="14px" colorScheme="purple">
-                    {['6', '7', '8', '9'].includes(hubClass.grade) && `#${hubClass.code}`}
+                    {[
+                      '6',
+                      '7',
+                      '8',
+                      '9',
+                      'MakersPro Mini',
+                      'MakersPro Explorers',
+                      'MakersPro Creators',
+                      'MakersPro Innovators',
+                      'MakersPro Experts',
+                    ].includes(hubClass.grade) && `#${hubClass.code}`}
                   </Badge>
                 </Flex>
 
