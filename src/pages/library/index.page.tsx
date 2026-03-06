@@ -52,27 +52,24 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { user } = useAuth();
-  const { school } = useSelectedSchool();
 
   const getBooks = useAsyncCallback(
     async () => {
       setIsLoading(true);
-      const [{ results: bookCategoryRes }, { results: videoCategoryRes }] = await Promise.all([
-        listBookCategories(school?.hub_school_id),
-        listVideoCategories(),
-      ]);
+      const [{ results: bookCategoryRes }, { results: videoCategoryRes }] = await Promise.all([listBookCategories(), listVideoCategories()]);
       setBookCategory(bookCategoryRes[0]);
       setVideoCategories(videoCategoryRes);
       setBookCategories(bookCategoryRes);
     },
-    [school],
+    [],
     true,
     () => setIsLoading(false),
+    false,
   );
 
   useEffect(() => {
     getBooks();
-  }, [school]);
+  }, []);
 
   useEffect(() => {
     if (!selectedItemId) return;
@@ -409,8 +406,6 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
   const selectedPage = 'library';
 
   try {
-    cookieManager.updateToken(req);
-
     return {
       props: {
         selectedPage,
@@ -420,9 +415,6 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
       },
     };
   } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-    logError(selectedPage, err);
-
     return { redirect: { destination: '/login', permanent: false } };
   }
 };
