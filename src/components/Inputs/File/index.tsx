@@ -15,9 +15,10 @@ interface IFileInputProps {
   onChange: (files: File[]) => void;
   fileUrl?: string;
   type?: 'image' | 'video';
+  multiple?: boolean;
 }
 
-export const FileInput: React.FC<IFileInputProps> = ({ type, onChange }) => {
+export const FileInput: React.FC<IFileInputProps> = ({ type, onChange, multiple = true }) => {
   const [toogleState, setToogleState] = useState<Array<any> | undefined>();
   const { toogle } = useFileInput();
   useEffect(() => {
@@ -39,7 +40,7 @@ export const FileInput: React.FC<IFileInputProps> = ({ type, onChange }) => {
         fileList={toogleState}
         draggable
         action=""
-        multiple
+        multiple={multiple}
         onChange={(e) => {
           onChange(e.map((file) => file.blobFile as File));
         }}

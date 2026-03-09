@@ -6,7 +6,7 @@ import { FiUsers } from 'react-icons/fi';
 
 import { logError, cookieManager, formatShortName } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
-import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
+import { useAsyncCallback, useInputHandler, useLoading } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
 import { EmptyPageData } from '@/components/EmptyPageData';
 import { SmallModal } from '@/components/Modal/Small';
@@ -19,25 +19,27 @@ import { IProject } from '@/_base/interfaces/project';
 import { IHubUser } from '@/_base/interfaces/user';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 
-interface IProps {
-  myGroups: IHubGroup[];
-}
-
-const Groups: React.FC<IProps> = ({ myGroups }) => {
-  const [groups, setGroups] = useState<PageDataType<IHubGroup>>({ data: myGroups });
+const Groups: React.FC = () => {
+  const [groups, setGroups] = useState<PageDataType<IHubGroup>>({ data: [] });
   const [availableProjects, setAvailableProjects] = useState<IProject[]>([]);
   const [availableStudents, setAvailableStudents] = useState<IHubUser[]>([]);
   const [openModal, setOpenModal] = useState(false);
 
   const toast = useToast();
+  const { setLoadingConfig } = useLoading();
   const { errors, onInputChange, data, submit, setData } = useInputHandler<ICreateHubGroupParams>({ schema: createHubGroupSchema });
 
   const getAvailableProjects = useAsyncCallback(async () => {
-    const projects = await listAvailableProjectsForStudent();
+    const [projects, meGroups] = await Promise.all([listAvailableProjectsForStudent(), listStudentGroups()]);
     setAvailableProjects(projects);
+    setGroups((e) => ({ ...e, data: meGroups, _isLoading: false }));
+    setLoadingConfig({ isLoading: false });
   }, []);
 
   useEffect(() => {
+    setLoadingConfig({ isLoading: true, type: 'darken-spinner' });
+    setGroups({ data: [], _isLoading: true });
+
     getAvailableProjects();
   }, []);
 
@@ -83,7 +85,6 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
           fontSize="16px"
           fontWeight="600"
           color="gray700"
-          
           cursor="pointer"
           onClick={() => setOpenModal(true)}
         >
@@ -100,7 +101,6 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
               h="fit-content"
               bgColor="white"
               borderRadius="10px"
-              
               align="center"
               padding="20px 24px"
               color="primary700"
@@ -149,7 +149,7 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               {availableProjects.find((e) => data.hub_project_class_id === e.id)?.title || `Selecione o projeto`}
             </MenuButton>
-            <MenuList borderColor="gray300" >
+            <MenuList borderColor="gray300">
               {availableProjects.length ? (
                 availableProjects.map((project) => (
                   <MenuItem key={project.id} onClick={() => handleChangeProject(project.id)}>
@@ -166,8 +166,8 @@ const Groups: React.FC<IProps> = ({ myGroups }) => {
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
               Selecione os membros do grupo
             </MenuButton>
-            <MenuList borderColor="gray300"  overflow="auto" maxH="300px">
-              <MenuOptionGroup type="checkbox" >
+            <MenuList borderColor="gray300" overflow="auto" maxH="300px">
+              <MenuOptionGroup type="checkbox">
                 {availableStudents.length ? (
                   availableStudents.map((student) => (
                     <MenuItemOption
@@ -232,8 +232,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     cookieManager.updateToken(req);
 
     // TODO: add in use effect
-    const myGroups = await listStudentGroups();
-    return { props: { selectedPage, pageTitle: 'Meus Grupos', myGroups } };
+    return { props: { selectedPage, pageTitle: 'Meus Grupos' } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
