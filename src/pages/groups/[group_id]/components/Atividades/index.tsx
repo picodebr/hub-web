@@ -1,5 +1,5 @@
-import { Flex, Grid, Text, useUpdateEffect } from '@chakra-ui/react';
-import { FiChevronLeft, FiFileText } from 'react-icons/fi';
+import { Button, Flex, Grid, Image, Modal, ModalContent, Spinner, Text, useUpdateEffect } from '@chakra-ui/react';
+import { FiChevronLeft, FiDownload, FiFileText } from 'react-icons/fi';
 import { ContentState, EditorState, convertFromRaw, convertToRaw } from 'draft-js';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -8,10 +8,15 @@ import { EditorProps } from 'react-draft-wysiwyg';
 import { IHubGroup } from '@/_base/interfaces/group';
 import { ITempFile } from '@/_base/interfaces/shared';
 import { SmallModal } from '@/components/Modal/Small';
-import { FaRegTrashCan } from 'react-icons/fa6';
+import { FaPlus, FaRegTrashCan } from 'react-icons/fa6';
 import { TextInput } from '@/components/Inputs/Text';
 import { useInputHandler } from '@/_base/hooks';
 import { ColorPicker } from '@/components/ColorPicker';
+import { FileInput, useFileInput } from '@/components/Inputs/File';
+import { isColorLight } from '@/_base/utils';
+import { Document, Page } from 'react-pdf';
+import { BiLeftArrowAlt } from 'react-icons/bi';
+import { MdOutlineZoomIn, MdOutlineZoomOut } from 'react-icons/md';
 
 const Editor = dynamic<EditorProps>(() => import('react-draft-wysiwyg').then((mod) => mod.Editor), { ssr: false });
 
@@ -30,11 +35,17 @@ interface IProps {
 }
 
 export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActivityFiles }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [openEditor, setOpenEditor] = useState(false);
   const [editorValue, setEditorValue] = useState<EditorState>(EditorState.createEmpty());
   const [contentIsMounted, setContentIsMounted] = useState(false);
   const [customActivities, setCustomActivities] = useState<ICustomActivity[]>([]);
+  const [newCustomActivity, setNewCustomActivity] = useState<Partial<ICustomActivity> | null>(null);
   const [targetCustomActivity, setTargetCustomActivity] = useState<ICustomActivity | null>(null);
+  const [PDFPages, setPDFPages] = useState(0);
+  const [scale, setScale] = useState(1);
+
+  const { clearFileList } = useFileInput();
 
   useEffect(() => {
     const content = EditorState.createWithContent(
@@ -64,6 +75,27 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const closeCustomActivityModal = () => {
+    setNewCustomActivity(null);
+    clearFileList();
+  };
+
+  const handleCustomActivity = () => {
+    if (!newCustomActivity) return;
+
+    const url = URL.createObjectURL(newCustomActivity.file as File);
+    setCustomActivities((c) => [...c, { ...newCustomActivity, path: url } as any]);
+    closeCustomActivityModal();
+  };
+
+  const downloadFile = (file: string, title: string) => {
+    const link = document.createElement('a');
+    link.setAttribute(`target`, `_blank`);
+    link.href = file;
+    link.download = `${title}.pdf`;
+    link.click();
   };
 
   return (
@@ -125,7 +157,7 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
             border="1px"
             borderColor="gray300"
             cursor="pointer"
-            _hover={{ bg: 'gray50' }}
+            _hover={{ filter: 'brightness(0.85)' }}
             onClick={() => setOpenEditor(true)}
           >
             <Flex align="center" color="primary500" gap="4px" fontWeight="500">
@@ -141,21 +173,22 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
               gap="4px"
               display="flex"
               direction="column"
-              bg="white"
               borderRadius="10px"
+              cursor="pointer"
               border="1px"
               borderColor="gray300"
-              cursor="pointer"
-              _hover={{ bg: 'gray50' }}
-              // onClick={() => setOpenEditor(true)}
+              bg={activity.color || `white`}
+              color={activity.color ? (isColorLight(activity.color) ? `#4d4b5f` : `#fff`) : `primary800`}
+              _hover={{ filter: 'brightness(0.85)' }}
+              onClick={() => setTargetCustomActivity(activity)}
             >
-              <Flex align="center" color="primary500" gap="4px" fontWeight="500">
+              <Flex align="center" gap="4px" fontWeight="500">
                 <FiFileText />
                 {activity.title}
               </Flex>
             </Flex>
           ))}
-          <Flex
+          {/* <Flex
             w="220px"
             h="183px"
             p="12px"
@@ -167,25 +200,26 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
             border="1px"
             borderColor="gray300"
             cursor="pointer"
-            _hover={{ bg: 'gray50' }}
-            onClick={() => setOpenEditor(true)}
+            justify="center"
+            align="center"
+            fontSize="2.5rem"
+            _hover={{ filter: 'brightness(0.85)' }}
+            onClick={() => setNewCustomActivity({})}
           >
-            <Flex align="center" color="primary500" gap="4px" fontWeight="500">
-              <FiFileText />
-              Anotações
-            </Flex>
-          </Flex>
+            <FaPlus />
+            <Text fontSize="1rem">Adicionar atividade</Text>
+          </Flex> */}
         </Grid>
       )}
       <SmallModal
-        show={!!targetCustomActivity}
-        onConfirm={() => setCustomActivities((c) => [...c, targetCustomActivity as ICustomActivity])}
-        onCancel={() => setTargetCustomActivity(null)}
-        onClose={() => setTargetCustomActivity(null)}
+        show={!!newCustomActivity}
+        onConfirm={handleCustomActivity}
+        onCancel={closeCustomActivityModal}
+        onClose={closeCustomActivityModal}
         disableOkButton={!canEdit}
         size="2xl"
       >
-        {!!targetCustomActivity?.id && (
+        {!!newCustomActivity?.id && (
           <Flex justify="flex-end" m="-0.5rem 1.5rem 0">
             <Flex
               align="center"
@@ -200,29 +234,30 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
               _hover={{
                 borderColor: `primary500`,
               }}
-              onClick={() => canEdit && setCustomActivities((c) => c.filter((e) => e.id !== targetCustomActivity.id))}
+              onClick={() => canEdit && setCustomActivities((c) => c.filter((e) => e.id !== newCustomActivity.id))}
             >
               <FaRegTrashCan fontSize="1rem" />
             </Flex>
           </Flex>
         )}
         <Flex direction="column" gap="1rem" flex="1">
-          <Flex gap="1rem" align="flex-end">
-            <TextInput
-              isDisabled={!canEdit}
-              flex="1"
-              label="Título"
-              placeholder="Informe o título da tarefa"
-              _placeholder={{ fontSize: '14px' }}
-              error={targetCustomActivity?.error}
-              value={targetCustomActivity?.title || ``}
-              onInputChange={(value) => setTargetCustomActivity((e) => (e ? { ...e, title: value } : null))}
-            />
+          <TextInput
+            isDisabled={!canEdit}
+            flex="1"
+            label="Título"
+            placeholder="Informe o título da atividade"
+            _placeholder={{ fontSize: '14px' }}
+            error={newCustomActivity?.error}
+            value={newCustomActivity?.title || ``}
+            onInputChange={(value) => setNewCustomActivity((e) => (e ? { ...e, title: value } : null))}
+          />
+          <Flex align="center" justify="space-between" w="100%">
+            <FileInput onChange={(files) => setNewCustomActivity((e) => (e ? { ...e, file: files[0] } : null))} multiple={false} />
             <Flex gap="1rem" align="center" mb="0.45rem">
               <ColorPicker
-                onChange={(value) => setTargetCustomActivity((e) => (e ? { ...e, color: value } : null))}
+                onChange={(value) => setNewCustomActivity((e) => (e ? { ...e, color: value } : null))}
                 enableInput={false}
-                color={targetCustomActivity?.color}
+                color={newCustomActivity?.color}
               />
               <Text fontWeight="500" whiteSpace="nowrap">
                 Cor de fundo
@@ -231,6 +266,124 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
           </Flex>
         </Flex>
       </SmallModal>
+      <Modal isOpen={!!targetCustomActivity} onClose={() => setTargetCustomActivity(null)} size="full" scrollBehavior="inside">
+        <ModalContent
+          display="flex"
+          alignItems="center"
+          bg="#eeefff"
+          overflow="hidden auto"
+          sx={{
+            '&::-webkit-scrollbar': {
+              width: '12px',
+            },
+            '&::-webkit-scrollbar-track': {
+              width: '20px',
+              margin: `1rem`,
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'primary700',
+              width: '100px !important',
+              height: `80px`,
+              borderRadius: '9px',
+              borderRight: `4px`,
+              borderColor: `#7197ff`,
+            },
+          }}
+        >
+          <Document
+            file={targetCustomActivity?.path}
+            onLoadSuccess={({ _pdfInfo }) => {
+              setIsLoading(false);
+              setPDFPages(_pdfInfo.numPages);
+            }}
+            onLoadError={(err) => {
+              // eslint-disable-next-line no-console
+              console.error(err);
+              setIsLoading(false);
+            }}
+            className="teste"
+          >
+            {Array.from({ length: PDFPages }).map((_, i) => (
+              <Page key={i} pageNumber={i + 1} height={900} renderTextLayer={false} loading={isLoading} scale={scale} />
+            ))}
+          </Document>
+          <Flex
+            display={isLoading ? `flex` : `none`}
+            align="center"
+            justify="center"
+            position="fixed"
+            bg="#eeefff"
+            w="100%"
+            h="100%"
+            zIndex={9999}
+            direction="column"
+          >
+            <Image src="/loading/rocket-picode.gif" h="19rem" />
+            <Spinner size="lg" />
+          </Flex>
+          <Button
+            onClick={() => setTargetCustomActivity(null)}
+            position="fixed"
+            top="1rem"
+            left="2rem"
+            zIndex={9999}
+            bg="primary700"
+            color="white"
+            colorScheme="blue"
+            p="1rem 1rem 1rem 0.5rem"
+            leftIcon={<BiLeftArrowAlt fontSize="1.5rem" />}
+          >
+            Voltar
+          </Button>
+
+          <Flex direction="column" gap="0.5rem" position="fixed" top="1rem" right="2rem" zIndex={9999}>
+            <Button
+              bg="primary700"
+              color="white"
+              colorScheme="blue"
+              gap="0.5rem"
+              p="0.5rem 1rem"
+              onClick={() => targetCustomActivity && downloadFile(targetCustomActivity.file as any, targetCustomActivity.title)}
+            >
+              <FiDownload fontSize="1.5rem" />
+              Baixar Arquivo
+            </Button>
+            <Flex align="center" justify="space-between" gap="0.5rem" w="100%">
+              <Button
+                onClick={() => setScale((s) => Math.min(s - 0.1, 3))}
+                bg="primary700"
+                color="white"
+                colorScheme="blue"
+                h="3rem"
+                w="3rem"
+                fontSize="1.8rem"
+                p="0"
+              >
+                <MdOutlineZoomOut fontSize="1.5rem" />
+              </Button>
+              <Flex direction="column" justify="center">
+                <Text fontWeight="400" lineHeight="14px" fontSize="12px" opacity="0.7">
+                  Zoom
+                </Text>
+                <Text fontWeight="500">{Math.round(scale * 100)}%</Text>
+              </Flex>
+
+              <Button
+                onClick={() => setScale((s) => Math.max(s + 0.1, 0))}
+                bg="primary700"
+                color="white"
+                colorScheme="blue"
+                h="3rem"
+                w="3rem"
+                fontSize="1.8rem"
+                p="0"
+              >
+                <MdOutlineZoomIn fontSize="1.5rem" />
+              </Button>
+            </Flex>
+          </Flex>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 };
