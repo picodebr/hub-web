@@ -84,7 +84,11 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
       const kanban: KanbanColumnData[] = JSON.parse(_user?.metadata?.kanban || user?.metadata?.kanban || `[]`);
 
       if (kanban?.length)
-        setKanbanItemsDue(kanban.flatMap((e) => e.items.filter((k) => k.end_date && new Date(k.end_date).getTime() < Date.now() + ONE_WEEK)));
+        setKanbanItemsDue(
+          kanban.flatMap((e) =>
+            e.items.filter((k) => k.column !== 'finished' && k.end_date && new Date(k.end_date).getTime() < Date.now() + ONE_WEEK),
+          ),
+        );
     } catch (err) {
       console.error(`Individual kanban parse error`, err);
     }

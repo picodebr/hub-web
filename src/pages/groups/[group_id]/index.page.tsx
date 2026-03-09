@@ -60,17 +60,16 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   }, [group]);
 
   useEffect(() => {
-    if (!school) return;
     (async () => {
       setIsLoading(true);
       try {
-        const results = await getStockMaker(school?.hub_school_id || ``);
+        const results = await getStockMaker();
         setStock(results);
       } finally {
         setIsLoading(false);
       }
     })();
-  }, [school]);
+  }, []);
 
   const handleSaveGroup = useAsyncCallback(
     async (metadata: IHubGroupMetadata, showToast = true) => {
@@ -101,7 +100,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   );
 
   const handleRefreshStock = useAsyncCallback(async () => {
-    const [results, updatedGroup] = await Promise.all([getStockMaker(school?.hub_school_id || ``), getGroupById(group.id)]);
+    const [results, updatedGroup] = await Promise.all([getStockMaker(), getGroupById(group.id)]);
 
     setStock(results);
     setGroup(updatedGroup);

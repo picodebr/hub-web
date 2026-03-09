@@ -59,6 +59,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
   const [interests, setInterests] = useState<string[]>(user.metadata.store_interests || []);
 
   const storeMakerList = storeList.filter((e) => !e.hub_user_id).map((e) => e.store_item);
+  console.log('storeList: ', storeList);
 
   const toast = useCustomToast();
   const { isOpen, onOpen, onClose } = useDisclosure({ defaultIsOpen: cartIsOpened });
