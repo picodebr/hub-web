@@ -45,6 +45,7 @@ import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { HubStatus, hubStatuses } from '@/_base/interfaces/shared';
 import { TbReload } from 'react-icons/tb';
 import { CoinIcon } from '@/components/Logo';
+import { AttendanceList } from './components/AttendanceList';
 
 type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; groups: ReactNode; coins: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -331,7 +332,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
     setModalStep('creation_type');
   };
   return (
-    <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
+    <Flex direction="column" w="100%" h="100%" gap="1rem" overflow="hidden">
       <Flex justify="space-between">
         <TabSwitch
           tabs={classPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
@@ -419,6 +420,8 @@ const Class: React.FC<IProps> = ({ classId }) => {
             </Flex>
           ))}
         </Grid>
+      ) : pageView === 'Lista de Presença' ? (
+        <AttendanceList />
       ) : (
         <ProjectTable
           rows={dataProjects}
