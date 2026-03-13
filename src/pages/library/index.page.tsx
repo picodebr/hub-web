@@ -1,6 +1,5 @@
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
 import { BiLeftArrowAlt } from 'react-icons/bi';
 import { MdOutlineZoomIn, MdOutlineZoomOut } from 'react-icons/md';
 import {
@@ -20,7 +19,7 @@ import {
   Spinner,
 } from '@chakra-ui/react';
 
-import { logError, cookieManager, formatClassGrade, sortGrades } from '@/_base/utils';
+import { formatClassGrade, sortGrades } from '@/_base/utils';
 import { TabSwitch } from '@/components/TabSwitch';
 import { listBookCategories } from '@/_base/services/book';
 import { IHubBook, IHubBookCategory } from '@/_base/interfaces/book';
@@ -28,9 +27,6 @@ import { useAsyncCallback, useAuth } from '@/_base/hooks';
 import { IHubVideo, IHubVideoCategory } from '@/_base/interfaces/video';
 import { listVideoCategories } from '@/_base/services/video';
 import { FiDownload } from 'react-icons/fi';
-import { useSelectedSchool } from '@/components/Page/components/Header';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 type BookByGrade = Record<string, IHubBook[]>;
 type VideoByGrade = Record<string, IHubVideo[]>;
@@ -302,23 +298,12 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
             },
           }}
         >
-          <Document
-            file={targetBook?.file}
-            onLoadSuccess={({ _pdfInfo }) => {
-              setIsLoading(false);
-              setPDFPages(_pdfInfo.numPages);
-            }}
-            onLoadError={(err) => {
-              // eslint-disable-next-line no-console
-              console.error(err);
-              setIsLoading(false);
-            }}
-            className="teste"
-          >
-            {Array.from({ length: PDFPages }).map((_, i) => (
-              <Page key={i} pageNumber={i + 1} height={900} renderTextLayer={false} loading={isLoading} scale={scale} />
-            ))}
-          </Document>
+          <iframe
+            src={targetBook?.file}
+            title={targetBook?.title}
+            style={{ width: '100%', height: '100vh', border: 'none' }}
+            onLoad={() => setIsLoading(false)}
+          />
           <Flex
             display={isLoading ? `flex` : `none`}
             align="center"
@@ -336,7 +321,7 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
           <Button
             onClick={() => setTargetBook(null)}
             position="fixed"
-            top="1rem"
+            top="4rem"
             left="2rem"
             zIndex={9999}
             bg="primary700"
@@ -348,7 +333,7 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
             Voltar
           </Button>
 
-          <Flex direction="column" gap="0.5rem" position="fixed" top="1rem" right="2rem" zIndex={9999}>
+          <Flex direction="column" gap="0.5rem" position="fixed" top="4rem" right="2rem" zIndex={9999}>
             <Button
               bg="primary700"
               color="white"
@@ -360,39 +345,6 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
               <FiDownload fontSize="1.5rem" />
               Baixar livro
             </Button>
-            <Flex align="center" justify="space-between" gap="0.5rem" w="100%">
-              <Button
-                onClick={() => setScale((s) => Math.min(s - 0.1, 3))}
-                bg="primary700"
-                color="white"
-                colorScheme="blue"
-                h="3rem"
-                w="3rem"
-                fontSize="1.8rem"
-                p="0"
-              >
-                <MdOutlineZoomOut fontSize="1.5rem" />
-              </Button>
-              <Flex direction="column" justify="center">
-                <Text fontWeight="400" lineHeight="14px" fontSize="12px" opacity="0.7">
-                  Zoom
-                </Text>
-                <Text fontWeight="500">{Math.round(scale * 100)}%</Text>
-              </Flex>
-
-              <Button
-                onClick={() => setScale((s) => Math.max(s + 0.1, 0))}
-                bg="primary700"
-                color="white"
-                colorScheme="blue"
-                h="3rem"
-                w="3rem"
-                fontSize="1.8rem"
-                p="0"
-              >
-                <MdOutlineZoomIn fontSize="1.5rem" />
-              </Button>
-            </Flex>
           </Flex>
         </ModalContent>
       </Modal>

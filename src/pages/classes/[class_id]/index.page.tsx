@@ -335,7 +335,9 @@ const Class: React.FC<IProps> = ({ classId }) => {
     <Flex direction="column" w="100%" h="100%" gap="1rem" overflow="hidden">
       <Flex justify="space-between">
         <TabSwitch
-          tabs={classPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
+          tabs={classPageViews
+            .map((view) => ({ isSelected: pageView === view, key: view, label: view }))
+            .slice(0, router.query.devmode === `true` ? 3 : 2)}
           onSwitch={(view) => setPageView(view as any)}
         />
         {pageView === 'Projetos' && (
