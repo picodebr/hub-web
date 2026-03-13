@@ -8,7 +8,10 @@ export function useInputHandler<T>(props?: IInputHandlerProps<T>): IInputHandler
   const [data, setData] = useState<T>(props?.data || ({} as T));
 
   const onInputChange = (field: keyof T, value: any) => {
-    setErrors((e) => ({ ...e, [field]: undefined }));
+    setErrors((e) => {
+      delete e[field];
+      return e;
+    });
     setData((e) => ({ ...e, [field]: value }));
   };
 
@@ -21,6 +24,7 @@ export function useInputHandler<T>(props?: IInputHandlerProps<T>): IInputHandler
   const submit = (cb: () => any) => {
     if (!props?.schema) return cb();
     const invalidData = zodErrorHandler(props.schema, data);
+    console.log('invalidData: ', invalidData);
     if (!invalidData) return cb();
     setErrors(invalidData as any);
   };

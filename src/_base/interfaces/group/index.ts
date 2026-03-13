@@ -1,5 +1,7 @@
+export * from './ICreateHubGroupActivity';
 export * from './ICreateHubGroupParams';
 export * from './IHubGroup';
+export * from './IHubGroupActivity';
 export * from './IHubGroupMetadata';
 export * from './IHubGroupOrder';
 export * from './IHubGroupStudentLink';

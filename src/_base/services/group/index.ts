@@ -1,5 +1,6 @@
 export * from './acceptGroup';
 export * from './acceptOrder';
+export * from './addGroupActivity';
 export * from './addGroupToProject';
 export * from './addOrder';
 export * from './createGroup';
@@ -9,6 +10,7 @@ export * from './listStudentGroups';
 export * from './listTeacherGroups';
 export * from './rejectOrder';
 export * from './removeGroup';
+export * from './removeGroupActivity';
 export * from './updateGroup';
 export * from './updateOrder';
 export * from './updateOrderItem';

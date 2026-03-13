@@ -1,32 +1,28 @@
 import { Button, Flex, Grid, Image, Modal, ModalContent, Spinner, Text, useUpdateEffect } from '@chakra-ui/react';
 import { FiChevronLeft, FiDownload, FiFileText } from 'react-icons/fi';
 import { ContentState, EditorState, convertFromRaw, convertToRaw } from 'draft-js';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { EditorProps } from 'react-draft-wysiwyg';
 
-import { IHubGroup } from '@/_base/interfaces/group';
+import { createHubGroupActivitySchema, ICreateHubGroupActivityDTO, IHubGroup, IHubGroupActivity } from '@/_base/interfaces/group';
 import { ITempFile } from '@/_base/interfaces/shared';
 import { SmallModal } from '@/components/Modal/Small';
 import { FaPlus, FaRegTrashCan } from 'react-icons/fa6';
 import { TextInput } from '@/components/Inputs/Text';
-import { useInputHandler } from '@/_base/hooks';
+import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { ColorPicker } from '@/components/ColorPicker';
 import { FileInput, useFileInput } from '@/components/Inputs/File';
 import { isColorLight } from '@/_base/utils';
 import { Document, Page } from 'react-pdf';
 import { BiLeftArrowAlt } from 'react-icons/bi';
 import { MdOutlineZoomIn, MdOutlineZoomOut } from 'react-icons/md';
+import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
+import { addGroupActivity } from '@/_base/services/group';
+import { IHubProjectStep } from '@/_base/interfaces/project';
+import { SelectInput } from '@/components/Inputs/Select';
 
 const Editor = dynamic<EditorProps>(() => import('react-draft-wysiwyg').then((mod) => mod.Editor), { ssr: false });
-
-interface ICustomActivity extends ITempFile {
-  id?: string;
-  error?: string;
-  title: string;
-  color?: string;
-}
-
 interface IProps {
   group: IHubGroup;
   setGroup: Dispatch<SetStateAction<IHubGroup>>;
@@ -35,17 +31,22 @@ interface IProps {
 }
 
 export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActivityFiles }) => {
+  console.log('group: ', group.activities);
   const [isLoading, setIsLoading] = useState(false);
   const [openEditor, setOpenEditor] = useState(false);
   const [editorValue, setEditorValue] = useState<EditorState>(EditorState.createEmpty());
   const [contentIsMounted, setContentIsMounted] = useState(false);
-  const [customActivities, setCustomActivities] = useState<ICustomActivity[]>([]);
-  const [newCustomActivity, setNewCustomActivity] = useState<Partial<ICustomActivity> | null>(null);
-  const [targetCustomActivity, setTargetCustomActivity] = useState<ICustomActivity | null>(null);
+  const [customActivities, setCustomActivities] = useState<IHubGroupActivity[]>(group.activities || []);
+  const [fileActivity, setFileActivity] = useState<File | null>(null);
+  const [targetProjectStep, setTargetProjectStep] = useState<IHubProjectStep | null>(null);
+  const [targetCustomActivity, setTargetCustomActivity] = useState<IHubGroupActivity | null>(null);
   const [PDFPages, setPDFPages] = useState(0);
   const [scale, setScale] = useState(1);
 
   const { clearFileList } = useFileInput();
+  const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<ICreateHubGroupActivityDTO>({
+    schema: createHubGroupActivitySchema,
+  });
 
   useEffect(() => {
     const content = EditorState.createWithContent(
@@ -78,17 +79,37 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
   };
 
   const closeCustomActivityModal = () => {
-    setNewCustomActivity(null);
+    setFileActivity(null);
     clearFileList();
+    setData({} as any);
+    setErrors({} as any);
   };
 
-  const handleCustomActivity = () => {
-    if (!newCustomActivity) return;
+  const handleCreateCustomActivity = useAsyncCallback(
+    async () => {
+      console.log('fileActivity: ', fileActivity);
+      if (!fileActivity) return;
+      setIsLoading(true);
+      const response = await getPresignedUrl(fileActivity.type, 'groups');
+      await uploadFile(response.link, fileActivity);
 
-    const url = URL.createObjectURL(newCustomActivity.file as File);
-    setCustomActivities((c) => [...c, { ...newCustomActivity, path: url } as any]);
-    closeCustomActivityModal();
-  };
+      const newActivity = await addGroupActivity({
+        ...data,
+        file_url: response.path,
+        metadata: {
+          color: data.metadata?.color,
+          project_activity_parent: targetProjectStep?.parent,
+          project_activity_title: targetProjectStep?.title,
+        },
+      });
+
+      setCustomActivities((c) => [...c, newActivity]);
+      closeCustomActivityModal();
+    },
+    [data],
+    true,
+    () => setIsLoading(false),
+  );
 
   const downloadFile = (file: string, title: string) => {
     const link = document.createElement('a');
@@ -177,18 +198,39 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
               cursor="pointer"
               border="1px"
               borderColor="gray300"
-              bg={activity.color || `white`}
-              color={activity.color ? (isColorLight(activity.color) ? `#4d4b5f` : `#fff`) : `primary800`}
+              bg={activity.metadata.color || `white`}
+              color={activity.metadata.color ? (isColorLight(activity.metadata.color) ? `#4d4b5f` : `#fff`) : `primary800`}
               _hover={{ filter: 'brightness(0.85)' }}
               onClick={() => setTargetCustomActivity(activity)}
             >
-              <Flex align="center" gap="4px" fontWeight="500">
+              <Flex align="center" gap="4px" fontWeight="500" position="relative">
                 <FiFileText />
                 {activity.title}
+                <Flex
+                  position="absolute"
+                  top="0"
+                  right="0"
+                  align="center"
+                  justify="center"
+                  color="primary500"
+                  border="1px"
+                  bg="gray100"
+                  borderColor="gray300"
+                  p=".35rem .35rem .38rem .38rem"
+                  cursor="pointer"
+                  borderRadius="50%"
+                  transition="0.1s"
+                  _hover={{
+                    borderColor: `primary500`,
+                  }}
+                  // onClick={() => canEdit && setCustomActivities((c) => c.filter((e) => e.id !== newCustomActivity.id))}
+                >
+                  <FaRegTrashCan fontSize="1rem" />
+                </Flex>
               </Flex>
             </Flex>
           ))}
-          {/* <Flex
+          <Flex
             w="220px"
             h="183px"
             p="12px"
@@ -204,61 +246,67 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
             align="center"
             fontSize="2.5rem"
             _hover={{ filter: 'brightness(0.85)' }}
-            onClick={() => setNewCustomActivity({})}
+            onClick={() => onInputChange(`hub_group_id`, group.id)}
           >
             <FaPlus />
             <Text fontSize="1rem">Adicionar atividade</Text>
-          </Flex> */}
+          </Flex>
         </Grid>
       )}
       <SmallModal
-        show={!!newCustomActivity}
-        onConfirm={handleCustomActivity}
+        show={!!data.hub_group_id}
+        onConfirm={() => submit(handleCreateCustomActivity)}
         onCancel={closeCustomActivityModal}
         onClose={closeCustomActivityModal}
         disableOkButton={!canEdit}
         size="2xl"
+        isLoading={isLoading}
       >
-        {!!newCustomActivity?.id && (
-          <Flex justify="flex-end" m="-0.5rem 1.5rem 0">
-            <Flex
-              align="center"
-              justify="center"
-              color="primary500"
-              border="1px"
-              borderColor="gray300"
-              p=".35rem .35rem .38rem .38rem"
-              cursor="pointer"
-              borderRadius="50%"
-              transition="0.1s"
-              _hover={{
-                borderColor: `primary500`,
-              }}
-              onClick={() => canEdit && setCustomActivities((c) => c.filter((e) => e.id !== newCustomActivity.id))}
-            >
-              <FaRegTrashCan fontSize="1rem" />
-            </Flex>
-          </Flex>
-        )}
-        <Flex direction="column" gap="1rem" flex="1">
+        <Flex direction="column" gap="1rem" flex="1" minH="25rem">
           <TextInput
             isDisabled={!canEdit}
             flex="1"
             label="Título"
             placeholder="Informe o título da atividade"
             _placeholder={{ fontSize: '14px' }}
-            error={newCustomActivity?.error}
-            value={newCustomActivity?.title || ``}
-            onInputChange={(value) => setNewCustomActivity((e) => (e ? { ...e, title: value } : null))}
+            error={errors?.title}
+            value={data?.title || ``}
+            onInputChange={(value) => onInputChange(`title`, value)}
           />
+
+          <SelectInput
+            instanceId="order-status-select"
+            // options={group.project?.project?.metadata.steps
+            //   ?.filter((e) => e.requires_file_submission)
+            //   .map((e) => ({ label: `${e.parent} - ${e.title}`, value: JSON.stringify(e) }))}
+            options={group.project?.project?.metadata.steps?.map((e) => ({ label: `${e.parent} - ${e.title}`, value: JSON.stringify(e) }))}
+            onSelectChange={([value]) => setTargetProjectStep(value ? JSON.parse(value) : null)}
+            placeholder="Selecione uma etapa do projeto (opcional)"
+            isMultiSelect={false}
+            maxMenuHeight={200}
+            styles={{ menu: (provided: any) => ({ ...provided, zIndex: 9999 }) }}
+          />
+
           <Flex align="center" justify="space-between" w="100%">
-            <FileInput onChange={(files) => setNewCustomActivity((e) => (e ? { ...e, file: files[0] } : null))} multiple={false} />
-            <Flex gap="1rem" align="center" mb="0.45rem">
-              <ColorPicker
-                onChange={(value) => setNewCustomActivity((e) => (e ? { ...e, color: value } : null))}
-                enableInput={false}
-                color={newCustomActivity?.color}
+            <Flex direction="column">
+              <FileInput
+                onChange={(files) => {
+                  console.log('files: ', files);
+                  setFileActivity(files[0]);
+                  onInputChange(`file_url`, files[0]?.name);
+                }}
+                multiple={false}
               />
+              {Object.values(errors || {}).length > 0 && (
+                <Text color="red.500" fontSize="sm">
+                  {Object.entries(errors)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(' | ')}
+                </Text>
+              )}
+            </Flex>
+            <Flex gap="1rem" align="center" mb="0.45rem">
+              <ColorPicker onChange={(value) => onInputChange(`metadata`, { color: value })} enableInput={false} color={data?.metadata?.color} />
               <Text fontWeight="500" whiteSpace="nowrap">
                 Cor de fundo
               </Text>
@@ -291,7 +339,7 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
           }}
         >
           <Document
-            file={targetCustomActivity?.path}
+            file={targetCustomActivity?.file_url}
             onLoadSuccess={({ _pdfInfo }) => {
               setIsLoading(false);
               setPDFPages(_pdfInfo.numPages);
@@ -343,7 +391,7 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
               colorScheme="blue"
               gap="0.5rem"
               p="0.5rem 1rem"
-              onClick={() => targetCustomActivity && downloadFile(targetCustomActivity.file as any, targetCustomActivity.title)}
+              onClick={() => targetCustomActivity && downloadFile(targetCustomActivity.file_url, targetCustomActivity.title)}
             >
               <FiDownload fontSize="1.5rem" />
               Baixar Arquivo

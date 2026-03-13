@@ -5,4 +5,5 @@ export interface IHubProjectStep {
   description: string | null;
   position: number;
   cashback?: string;
+  requires_file_submission?: boolean;
 }
