@@ -1,64 +1,120 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, isWeekend, isAfter, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AttendanceButton } from '@/components/Tailwind/AttendanceList/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/Tailwind/AttendanceList/popover';
-import { BiCalendar, BiTrendingUp } from 'react-icons/bi';
+import { BiCalendar } from 'react-icons/bi';
 import { Calendar } from '@/components/Tailwind/AttendanceList/calendar';
 import { cn } from '@/_base/utils/cn';
-import { FaCalendar, FaGraduationCap, FaUsers } from 'react-icons/fa6';
-import { background, Flex, useColorMode } from '@chakra-ui/react';
+import { FaGraduationCap, FaUsers } from 'react-icons/fa6';
+import { Avatar, Flex, useColorMode, Spinner } from '@chakra-ui/react';
 import { FiTrendingUp } from 'react-icons/fi';
+import { formatShortName } from '@/_base/utils';
+import { ICreateHubClassRollCall, IHubClass } from '@/_base/interfaces/class';
+import { addRollCall } from '@/_base/services/class';
 
-// --- Types ---
-interface Student {
-  id: string;
-  name: string;
-  username: string;
-  avatar: string;
-  lastAccess: string;
+interface IProps {
+  hub_class: IHubClass | null;
 }
 
 // --- Main Component ---
-export const AttendanceList: React.FC = () => {
+export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
   const today = startOfDay(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(today);
-  // attendance: dateKey -> Set of student IDs present
-  const [attendanceMap, setAttendanceMap] = useState<Record<string, Set<string>>>(() => {
-    const todayKey = format(today, 'yyyy-MM-dd');
-    return { [todayKey]: new Set(['1', '2', '4', '6', '8', '10']) };
-  });
-  const { colorMode } = useColorMode();
 
-  const dateKey = format(selectedDate, 'yyyy-MM-dd');
-  const presentIds = attendanceMap[dateKey] ?? new Set<string>();
+  // Novos estados para controlar o debounce e o UI
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isPendingSync, setIsPendingSync] = useState(false);
+
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, string[]>>(() => {
+    const initialMap: Record<string, string[]> = {};
+
+    if (hub_class?.roll_calls) {
+      hub_class.roll_calls.forEach((rollCall) => {
+        const dateKey = rollCall.roll_call_date.split('T')[0];
+        const studentIds = rollCall.students_roll_calls.map((studentCall) => studentCall.hub_user_id);
+        initialMap[dateKey] = studentIds;
+      });
+    }
+
+    // const todayKey = format(today, 'yyyy-MM-dd');
+    // if (!initialMap[todayKey]) {
+    //   initialMap[todayKey] = hub_class?.students.map((s) => s.id) || [];
+    // }
+
+    return initialMap;
+  });
+
+  const { colorMode } = useColorMode();
+  const dateKey = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
+  const presentIds = attendanceMap[dateKey] ?? [];
 
   const toggleAttendance = useCallback(
     (studentId: string) => {
       setAttendanceMap((prev) => {
-        const current = new Set(prev[dateKey] ?? []);
-        if (current.has(studentId)) current.delete(studentId);
-        else current.add(studentId);
+        const current = [...(prev[dateKey] ?? [])]; // Cópia para evitar mutação direta
+        if (current.includes(studentId)) {
+          current.splice(current.indexOf(studentId), 1);
+        } else {
+          current.push(studentId);
+        }
         return { ...prev, [dateKey]: current };
       });
+
+      // Sinaliza que houveram alterações que precisam ser salvas e bloqueia o input
+      setHasUnsavedChanges(true);
+      setIsPendingSync(true);
     },
     [dateKey],
   );
 
-  const attendancePercent = useMemo(() => Math.round((presentIds.size / STUDENTS.length) * 100), [presentIds.size]);
+  // --- Efeito de Debounce para a Requisição ---
+  useEffect(() => {
+    // Se não houver alterações não salvas, não faz nada
+    if (!hasUnsavedChanges) return;
+
+    // Inicia o timer de 3 segundos
+    const timer = setTimeout(async () => {
+      try {
+        const payload: ICreateHubClassRollCall = {
+          roll_call_date: selectedDate.toISOString(),
+          students: attendanceMap[dateKey] || [],
+          hub_class_id: hub_class?.id || '',
+        };
+
+        await addRollCall(payload);
+      } catch (error) {
+        console.error('Erro ao salvar lista de chamada:', error);
+        // Aqui você pode adicionar um toast de erro se a requisição falhar
+      } finally {
+        // Libera a interface e reseta o aviso de alterações
+        setIsPendingSync(false);
+        setHasUnsavedChanges(false);
+      }
+    }, 3000);
+
+    // Função de limpeza: se o attendanceMap mudar antes dos 3s, o useEffect roda novamente,
+    // cancela o timer anterior e inicia um novo (esse é o segredo do debounce!)
+    return () => clearTimeout(timer);
+  }, [attendanceMap, dateKey, hasUnsavedChanges, hub_class?.id, selectedDate]);
+
+  const attendancePercent = useMemo(
+    () => Math.round((presentIds.length / (hub_class?.students.length || 1)) * 100),
+    [presentIds.length, hub_class?.students.length],
+  );
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) setSelectedDate(startOfDay(date));
   };
 
   const toggleBg = colorMode === 'light' ? 'white' : 'gray.700';
+
   return (
     <Flex direction="column" overflow="hidden" gap="1rem">
-      {/* Header: Stats + Date Picker */}
       <Flex justify="space-between" gap="1rem">
-        <StatCard icon={FaGraduationCap} label="Turma" value="3º Ano - EM" />
-        <StatCard icon={FaUsers} label="Alunos" value={STUDENTS.length} />
+        <StatCard icon={FaGraduationCap} label="Turma" value={hub_class?.display_name || 'Turma não encontrada'} />
+        <StatCard icon={FaUsers} label="Alunos" value={hub_class?.students.length || 0} />
         <StatCard icon={FiTrendingUp} label="Presença" value={`${attendancePercent}%`} />
 
         {/* Date Picker Card */}
@@ -72,12 +128,17 @@ export const AttendanceList: React.FC = () => {
             <BiCalendar className="h-5 w-5" />
           </div>
           <Flex direction="column">
-            <p className="text-md font-semibold  mb-2">Dia da aula</p>
+            <p className="text-md font-semibold mb-2">Dia da aula</p>
             <Popover>
               <PopoverTrigger asChild>
-                <AttendanceButton variant="outline" className="w-full justify-start text-left font-medium gap-2 h-10 rounded-xl">
-                  <BiCalendar className="h-4 w-4 text-muted-foreground" />
-                  {format(selectedDate, 'dd MMM yyyy', { locale: ptBR })}
+                {/* Aqui bloqueamos o botão e alteramos o conteúdo caso isPendingSync seja true */}
+                <AttendanceButton
+                  variant="outline"
+                  className="w-full justify-start text-left font-medium gap-2 h-10 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={isPendingSync}
+                >
+                  {isPendingSync ? <Spinner size="sm" color="gray.500" /> : <BiCalendar className="h-4 w-4 text-muted-foreground" />}
+                  {isPendingSync ? 'Salvando...' : format(selectedDate, 'dd MMM yyyy', { locale: ptBR })}
                 </AttendanceButton>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 rounded-2xl" align="end">
@@ -104,76 +165,65 @@ export const AttendanceList: React.FC = () => {
           style={{ backgroundColor: toggleBg, height: `6rem` }}
         >
           <p className="text-md font-semibold tracking-tight">
-            {presentIds.size} de {STUDENTS.length} alunos presentes
+            {presentIds.length} de {hub_class?.students.length || 0} alunos presentes
           </p>
           <p className="text-md bg-primary/10 text-primary p-2 rounded-md">{format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
         </motion.div>
       </Flex>
 
       {/* Student List */}
-      <motion.div
-        className="surface-elevated rounded-2xl  bg-white"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        style={{ overflowY: `auto` }}
-      >
-        {/* Table Header */}
-        <div className="hidden sm:grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-3 border-b text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          <span className="w-10" />
-          <span>Aluno</span>
-          <span>Usuário</span>
-          <span>Último Acesso</span>
-          <span>Presença</span>
-        </div>
+      <Flex w="100%" overflow="hidden">
+        <motion.div
+          className="surface-elevated rounded-2xl bg-white"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          style={{ overflowY: `auto`, width: `100%` }}
+        >
+          <div className="hidden sm:grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-3 border-b text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <span className="w-10" />
+            <span>Aluno</span>
+            <span>Usuário</span>
+            <span>Último Acesso</span>
+            <span>Presença</span>
+          </div>
 
-        <AnimatePresence mode="popLayout">
-          {STUDENTS.map((student, i) => {
-            const isPresent = presentIds.has(student.id);
-            return (
-              <motion.div
-                key={`${student.id}-${dateKey}`}
-                layout
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ delay: i * 0.04, duration: 0.3 }}
-                onClick={() => toggleAttendance(student.id)}
-                className={cn(
-                  'grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-4 cursor-pointer transition-colors duration-200',
-                  'hover:bg-muted/50',
-                  i < STUDENTS.length - 1 && 'border-b border-border/50',
-                )}
-              >
-                {/* Avatar */}
-                <div
+          <AnimatePresence mode="popLayout">
+            {hub_class?.students.map((student, i) => {
+              const isPresent = presentIds.includes(student.id);
+              return (
+                <motion.div
+                  key={`${student.id}-${dateKey}`}
+                  layout
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ delay: i * 0.04, duration: 0.3 }}
+                  onClick={() => toggleAttendance(student.id)}
                   className={cn(
-                    'h-10 w-10 rounded-full bg-gradient-to-br flex items-center justify-center text-sm font-semibold text-primary-foreground shrink-0',
-                    AVATAR_COLORS[i % AVATAR_COLORS.length],
+                    'grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-4 cursor-pointer transition-colors duration-200',
+                    'hover:bg-muted/50',
+                    i < (hub_class?.students.length || 0) - 1 && 'border-b border-border/50',
                   )}
                 >
-                  {student.avatar}
-                </div>
-
-                {/* Name */}
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{student.name}</p>
-                  <p className="text-sm text-muted-foreground sm:hidden">{student.username}</p>
-                </div>
-
-                {/* Username - desktop */}
-                <p className="hidden sm:block text-sm text-muted-foreground truncate">{student.username}</p>
-
-                {/* Last Access - desktop */}
-                <p className="hidden sm:block text-sm text-muted-foreground">{student.lastAccess}</p>
-
-                {/* Toggle */}
-                <AttendanceToggle checked={isPresent} onToggle={() => toggleAttendance(student.id)} />
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </motion.div>
+                  <div>
+                    <Avatar name={formatShortName(student.name, true)} title={student.name} src={student.avatar || ``} h="40px" w="40px" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{student.name}</p>
+                    <p className="text-sm text-muted-foreground sm:hidden">{student.username}</p>
+                  </div>
+                  <p className="hidden sm:block text-sm text-muted-foreground truncate">{student.username}</p>
+                  <p className="hidden sm:block text-sm text-muted-foreground">
+                    {student.metadata?.last_access ? new Date(student.metadata?.last_access).toLocaleDateString() : `-`}
+                  </p>
+                  <AttendanceToggle checked={isPresent} onToggle={() => toggleAttendance(student.id)} />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
+      </Flex>
     </Flex>
   );
 };
@@ -226,30 +276,3 @@ function StatCard({ icon: Icon, label, value, accent }: { icon: React.ElementTyp
     </motion.div>
   );
 }
-
-// --- Mock Data ---
-const STUDENTS: Student[] = [
-  { id: '1', name: 'Ana Beatriz Costa', username: '@anabcosta', avatar: 'AB', lastAccess: 'Hoje às 14:00' },
-  { id: '2', name: 'Bruno Henrique Silva', username: '@brunohs', avatar: 'BH', lastAccess: 'Hoje às 13:45' },
-  { id: '3', name: 'Camila Rodrigues', username: '@camilar', avatar: 'CR', lastAccess: 'Há 1 dia' },
-  { id: '4', name: 'Daniel Oliveira', username: '@danielo', avatar: 'DO', lastAccess: 'Hoje às 10:30' },
-  { id: '5', name: 'Elena Martins', username: '@elenam', avatar: 'EM', lastAccess: 'Há 2 dias' },
-  { id: '6', name: 'Felipe Andrade', username: '@felipea', avatar: 'FA', lastAccess: 'Hoje às 09:15' },
-  { id: '7', name: 'Gabriela Santos', username: '@gabis', avatar: 'GS', lastAccess: 'Há 3 dias' },
-  { id: '8', name: 'Henrique Lima', username: '@henriquel', avatar: 'HL', lastAccess: 'Hoje às 15:20' },
-  { id: '9', name: 'Isabela Ferreira', username: '@isabelaf', avatar: 'IF', lastAccess: 'Há 1 dia' },
-  { id: '10', name: 'João Pedro Almeida', username: '@joaopa', avatar: 'JP', lastAccess: 'Hoje às 11:00' },
-];
-
-const AVATAR_COLORS = [
-  'from-primary to-blue-600',
-  'from-violet-500 to-purple-600',
-  'from-rose-400 to-pink-600',
-  'from-amber-400 to-orange-500',
-  'from-emerald-400 to-green-600',
-  'from-cyan-400 to-teal-600',
-  'from-indigo-400 to-blue-600',
-  'from-fuchsia-400 to-purple-600',
-  'from-lime-400 to-green-500',
-  'from-sky-400 to-blue-500',
-];

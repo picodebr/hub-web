@@ -47,7 +47,7 @@ import { TbReload } from 'react-icons/tb';
 import { CoinIcon } from '@/components/Logo';
 import { AttendanceList } from './components/AttendanceList';
 
-type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; groups: ReactNode; coins: ReactNode };
+export type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; groups: ReactNode; coins: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
 
 type ProjectTableType = { id: string; user_avatar: ReactNode; name: ReactNode; status: ReactNode; thumbnail?: string; created_at: ReactNode };
@@ -335,9 +335,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
     <Flex direction="column" w="100%" h="100%" gap="1rem" overflow="hidden">
       <Flex justify="space-between">
         <TabSwitch
-          tabs={classPageViews
-            .map((view) => ({ isSelected: pageView === view, key: view, label: view }))
-            .slice(0, router.query.devmode === `true` ? 3 : 2)}
+          tabs={classPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
           onSwitch={(view) => setPageView(view as any)}
         />
         {pageView === 'Projetos' && (
@@ -423,7 +421,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
           ))}
         </Grid>
       ) : pageView === 'Lista de Presença' ? (
-        <AttendanceList />
+        <AttendanceList hub_class={hubClass} />
       ) : (
         <ProjectTable
           rows={dataProjects}
