@@ -32,6 +32,14 @@ export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTi
     else syncProfile();
   }, []);
 
+  useEffect(() => {
+    const tm = setTimeout(() => {
+      if (!user?.id) syncProfile();
+    }, 3000);
+
+    return clearTimeout(tm);
+  }, []);
+
   return (
     <PageContext.Provider value={{}}>
       <Head>
