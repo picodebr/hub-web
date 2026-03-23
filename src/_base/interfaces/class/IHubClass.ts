@@ -1,6 +1,7 @@
 import { IProject } from '../project';
 import { IHubUserSchool } from '../school';
 import { IHubUser } from '../user';
+import { IHubClassRollCall } from './IHubClassRollCall';
 
 export interface IHubClass {
   id: string;
@@ -12,4 +13,5 @@ export interface IHubClass {
   students: IHubUser[];
   projects: IProject[];
   hub_school: IHubUserSchool;
+  roll_calls: IHubClassRollCall[];
 }
