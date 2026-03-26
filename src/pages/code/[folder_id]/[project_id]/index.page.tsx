@@ -99,12 +99,6 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
   const [isTextMode, setIsTextMode] = useState(false);
   const [mobileView, setMobileView] = useState(false);
 
-  const { setIsSidebarOpen } = useNavbar();
-
-  useEffect(() => {
-    setIsSidebarOpen(false);
-  }, []);
-
   useEffect(() => {
     setIsTextMode(!!(project?.source_code?.mode === 'text'));
   }, [project]);
