@@ -157,6 +157,7 @@ const Classes: React.FC = () => {
                       'MakersPro Creators',
                       'MakersPro Innovators',
                       'MakersPro Experts',
+                      'CulturaTech',
                     ].includes(hubClass.grade) && `#${hubClass.code}`}
                   </Badge>
                 </Flex>
