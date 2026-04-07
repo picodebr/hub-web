@@ -16,5 +16,6 @@ export const updateHubGroupSchema: ZodCustomSchema<IUpdateHubGroupParams> = z.ob
   id: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).uuid(),
   display_name: z.string().trim(),
   users: z.array(z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).uuid()).min(1, { message: zodSchemaErrors.REQUIRED_FIELD }),
+  user_roles: z.record(z.string().uuid(), z.string()).optional(),
   metadata: z.any(),
 });

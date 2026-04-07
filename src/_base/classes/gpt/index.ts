@@ -27,86 +27,86 @@ type RawGenerateFuncType = (data: Prompts) => Promise<AutoGenerateResponse>;
 type ToolsGenerateFuncType = (data: ToolPrompts) => Promise<string[]>;
 
 export const generateProjectWithAI: RawGenerateFuncType = async ({ grade, topic }) => {
-  console.log('grade: ', grade);
-  try {
-    const gptKey = `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`;
-    if (!gptKey) throw new Error('Not found api key');
+  // try {
+  //   const gptKey = `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`;
+  //   if (!gptKey) throw new Error('Not found api key');
 
-    const openai = new OpenAI({ apiKey: gptKey, dangerouslyAllowBrowser: true });
+  //   const openai = new OpenAI({ apiKey: gptKey, dangerouslyAllowBrowser: true });
 
-    const FINAL_PROMPT = `Me dê um exemplo de atividade maker, levando em conta a BNCC, para ensinar sobre ${topic}, para alunos do ${grade}º ANO. Liste, ao final, as habilidades da BNCC com o código, que foram usadas nessa atividade.
+  //   const FINAL_PROMPT = `Me dê um exemplo de atividade maker, levando em conta a BNCC, para ensinar sobre ${topic}, para alunos do ${grade}º ANO. Liste, ao final, as habilidades da BNCC com o código, que foram usadas nessa atividade.
 
-    Considere sempre 4 etapas, sendo a primeira etapa de contextualização do tema, envolvendo pesquisas e discussões, a segunda etapa para planejamento do que será construído, a terceira etapa de construção - nesta você pode criar um passo a passo, caso o projeto já tenha - e a última etapa de apresentação e/ou testes do que foi construído.
+  //   Considere sempre 4 etapas, sendo a primeira etapa de contextualização do tema, envolvendo pesquisas e discussões, a segunda etapa para planejamento do que será construído, a terceira etapa de construção - nesta você pode criar um passo a passo, caso o projeto já tenha - e a última etapa de apresentação e/ou testes do que foi construído.
 
-    Apresente o objetivo da atividade no início e, antes de falar das etapas, liste as ferramentas que serão necessárias para esse projeto.
+  //   Apresente o objetivo da atividade no início e, antes de falar das etapas, liste as ferramentas que serão necessárias para esse projeto.
 
-    Por fim formule a resposta em uma estrutura JSON, restritamente e exatamente como esta: {"title": "Titulo do projeto", "objective": "Objetivo e detalhes do projeto","materials": ["material 1", "material 2"], "steps":[{"title": "Título da etapa 1", "description": "Descrição da etapa 1"},{"title": "Título da etapa 2", "description": "Descrição da etapa 2"}], "bncc": [{"Código da habilidade BNCC":"Descrição da atividade BNCC"}]}`;
+  //   Por fim formule a resposta em uma estrutura JSON, restritamente e exatamente como esta: {"title": "Titulo do projeto", "objective": "Objetivo e detalhes do projeto","materials": ["material 1", "material 2"], "steps":[{"title": "Título da etapa 1", "description": "Descrição da etapa 1"},{"title": "Título da etapa 2", "description": "Descrição da etapa 2"}], "bncc": [{"Código da habilidade BNCC":"Descrição da atividade BNCC"}]}`;
 
-    const data = await openai.chat.completions.create({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: FINAL_PROMPT }] });
+  //   const data = await openai.chat.completions.create({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: FINAL_PROMPT }] });
 
-    const rawResponse = data.choices[0].message.content || '';
+  //   const rawResponse = data.choices[0].message.content || '';
 
-    const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
+  //   const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
 
-    if (!jsonMatch) {
-      throw new Error('JSON não encontrado na resposta da API.');
-    }
+  //   if (!jsonMatch) {
+  //     throw new Error('JSON não encontrado na resposta da API.');
+  //   }
 
-    const jsonString = jsonMatch[1].trim();
+  //   const jsonString = jsonMatch[1].trim();
 
-    const parsedResponse = JSON.parse(jsonString);
+  //   const parsedResponse = JSON.parse(jsonString);
 
-    // Modifica o conteúdo para incluir 'position' em cada etapa
-    const stepsWithPosition = parsedResponse.steps.map((step: { title: string; description: string }, index: number) => ({
-      title: step.title,
-      description: step.description,
-      position: index + 1,
-    }));
-    // Modifica o conteúdo para incluir somente as tags do BNCC
-    const bnccTag: string[] = parsedResponse.bncc.map((item: Record<string, string>) => Object.keys(item)[0]);
+  //   // Modifica o conteúdo para incluir 'position' em cada etapa
+  //   const stepsWithPosition = parsedResponse.steps.map((step: { title: string; description: string }, index: number) => ({
+  //     title: step.title,
+  //     description: step.description,
+  //     position: index + 1,
+  //   }));
+  //   // Modifica o conteúdo para incluir somente as tags do BNCC
+  //   const bnccTag: string[] = parsedResponse.bncc.map((item: Record<string, string>) => Object.keys(item)[0]);
 
-    const completionData: AutoGenerateResponse = {
-      ai_model: data.model,
-      total_used_tokens: data.usage?.total_tokens,
-      answer: { used_tokens: data.usage?.prompt_tokens, content: FINAL_PROMPT },
-      response: {
-        used_tokens: data.usage?.completion_tokens,
-        content: { ...parsedResponse, steps: stepsWithPosition, bnccTags: bnccTag },
-      },
-    };
+  //   const completionData: AutoGenerateResponse = {
+  //     ai_model: data.model,
+  //     total_used_tokens: data.usage?.total_tokens,
+  //     answer: { used_tokens: data.usage?.prompt_tokens, content: FINAL_PROMPT },
+  //     response: {
+  //       used_tokens: data.usage?.completion_tokens,
+  //       content: { ...parsedResponse, steps: stepsWithPosition, bnccTags: bnccTag },
+  //     },
+  //   };
 
-    return completionData;
-  } catch (error: any) {
-    console.error(JSON.stringify(error, null, 4));
-    return null;
-  }
+  //   return completionData;
+  // } catch (error: any) {
+  //   console.error(JSON.stringify(error, null, 4));
+  //   return null;
+  // }
   return {} as any;
 };
 
 export const generateProjectToolsWithAI: ToolsGenerateFuncType = async ({ tools, previousResponse }) => {
   try {
-    const gptKey = `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`;
-    if (!gptKey) throw new Error('Not found api key');
+    // const gptKey = `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`;
+    // if (!gptKey) throw new Error('Not found api key');
 
-    const openai = new OpenAI({ apiKey: gptKey, dangerouslyAllowBrowser: true });
+    // const openai = new OpenAI({ apiKey: gptKey, dangerouslyAllowBrowser: true });
 
-    const EDITING_PROMPT = `Não tenho as ferramentas ${tools.join(
-      ', ',
-    )}, pode me gerar similares e simples com base no projeto gerado na resposta anterior.
-    Por fim formule a resposta em uma estrutura JSON, restritamente e exatamente como esta: ["material 1", "material 2", "material 3"], respeitando a quantidade de materiais necessários.`;
-    const data = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: previousResponse },
-        { role: 'user', content: EDITING_PROMPT },
-      ],
-    });
+    // const EDITING_PROMPT = `Não tenho as ferramentas ${tools.join(
+    //   ', ',
+    // )}, pode me gerar similares e simples com base no projeto gerado na resposta anterior.
+    // Por fim formule a resposta em uma estrutura JSON, restritamente e exatamente como esta: ["material 1", "material 2", "material 3"], respeitando a quantidade de materiais necessários.`;
+    // const data = await openai.chat.completions.create({
+    //   model: 'gpt-4o-mini',
+    //   messages: [
+    //     { role: 'system', content: previousResponse },
+    //     { role: 'user', content: EDITING_PROMPT },
+    //   ],
+    // });
 
-    const rawResponse = data.choices[0].message.content || '';
-    console.log(rawResponse);
+    // const rawResponse = data.choices[0].message.content || '';
+    // console.log(rawResponse);
 
-    const parsedResponse: string[] = JSON.parse(rawResponse);
-    return parsedResponse;
+    // const parsedResponse: string[] = JSON.parse(rawResponse);
+    // return parsedResponse;
+    return [];
   } catch (error: any) {
     console.error(JSON.stringify(error, null, 4));
     return [];

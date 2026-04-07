@@ -1,9 +1,9 @@
-import { Flex, Icon, Image, Spinner, Text, Tooltip, useColorMode, Box } from '@chakra-ui/react';
-import NextImage from 'next/image';
+import { Flex, Icon, Image, Spinner, Text, Tooltip, useColorMode, Box, Avatar, Divider } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
-import { FiEdit2, FiChevronLeft, FiChevronRight } from 'react-icons/fi'; // Adicionado ícones de chevron
+import { FiEdit2, FiChevronLeft, FiChevronRight, FiCamera } from 'react-icons/fi';
 import { Uploader } from 'rsuite';
 import { motion, Variants } from 'framer-motion';
+import NextImage from 'next/image';
 
 import { dimensions } from '@/styles/global';
 import { formatClassGrade, formatCoin, formatShortName } from '@/_base/utils';
@@ -40,12 +40,12 @@ const sidebarTransition = {
 
 const sidebarVariants: Variants = {
   expanded: {
-    width: dimensions.navbar.width, // Usa a largura definida no global
+    width: dimensions.navbar.width,
     opacity: 1,
     transition: sidebarTransition,
   },
   collapsed: {
-    width: '0px', // Colapsa totalmente
+    width: '0px',
     opacity: 0,
     transition: {
       ...sidebarTransition,
@@ -58,10 +58,13 @@ type NavbarHookType = {
   isSidebarOpen: boolean;
   setIsSidebarOpen: (opened: boolean) => void;
 };
+
 export const useNavbar = create<NavbarHookType>((set) => ({
   isSidebarOpen: true,
   setIsSidebarOpen: (opened) => set(() => ({ isSidebarOpen: opened })),
 }));
+
+const MotionFlex = motion(Flex);
 
 export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, stockItems, school, defaultOpened = true }) => {
   const router = useRouter();
@@ -123,22 +126,23 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
     }, 250);
   }, []);
 
-  // Cores dinâmicas para o botão de toggle
-  const toggleBg = colorMode === 'light' ? 'white' : 'gray.700';
-  const toggleBorder = colorMode === 'light' ? 'gray.200' : 'gray.600';
-  const toggleColor = colorMode === 'light' ? 'gray.500' : 'gray.300';
+  const toggleBg = 'white';
+  const toggleBorder = 'gray200';
+  const toggleColor = 'gray500';
 
   return (
-    <Box position="relative" zIndex={100} display={{ base: `none`, lg: `block` }} pl={isSidebarOpen ? '0' : '1.5rem'}>
+    <Box position="relative" zIndex={100} display={{ base: `none`, lg: `block` }} pl={isSidebarOpen ? '0' : '1.5rem'} mb="3rem">
       <motion.nav
         initial={defaultOpened ? 'expanded' : 'collapsed'}
         animate={isSidebarOpen ? 'expanded' : 'collapsed'}
         variants={sidebarVariants}
         style={{
           height: '100%',
-          margin: isSidebarOpen ? (typeof window !== 'undefined' && window.innerWidth > 1280 ? '1.5rem' : '1rem') : '1rem 0rem', // Ajusta margem para não ocupar espaço quando fechado
           position: 'relative',
           willChange: 'width, opacity',
+          display: 'flex',
+          flexDirection: 'column',
+          margin: isSidebarOpen ? (typeof window !== 'undefined' && window.innerWidth > 1280 ? '1.5rem' : '1rem') : '1rem 0rem',
         }}
       >
         {isSidebarOpen ? (
@@ -146,334 +150,300 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
             direction="column"
             minW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
             maxW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
-            gap={{ base: `0.6rem`, xl: '1rem' }}
-            overflow="hidden" // Importante: esconde o conteúdo ao fechar
+            bg="white" // Fundo único para unificar a barra lateral
+            borderRadius="16px"
+            border="1px solid"
+            borderColor="gray200"
+            boxShadow="0px 4px 12px rgba(0,0,0,0.03)" // Sombra leve para destacar do fundo da página
+            overflow="hidden"
             userSelect="none"
-            borderRadius="8px"
-            h="fit-content"
+            h="100%"
           >
-            <Flex direction="column" gap={{ base: '0.5rem', xl: '1rem' }}>
-              {/* Informações */}
-              <Flex direction="column">
-                <Flex flex="1" bg="white" padding="1rem" gap="1rem" h="fit-content" borderRadius="8px">
-                  <Flex position="relative">
-                    <Flex
-                      title="Trocar foto de perfil"
-                      borderRadius="50%"
-                      bg="gray300"
-                      w={{ base: `4rem`, xl: '5rem' }}
-                      h={{ base: `4rem`, xl: '5rem' }}
-                      overflow="hidden"
-                      border="4px"
-                      borderColor="white"
-                      flexShrink={0}
-                    >
-                      <NextImage
-                        loader={() => avatar}
-                        src={avatar}
-                        width={100}
-                        height={100}
-                        alt=""
-                        style={{ opacity: isUpdating ? `0.4` : `1` }}
-                        priority
-                      />
+            {/* 1. SEÇÃO DE PERFIL */}
+            <Flex direction="column" p="1.25rem" position="relative" gap="1rem" flexShrink={0}>
+              {/* Botão de Fechar Menu */}
+              <Tooltip label="Recolher menu" placement="right" hasArrow>
+                <Flex
+                  as={motion.div}
+                  position="absolute"
+                  top="1.25rem"
+                  right="1.25rem"
+                  zIndex={101}
+                  onClick={() => setIsSidebarOpen(false)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  cursor="pointer"
+                  color="gray400"
+                  _hover={{ color: 'primary500' }}
+                  transition="all 0.2s"
+                >
+                  <Icon as={FiChevronLeft} fontSize="20px" />
+                </Flex>
+              </Tooltip>
+
+              <Flex align="center" gap="1rem" w="100%" pr="1.5rem">
+                {/* Avatar & Uploader */}
+                <Flex position="relative">
+                  <NextImage
+                    loader={() => avatar}
+                    src={avatar}
+                    width={80}
+                    height={80}
+                    alt=""
+                    style={{ opacity: isUpdating ? `0.4` : `1`, borderRadius: `50%` }}
+                    priority
+                  />
+                  {isUpdating && (
+                    <Flex borderRadius="50%" position="absolute" inset="0" align="center" justify="center">
+                      <Spinner size="sm" color="primary500" />
                     </Flex>
-                    {isUpdating && (
+                  )}
+                  <Uploader
+                    autoUpload={true}
+                    accept={`img/*`}
+                    draggable={false}
+                    action=""
+                    fileListVisible={false}
+                    onChange={(e) => handleUploadAvatar(e[0]?.blobFile as File)}
+                    toggleAs={(e) => (
                       <Flex
+                        border="1px solid"
+                        borderColor="gray200"
                         borderRadius="50%"
+                        p="0.3rem"
+                        bg="white"
                         position="absolute"
-                        w={{ base: `4rem`, xl: '5rem' }}
-                        h={{ base: `4rem`, xl: '5rem' }}
-                        left="50%"
-                        transform="translate(-50%, 0)"
-                        align="center"
-                        justify="center"
+                        bottom="-2px"
+                        right="-2px"
+                        cursor="pointer"
+                        boxShadow="sm"
+                        transition="all 0.2s"
+                        _hover={{ transform: 'scale(1.1)', color: 'primary500' }}
+                        color="gray500"
+                        onClick={() => e.onClick(e)}
                       >
-                        <Spinner size="xl" />
+                        <FiCamera size="0.75rem" />
                       </Flex>
                     )}
-                    <Uploader
-                      autoUpload={true}
-                      accept={`img/*`}
-                      draggable={false}
-                      action=""
-                      fileListVisible={false}
-                      onChange={(e) => {
-                        handleUploadAvatar(e[0]?.blobFile as File);
-                      }}
-                      toggleAs={(e) => (
-                        <Flex
-                          border="1px"
-                          borderColor="gray300"
-                          borderRadius="50%"
-                          p="0.25rem"
-                          bg="white"
-                          position="absolute"
-                          left="0"
-                          cursor={'pointer'}
-                          _hover={{ filter: `brightness(0.9)` }}
-                          top="-0.5rem"
-                          onClick={() => e.onClick(e)}
-                        >
-                          <FiEdit2 size="0.875rem" color="#98A2B3" />
-                        </Flex>
-                      )}
-                    />
-                  </Flex>
-                  <Flex direction="column" flex="1" w="100%">
-                    <Flex
-                      fontSize={{ base: `16px`, xl: '18px' }}
-                      fontWeight="600"
-                      flex="1 0 0"
-                      color="primary900"
-                      justify="space-between"
-                      align="center"
-                    >
-                      <Text isTruncated maxW="150px">
-                        {formatShortName(user?.name || '', true)}
-                      </Text>
+                  />
+                </Flex>
+
+                {/* Info do Usuário */}
+                <Flex direction="column" flex="1" overflow="hidden" gap="2px">
+                  <Flex align="center" gap="0.5rem">
+                    <Text fontSize="16px" fontWeight="700" color="primary900" isTruncated>
+                      {formatShortName(user?.name || '', true)}
+                    </Text>
+                    <Tooltip label="Editar Perfil" placement="top">
                       <Flex
                         cursor="pointer"
-                        transition="all 0.12s"
-                        _hover={{ filter: 'brightness(0.7)' }}
+                        transition="all 0.2s"
+                        color="gray400"
+                        _hover={{ color: 'primary500' }}
                         onClick={() => router.push('/profile?opened=true')}
                       >
-                        <FiEdit2 size="1rem" color="#98A2B3" />
-                      </Flex>
-                    </Flex>
-
-                    <Flex
-                      fontSize="12px"
-                      color="gray600"
-                      fontWeight="500"
-                      marginTop="0.5rem"
-                      maxH="8rem"
-                      overflow="auto"
-                      opacity={user?.hub_class?.display_name || school ? '1' : '0'}
-                    >
-                      {user?.role === `student` ? `${user.hub_class?.hub_school?.display_name}` : user.email}
-                    </Flex>
-                    <Flex
-                      fontSize="13px"
-                      color="gray600"
-                      fontWeight="400"
-                      marginTop="0.5rem"
-                      maxH="8rem"
-                      overflow="auto"
-                      opacity={user?.hub_class?.display_name || school ? '1' : '0'}
-                    >
-                      {user?.role === `student`
-                        ? `Turma: ${user.hub_class?.display_name} - ${formatClassGrade(user.hub_class?.grade)}`
-                        : school?.display_name || '.'}
-                    </Flex>
-                    <Tooltip label="Recolher menu" placement="right" hasArrow>
-                      <Flex
-                        as={motion.div}
-                        alignSelf="flex-end"
-                        zIndex={101}
-                        onClick={() => setIsSidebarOpen(false)}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ scale: 1.15 }}
-                        whileTap={{ scale: 0.95 }}
-                        cursor="pointer"
-                        bg={toggleBg}
-                        border="1px solid"
-                        borderColor={toggleBorder}
-                        borderRadius="4px"
-                        width="24px"
-                        height="24px"
-                        align="center"
-                        justify="center"
-                        boxShadow="0px 2px 6px rgba(0,0,0,0.08)"
-                        transition="all 0.2s"
-                      >
-                        <Icon as={FiChevronLeft} color={toggleColor} fontSize="18px" />
+                        <FiEdit2 size="0.85rem" />
                       </Flex>
                     </Tooltip>
                   </Flex>
+
+                  <Text fontSize="12px" color="gray500" fontWeight="500" isTruncated>
+                    {user?.role === `student` ? `${user.hub_class?.hub_school?.display_name}` : user?.email}
+                  </Text>
+
+                  {user?.role === `student` && (
+                    <Text fontSize="11px" color="gray400" fontWeight="400" isTruncated>
+                      Turma: {user.hub_class?.display_name} - {formatClassGrade(user.hub_class?.grade)}
+                    </Text>
+                  )}
+
+                  {/* Moedas integradas de forma limpa abaixo da classe */}
+                  {user?.role === 'student' && (
+                    <Flex
+                      align="center"
+                      gap="0.3rem"
+                      mt="4px"
+                      bg="warning50"
+                      w="fit-content"
+                      px="0.5rem"
+                      py="0.1rem"
+                      borderRadius="full"
+                      border="1px solid"
+                      borderColor="warning200"
+                    >
+                      <Image src="/icons/coin.svg" alt="Moedas" w="12px" h="12px" />
+                      <Text fontSize="11px" fontWeight="700" color="warning700">
+                        {formatCoin(user.metadata.coins || 0)}
+                      </Text>
+                    </Flex>
+                  )}
                 </Flex>
               </Flex>
-
-              {/* Ranking */}
-              {user?.role === 'student' && (
-                <Flex display="column" gap="0.5rem" h="fit-content">
-                  <Flex
-                    fontWeight="600"
-                    p={{ base: '0.5rem', xl: '1rem 0.5rem' }}
-                    gap="1.25rem"
-                    color="white"
-                    borderColor="primary600"
-                    bg="primary400"
-                    borderRadius="10px"
-                    justify="center"
-                    align="center"
-                    w="100%"
-                  >
-                    <>
-                      <Flex align="center" justify="center" gap="0.45rem">
-                        <Image src="/icons/coin.svg" />
-                        <Text>{formatCoin(user.metadata.coins || 0)}</Text>
-                      </Flex>
-                    </>
-                  </Flex>
-                </Flex>
-              )}
             </Flex>
 
-            {/* Menu */}
-            <motion.div
-              style={{
-                display: `flex`,
-                flex: `1`,
-                padding: '1rem',
-                flexDirection: 'column',
-                gap: '0.5rem',
-                overflow: 'hidden auto',
-                alignItems: 'flex-end',
-                background: colorMode === `light` ? `white` : `#101828`,
-              }}
+            <Divider borderColor="gray200" opacity={0.6} />
+
+            {/* 2. MENU DE NAVEGAÇÃO */}
+            <MotionFlex
+              direction="column"
+              flex="1"
+              p="1rem 0.75rem"
+              gap="0.25rem"
+              overflowY="auto"
+              overflowX="hidden"
               animate={isOpen ? 'open' : 'closed'}
               variants={{
-                open: {
-                  clipPath: 'inset(0% 0% 0% 0% round 10px)',
-                  transition: {
-                    type: 'spring',
-                    bounce: 0,
-                    duration: 0.7,
-                    delayChildren: 0.3,
-                    staggerChildren: 0.05,
-                  },
-                },
-                closed: {
-                  opacity: 0,
-                  clipPath: 'inset(10% 50% 90% 50% round 10px)',
-                  transition: {
-                    type: 'spring',
-                    bounce: 0,
-                    duration: 0.3,
-                  },
-                },
+                open: { transition: { type: 'spring', bounce: 0, duration: 0.6, delayChildren: 0.1, staggerChildren: 0.05 } },
+                closed: { opacity: 0 },
+              }}
+              css={{
+                '&::-webkit-scrollbar': { width: '4px' },
+                '&::-webkit-scrollbar-track': { background: 'transparent' },
+                '&::-webkit-scrollbar-thumb': { background: '#D0D5DD', borderRadius: '4px' },
               }}
             >
-              {menuItems.map((item) => (
-                <motion.div
-                  key={item.name}
-                  ref={item.ref as any}
-                  style={{ width: `100%`, flexDirection: `column`, fontWeight: `600`, position: `relative` }}
-                  variants={{
-                    open: {
-                      opacity: 1,
-                      y: 0,
-                      transition: { type: 'spring', stiffness: 300, damping: 24 },
-                    },
-                    closed: { opacity: 0, y: 20, transition: { duration: 0.2 } },
-                  }}
-                >
-                  {item.page === `planner` && !!kanbanItemsDue.length && (
-                    <Tooltip label="Atividades á vencer" placement="right-end">
-                      <Flex w="0.75rem" h="0.75rem" borderRadius="50%" bg="redDot" position="absolute" top="3px" right="3px" />
-                    </Tooltip>
-                  )}
-                  {item.page === `stock` && !!stockItems?.length && (
-                    <Tooltip label="Itens com quantidade crítica" placement="right-end">
-                      <Flex w="0.75rem" h="0.75rem" borderRadius="50%" bg="redDot" position="absolute" top="3px" right="3px" />
-                    </Tooltip>
-                  )}
-                  <Flex
-                    align="center"
-                    padding="10px 18px"
-                    transition="all 0.15s"
-                    borderRadius="8px"
-                    border={colorMode === 'dark' && page !== item.page ? `1px` : undefined}
-                    borderColor="#4E5BA666"
-                    fontSize={{ base: `14px`, xl: '15px' }}
-                    cursor="pointer"
-                    whiteSpace="nowrap"
-                    _hover={{ outline: '1px solid #3356B7' }}
-                    bg={page === item.page ? 'primary700' : colorMode === 'dark' ? `transparent` : 'primary50'}
-                    color={
-                      page === item.page && colorMode === 'dark'
-                        ? 'primary25'
-                        : page !== item.page && colorMode === 'dark'
-                          ? 'primary25'
-                          : page === item.page && colorMode === 'light'
-                            ? 'primary25'
-                            : 'primary800'
-                    }
-                    onClick={() => router.push(`/${item.page}`)}
-                  >
-                    {item.icon && <Icon mr="3" fontSize="16" as={item.icon} />}
-                    {item.name}
-                  </Flex>
-                </motion.div>
-              ))}
-            </motion.div>
+              {menuItems.map((item) => {
+                const isActive = page === item.page;
 
-            {!!actions.length && (
-              <Flex gap="1.25rem" justify="center" align="flex-end">
-                {actions.map((action, i) => (
-                  <motion.a
-                    key={action.type + i}
-                    href={action.data.link}
-                    target="_blank"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-                    style={{
-                      display: `flex`,
-                      flexDirection: `column`,
-                      alignItems: `center`,
-                      justifyContent: `center`,
-                      background: colorMode === `light` ? `white` : `#101828`,
-                      border: `1px solid ${colorMode === 'light' ? '#d9d5dd88' : '#272352'}`,
-                      height: `3.25rem`,
-                      minWidth: `4rem`,
-                      color: colorMode === `light` ? `#1D2939` : `white`,
-                      padding: `0.25rem`,
-                      gap: `0.23rem`,
-                      borderRadius: `8px`,
-                      cursor: `pointer`,
+                return (
+                  <motion.div
+                    key={item.name}
+                    ref={item.ref as any}
+                    style={{ width: `100%`, position: `relative`, flexShrink: 0 }}
+                    variants={{
+                      open: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+                      closed: { opacity: 0, y: 10, transition: { duration: 0.2 } },
                     }}
                   >
-                    <Icon fontSize="20" as={iconList[action.data.icon]} />
-                    <Text lineHeight="1" noOfLines={1} textAlign="center" letterSpacing={0.5} fontWeight="500">
-                      {action.data.label}
-                    </Text>
-                  </motion.a>
-                ))}
-              </Flex>
+                    {item.page === `planner` && !!kanbanItemsDue.length && (
+                      <Tooltip label="Atividades a vencer" placement="right-end">
+                        <Flex
+                          w="10px"
+                          h="10px"
+                          borderRadius="full"
+                          bg="redDot"
+                          border="2px solid"
+                          borderColor="white"
+                          position="absolute"
+                          top="12px"
+                          right="12px"
+                          zIndex={2}
+                        />
+                      </Tooltip>
+                    )}
+                    {item.page === `stock` && !!stockItems?.length && (
+                      <Tooltip label="Itens com quantidade crítica" placement="right-end">
+                        <Flex
+                          w="10px"
+                          h="10px"
+                          borderRadius="full"
+                          bg="redDot"
+                          border="2px solid"
+                          borderColor="white"
+                          position="absolute"
+                          top="12px"
+                          right="12px"
+                          zIndex={2}
+                        />
+                      </Tooltip>
+                    )}
+
+                    <Flex
+                      align="center"
+                      padding="10px 14px"
+                      borderRadius="10px"
+                      cursor="pointer"
+                      whiteSpace="nowrap"
+                      transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+                      fontSize="14px"
+                      fontWeight={isActive ? '700' : '500'}
+                      bg={isActive ? 'primary700' : 'transparent'}
+                      color={isActive ? 'primary25' : 'gray600'}
+                      _hover={{
+                        bg: isActive ? 'primary700' : 'primary50',
+                        transform: isActive ? 'none' : 'translateX(4px)',
+                        color: isActive ? 'primary25' : 'primary700',
+                      }}
+                      onClick={() => router.push(`/${item.page}`)}
+                    >
+                      <Icon mr="3" fontSize="18px" as={item.icon} opacity={isActive ? 1 : 0.7} />
+                      {item.name}
+                    </Flex>
+                  </motion.div>
+                );
+              })}
+            </MotionFlex>
+
+            {/* 3. AÇÕES CUSTOMIZADAS (WIDGETS INFERIORES) */}
+            {!!actions.length && (
+              <>
+                <Divider borderColor="gray200" opacity={0.6} />
+                <Flex p="1rem" gap="0.75rem" justify="space-between" align="center" wrap="wrap" flexShrink={0}>
+                  {actions.map((action, i) => (
+                    <motion.a
+                      key={action.type + i}
+                      href={action.data.link}
+                      target="_blank"
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                      style={{
+                        display: `flex`,
+                        flexDirection: `column`,
+                        alignItems: `center`,
+                        justifyContent: `center`,
+                        flex: 1,
+                        border: `1px solid`,
+                        borderColor: `#EAECF0`, // gray200
+                        height: `4.5rem`,
+                        minWidth: `4rem`,
+                        padding: `0.5rem`,
+                        gap: `0.3rem`,
+                        borderRadius: `12px`,
+                        cursor: `pointer`,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        background: '#F9FAFB', // gray50 para destacar suavemente na barra branca
+                      }}
+                    >
+                      <Icon fontSize="22px" as={iconList[action.data.icon]} color="primary700" />
+                      <Text fontSize="11px" lineHeight="1" noOfLines={1} textAlign="center" fontWeight="600" color="text" mt="1">
+                        {action.data.label}
+                      </Text>
+                    </motion.a>
+                  ))}
+                </Flex>
+              </>
             )}
           </Flex>
         ) : null}
       </motion.nav>
 
-      {/* Botão de Toggle Lateral - Posicionado fora do fluxo do nav mas visualmente atrelado */}
+      {/* Botão de Expandir Lateral (Quando Colapsado) */}
       <Tooltip label={'Expandir menu'} placement="right" hasArrow>
         <Flex
           display={isSidebarOpen ? 'none' : 'flex'}
           as={motion.div}
           position="absolute"
-          right={'6px'}
-          top="6.35rem" // Altura alinhada visualmente com a foto ou topo
+          right={'12px'}
+          top="2.5rem"
           zIndex={101}
           onClick={() => setIsSidebarOpen(true)}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.15 }}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
           cursor="pointer"
           bg={toggleBg}
           border="1px solid"
           borderColor={toggleBorder}
-          borderRadius="4px"
-          width="24px"
+          borderRadius="full"
+          width="36px"
           height={'36px'}
           align="center"
           justify="center"
-          boxShadow="0px 2px 6px rgba(0,0,0,0.08)"
+          boxShadow="md"
           transition="all 0.2s"
         >
-          <Icon as={FiChevronRight} color={toggleColor} fontSize="18px" />
+          <Icon as={FiChevronRight} color={toggleColor} fontSize="20px" />
         </Flex>
       </Tooltip>
     </Box>

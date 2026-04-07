@@ -8,6 +8,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Text,
 } from '@chakra-ui/react';
 import React, { PropsWithChildren } from 'react';
 import { motion } from 'framer-motion';
@@ -38,15 +39,15 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps & { overflow?: s
     <ChakraModal {...rest} isOpen={show} onClose={() => (onCloseModal ? onCloseModal() : onCancel && onCancel())} scrollBehavior="inside">
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(2px)" {...overlay} />
       <ModalContent w={!rest.size ? 'fit-content' : undefined} zIndex="9998">
-        {typeof topIcon === 'string' ? (
-          <Box m="1rem 0 0 1rem">
-            <Image src={`/icons/${topIcon}.svg`} h="48px" />
-          </Box>
-        ) : (
-          topIcon || null
-        )}
-        <ModalHeader fontSize="1rem" p="0.5rem 1rem" color="gray800">
-          {title}
+        <ModalHeader fontSize="1rem" p="0.5rem" color="gray800" display="flex" alignItems="center" gap="0.5rem">
+          {typeof topIcon === 'string' ? (
+            <Box>
+              <Image src={`/icons/${topIcon}.svg`} h="48px" />
+            </Box>
+          ) : (
+            topIcon || null
+          )}
+          <Text>{title}</Text>
         </ModalHeader>
         {(!!onCancel || !!onCloseModal) && showCloseButton && <ModalCloseButton isDisabled={disableCloseButton} mt="0.25rem" />}
         <ModalBody overflow={rest.overflow}> {children}</ModalBody>

@@ -1,9 +1,9 @@
-import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, useUpdateEffect } from '@chakra-ui/react';
+import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, Divider, Box, Icon } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { create } from 'zustand';
 import { FiLogOut } from 'react-icons/fi';
-import { persist } from 'zustand/middleware';
+import { useRouter } from 'next/router';
 
 import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
@@ -19,8 +19,7 @@ import { readAllNotifications } from '@/_base/services/notifications/readAllNoti
 import { deleteAllNotifications } from '@/_base/services/notifications/deleteAllNotifications';
 import { KanbanItemType } from '@/components/Kanban/interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
-import { useRouter } from 'next/router';
-import { listSchoolGroups, listSchoolsByGroupCode } from '@/_base/services/school';
+import { listSchoolGroups } from '@/_base/services/school';
 import { OptionType } from '@/components/Inputs/interfaces';
 import { updateChosenSchool } from '@/_base/services/user';
 
@@ -41,6 +40,7 @@ type TargetSchoolHookType = {
   setSchool: (school: IHubUserSchool) => void;
   setCustomActions: (customActions: CustomActions[]) => void;
 };
+
 export const useSelectedSchool = create<TargetSchoolHookType>((set) => ({
   school: null,
   customActions: [],
@@ -61,7 +61,7 @@ export const Header: React.FC<IProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<OptionType | null>(null);
   const [user, setUser] = useState<IHubUser | undefined>(_user);
-  const [schools, setSchools] = useState<IHubUserSchool[]>(user?.schools || []);
+  const [schools, setSchools] = useState<IHubUserSchool[]>(_user?.schools || []);
 
   const [notifications, setNotifications] = useState<IHubNotification[]>([]);
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
@@ -75,12 +75,21 @@ export const Header: React.FC<IProps> = ({
   const schoolList = useMemo(() => schools.map((item) => ({ label: item.display_name, value: item.hub_school_id })) || [], [schools]);
   const schoolGroupList = useMemo(() => schoolGroups.map((item) => ({ label: item.display_name, value: item.id })), [schoolGroups]);
 
+  // CORREÇÃO DO BUG: Sincroniza a prop _user com o estado local ao navegar entre as páginas
+  useEffect(() => {
+    if (_user) {
+      setUser(_user);
+      if (_user.role !== 'master') {
+        setSchools(_user.schools || []);
+      }
+    }
+  }, [_user]);
+
   const updateSchoolChoice = useCallback(async (school_id: string) => {
     setIsLoading(true);
     try {
       const updatedUser = await updateChosenSchool(school_id);
       setUser(updatedUser);
-      // onUpdateUser(updatedUser);
     } finally {
       router.push(`/profile`);
       setTimeout(() => {
@@ -91,7 +100,6 @@ export const Header: React.FC<IProps> = ({
 
   // Set schools and school groups for master users
   useEffect(() => {
-    console.log('user: ', user);
     if (user?.role !== `master` || schoolGroups.length) return;
     listSchoolGroups().then((res) => {
       setSchoolGroups(res);
@@ -114,8 +122,10 @@ export const Header: React.FC<IProps> = ({
     const schoolID = user?.chosen_school_id;
     const userSchools = user?.schools || [];
     if (!schoolID || !userSchools.length) return;
+
     const targetSchool = userSchools.find((e) => e.hub_school_id === schoolID);
     if (!targetSchool) return;
+
     setSelectedSchool({ label: targetSchool.display_name, value: targetSchool.hub_school_id });
     setSchool(targetSchool);
     onUpdateSchool(targetSchool);
@@ -142,13 +152,15 @@ export const Header: React.FC<IProps> = ({
 
     const targetSchool = schools.find((e) => e.hub_school_id === selectedSchool.value);
 
-    if (user?.role !== `student`)
+    if (user?.role !== `student`) {
       setCustomActions(
         targetSchool?.hub_school_group?.metadata?.custom_actions?.filter(
           (action) => !action.school_id || action.school_id === targetSchool.hub_school_id,
         ) || [],
       );
-    else setCustomActions([]);
+    } else {
+      setCustomActions([]);
+    }
   }, [user, schools, selectedSchool]);
 
   const onSchoolChange = (schoolID: string) => {
@@ -158,6 +170,7 @@ export const Header: React.FC<IProps> = ({
       updateSchoolChoice(targetSchool.hub_school_id);
     }
   };
+
   const onSchoolGroupChange = (schoolGroupID: string) => {
     const targetSchoolGroup = schoolGroups.find((e) => e.id === schoolGroupID);
     if (targetSchoolGroup) {
@@ -176,17 +189,16 @@ export const Header: React.FC<IProps> = ({
         case `book_added`:
           router.push(`/library?id=${notification.target_id}`);
           break;
-
         case `course_added`:
           router.push(`/courses/${notification.target_id}?_p=${notification.message}`);
           break;
-
         default:
           break;
       }
     },
     [user],
   );
+
   const handleKanbanClick = useCallback(
     (kanban: KanbanItemType) => {
       router.push(`/planner?id=${kanban.id}`);
@@ -208,45 +220,76 @@ export const Header: React.FC<IProps> = ({
 
   return (
     <Flex
+      as="header"
       maxH={dimensions.header.height}
       minH={dimensions.header.height}
       w="100%"
       alignItems="center"
       justifyContent="space-between"
       padding={{ base: '0 1rem', lg: '0 2rem' }}
-      borderRadius="0 0 0.4rem 0.4rem"
-      borderColor="primary"
-      bg="white"
+      bg={colorMode === 'light' ? 'white' : 'gray.900'}
+      borderBottom="1px solid"
+      borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}
+      boxShadow="0px 1px 3px rgba(0,0,0,0.02)"
       userSelect="none"
       position="relative"
       display={{ base: hideOnMobile ? `none` : `flex`, lg: `flex` }}
+      zIndex={10}
     >
-      <Logo size="md" className="only-desktop" />
-      <MobileMenu menuItems={menuItems} page={page} />
+      <Flex align="center" gap="1rem">
+        <Logo size="md" className="only-desktop" />
+        <MobileMenu menuItems={menuItems} page={page} />
+      </Flex>
+
+      {/* Título do Projeto (Centralizado de forma limpa) */}
       {!!headerLabel && (
-        <Flex position="absolute" top="50%" left="50%" transform="translate(-50%, -50%)">
-          <Tooltip label={`Projeto: ${headerLabel}`}>
-            <Text fontSize="19px" fontWeight="500">
-              {headerLabel}
-            </Text>
+        <Flex position="absolute" top="50%" left="50%" transform="translate(-50%, -50%)" display={{ base: 'none', md: 'flex' }}>
+          <Tooltip label="Projeto Atual">
+            <Flex
+              bg={colorMode === 'light' ? 'primary.50' : 'primary.900'}
+              color={colorMode === 'light' ? 'primary.700' : 'primary.100'}
+              px="1.25rem"
+              py="0.35rem"
+              borderRadius="full"
+              align="center"
+              gap="0.5rem"
+              border="1px solid"
+              borderColor={colorMode === 'light' ? 'primary.100' : 'primary.700'}
+            >
+              <Text fontSize="14px" fontWeight="600" letterSpacing="0.2px">
+                {headerLabel}
+              </Text>
+            </Flex>
           </Tooltip>
         </Flex>
       )}
-      <Flex gap="1rem" align="center" fontSize="1.75rem">
+
+      {/* Controles à Direita */}
+      <Flex gap="1.25rem" align="center" h="100%">
+        {/* Agrupamento de Seletores RSuite */}
         {(user?.role === `teacher` || user?.role === `master`) && (
-          <>
+          <Flex
+            align="center"
+            gap="0.75rem"
+            bg={colorMode === 'light' ? 'gray.50' : 'gray.800'}
+            px="1rem"
+            py="0.25rem"
+            borderRadius="lg"
+            border="1px solid"
+            borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+          >
             {user?.role === `master` && (
               <SelectPicker
                 id="master-picker"
                 data={schoolGroupList}
                 value={selectedSchoolGroup?.value}
                 size="sm"
-                style={{ paddingBottom: 5, marginRight: 5 }}
                 appearance="subtle"
                 searchable={false}
                 label="Rede"
                 cleanable={false}
                 onChange={(e) => onSchoolGroupChange(e as string)}
+                style={{ minWidth: '150px' }}
               />
             )}
             <SelectPicker
@@ -254,36 +297,57 @@ export const Header: React.FC<IProps> = ({
               data={schoolList}
               value={selectedSchool?.value}
               size="sm"
-              style={{ paddingBottom: 5 }}
               appearance="subtle"
               searchable={false}
               cleanable={false}
+              label={user?.role === 'teacher' ? 'Escola' : undefined}
               onChange={(e) => onSchoolChange(e as string)}
+              style={{ minWidth: '150px' }}
             />
-          </>
-        )}
-        <NotificationMenu
-          notifications={notifications}
-          user={user}
-          stockItems={stockItems}
-          onNotificationClick={handleNotificationClick}
-          onKanbanClick={handleKanbanClick}
-          onMarkAllAsRead={handleReadAllNotifications}
-          onRemoveAll={handleDeleteAllNotifications}
-        />
-        <Tooltip label="Sair">
-          <Flex
-            cursor="pointer"
-            transition="0.12s"
-            _hover={{ filter: 'brightness(0.7)' }}
-            onClick={() => router.push('/logout', `spinner`)}
-            className="only-desktop"
-          >
-            <FiLogOut color="#FDA29B" />
           </Flex>
-        </Tooltip>
+        )}
+
+        {/* Divisória Vertical */}
+        <Divider
+          orientation="vertical"
+          h="28px"
+          borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'}
+          display={{ base: 'none', md: 'block' }}
+        />
+
+        {/* Notificações e Logout */}
+        <Flex align="center" gap="0.5rem">
+          <NotificationMenu
+            notifications={notifications}
+            user={user}
+            stockItems={stockItems}
+            onNotificationClick={handleNotificationClick}
+            onKanbanClick={handleKanbanClick}
+            onMarkAllAsRead={handleReadAllNotifications}
+            onRemoveAll={handleDeleteAllNotifications}
+          />
+
+          <Tooltip label="Sair do sistema" placement="bottom-end">
+            <Flex
+              className="only-desktop"
+              cursor="pointer"
+              w="36px"
+              h="36px"
+              align="center"
+              justify="center"
+              borderRadius="full"
+              color="error.600"
+              transition="all 0.2s"
+              _hover={{ bg: 'error.50', color: 'error.700', transform: 'scale(1.05)' }}
+              onClick={() => router.push('/logout', `spinner`)}
+            >
+              <Icon as={FiLogOut} fontSize="18px" />
+            </Flex>
+          </Tooltip>
+        </Flex>
       </Flex>
 
+      {/* Tela de Carregamento ao trocar de escola */}
       <ScaleFade
         in={isLoading}
         style={{
@@ -295,17 +359,17 @@ export const Header: React.FC<IProps> = ({
           backgroundColor: `${colorMode === `light` ? `#FDFAFF` : `#18203D`}`,
           height: '100%',
           width: '100%',
-          pointerEvents: 'none',
+          pointerEvents: isLoading ? 'auto' : 'none',
           zIndex: '9999',
           opacity: isLoading ? `1` : `0`,
           transition: 'all 0.2s',
         }}
       >
-        <Flex height="100%" w="100%" bgColor={`${colorMode === `light` ? `#FDFAFF` : `#18203D`}`} bgRepeat="no-repeat" bgSize="cover">
-          <Flex direction="column" margin="auto" gap="1rem" align="center">
-            <Image src="/loading/rocket-loading.gif" h="100%" borderRadius="1rem" />
-            <Text fontSize="24px" mt="-6rem">
-              {selectedSchool?.label}
+        <Flex height="100%" w="100%" align="center" justify="center">
+          <Flex direction="column" gap="1rem" align="center">
+            <Image src="/loading/rocket-loading.gif" h="12rem" borderRadius="1rem" />
+            <Text fontSize="20px" fontWeight="600" color="primary.700" mt="-3rem">
+              Entrando em {selectedSchool?.label}...
             </Text>
           </Flex>
         </Flex>

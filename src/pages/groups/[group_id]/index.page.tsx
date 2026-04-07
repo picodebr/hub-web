@@ -194,18 +194,20 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
   );
 
   const handleUpdateGroup = useAsyncCallback(async (params: IUpdateHubGroupParams) => {
-    await updateGroup({ display_name: params.display_name, users: params.users, id: group.id });
+    const updatedGroup = await updateGroup({ display_name: params.display_name, users: params.users, id: group.id, user_roles: params.user_roles });
     setGroup((e) => ({
       ...e,
       display_name: params.display_name || e.display_name,
-      students: removeDuplicateStudents([...availableStudents, ...group.students]).filter((e) => params.users?.includes(e.id)),
+      students: updatedGroup.students,
     }));
     setSavedGroup((e) => ({
       ...e,
       display_name: params.display_name || e.display_name,
-      students: removeDuplicateStudents([...availableStudents, ...group.students]).filter((e) => params.users?.includes(e.id)),
+      students: updatedGroup.students,
     }));
-    setAvailableStudents(() => removeDuplicateStudents([...availableStudents, ...group.students]).filter((e) => !params.users?.includes(e.id)));
+    setAvailableStudents(() =>
+      removeDuplicateStudents([...availableStudents, ...updatedGroup.students]).filter((e) => !params.users?.includes(e.id)),
+    );
     toast({ status: `success`, description: `Grupo atualizado` });
   }, []);
 
@@ -298,7 +300,7 @@ const GroupPage: React.FC<IProps> = ({ group: _group }) => {
             bg={needSave ? 'primary500' : 'primary700'}
             color="white"
             minW="7rem"
-            isDisabled={!canEdit || user.role !== `student`}
+            isDisabled={!canEdit || (user.role !== `student` && group.project?.user_id !== user.id)}
             _hover={{ filter: 'brightness(0.9)' }}
             rightIcon={needSave ? <MdWarning /> : undefined}
           />

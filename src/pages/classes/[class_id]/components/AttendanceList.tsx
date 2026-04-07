@@ -1,15 +1,40 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, isWeekend, isAfter, startOfDay } from 'date-fns';
+import { format, isWeekend, isAfter, startOfDay, differenceInMonths, isWithinInterval, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AttendanceButton } from '@/components/Tailwind/AttendanceList/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/Tailwind/AttendanceList/popover';
+import * as XLSX from 'xlsx'; // Importação necessária para o Excel real
 import { BiCalendar } from 'react-icons/bi';
+import { FaGraduationCap, FaUsers } from 'react-icons/fa6';
+import { FiTrendingUp, FiSearch, FiDownload } from 'react-icons/fi';
+import {
+  Avatar,
+  Flex,
+  useColorMode,
+  Spinner,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  Text,
+  Box,
+  Grid,
+  Badge,
+  useToast,
+  Divider,
+  VStack,
+} from '@chakra-ui/react';
+
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/Tailwind/AttendanceList/popover';
 import { Calendar } from '@/components/Tailwind/AttendanceList/calendar';
 import { cn } from '@/_base/utils/cn';
-import { FaGraduationCap, FaUsers } from 'react-icons/fa6';
-import { Avatar, Flex, useColorMode, Spinner } from '@chakra-ui/react';
-import { FiTrendingUp } from 'react-icons/fi';
 import { formatShortName } from '@/_base/utils';
 import { ICreateHubClassRollCall, IHubClass } from '@/_base/interfaces/class';
 import { addRollCall } from '@/_base/services/class';
@@ -18,18 +43,22 @@ interface IProps {
   hub_class: IHubClass | null;
 }
 
-// --- Main Component ---
 export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
   const today = startOfDay(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const { colorMode } = useColorMode();
+  const toast = useToast();
 
-  // Novos estados para controlar o debounce e o UI
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const [searchTerm, setSearchTerm] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isPendingSync, setIsPendingSync] = useState(false);
 
+  const { isOpen: isExportOpen, onOpen: onOpenExport, onClose: onExportClose } = useDisclosure();
+  const [exportStartDate, setExportStartDate] = useState<string>('');
+  const [exportEndDate, setExportEndDate] = useState<string>('');
+
   const [attendanceMap, setAttendanceMap] = useState<Record<string, string[]>>(() => {
     const initialMap: Record<string, string[]> = {};
-
     if (hub_class?.roll_calls) {
       hub_class.roll_calls.forEach((rollCall) => {
         const dateKey = rollCall.roll_call_date.split('T')[0];
@@ -37,23 +66,27 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
         initialMap[dateKey] = studentIds;
       });
     }
-
-    // const todayKey = format(today, 'yyyy-MM-dd');
-    // if (!initialMap[todayKey]) {
-    //   initialMap[todayKey] = hub_class?.students.map((s) => s.id) || [];
-    // }
-
     return initialMap;
   });
 
-  const { colorMode } = useColorMode();
   const dateKey = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
   const presentIds = attendanceMap[dateKey] ?? [];
+
+  const filteredStudents = useMemo(() => {
+    if (!searchTerm) return hub_class?.students || [];
+    const lowerTerm = searchTerm.toLowerCase();
+    return (hub_class?.students || []).filter((s) => s.name.toLowerCase().includes(lowerTerm) || s.username.toLowerCase().includes(lowerTerm));
+  }, [hub_class?.students, searchTerm]);
+
+  const attendancePercent = useMemo(
+    () => Math.round((presentIds.length / (hub_class?.students.length || 1)) * 100),
+    [presentIds.length, hub_class?.students.length],
+  );
 
   const toggleAttendance = useCallback(
     (studentId: string) => {
       setAttendanceMap((prev) => {
-        const current = [...(prev[dateKey] ?? [])]; // Cópia para evitar mutação direta
+        const current = [...(prev[dateKey] ?? [])];
         if (current.includes(studentId)) {
           current.splice(current.indexOf(studentId), 1);
         } else {
@@ -61,20 +94,14 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
         }
         return { ...prev, [dateKey]: current };
       });
-
-      // Sinaliza que houveram alterações que precisam ser salvas e bloqueia o input
       setHasUnsavedChanges(true);
       setIsPendingSync(true);
     },
     [dateKey],
   );
 
-  // --- Efeito de Debounce para a Requisição ---
   useEffect(() => {
-    // Se não houver alterações não salvas, não faz nada
     if (!hasUnsavedChanges) return;
-
-    // Inicia o timer de 3 segundos
     const timer = setTimeout(async () => {
       try {
         const payload: ICreateHubClassRollCall = {
@@ -82,197 +109,291 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
           students: attendanceMap[dateKey] || [],
           hub_class_id: hub_class?.id || '',
         };
-
         await addRollCall(payload);
       } catch (error) {
         console.error('Erro ao salvar lista de chamada:', error);
-        // Aqui você pode adicionar um toast de erro se a requisição falhar
       } finally {
-        // Libera a interface e reseta o aviso de alterações
         setIsPendingSync(false);
         setHasUnsavedChanges(false);
       }
-    }, 3000);
-
-    // Função de limpeza: se o attendanceMap mudar antes dos 3s, o useEffect roda novamente,
-    // cancela o timer anterior e inicia um novo (esse é o segredo do debounce!)
+    }, 2000);
     return () => clearTimeout(timer);
   }, [attendanceMap, dateKey, hasUnsavedChanges, hub_class?.id, selectedDate]);
 
-  const attendancePercent = useMemo(
-    () => Math.round((presentIds.length / (hub_class?.students.length || 1)) * 100),
-    [presentIds.length, hub_class?.students.length],
-  );
+  // --- Lógica de Exportação para XLSX (Excel Profissional) ---
+  const handleExportXLSX = () => {
+    if (!exportStartDate || !exportEndDate || !hub_class) return;
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) setSelectedDate(startOfDay(date));
+    const start = startOfDay(new Date(exportStartDate));
+    const end = startOfDay(new Date(exportEndDate));
+
+    if (differenceInMonths(end, start) > 6) {
+      toast({ title: 'Período muito longo', description: 'O limite máximo é de 6 meses.', status: 'warning' });
+      return;
+    }
+
+    // 1. Criar o intervalo de dias (apenas dias úteis ou dias que tiveram chamada)
+    const daysInterval = eachDayOfInterval({ start, end }).filter((day) => !isWeekend(day));
+
+    // 2. Montar o cabeçalho: [Data, Aluno 1, Aluno 2, ...]
+    const header = ['Data', ...hub_class.students.map((s) => s.name)];
+
+    // 3. Montar as linhas (Matriz)
+    const rows = daysInterval.map((day) => {
+      const currentKey = format(day, 'yyyy-MM-dd');
+      const presentInThisDay = attendanceMap[currentKey] || [];
+
+      const rowData = [format(day, 'dd/MM/yyyy')];
+
+      hub_class.students.forEach((student) => {
+        // Usamos 'P' para presente e vazio para falta, padrão em diários de classe
+        rowData.push(presentInThisDay.includes(student.id) ? 'P' : 'F');
+      });
+
+      return rowData;
+    });
+
+    // 4. Gerar o Workbook do Excel
+    const worksheet = XLSX.utils.aoa_to_sheet([header, ...rows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Chamada');
+
+    // Ajustar largura das colunas automaticamente
+    const colWidths = header.map((h) => ({ wch: h.length + 5 }));
+    worksheet['!cols'] = colWidths;
+
+    // 5. Salvar o arquivo
+    XLSX.writeFile(workbook, `Chamada_${hub_class.display_name}_Relatorio.xlsx`);
+
+    onExportClose();
+    toast({ title: 'Planilha Gerada!', status: 'success' });
   };
 
-  const toggleBg = colorMode === 'light' ? 'white' : 'gray.700';
+  const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
+  const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" overflow="hidden" gap="1rem">
-      <Flex justify="space-between" gap="1rem">
-        <StatCard icon={FaGraduationCap} label="Turma" value={hub_class?.display_name || 'Turma não encontrada'} />
-        <StatCard icon={FaUsers} label="Alunos" value={hub_class?.students.length || 0} />
-        <StatCard icon={FiTrendingUp} label="Presença" value={`${attendancePercent}%`} />
-
-        {/* Date Picker Card */}
-        <motion.div
-          className="surface-elevated rounded-2xl p-4 flex gap-4 justify-start items-center sm:col-span-2 lg:col-span-1 w-full"
-          whileHover={{ y: -2, boxShadow: '0 8px 30px -12px rgba(0,0,0,0.12)' }}
-          transition={{ duration: 0.2 }}
-          style={{ border: '1px solid var(--chakra-colors-gray100)', backgroundColor: `white`, height: `6rem` }}
+    <Flex direction="column" gap="1.5rem" h="100%">
+      {/* Dashboard Stats */}
+      <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap="1rem">
+        <StatCard icon={FaGraduationCap} label="Turma" value={hub_class?.display_name || '...'} bg={bgCard} border={borderColor} />
+        <StatCard icon={FaUsers} label="Alunos" value={hub_class?.students.length || 0} bg={bgCard} border={borderColor} />
+        <StatCard icon={FiTrendingUp} label="Presença" value={`${attendancePercent}%`} bg={bgCard} border={borderColor} />
+        <Flex
+          direction="column"
+          align="center"
+          justify="center"
+          bg={bgCard}
+          border="1px solid"
+          borderColor={borderColor}
+          borderRadius="xl"
+          p="1rem"
+          boxShadow="sm"
         >
-          <div className={cn('h-11 w-11 rounded-xl flex items-center justify-center shrink-0', 'bg-primary/10 text-primary')}>
-            <BiCalendar className="h-5 w-5" />
-          </div>
-          <Flex direction="column">
-            <p className="text-md font-semibold mb-2">Dia da aula</p>
-            <Popover>
-              <PopoverTrigger asChild>
-                {/* Aqui bloqueamos o botão e alteramos o conteúdo caso isPendingSync seja true */}
-                <AttendanceButton
-                  variant="outline"
-                  className="w-full justify-start text-left font-medium gap-2 h-10 rounded-xl disabled:opacity-60 disabled:cursor-not-allowed"
-                  disabled={isPendingSync}
-                >
-                  {isPendingSync ? <Spinner size="sm" color="gray.500" /> : <BiCalendar className="h-4 w-4 text-muted-foreground" />}
-                  {isPendingSync ? 'Salvando...' : format(selectedDate, 'dd MMM yyyy', { locale: ptBR })}
-                </AttendanceButton>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 rounded-2xl" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={handleDateSelect}
-                  disabled={(date) => isWeekend(date) || isAfter(startOfDay(date), today)}
-                  locale={ptBR}
-                  className="p-3 pointer-events-auto"
-                  styles={{ cell: { width: `2.5rem` } }}
-                  style={{ backgroundColor: toggleBg }}
-                />
-              </PopoverContent>
-            </Popover>
-          </Flex>
-        </motion.div>
+          <Text fontSize="12px" color="gray.500" fontWeight="bold" textTransform="uppercase">
+            Presentes Agora
+          </Text>
+          <Text fontSize="28px" fontWeight="800" color="primary.500" mt="1">
+            {presentIds.length}
+          </Text>
+        </Flex>
+      </Grid>
 
-        <motion.div
-          className="flex flex-col items-center bg-white justify-center rounded-md w-full gap-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          style={{ backgroundColor: toggleBg, height: `6rem` }}
-        >
-          <p className="text-md font-semibold tracking-tight">
-            {presentIds.length} de {hub_class?.students.length || 0} alunos presentes
-          </p>
-          <p className="text-md bg-primary/10 text-primary p-2 rounded-md">{format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
-        </motion.div>
+      {/* Toolbar */}
+      <Flex
+        direction={{ base: 'column', md: 'row' }}
+        gap="1rem"
+        justify="space-between"
+        align="center"
+        bg={bgCard}
+        p="1rem"
+        borderRadius="xl"
+        border="1px solid"
+        borderColor={borderColor}
+        boxShadow="sm"
+      >
+        <InputGroup maxW="400px">
+          <InputLeftElement pointerEvents="none">
+            <FiSearch color="gray.400" />
+          </InputLeftElement>
+          <Input
+            placeholder="Pesquisar aluno..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            borderRadius="lg"
+            variant="filled"
+            _focus={{ bg: 'white', border: '1px solid', borderColor: 'primary.500' }}
+          />
+        </InputGroup>
+
+        <Flex gap="3" align="center">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button leftIcon={isPendingSync ? <Spinner size="xs" /> : <BiCalendar />} variant="outline" borderRadius="lg" minW="220px">
+                {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 border-none shadow-2xl" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => d && setSelectedDate(startOfDay(d))}
+                disabled={(date) => isWeekend(date) || isAfter(startOfDay(date), today)}
+                locale={ptBR}
+                className="rounded-xl bg-white p-3"
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Button colorScheme="green" leftIcon={<FiDownload />} onClick={onOpenExport} borderRadius="lg">
+            Exportar Excel
+          </Button>
+        </Flex>
       </Flex>
 
-      {/* Student List */}
-      <Flex w="100%" overflow="hidden">
-        <motion.div
-          className="surface-elevated rounded-2xl bg-white"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          style={{ overflowY: `auto`, width: `100%` }}
+      {/* Tabela de Alunos */}
+      <Box bg={bgCard} borderRadius="xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflow="hidden" flex="1">
+        <Grid
+          templateColumns="auto 1fr 1fr 1fr auto"
+          gap="4"
+          px="6"
+          py="4"
+          bg="gray.50"
+          fontSize="12px"
+          fontWeight="bold"
+          color="gray.500"
+          textTransform="uppercase"
+          display={{ base: 'none', md: 'grid' }}
         >
-          <div className="hidden sm:grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-3 border-b text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            <span className="w-10" />
-            <span>Aluno</span>
-            <span>Usuário</span>
-            <span>Último Acesso</span>
-            <span>Presença</span>
-          </div>
+          <Box w="40px" />
+          <Text>Nome do Aluno</Text>
+          <Text>Username</Text>
+          <Text>Último Acesso</Text>
+          <Text textAlign="center">Status</Text>
+        </Grid>
 
+        <Flex direction="column" overflowY="auto" maxH="60vh">
           <AnimatePresence mode="popLayout">
-            {hub_class?.students.map((student, i) => {
-              const isPresent = presentIds.includes(student.id);
-              return (
-                <motion.div
-                  key={`${student.id}-${dateKey}`}
-                  layout
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ delay: i * 0.04, duration: 0.3 }}
-                  onClick={() => toggleAttendance(student.id)}
-                  className={cn(
-                    'grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-4 cursor-pointer transition-colors duration-200',
-                    'hover:bg-muted/50',
-                    i < (hub_class?.students.length || 0) - 1 && 'border-b border-border/50',
-                  )}
+            {filteredStudents.map((student, i) => (
+              <motion.div
+                key={`${student.id}-${dateKey}`}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => toggleAttendance(student.id)}
+              >
+                <Grid
+                  templateColumns={{ base: 'auto 1fr auto', md: 'auto 1fr 1fr 1fr auto' }}
+                  gap="4"
+                  px="6"
+                  py="3"
+                  alignItems="center"
+                  cursor="pointer"
+                  borderBottom="1px solid"
+                  borderColor="gray.100"
+                  _hover={{ bg: 'primary.25' }}
                 >
-                  <div>
-                    <Avatar name={formatShortName(student.name, true)} title={student.name} src={student.avatar || ``} h="40px" w="40px" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{student.name}</p>
-                    <p className="text-sm text-muted-foreground sm:hidden">{student.username}</p>
-                  </div>
-                  <p className="hidden sm:block text-sm text-muted-foreground truncate">{student.username}</p>
-                  <p className="hidden sm:block text-sm text-muted-foreground">
-                    {student.metadata?.last_access ? new Date(student.metadata?.last_access).toLocaleDateString() : `-`}
-                  </p>
-                  <AttendanceToggle checked={isPresent} onToggle={() => toggleAttendance(student.id)} />
-                </motion.div>
-              );
-            })}
+                  <Avatar size="sm" name={student.name} src={student.avatar || ``} />
+                  <Text fontWeight="600" isTruncated>
+                    {student.name}
+                  </Text>
+                  <Text fontSize="13px" color="gray.500" display={{ base: 'none', md: 'block' }}>
+                    @{student.username}
+                  </Text>
+                  <Text fontSize="13px" color="gray.500" display={{ base: 'none', md: 'block' }}>
+                    {student.metadata?.last_access ? format(new Date(student.metadata.last_access), 'dd/MM/yy') : '-'}
+                  </Text>
+                  <Flex justify="center">
+                    <AttendanceToggle checked={presentIds.includes(student.id)} onToggle={() => toggleAttendance(student.id)} />
+                  </Flex>
+                </Grid>
+              </motion.div>
+            ))}
           </AnimatePresence>
-        </motion.div>
-      </Flex>
+        </Flex>
+      </Box>
+
+      {/* Modal de Exportação */}
+      <Modal isOpen={isExportOpen} onClose={onExportClose} isCentered size="md">
+        <ModalOverlay backdropFilter="blur(8px)" />
+        <ModalContent borderRadius="2xl">
+          <ModalHeader>Relatório de Frequência</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb="6">
+            <VStack spacing="4" align="stretch">
+              <Text fontSize="14px" color="gray.500">
+                Selecione o período para gerar a planilha formatada (.xlsx).
+              </Text>
+              <Grid templateColumns="1fr 1fr" gap="4">
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" mb="1">
+                    Início
+                  </Text>
+                  <Input type="date" value={exportStartDate} onChange={(e) => setExportStartDate(e.target.value)} />
+                </Box>
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" mb="1">
+                    Fim
+                  </Text>
+                  <Input type="date" value={exportEndDate} onChange={(e) => setExportEndDate(e.target.value)} />
+                </Box>
+              </Grid>
+            </VStack>
+          </ModalBody>
+          <ModalFooter bg="gray.50" borderRadius="0 0 16px 16px">
+            <Button variant="ghost" mr="3" onClick={onExportClose}>
+              Cancelar
+            </Button>
+            <Button colorScheme="green" leftIcon={<FiDownload />} onClick={handleExportXLSX} isDisabled={!exportStartDate || !exportEndDate}>
+              Baixar Planilha
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 };
 
-// --- Toggle Component ---
+// --- Componentes Auxiliares ---
 function AttendanceToggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
   return (
-    <motion.button
-      onClick={(e) => {
+    <Box
+      as="button"
+      onClick={(e: any) => {
         e.stopPropagation();
         onToggle();
       }}
-      className={cn(
-        'relative h-8 w-14 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        checked ? 'bg-success' : 'bg-muted',
-      )}
-      whileTap={{ scale: 0.95 }}
-      aria-label="Toggle attendance"
+      w="56px"
+      h="28px"
+      borderRadius="full"
+      position="relative"
+      bg={checked ? 'success500' : 'gray.300'}
+      transition="0.3s"
     >
       <motion.div
-        className="absolute top-1 left-1 h-6 w-6 rounded-full bg-card shadow-md"
-        animate={{ x: checked ? 24 : 0 }}
-        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'white', position: 'absolute', top: '3px', left: '3px' }}
+        animate={{ x: checked ? 28 : 0 }}
       />
-    </motion.button>
+    </Box>
   );
 }
 
-// --- Stat Card ---
-function StatCard({ icon: Icon, label, value, accent }: { icon: React.ElementType; label: string; value: string | number; accent?: boolean }) {
+function StatCard({ icon: Icon, label, value, bg, border }: any) {
   return (
-    <motion.div
-      className="surface-elevated rounded-2xl p-4 flex items-center gap-4 w-full"
-      whileHover={{ y: -2, boxShadow: '0 8px 30px -12px rgba(0,0,0,0.12)' }}
-      transition={{ duration: 0.2 }}
-      style={{ border: '1px solid var(--chakra-colors-gray100)', backgroundColor: `white`, height: `6rem` }}
-    >
-      <div
-        className={cn(
-          'h-11 w-11 rounded-xl flex items-center justify-center shrink-0',
-          accent ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary',
-        )}
-      >
-        <Icon className="h-5 w-5" />
-      </div>
-      <div>
-        <p className="text-md text-muted-foreground">{label}</p>
-        <p className="text-xl font-semibold tracking-tight">{value}</p>
-      </div>
-    </motion.div>
+    <Flex align="center" gap="4" bg={bg} p="4" borderRadius="xl" border="1px solid" borderColor={border} boxShadow="sm">
+      <Flex h="12" w="12" align="center" justify="center" borderRadius="lg" bg="primary.50" color="primary.500">
+        <Icon size="20px" />
+      </Flex>
+      <Box>
+        <Text fontSize="12px" color="gray.500" fontWeight="bold" textTransform="uppercase">
+          {label}
+        </Text>
+        <Text fontSize="20px" fontWeight="800" color="primary.900">
+          {value}
+        </Text>
+      </Box>
+    </Flex>
   );
 }

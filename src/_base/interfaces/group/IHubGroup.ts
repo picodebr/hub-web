@@ -4,6 +4,7 @@ import { IHubGroupStudentLink } from './IHubGroupStudentLink';
 import { IHubGroupMetadata } from './IHubGroupMetadata';
 import { IHubGroupOrder } from './IHubGroupOrder';
 import { IHubGroupActivity } from './IHubGroupActivity';
+import { IHubGroupActivityCategory } from './IHubGroupActivityCategory';
 
 export interface IHubGroup {
   id: string;
@@ -14,10 +15,14 @@ export interface IHubGroup {
   approved_at: string | null;
   created_at: string;
   updated_at: string;
-  students: IHubUser[];
+  students: (IHubUser & { group_role?: HubGroupRole })[];
   educator: IHubUser | null;
   project: IProject | null;
   student_links: IHubGroupStudentLink[];
   orders: IHubGroupOrder[];
   activities: IHubGroupActivity[];
+  activity_categories: IHubGroupActivityCategory[];
 }
+
+export const HUB_GROUP_ROLES = <const>['Líder de Grupo', 'Gestor de Projetos', 'Social Media', 'Construtor'];
+export type HubGroupRole = (typeof HUB_GROUP_ROLES)[number];
