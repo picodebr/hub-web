@@ -11,6 +11,8 @@ export * from './listTeacherGroups';
 export * from './rejectOrder';
 export * from './removeGroup';
 export * from './removeGroupActivity';
+export * from './removeGroupActivityCategory';
 export * from './updateGroup';
 export * from './updateOrder';
 export * from './updateOrderItem';
+export * from './addGroupActivityCategory';

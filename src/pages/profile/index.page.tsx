@@ -1,12 +1,12 @@
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
-import { Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Img, Switch, useColorMode } from '@chakra-ui/react';
+import { Box, Img, Switch, useColorMode, Flex, Text, Grid, Divider, Icon, Button } from '@chakra-ui/react';
+import { FiExternalLink, FiSettings, FiAward, FiMoon } from 'react-icons/fi';
 
 import { TeacherProfile } from './components/TeacherProfile';
 import { StudentProfile } from './components/StudentProfile';
 import { validateSession } from '@/_base/services/auth';
 import { logError, cookieManager, formatDateInput } from '@/_base/utils';
-import { Flex, Text } from '@chakra-ui/react';
 import { IHubUser } from '@/_base/interfaces/user';
 import { EditableTextInput } from '@/components/Inputs/EditableText';
 import { DateInput } from '@/components/Inputs/Date';
@@ -16,7 +16,6 @@ import { IProject } from '@/_base/interfaces/project';
 import { updateProfile } from '@/_base/services/user';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { IHubCertificate } from '@/_base/interfaces/certificate';
-import { FiExternalLink } from 'react-icons/fi';
 import { listUserCertificates } from '@/_base/services/certificates';
 
 interface IProps {
@@ -24,16 +23,13 @@ interface IProps {
 }
 
 const Profile: React.FC<IProps> = ({ user }) => {
-  const [eventIsClicked, setEventIsClicked] = useState(false);
   const [projects, setProjects] = useState<IProject[]>([]);
   const [certificates, setCertificates] = useState<IHubCertificate[]>([]);
-
   const [profile, setProfile] = useState<IHubUser>(user);
 
   const { colorMode, toggleColorMode } = useColorMode();
   const { setUser, user: authUser } = useAuth();
   const router = useCustomRouter();
-  const isOpened = useMemo<boolean>(() => !!router.query.opened, [router]);
 
   const { school } = useSelectedSchool();
 
@@ -48,20 +44,9 @@ const Profile: React.FC<IProps> = ({ user }) => {
   useEffect(() => {
     (async () => {
       const certificatesResponse = await listUserCertificates();
-
       setCertificates(certificatesResponse);
     })();
   }, [school]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      const el = document.getElementsByClassName(`my-data-btn`);
-      if (el[0] && isOpened && !eventIsClicked) {
-        (el[0] as any).click();
-        setEventIsClicked(true);
-      }
-    }, 250);
-  }, [isOpened]);
 
   const handleUpdateProfile = useAsyncCallback(async () => {
     const updatedProfile = await updateProfile({
@@ -69,200 +54,172 @@ const Profile: React.FC<IProps> = ({ user }) => {
       username: profile.username,
       bio: profile.bio || undefined,
     });
-
     setProfile((e) => ({ ...e, ...updatedProfile }));
     setUser({ ...authUser, ...updatedProfile });
   }, []);
 
   const ComponentUser = user?.role === 'student' ? StudentProfile : TeacherProfile;
 
-  return (
-    <Flex direction="column" flex="1" gap="1rem" overflow="auto">
-      <ComponentUser projects={projects} user={profile} />
-      <Flex flex="1" flexDirection="column" gap="1rem">
-        <Flex
-          bgColor="white"
-          flexDirection="column"
-          borderRadius="10px"
-          w="100%"
-          gap="1.25rem"
-          textAlign="left"
-          display="column"
-          justify="center"
-          color="gray600"
-        >
-          <Accordion allowMultiple>
-            <AccordionItem border="none" borderRadius="10px">
-              <AccordionButton className="my-data-btn" borderRadius="md">
-                <Text flex="1" textAlign="left" padding="0.65rem 0.35rem" fontSize={{ base: `15px`, xl: '16px' }}>
-                  Meus dados
-                </Text>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel>
-                <Flex pb={5} direction="column">
-                  <Text>Nome Completo</Text>
-                  <EditableTextInput
-                    onInputChange={(name) => setProfile((e) => ({ ...e, name }))}
-                    value={profile.name}
-                    onOk={handleUpdateProfile}
-                    onCancel={() => setProfile((e) => ({ ...e, name: user.name }))}
-                  />
-                </Flex>
-                <Flex pb={5} direction="column">
-                  <Text>Nome de Usuário</Text>
-                  <EditableTextInput
-                    onInputChange={(username) => setProfile((e) => ({ ...e, username }))}
-                    value={profile.username}
-                    onOk={handleUpdateProfile}
-                    onCancel={() => setProfile((e) => ({ ...e, username: user.username }))}
-                  />
-                </Flex>
-                <Flex pb={5} direction="column">
-                  <Text>Biografia</Text>
-                  <EditableTextInput
-                    placeholder="Biografia"
-                    onInputChange={(bio) => setProfile((e) => ({ ...e, bio }))}
-                    value={profile.bio || ''}
-                    onOk={handleUpdateProfile}
-                    onCancel={() => setProfile((e) => ({ ...e, bio: user.bio }))}
-                  />
-                </Flex>
-                <Flex pb={5} direction="column">
-                  <Text>E-mail (opcional)</Text>
-                  <EditableTextInput
-                    placeholder="Seu e-mail"
-                    onInputChange={(email) => setProfile((e) => ({ ...e, email }))}
-                    value={profile.email || ''}
-                    isDisabled
-                  />
-                </Flex>
-                <Flex direction="column">
-                  <Text>Data de Nascimento</Text>
-                  <DateInput
-                    value={formatDateInput(profile.birthdate)}
-                    isDisabled
-                    onInputChange={(birthdate) => setProfile((e) => ({ ...e, birthdate: birthdate ? new Date(birthdate) : e.birthdate }))}
-                  />
-                </Flex>
-              </AccordionPanel>
-            </AccordionItem>
-          </Accordion>
-        </Flex>
-        <Flex
-          bgColor="white"
-          flexDirection="column"
-          borderRadius="10px"
-          w="100%"
-          h="fit-content"
-          gap="1.25rem"
-          textAlign="left"
-          color="gray600"
-          userSelect="none"
-        >
-          <Accordion allowMultiple w="100%">
-            <AccordionItem border="none">
-              <AccordionButton borderRadius="md">
-                <Text flex="1" textAlign="left" padding="0.65rem 0.35rem" fontSize={{ base: `15px`, xl: '16px' }}>
-                  Certificados
-                </Text>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel pb={4}>
-                {certificates.length ? (
-                  <Flex direction="column" gap="1rem">
-                    {certificates.map((certificate) => (
-                      <Flex
-                        key={certificate.id}
-                        justify="space-between"
-                        align="center"
-                        gap="0.5rem"
-                        w="100%"
-                        _notLast={{ borderBottom: '1px', borderColor: '#4B4F5C33', paddingBottom: '1rem' }}
-                      >
-                        <Flex align="center" gap="20px">
-                          <Img src={certificate.thumbnail} w="40px" />
-                          <Text fontWeight="500" fontSize="15px">
-                            {certificate.title}
-                          </Text>
-                        </Flex>
-                        <Box
-                          as="a"
-                          href={certificate.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          bgColor="primary"
-                          borderRadius="5px"
-                          cursor="pointer"
-                          textAlign="center"
-                        >
-                          <FiExternalLink fontSize="22px" />
-                        </Box>
-                      </Flex>
-                    ))}
-                  </Flex>
-                ) : (
-                  <Text color="gray500">Você ainda não possui nenhum certificado</Text>
-                )}
-              </AccordionPanel>
+  const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
+  const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
-              {/* <AccordionPanel pb={4}>
-              <Flex w="100%" justify="space-between" p="20px" borderTop="1px" borderBottom="1px" borderColor="gray300">
-                <Flex align="center" gap="20px">
-                  <Img src="/icons/medal.svg" w="40px" />
-                  <Text fontWeight="500" fontSize="15px">
-                    JavaScript
-                  </Text>
-                </Flex>
-                <CircularProgress value={100}>
-                  <CircularProgressLabel>100%</CircularProgressLabel>
-                </CircularProgress>
-              </Flex>
-              <Flex w="100%" justify="space-between" p="20px" borderBottom="1px" borderColor="gray300">
-                <Flex align="center" gap="20px">
-                  <Img src="/icons/medal.svg" w="40px" />
-                  <Text fontWeight="500" fontSize="15px">
-                    SQL
-                  </Text>
-                </Flex>
-                <CircularProgress value={50}>
-                  <CircularProgressLabel>50%</CircularProgressLabel>
-                </CircularProgress>
-              </Flex>
-              <Flex w="100%" justify="space-between" p="20px">
-                <Flex align="center" gap="20px">
-                  <Img src="/icons/medal.svg" w="40px" />
-                  <Text fontWeight="500" fontSize="15px">
-                    Python
-                  </Text>
-                </Flex>
-                <CircularProgress value={60}>
-                  <CircularProgressLabel>60%</CircularProgressLabel>
-                </CircularProgress>
-              </Flex>
-            </AccordionPanel> */}
-            </AccordionItem>
-          </Accordion>
-        </Flex>
-        <Flex
-          bgColor="white"
-          flexDirection="column"
-          borderRadius="10px"
-          w="100%"
-          h="fit-content"
-          padding="1.25rem"
-          gap="1.25rem"
-          textAlign="left"
-          display="column"
-          justify="space-between"
-          color="gray600"
-        >
-          <Flex display="flex" justify="space-between" direction="row">
-            <Text fontSize="16px">Modo noturno</Text>
-            <Switch onChange={toggleColorMode} isChecked={colorMode === 'dark'} colorScheme="orange" />
+  return (
+    <Flex direction="column" flex="1" gap="1.5rem" overflowY="auto" overflowX="hidden" pb="2rem">
+      {/* Dashboard Topo (Professor ou Aluno) */}
+      <ComponentUser projects={projects} user={profile} />
+
+      <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap="1.5rem">
+        {/* Painel de Configurações (Meus Dados + Modo Noturno) */}
+        <Flex direction="column" bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" p="1.5rem">
+          <Flex justify="space-between" align="center" mb="1.5rem">
+            <Flex align="center" gap="0.5rem">
+              <Icon as={FiSettings} color="primary.500" fontSize="20px" />
+              <Text fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+                Configurações da Conta
+              </Text>
+            </Flex>
+            <Flex
+              align="center"
+              gap="0.5rem"
+              bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
+              p="0.25rem 0.75rem"
+              borderRadius="full"
+              border="1px solid"
+              borderColor={borderColor}
+            >
+              <Icon as={FiMoon} color="gray.500" />
+              <Switch size="sm" onChange={toggleColorMode} isChecked={colorMode === 'dark'} colorScheme="orange" />
+            </Flex>
+          </Flex>
+
+          <Flex direction="column" gap="1.25rem">
+            <Box>
+              <Text fontSize="13px" fontWeight="600" color="gray.500" mb="2px">
+                Nome Completo
+              </Text>
+              <EditableTextInput
+                value={profile.name}
+                onInputChange={(name) => setProfile((e) => ({ ...e, name }))}
+                onOk={handleUpdateProfile}
+                onCancel={() => setProfile((e) => ({ ...e, name: user.name }))}
+              />
+            </Box>
+            <Box>
+              <Text fontSize="13px" fontWeight="600" color="gray.500" mb="2px">
+                Nome de Usuário
+              </Text>
+              <EditableTextInput
+                value={profile.username}
+                onInputChange={(username) => setProfile((e) => ({ ...e, username }))}
+                onOk={handleUpdateProfile}
+                onCancel={() => setProfile((e) => ({ ...e, username: user.username }))}
+              />
+            </Box>
+            <Box>
+              <Text fontSize="13px" fontWeight="600" color="gray.500" mb="2px">
+                Biografia
+              </Text>
+              <EditableTextInput
+                placeholder="Adicione uma biografia..."
+                value={profile.bio || ''}
+                onInputChange={(bio) => setProfile((e) => ({ ...e, bio }))}
+                onOk={handleUpdateProfile}
+                onCancel={() => setProfile((e) => ({ ...e, bio: user.bio }))}
+              />
+            </Box>
+            <Grid templateColumns="1fr 1fr" gap="1rem">
+              <Box>
+                <Text fontSize="13px" fontWeight="600" color="gray.500" mb="2px">
+                  E-mail
+                </Text>
+                <EditableTextInput
+                  placeholder="Seu e-mail"
+                  value={profile.email || ''}
+                  onInputChange={(email) => setProfile((e) => ({ ...e, email }))}
+                  isDisabled
+                />
+              </Box>
+              <Box>
+                <Text fontSize="13px" fontWeight="600" color="gray.500" mb="2px">
+                  Nascimento
+                </Text>
+                <DateInput
+                  value={formatDateInput(profile.birthdate)}
+                  isDisabled
+                  onInputChange={(birthdate) => setProfile((e) => ({ ...e, birthdate: birthdate ? new Date(birthdate) : e.birthdate }))}
+                />
+              </Box>
+            </Grid>
           </Flex>
         </Flex>
-      </Flex>
+
+        {/* Painel de Certificados */}
+        <Flex direction="column" bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" p="1.5rem">
+          <Flex align="center" gap="0.5rem" mb="1.5rem">
+            <Icon as={FiAward} color="orange.500" fontSize="20px" />
+            <Text fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+              Meus Certificados
+            </Text>
+          </Flex>
+
+          <Flex direction="column" gap="0.75rem" overflowY="auto" maxH="350px" pr="0.5rem">
+            {certificates.length ? (
+              certificates.map((certificate) => (
+                <Flex
+                  key={certificate.id}
+                  align="center"
+                  justify="space-between"
+                  p="1rem"
+                  bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
+                  border="1px solid"
+                  borderColor={borderColor}
+                  borderRadius="xl"
+                  transition="all 0.2s"
+                  _hover={{ transform: 'translateY(-2px)', boxShadow: 'sm' }}
+                >
+                  <Flex align="center" gap="1rem">
+                    <Flex bg="white" p="0.25rem" borderRadius="md" border="1px solid" borderColor="gray.200">
+                      <Img src={certificate.thumbnail} w="32px" h="32px" objectFit="contain" />
+                    </Flex>
+                    <Text fontWeight="600" fontSize="15px" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+                      {certificate.title}
+                    </Text>
+                  </Flex>
+                  <Button
+                    as="a"
+                    href={certificate.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="sm"
+                    variant="ghost"
+                    colorScheme="blue"
+                    borderRadius="full"
+                    rightIcon={<FiExternalLink />}
+                  >
+                    Visualizar
+                  </Button>
+                </Flex>
+              ))
+            ) : (
+              <Flex
+                direction="column"
+                align="center"
+                justify="center"
+                h="150px"
+                color="gray.400"
+                border="2px dashed"
+                borderColor={borderColor}
+                borderRadius="xl"
+              >
+                <Icon as={FiAward} fontSize="28px" mb="2" opacity={0.5} />
+                <Text fontSize="14px" fontWeight="500">
+                  Você ainda não possui certificados
+                </Text>
+              </Flex>
+            )}
+          </Flex>
+        </Flex>
+      </Grid>
     </Flex>
   );
 };
@@ -271,17 +228,13 @@ export default Profile;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const selectedPage = 'profile';
-
   try {
     cookieManager.updateToken(req);
-
     const user = await validateSession();
-
     return { props: { selectedPage, pageTitle: 'Meu perfil', user, showBackButton: false } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
-
     return { redirect: { destination: '/login', permanent: false } };
   }
 };

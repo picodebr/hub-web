@@ -18,9 +18,16 @@ import {
   MenuOptionGroup,
   Text,
   useColorMode,
+  VStack,
+  HStack,
+  Box,
+  Divider,
+  Icon,
 } from '@chakra-ui/react';
 import { FaRegTrashCan } from 'react-icons/fa6';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
+import { FiUsers, FiClock } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 import { SmallModal } from '@/components/Modal/Small';
 import { IHubUser } from '@/_base/interfaces/user';
@@ -47,7 +54,7 @@ interface IProps {
 export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit = true, selectedItemId }) => {
   const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>(initialData);
   const [itemToRemove, setItemToRemove] = useState<KanbanItemType | null>(null);
-  const { colorMode } = useColorMode()
+  const { colorMode } = useColorMode();
 
   const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<KanbanItemType>({
     data: EMPTY_KANBAN_ITEM,
@@ -57,15 +64,14 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
   useEffect(() => {
     initialData.forEach((e) => {
       const target = e.items.find((x) => x.id === selectedItemId);
-
       if (target) setData(target);
     });
   }, [selectedItemId]);
 
   const handleUpdateKanbanList = (_item?: KanbanItemType) => {
     const kanbanItem = _item || data;
-
     if (!kanbanItem) return;
+
     setKanbanList((e) => {
       const res = e.map((column) =>
         column.type === kanbanItem.column
@@ -77,9 +83,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
             }
           : column,
       );
-
       onChange(res);
-
       return res;
     });
     clearStates();
@@ -96,9 +100,7 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
             }
           : column,
       );
-
       onChange(res);
-
       return res;
     });
     clearStates();
@@ -112,10 +114,8 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
 
   function onDragEnd(result: { source: any; destination: any }) {
     const { source, destination } = result;
+    if (!destination) return;
 
-    if (!destination) {
-      return;
-    }
     const sInd = +source.droppableId;
     const dInd = +destination.droppableId;
 
@@ -149,140 +149,177 @@ export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit
 
       {/* UPDATE/CREATE MODAL */}
       <SmallModal
+        title={data.id ? 'Editar Tarefa' : 'Nova Tarefa'}
         show={!!data?.column}
         onConfirm={() => submit(handleUpdateKanbanList)}
-        onCancel={() => setData({} as any)}
-        onClose={() => setData({} as any)}
+        onCancel={clearStates}
+        onClose={clearStates}
         disableOkButton={!canEdit}
         size="2xl"
       >
-        {!!data.id && (
-          <Flex justify="flex-end" m="-0.5rem 1.5rem 0">
-            <Flex
-              align="center"
-              justify="center"
-              color="primary500"
-              border="1px"
-              borderColor="gray300"
-              p=".35rem .35rem .38rem .38rem"
-              cursor="pointer"
-              borderRadius="50%"
-              transition="0.1s"
-              _hover={{
-                borderColor: `primary500`,
-              }}
-              onClick={() => canEdit && setItemToRemove(data)}
-            >
-              <FaRegTrashCan fontSize="1rem" />
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: 'easeOut' }}>
+          <VStack spacing="1.5rem" align="stretch" mt="2">
+            {/* LINHA 1: Título e Data */}
+            <Flex gap="1.5rem" direction={{ base: 'column', md: 'row' }} align="flex-start">
+              <Box flex="2" w="100%">
+                <TextInput
+                  isDisabled={!canEdit}
+                  color={colorMode === `dark` ? `#FFF` : `#1D2939`}
+                  label="Título da Tarefa"
+                  placeholder="Ex: Desenvolver nova landing page"
+                  _placeholder={{ fontSize: '14px', color: 'gray.400' }}
+                  error={errors.title}
+                  value={data?.title || ``}
+                  onInputChange={(value) => onInputChange('title', value)}
+                />
+              </Box>
+              <Box flex="1" w="100%">
+                <DateInput
+                  isDisabled={!canEdit}
+                  label="Data limite"
+                  color={colorMode === `dark` ? `#FFF` : `#1D2939`}
+                  value={formatDateInput(data.end_date)}
+                  error={errors.end_date}
+                  onInputChange={(value) => onInputChange('end_date', value ? new Date(value).toString() : '')}
+                />
+              </Box>
             </Flex>
-          </Flex>
-        )}
-        <Flex direction="column" gap="1rem" flex="1">
-          <Flex gap="1rem" align="flex-end">
-            <TextInput
-              isDisabled={!canEdit}
-              flex="1"
-              color={colorMode === `dark` ? `#FFF` : `#1D2939`}
-              label="Título"
-              placeholder="Informe o título da tarefa"
-              _placeholder={{ fontSize: '14px' }}
-              error={errors.title}
-              value={data?.title || ``}
-              onInputChange={(value) => onInputChange('title', value)}
-            />
-            <DateInput
-              isDisabled={!canEdit}
-              label="Data limite"
-              color={colorMode === `dark` ? `#FFF` : `#1D2939`}
-              value={formatDateInput(data.end_date)}
-              error={errors.end_date}
-              onInputChange={(value) => onInputChange('end_date', value ? new Date(value).toString() : '')}
-            />
-            {!group && (
-              <Flex gap="1rem" align="center" mb="0.45rem">
-                <ColorPicker onChange={(value) => onInputChange('bgcolor', value)} enableInput={false} color={data?.bgcolor} />
-                <Text fontWeight="500" whiteSpace="nowrap" color={colorMode === `dark` ? `#FFF` : `#1D2939`}>
-                  Cor de fundo
-                </Text>
-              </Flex>
-            )}
-          </Flex>
-          <TextAreaInput
-            label="Descrição da tarefa"
-            isDisabled={!canEdit}
-            placeholder="Informe a descrição da tarefa"
-            color={colorMode === `dark` ? `#FFF` : `#1D2939`}
-            _placeholder={{ fontSize: '14px' }}
-            error={errors.content}
-            value={data?.content || ``}
-            onInputChange={(value) => onInputChange('content', value)}
-            rows={5}
-          />
-          {!!group && (
-            <>
-              <Flex align="center" justify="space-between" gap="2rem">
-                <Flex gap="1rem" align="center">
-                  <Text fontWeight="500">Cor de fundo</Text>
+
+            {/* LINHA 2: Descrição */}
+            <Box>
+              <TextAreaInput
+                label="Descrição detalhada"
+                isDisabled={!canEdit}
+                placeholder="Informe o que precisa ser feito nesta tarefa..."
+                color={colorMode === `dark` ? `#FFF` : `#1D2939`}
+                _placeholder={{ fontSize: '14px', color: 'gray.400' }}
+                error={errors.content}
+                value={data?.content || ``}
+                onInputChange={(value) => onInputChange('content', value)}
+                rows={5}
+              />
+            </Box>
+
+            <Divider borderColor={colorMode === 'dark' ? 'whiteAlpha.200' : 'blackAlpha.200'} />
+
+            {/* LINHA 3: Configurações Extras (Membros e Cor) */}
+            <Flex justify="space-between" align={{ base: 'flex-start', md: 'center' }} direction={{ base: 'column', md: 'row' }} gap="1rem">
+              {/* Box de Atribuição (Design mais integrado) */}
+              {!!group && (
+                <Flex
+                  align="center"
+                  gap="1rem"
+                  p="0.75rem"
+                  borderRadius="lg"
+                  bg={colorMode === 'dark' ? 'whiteAlpha.50' : 'gray.50'}
+                  border="1px solid"
+                  borderColor={colorMode === 'dark' ? 'whiteAlpha.200' : 'gray.200'}
+                  flex="1"
+                >
+                  <Icon as={FiUsers} color="gray.500" fontSize="1.2rem" />
+                  <Box flex="1">
+                    <Text fontSize="12px" fontWeight="600" color="gray.500" mb="1">
+                      Atribuído a:
+                    </Text>
+                    <Flex align="center" gap="0.75rem">
+                      <Menu closeOnSelect={false} placement="top-start" isOpen={canEdit ? undefined : false}>
+                        <MenuButton
+                          as={Button}
+                          size="sm"
+                          variant="outline"
+                          rightIcon={<IoChevronDownCircleOutline />}
+                          bg="white"
+                          color="gray.700"
+                          _hover={{ bg: 'gray.100' }}
+                        >
+                          Adicionar
+                        </MenuButton>
+                        <MenuList borderColor="gray300" maxH="250px" overflow="auto" zIndex={10}>
+                          <MenuOptionGroup type="checkbox">
+                            {group.students.length ? (
+                              group.students.map((student) => (
+                                <MenuItemOption
+                                  key={student.id}
+                                  value={student.id}
+                                  color={colorMode === `dark` ? `#FFF` : `#1D2939`}
+                                  onClick={(e) =>
+                                    onInputChange(
+                                      'users',
+                                      data.users.includes(e.currentTarget.value)
+                                        ? data.users.filter((id) => id !== e.currentTarget.value)
+                                        : [e.currentTarget.value, ...data.users],
+                                    )
+                                  }
+                                >
+                                  {student.name}
+                                </MenuItemOption>
+                              ))
+                            ) : (
+                              <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
+                            )}
+                          </MenuOptionGroup>
+                        </MenuList>
+                      </Menu>
+                      <Box minH="32px" display="flex" alignItems="center">
+                        <AvatarList
+                          users={data.users?.map((studentId) => group.students.find((e) => e.id === studentId) as IHubUser).filter((e) => e) || []}
+                          emptyMessage="Ninguém"
+                        />
+                      </Box>
+                    </Flex>
+                  </Box>
+                </Flex>
+              )}
+
+              {/* Controles da Direita (Cor e Lixeira) */}
+              <Flex align="center" gap="1.5rem" ml="auto">
+                <Flex align="center" gap="0.5rem">
+                  <Text fontSize="14px" fontWeight="500" color={colorMode === `dark` ? `gray.300` : `gray.600`}>
+                    Cor
+                  </Text>
                   <ColorPicker onChange={(value) => onInputChange('bgcolor', value)} enableInput={false} color={data?.bgcolor} />
                 </Flex>
-                <Menu closeOnSelect={false} placement="bottom" isOpen={canEdit ? undefined : false}>
-                  <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white" flex="1">
-                    Atribuido à
-                  </MenuButton>
-                  <MenuList borderColor="gray300" maxH="250px" overflow="auto" >
-                    <MenuOptionGroup type="checkbox">
-                      {group.students.length ? (
-                        group.students.map((student) => (
-                          <MenuItemOption
-                            key={student.id}
-                            value={student.id}
-                            color={colorMode === `dark` ? `#FFF` : `#1D2939`}
-                            onClick={(e) =>
-                              onInputChange(
-                                'users',
-                                data.users.includes(e.currentTarget.value)
-                                  ? data.users.filter((id) => id !== e.currentTarget.value)
-                                  : [e.currentTarget.value, ...data.users],
-                              )
-                            }
-                          >
-                            {student.name}
-                          </MenuItemOption>
-                        ))
-                      ) : (
-                        <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
-                      )}
-                    </MenuOptionGroup>
-                  </MenuList>
-                </Menu>
+
+                {!!data.id && canEdit && (
+                  <>
+                    <Divider orientation="vertical" h="2rem" borderColor={colorMode === 'dark' ? 'whiteAlpha.300' : 'gray.300'} />
+                    <Button
+                      size="sm"
+                      colorScheme="red"
+                      variant="ghost"
+                      leftIcon={<FaRegTrashCan />}
+                      onClick={() => setItemToRemove(data)}
+                      _hover={{ bg: 'red.50', transform: 'scale(1.05)' }}
+                      transition="all 0.2s"
+                    >
+                      Excluir
+                    </Button>
+                  </>
+                )}
               </Flex>
-              <Flex minH="3rem">
-                <AvatarList
-                  users={data.users?.map((studentId) => group.students.find((e) => e.id === studentId) as IHubUser).filter((e) => e) || []}
-                  emptyMessage="Nenhum membro atribuído"
-                />
-              </Flex>
-            </>
-          )}
-        </Flex>
+            </Flex>
+          </VStack>
+        </motion.div>
       </SmallModal>
 
-      {/* COFIRM DELETE MODAL */}
+      {/* CONFIRM DELETE MODAL */}
       <AlertDialog isOpen={!!itemToRemove} leastDestructiveRef={cancelRef} onClose={() => setItemToRemove(null)}>
         <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+          <AlertDialogContent borderRadius="xl">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" color="red.500">
               Excluir Tarefa
             </AlertDialogHeader>
 
-            <AlertDialogBody>Você tem certeza que deseja remover essa tarefa?</AlertDialogBody>
+            <AlertDialogBody color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
+              Você tem certeza que deseja remover esta tarefa? Essa ação não poderá ser desfeita.
+            </AlertDialogBody>
 
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={() => setItemToRemove(null)}>
+              <Button ref={cancelRef} onClick={() => setItemToRemove(null)} variant="ghost">
                 Cancelar
               </Button>
-              <Button colorScheme="red" onClick={handleRemoveItem} ml={3}>
-                Excluir
+              <Button colorScheme="red" onClick={handleRemoveItem} ml={3} borderRadius="md">
+                Sim, Excluir
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
