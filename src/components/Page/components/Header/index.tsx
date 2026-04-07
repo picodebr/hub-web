@@ -285,7 +285,7 @@ export const Header: React.FC<IProps> = ({
                 value={selectedSchoolGroup?.value}
                 size="sm"
                 appearance="subtle"
-                searchable={false}
+                searchable={true}
                 label="Rede"
                 cleanable={false}
                 onChange={(e) => onSchoolGroupChange(e as string)}
@@ -298,7 +298,7 @@ export const Header: React.FC<IProps> = ({
               value={selectedSchool?.value}
               size="sm"
               appearance="subtle"
-              searchable={false}
+              searchable={true}
               cleanable={false}
               label={user?.role === 'teacher' ? 'Escola' : undefined}
               onChange={(e) => onSchoolChange(e as string)}
