@@ -187,23 +187,31 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
     () => setIsLoading(false),
   );
 
-  const handleRemoveActivity = useAsyncCallback(async () => {
-    if (!activityToRemove) return;
-    setIsLoading(true);
-    await removeGroupActivity(activityToRemove.id);
-    setCustomActivities((c) => c.filter((a) => a.id !== activityToRemove.id));
-    setActivityToRemove(null);
-    setIsLoading(false);
-  }, [activityToRemove]);
+  const handleRemoveActivity = useAsyncCallback(
+    async () => {
+      if (!activityToRemove) return;
+      setIsLoading(true);
+      await removeGroupActivity(activityToRemove.id);
+      setCustomActivities((c) => c.filter((a) => a.id !== activityToRemove.id));
+      setActivityToRemove(null);
+    },
+    [activityToRemove],
+    true,
+    () => setIsLoading(false),
+  );
 
-  const handleRemoveActivityCategory = useAsyncCallback(async () => {
-    if (!activityCategoryToRemove) return;
-    setIsLoading(true);
-    await removeGroupActivityCategory(activityCategoryToRemove.id);
-    setCustomCategories((c) => c.filter((a) => a.id !== activityCategoryToRemove.id));
-    setActivityCategoryToRemove(null);
-    setIsLoading(false);
-  }, [activityCategoryToRemove]);
+  const handleRemoveActivityCategory = useAsyncCallback(
+    async () => {
+      if (!activityCategoryToRemove) return;
+      setIsLoading(true);
+      await removeGroupActivityCategory(activityCategoryToRemove.id);
+      setCustomCategories((c) => c.filter((a) => a.id !== activityCategoryToRemove.id));
+      setActivityCategoryToRemove(null);
+    },
+    [activityCategoryToRemove],
+    true,
+    () => setIsLoading(false),
+  );
 
   const downloadFile = (file: string, title: string) => {
     const extension = file.split(/[#?]/)[0].split('.').pop()?.toLowerCase() || 'bin';
@@ -836,7 +844,7 @@ export const Activities: React.FC<IProps> = ({ group, setGroup, canEdit, setActi
             <AlertDialogBody>Você tem certeza que deseja remover essa atividade?</AlertDialogBody>
 
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={() => setActivityToRemove(null)}>
+              <Button ref={cancelRef} onClick={() => setActivityCategoryToRemove(null)}>
                 Cancelar
               </Button>
               <Button colorScheme="red" onClick={handleRemoveActivityCategory} ml={3} isLoading={isLoading}>
