@@ -279,7 +279,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
               <Text fontSize="14px" fontWeight="600" color={colorMode === 'dark' ? 'gray.300' : 'gray.700'}>
                 Membros Selecionados
               </Text>
-              <Badge colorScheme={isUserCountValid ? 'green' : 'orange'}>{selectedStudents.length} / 5</Badge>
+              <Badge colorScheme={isUserCountValid ? 'green' : 'orange'}>{selectedStudents.length} / 8</Badge>
             </Flex>
 
             {selectedStudents.length === 0 && (
