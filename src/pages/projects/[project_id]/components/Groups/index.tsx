@@ -245,7 +245,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
               fontWeight="normal"
               color="gray.600"
             >
-              {/* {selectedStudents.length === 5 ? 'Limite de 5 membros atingido' : 'Selecione os membros do grupo'} */}
+              {selectedStudents.length === 8 ? 'Limite de 8 membros atingido' : 'Selecione os membros do grupo'}
             </MenuButton>
             <MenuList borderColor="gray300" maxH="250px" overflow="auto" zIndex={10}>
               <MenuOptionGroup type="checkbox">
