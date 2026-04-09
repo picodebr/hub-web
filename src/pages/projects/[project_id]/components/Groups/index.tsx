@@ -41,7 +41,7 @@ const ROLE_LIMITS: Record<string, number> = {
   'Líder de Grupo': 1,
   'Gestor de Projetos': 1,
   'Social Media': 1,
-  Construtor: 2,
+  Construtor: 5,
 };
 
 const ROLES = Object.keys(ROLE_LIMITS);
@@ -106,7 +106,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
     {} as Record<string, number>,
   );
 
-  const isUserCountValid = selectedStudents.length >= 3 && selectedStudents.length <= 5;
+  const isUserCountValid = selectedStudents.length >= 3 && selectedStudents.length <= 8;
   const areAllRolesAssigned = selectedStudents.every((s) => !!memberRoles[s.id]);
   const isFormValid = !!data.hub_project_class_id && !!data.display_name && isUserCountValid && areAllRolesAssigned;
 
