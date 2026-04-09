@@ -284,7 +284,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
 
             {selectedStudents.length === 0 && (
               <Text fontSize="13px" color="gray.500" fontStyle="italic">
-                Nenhum membro adicionado (mín. 3).
+                Nenhum membro adicionado (mín. 3, recomendado 5, máx. 8).
               </Text>
             )}
 
