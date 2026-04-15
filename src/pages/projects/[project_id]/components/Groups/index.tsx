@@ -85,7 +85,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
       delete newRoles[studentId];
       setMemberRoles(newRoles);
     } else {
-      if (newUsers.length >= 5) return; // Trava o máximo de 5 no clique
+      if (newUsers.length >= 8) return; // Trava o máximo de 8 no clique
       newUsers = [...newUsers, studentId];
     }
     onInputChange('users', newUsers);
@@ -260,7 +260,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                         key={student.id}
                         value={student.id}
                         isChecked={data.users?.includes(student.id)}
-                        isDisabled={!data.users?.includes(student.id) && selectedStudents.length >= 5}
+                        isDisabled={!data.users?.includes(student.id) && selectedStudents.length >= 8}
                         onClick={() => toggleUser(student.id)}
                       >
                         {student.name}
