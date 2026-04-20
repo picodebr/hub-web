@@ -24,7 +24,7 @@ import {
 import { FiUsers, FiKey, FiMinus, FiPlus, FiTarget, FiAlertCircle } from 'react-icons/fi';
 import { TbMathSymbols, TbCode } from 'react-icons/tb';
 
-import { logError, cookieManager, formatShortName, formatCoin, showErrorToClient } from '@/_base/utils';
+import { logError, cookieManager, formatShortName, formatCoin, showErrorToClient, removeDuplicateItems } from '@/_base/utils';
 import { getStudent, redefineStudentPassword } from '@/_base/services/user';
 import { IHubUser } from '@/_base/interfaces/user';
 import { CoinIcon } from '@/components/Logo';
@@ -92,6 +92,28 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
   // Cores dinâmicas para Dark/Light mode
   const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
+
+  const { difficulties, skills } =
+    student.hub_forms?.reduce(
+      (acc, form) => {
+        const goodQuestions = form.questions.filter((q) => q.score > 3).map((e) => e.question_id);
+        const badQuestions = form.questions.filter((q) => q.score < 3).map((e) => e.question_id);
+
+        const formSkills: string[] = [];
+        const formDifficulties: string[] = [];
+
+        form.hub_form_class.form.questions.forEach((q) => {
+          if (goodQuestions.includes(q.id)) formSkills.push(q.title);
+          if (badQuestions.includes(q.id)) formDifficulties.push(q.title);
+        });
+
+        return {
+          skills: removeDuplicateItems([...acc.skills, ...formSkills]),
+          difficulties: removeDuplicateItems([...acc.difficulties, ...formDifficulties]),
+        };
+      },
+      { skills: [] as string[], difficulties: [] as string[] },
+    ) || {};
 
   return (
     <Flex direction="column" w="100%" h="100%" overflowY="auto" gap="1.5rem" pb="2rem">
@@ -182,7 +204,7 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
       </Box>
 
       {/* 2. CONTEÚDO EM GRID (Fim dos Accordions) */}
-      <Grid templateColumns={{ base: '1fr', lg: 'repeat(3, 1fr)' }} gap="1.5rem">
+      <Grid templateColumns={{ base: '1fr', lg: 'repeat(3, 1fr)' }} gap="1.5rem" maxH="50%">
         {/* Coluna 1: Grupos */}
         <Flex direction="column" bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" p="1.5rem">
           <Flex align="center" gap="0.5rem" mb="1.5rem">
@@ -225,59 +247,125 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
         </Flex>
 
         {/* Coluna 2: Habilidades */}
-        <Flex direction="column" bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" p="1.5rem">
-          <Flex align="center" gap="0.5rem" mb="1.5rem">
+        <Flex
+          direction="column"
+          bg={bgCard}
+          overflow="hidden"
+          borderRadius="2xl"
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+          h="100%"
+          p="1.5rem"
+          gap="1.5rem"
+        >
+          <Flex align="center" gap="0.5rem">
             <Icon as={FiTarget} fontSize="20px" color="green.500" />
             <Text fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
               Habilidades
             </Text>
           </Flex>
 
-          {/* Exemplo de Empty State Elegante */}
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            h="150px"
-            border="2px dashed"
-            borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
-            borderRadius="xl"
-            bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
-            color="gray.400"
-          >
-            <Icon as={FiTarget} fontSize="28px" mb="2" opacity={0.5} />
-            <Text fontSize="14px" fontWeight="500">
-              Nenhuma habilidade mapeada
-            </Text>
-          </Flex>
+          {skills?.length ? (
+            <Flex direction="column" h="100%" color="gray.500" overflow="hidden auto" gap="0.5rem" mr="-0.5rem" pr="0.5rem">
+              {skills.map((skill) => (
+                <Flex
+                  key={skill}
+                  w="100%"
+                  border="1px"
+                  minH="4rem"
+                  bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
+                  borderRadius="xl"
+                  align="center"
+                  gap="0.5rem"
+                  p="0.5rem"
+                >
+                  <Icon as={FiTarget} fontSize="28px" opacity={0.5} />
+                  <Text fontSize="14px" fontWeight="500">
+                    {skill}
+                  </Text>
+                </Flex>
+              ))}
+            </Flex>
+          ) : (
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              h="150px"
+              border="2px dashed"
+              borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+              borderRadius="xl"
+              bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
+              color="gray.400"
+            >
+              <Icon as={FiTarget} fontSize="28px" mb="2" opacity={0.5} />
+              <Text fontSize="14px" fontWeight="500">
+                Nenhuma habilidade mapeada
+              </Text>
+            </Flex>
+          )}
         </Flex>
 
         {/* Coluna 3: Dificuldades */}
-        <Flex direction="column" bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" p="1.5rem">
-          <Flex align="center" gap="0.5rem" mb="1.5rem">
+        <Flex
+          direction="column"
+          bg={bgCard}
+          overflow="hidden"
+          borderRadius="2xl"
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+          h="100%"
+          p="1.5rem"
+          gap="1.5rem"
+        >
+          <Flex align="center" gap="0.5rem">
             <Icon as={FiAlertCircle} fontSize="20px" color="red.500" />
             <Text fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
               Dificuldades
             </Text>
           </Flex>
 
-          {/* Exemplo de Empty State Elegante */}
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            h="150px"
-            border="2px dashed"
-            borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
-            borderRadius="xl"
-            bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
-            color="gray.400"
-          >
-            <Icon as={FiAlertCircle} fontSize="28px" mb="2" opacity={0.5} />
-            <Text fontSize="14px" fontWeight="500">
-              Nenhuma dificuldade reportada
-            </Text>
-          </Flex>
+          {difficulties?.length ? (
+            <Flex direction="column" h="100%" color="gray.500" overflow="hidden auto" gap="0.5rem" mr="-0.5rem" pr="0.5rem">
+              {difficulties.map((difficulty) => (
+                <Flex
+                  key={difficulty}
+                  w="100%"
+                  border="1px"
+                  minH="4rem"
+                  bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
+                  borderRadius="xl"
+                  align="center"
+                  gap="0.5rem"
+                  p="0.5rem"
+                >
+                  <Icon as={FiAlertCircle} fontSize="28px" opacity={0.5} />
+                  <Text fontSize="14px" fontWeight="500">
+                    {difficulty}
+                  </Text>
+                </Flex>
+              ))}
+            </Flex>
+          ) : (
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              h="150px"
+              border="2px dashed"
+              borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+              borderRadius="xl"
+              bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
+              color="gray.400"
+            >
+              <Icon as={FiAlertCircle} fontSize="28px" mb="2" opacity={0.5} />
+              <Text fontSize="14px" fontWeight="500">
+                Nenhuma dificuldade reportada
+              </Text>
+            </Flex>
+          )}
         </Flex>
       </Grid>
 

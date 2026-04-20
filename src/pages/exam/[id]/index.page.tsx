@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { Header } from '@/components/Tailwind/HubForm/components/Header';
 import { AssessmentQuestionType, AssessmentSection } from '@/components/Tailwind/HubForm/components/AssessmentSection';
 import AnnouncementSection from '@/components/Tailwind/HubForm/components/AnnouncementSection';
 import { GetServerSideProps } from 'next';
@@ -10,6 +9,7 @@ import { IProject } from '@/_base/interfaces/project';
 import { useCustomRouter } from '@/_base/hooks';
 import { IHubUser } from '@/_base/interfaces/user';
 import { getStudent } from '@/_base/services/user';
+import { HubFormHeader } from '@/components/Tailwind/HubForm/components/Header';
 
 interface IPageProps {
   projectId: string;
@@ -42,11 +42,11 @@ const ExamForm: React.FC<IPageProps> = ({ projectId, studentId }) => {
       animate={{ opacity: 1 }}
       style={{ overflow: `hidden auto`, borderRadius: `8px`, border: `1px solid #D0D5DD` }}
     >
-      <Header project={project} student={student} />
+      <HubFormHeader project={project} student={student} />
 
       <div className="container max-w-4xl mx-auto px-4 py-6">
-        <AnnouncementSection project={project} student={student} />
-        <AssessmentSection project={project} student={student} questions={initialQuestions} />
+        <AnnouncementSection project={project || ({} as any)} student={student} />
+        <AssessmentSection project={project || ({} as any)} student={student} questions={initialQuestions} />
       </div>
     </motion.div>
   );

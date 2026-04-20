@@ -4,13 +4,14 @@ import { IProject } from '@/_base/interfaces/project';
 import { formatClassGrade } from '@/_base/utils';
 import { IHubUser } from '@/_base/interfaces/user';
 import { Logo } from '@/components/Logo';
+import { IHubFactoryProject } from '@/_base/interfaces/project/IHubFactoryProject';
 
 interface IProps {
-  project: IProject | null;
+  project: IProject | IHubFactoryProject;
   student: IHubUser | null;
 }
 
-export const Header: React.FC<IProps> = ({ project, student }) => {
+export const HubFormHeader: React.FC<IProps> = ({ project, student }) => {
   return (
     <motion.header
       className="bg-white border-b border-gray-200 py-4 px-6 mb-6 sticky top-0 z-10"

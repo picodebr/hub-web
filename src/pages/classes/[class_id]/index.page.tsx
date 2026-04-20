@@ -24,7 +24,6 @@ import {
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { IoMdArrowUp } from 'react-icons/io';
 import { FaPlus } from 'react-icons/fa6';
 import { FiCalendar, FiFileText } from 'react-icons/fi';
 import { CiUser } from 'react-icons/ci';
@@ -49,6 +48,8 @@ import { HubStatus, hubStatuses } from '@/_base/interfaces/shared';
 import { TbReload } from 'react-icons/tb';
 import { CoinIcon } from '@/components/Logo';
 import { AttendanceList } from './components/AttendanceList';
+import { Exam } from './components/Exam';
+import { ClassLoading } from './components/ClassLoading';
 
 export type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; groups: ReactNode; coins: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -58,6 +59,7 @@ const ProjectTable = HubTable<ProjectTableType>;
 
 interface IProps {
   classId: string;
+  pageTitle: string;
 }
 
 type ModalStep = 'creation_type' | 'creation_topic' | 'man_project_name' | 'man_task_quantity' | 'man_task_naming' | 'edit_draft';
@@ -73,7 +75,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
 };
 
-const Class: React.FC<IProps> = ({ classId }) => {
+const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
   const { colorMode } = useColorMode();
   const [pageView, setPageView] = useState<ClassPageView>('Projetos');
   const [newProject, setNewProject] = useState<IProject | null>(null);
@@ -347,7 +349,95 @@ const Class: React.FC<IProps> = ({ classId }) => {
   const bgCard = colorMode === 'light' ? 'white' : 'gray800';
   const borderColor = colorMode === 'light' ? 'gray200' : 'gray700';
 
-  return (
+  const PageView: Record<ClassPageView, ReactNode> = {
+    'Lista de Presença': <AttendanceList hub_class={hubClass} />,
+    Alunos: (
+      <Box bg={bgCard} borderRadius="xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflowY="auto" overflowX="hidden" flex="1">
+        <StudentTable
+          rows={students}
+          onRowClick={(e) => router.push(`/students/${e.id}`)}
+          columnSizes={[
+            { field: 'avatar', width: '3rem' },
+            { field: 'coins', width: '8rem' },
+          ]}
+          columns={[
+            {
+              label: (
+                <Tooltip label="Aluno">
+                  <Flex justify="center">
+                    <Icon as={CiUser} fontSize="1.2rem" />
+                  </Flex>
+                </Tooltip>
+              ),
+              field: 'avatar',
+            },
+            { label: 'Nome do Aluno', field: 'name' },
+            { label: 'Grupos', field: 'groups' },
+            { label: 'Saldo (Moedas)', field: 'coins' },
+          ]}
+        />
+      </Box>
+    ),
+    Projetos: (
+      <Box flex="1" overflowY="auto" pb="2rem" px="2px">
+        <motion.div variants={containerVariants} initial="hidden" animate="show">
+          <Grid gap="1.5rem" gridTemplateColumns="repeat(auto-fill, minmax(260px, 1fr))">
+            {dataProjects.map((project) => (
+              <motion.div key={project.id} variants={itemVariants}>
+                <Flex
+                  direction="column"
+                  h="100%"
+                  w="100%"
+                  cursor="pointer"
+                  bg={bgCard}
+                  border="1px solid"
+                  borderColor={borderColor}
+                  borderRadius="2xl"
+                  boxShadow="sm"
+                  transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                  _hover={{ transform: 'translateY(-6px)', boxShadow: 'xl', borderColor: 'primary300' }}
+                  onClick={() => router.push(`/projects/${project.id}`)}
+                  overflow="hidden"
+                >
+                  {/* Thumbnail Area - CORREÇÃO: url() aplicada ao background-image */}
+                  <Flex
+                    backgroundImage={`url(${project.thumbnail || '/images/book.svg'})`}
+                    backgroundSize="cover"
+                    backgroundPosition={project.thumbnail ? 'bottom' : 'center'}
+                    backgroundRepeat="no-repeat"
+                    h="160px"
+                    w="100%"
+                    // bg={colorMode === 'light' ? 'gray50' : 'gray900'}
+                    borderBottom="1px solid"
+                    borderColor={borderColor}
+                    position="relative"
+                  >
+                    <Box position="absolute" top="10px" right="10px" onClick={(e) => e.stopPropagation()}>
+                      {project.status}
+                    </Box>
+                  </Flex>
+
+                  {/* Content Area */}
+                  <Flex direction="column" p="1.25rem" gap="1rem" flex="1" justify="space-between">
+                    {project.name}
+                    <Flex justify="space-between" align="center" pt="0.5rem" borderTop="1px solid" borderColor={borderColor}>
+                      {project.created_at}
+                      <Flex>{project.user_avatar}</Flex>
+                    </Flex>
+                  </Flex>
+                </Flex>
+              </motion.div>
+            ))}
+          </Grid>
+        </motion.div>
+      </Box>
+    ),
+    Avaliações: <Exam hub_class={hubClass} />,
+  };
+
+  return isLoading ? (
+    <ClassLoading className={pageTitle} />
+  ) : (
     <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflow="hidden">
       {/* HEADER DE ABAS E BOTÃO PRINCIPAL */}
       <Flex justify="space-between" align={{ base: 'flex-start', md: 'center' }} direction={{ base: 'column', md: 'row' }} gap="1rem">
@@ -375,123 +465,7 @@ const Class: React.FC<IProps> = ({ classId }) => {
       </Flex>
 
       {/* CONTEÚDO PRINCIPAL (RENDERIZAÇÃO CONDICIONAL) */}
-      {pageView === 'Alunos' ? (
-        // CORREÇÃO: overflowY="auto" para a rolagem da lista de alunos funcionar
-        <Box bg={bgCard} borderRadius="xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflowY="auto" overflowX="hidden" flex="1">
-          <StudentTable
-            rows={students}
-            onRowClick={(e) => router.push(`/students/${e.id}`)}
-            columnSizes={[
-              { field: 'avatar', width: '3rem' },
-              { field: 'coins', width: '8rem' },
-            ]}
-            columns={[
-              {
-                label: (
-                  <Tooltip label="Aluno">
-                    <Flex justify="center">
-                      <Icon as={CiUser} fontSize="1.2rem" />
-                    </Flex>
-                  </Tooltip>
-                ),
-                field: 'avatar',
-              },
-              { label: 'Nome do Aluno', field: 'name' },
-              { label: 'Grupos', field: 'groups' },
-              { label: 'Saldo (Moedas)', field: 'coins' },
-            ]}
-          />
-        </Box>
-      ) : pageView === 'Projetos' ? (
-        <Box flex="1" overflowY="auto" pb="2rem" px="2px">
-          <motion.div variants={containerVariants} initial="hidden" animate="show">
-            <Grid gap="1.5rem" gridTemplateColumns="repeat(auto-fill, minmax(260px, 1fr))">
-              {dataProjects.map((project) => (
-                <motion.div key={project.id} variants={itemVariants}>
-                  <Flex
-                    direction="column"
-                    h="100%"
-                    w="100%"
-                    cursor="pointer"
-                    bg={bgCard}
-                    border="1px solid"
-                    borderColor={borderColor}
-                    borderRadius="2xl"
-                    boxShadow="sm"
-                    transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-                    _hover={{ transform: 'translateY(-6px)', boxShadow: 'xl', borderColor: 'primary300' }}
-                    onClick={() => router.push(`/projects/${project.id}`)}
-                    overflow="hidden"
-                  >
-                    {/* Thumbnail Area - CORREÇÃO: url() aplicada ao background-image */}
-                    <Flex
-                      backgroundImage={`url(${project.thumbnail || '/images/book.svg'})`}
-                      backgroundSize="cover"
-                      backgroundPosition={project.thumbnail ? 'bottom' : 'center'}
-                      backgroundRepeat="no-repeat"
-                      h="160px"
-                      w="100%"
-                      // bg={colorMode === 'light' ? 'gray50' : 'gray900'}
-                      borderBottom="1px solid"
-                      borderColor={borderColor}
-                      position="relative"
-                    >
-                      <Box position="absolute" top="10px" right="10px" onClick={(e) => e.stopPropagation()}>
-                        {project.status}
-                      </Box>
-                    </Flex>
-
-                    {/* Content Area */}
-                    <Flex direction="column" p="1.25rem" gap="1rem" flex="1" justify="space-between">
-                      {project.name}
-                      <Flex justify="space-between" align="center" pt="0.5rem" borderTop="1px solid" borderColor={borderColor}>
-                        {project.created_at}
-                        <Flex>{project.user_avatar}</Flex>
-                      </Flex>
-                    </Flex>
-                  </Flex>
-                </motion.div>
-              ))}
-            </Grid>
-          </motion.div>
-        </Box>
-      ) : pageView === 'Lista de Presença' ? (
-        <AttendanceList hub_class={hubClass} />
-      ) : (
-        <Box bg={bgCard} borderRadius="xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflow="hidden" flex="1">
-          <ProjectTable
-            rows={dataProjects}
-            onRowClick={(e) => router.push(`/projects/${e.id}`)}
-            columnSizes={[{ field: 'name', width: '100%' }]}
-            columns={[
-              { label: 'Nome do projeto', field: 'name' },
-              {
-                label: (
-                  <Tooltip label="Status">
-                    <Flex gap="2" align="center">
-                      Status <IoMdArrowUp />
-                    </Flex>
-                  </Tooltip>
-                ),
-                field: 'status',
-              },
-              {
-                label: (
-                  <Tooltip label="Educador">
-                    <Flex gap="2" align="center">
-                      Educador <CiUser size="16px" />
-                    </Flex>
-                  </Tooltip>
-                ),
-                field: 'user_avatar',
-              },
-              { label: 'Data de criação', field: 'created_at' },
-            ]}
-          />
-        </Box>
-      )}
-
-      {isLoading && <Skeleton isLoaded={false} h="4.5rem" w="100%" borderRadius="xl" />}
+      {PageView[pageView]}
 
       <SmallModal
         title="Método de criação do projeto"

@@ -7,6 +7,7 @@ import { LoadingOverlay } from './LoadingOverlay';
 import { SubmissionComplete } from './SubmissionComplete';
 import { IProject } from '@/_base/interfaces/project';
 import { IHubUser } from '@/_base/interfaces/user';
+import { IHubFactoryProject } from '@/_base/interfaces/project/IHubFactoryProject';
 
 export type AssessmentQuestionType =
   | (Omit<MultipleChoiceQuestionProps, 'onOptionSelect'> & { type: 'multiple-choice' })
@@ -14,12 +15,11 @@ export type AssessmentQuestionType =
   | (Omit<RatingQuestionProps, 'onRatingChange'> & { type: 'rating' });
 
 interface IProps {
-  project: IProject | null;
   student: IHubUser | null;
   questions: AssessmentQuestionType[];
 }
 
-export const AssessmentSection: React.FC<IProps> = ({ questions: initialQuestions, project, student }) => {
+export const AssessmentSection: React.FC<IProps> = ({ questions: initialQuestions, student }) => {
   const [questions, setQuestions] = useState<AssessmentQuestionType[]>(initialQuestions);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -49,7 +49,7 @@ export const AssessmentSection: React.FC<IProps> = ({ questions: initialQuestion
   const updateLocalStorage = () => {
     const items = JSON.parse(localStorage.getItem(`finished_forms`) || `[]`);
 
-    localStorage.setItem(`finished_forms`, JSON.stringify([...items, { student_id: student?.id, project_id: project?.id, questions }]));
+    // localStorage.setItem(`finished_forms`, JSON.stringify([...items, { student_id: student?.id, project_id: project?.id, questions }]));
   };
 
   const closeSubmissionComplete = () => {

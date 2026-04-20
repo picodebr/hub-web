@@ -2,13 +2,13 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { IProject } from '@/_base/interfaces/project';
 import { IHubUser } from '@/_base/interfaces/user';
+import { IHubFactoryProject } from '@/_base/interfaces/project/IHubFactoryProject';
 
 interface IProps {
-  project: IProject | null;
   student: IHubUser | null;
 }
 
-const AnnouncementSection: React.FC<IProps> = ({ project, student }) => {
+const AnnouncementSection: React.FC<IProps> = ({ student }) => {
   return (
     <motion.div className="mb-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
       <div className="bg-education-warning/20 border-l-4 border-education-warning rounded-r-lg p-4">
@@ -33,7 +33,7 @@ const AnnouncementSection: React.FC<IProps> = ({ project, student }) => {
             <div className="mt-2 text-sm text-gray-600">
               <ul className="list-disc pl-5 space-y-1">
                 <li>
-                  O intuito é realizar avaliação do aluno <b>{student?.name}</b> sobre o projeto <b>{project?.title}</b>
+                  O intuito é realizar avaliação do aluno <b>{student?.name}</b>
                 </li>
                 <li>Leia atentamente todas as questões antes de responder.</li>
               </ul>

@@ -1,4 +1,5 @@
 import { IHubClass } from '../class';
+import { IHubFormClassUser } from '../form';
 import { IHubGroup } from '../group';
 import { HubPermissions } from '../permissions';
 import { IHubSchoolGroup, IHubUserSchool } from '../school';
@@ -26,6 +27,7 @@ export interface IHubUser {
   school_group: IHubSchoolGroup;
   hub_class: IHubClass;
   groups: IHubGroup[];
+  hub_forms?: IHubFormClassUser[];
 }
 
 export const EMPTY_HUB_USER: Partial<IHubUser> = {

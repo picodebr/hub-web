@@ -1,3 +1,4 @@
+import { IHubFormClass } from '../form';
 import { IProject } from '../project';
 import { IHubUserSchool } from '../school';
 import { IHubUser } from '../user';
@@ -14,4 +15,6 @@ export interface IHubClass {
   projects: IProject[];
   hub_school: IHubUserSchool;
   roll_calls: IHubClassRollCall[];
+  form_links: IHubFormClass[];
+  current_form?: IHubFormClass;
 }

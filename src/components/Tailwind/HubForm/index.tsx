@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Header } from '@/components/Tailwind/HubForm/components/Header';
+import { HubFormHeader } from '@/components/Tailwind/HubForm/components/Header';
 import { AssessmentSection } from '@/components/Tailwind/HubForm/components/AssessmentSection';
 import AnnouncementSection from '@/components/Tailwind/HubForm/components/AnnouncementSection';
 
