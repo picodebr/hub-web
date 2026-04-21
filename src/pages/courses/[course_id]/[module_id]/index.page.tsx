@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { Flex, Skeleton, Text, Box, CircularProgress, CircularProgressLabel, Badge, Icon, useColorMode, Button } from '@chakra-ui/react';
+import { Flex, Skeleton, Text, CircularProgress, CircularProgressLabel, Badge, Icon, useColorMode, Button } from '@chakra-ui/react';
 import { PiSealCheckFill } from 'react-icons/pi';
 import { FiLock, FiPlayCircle, FiRotateCcw } from 'react-icons/fi';
 import { motion } from 'framer-motion';

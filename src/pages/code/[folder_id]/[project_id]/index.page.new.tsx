@@ -10,20 +10,24 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import BlocklyWorkspace, { BlocklyWorkspaceRef } from './components/BlocklyWorkspace';
-import StageBridge from './components/StageBridge';
-import StageArea from './components/StageArea';
-import SpriteList from './components/SpriteList';
 import CodePreview from './components/CodePreview';
-import { useStage } from '@/_base/context/StageContext';
-import { useCodeExecution } from '@/_base/hooks/useCodeExecution';
-import { useKeyboardInput } from '@/_base/hooks/useKeyboardInput';
+import { useCodeExecution } from '@/_base/hooks/Code/useCodeExecution';
 import { getCodeProject } from '@/_base/services/codeProject';
 import { cookieManager } from '@/_base/utils';
 import { ICodeProject, IProjectSourceCode } from '@/_base/interfaces/codeProject/IProject';
 import { GetServerSideProps } from 'next';
 import { isUuid } from 'uuidv4';
-import CodeNavbar from './components/Navbar';
+import { useUI } from '@/_base/context/UIContext';
+import { useFirmware } from '@/_base/context/FirmwareContext';
+import { useProject } from '@/_base/context/ProjectContext';
+import { useExecutionRunner } from '@/_base/context/ExecutionRunnerContext';
+import { MLRecognitionWindow } from './components/ml/MLRecognitionWindow';
+import { BoardConnectionWarningModal, DeviceLostModal, RestoreConfirmModal, UploadTimeoutModal } from './components/modals';
+import { BlocklyWorkspaceRef } from '@/_base/domain/entities';
+import StageBridge from './components/stage/StageBridge';
+import BlocklyWorkspace from './components/blockly/BlocklyWorkspace';
+import StageArea from './components/stage/StageArea';
+import SpriteList from './components/sprites/SpriteList';
 
 const getDefaultSourceCode = (project: ICodeProject | null) =>
   project?.source_code ||
@@ -43,27 +47,45 @@ interface IProps {
 }
 
 const NewCode: React.FC = () => {
-  const stageContext = useStage();
-  const { isUploadMode, isSerialConnected, restoreBoard } = stageContext;
+  const { isUploadMode, activeExtensions, isStageFullScreen, setIsStageFullScreen, setShowRestoreConfirmModal } = useUI();
 
-  const blocklyRef = useRef<BlocklyWorkspaceRef>(null);
+  const { isSerialConnected, restoreBoard } = useFirmware();
+  const { isRecognitionWindowOpen, setIsRecognitionWindowOpen } = useProject();
+  const runnerContext = useExecutionRunner();
 
-  // Register blocklyRef with StageContext so Navbar can access it for saving
+  const blocklyRef = useRef<BlocklyWorkspaceRef | null>(null);
+
+  // Registra blocklyRef no ExecutionRunnerContext para que Navbar/Runner possam acessá-lo
+  const { setBlocklyWorkspaceRef } = runnerContext;
   useEffect(() => {
-    stageContext.setBlocklyWorkspaceRef(blocklyRef);
-  }, [stageContext.setBlocklyWorkspaceRef]);
+    setBlocklyWorkspaceRef(blocklyRef);
+  }, [setBlocklyWorkspaceRef]);
 
   // --- HOOKS ---
-  const { executeSpriteCode, handleRun, handleStop, handleBlockClick, handleRunCode } = useCodeExecution(blocklyRef);
+  const { handleRun, handleStop, handleBlockClick, handleRunCode } = useCodeExecution(blocklyRef);
 
-  useKeyboardInput(blocklyRef, executeSpriteCode);
+  useEffect(() => {
+    if (isUploadMode) {
+      handleStop();
+    }
+  }, [isUploadMode, handleStop]);
+
+  // --- MODAL EVENT LISTENERS ---
+  useEffect(() => {
+    const handleConfirmRestore = () => {
+      handleStop();
+      restoreBoard();
+    };
+
+    window.addEventListener('confirm-restore-board', handleConfirmRestore);
+    return () => window.removeEventListener('confirm-restore-board', handleConfirmRestore);
+  }, [handleStop, restoreBoard]);
 
   // --- UI STATE ---
   const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
 
   return (
-    <div className="flex flex-column flex-1">
-      <CodeNavbar />
+    <div className="d-flex flex-column flex-grow-1 overflow-hidden">
       <StageBridge />
 
       <div className="container-fluid flex-grow-1 d-flex flex-column px-0" style={{ overflow: 'hidden' }}>
@@ -81,6 +103,15 @@ const NewCode: React.FC = () => {
           >
             <BlocklyWorkspace ref={blocklyRef} onBlockClick={handleBlockClick} onRunCode={handleRunCode} />
           </div>
+
+          {/* ML Recognition floating window (STAGE MODE ONLY) */}
+          {!isUploadMode && <MLRecognitionWindow isOpen={isRecognitionWindowOpen} onClose={() => setIsRecognitionWindowOpen(false)} />}
+
+          {/* Warning Modal for Disconnected Board Runs */}
+          <BoardConnectionWarningModal />
+          <DeviceLostModal />
+          <RestoreConfirmModal />
+          <UploadTimeoutModal />
 
           {/* Floating Code Preview Overlay - Always render for Smooth Transitions */}
           <CodePreview isOpen={isCodePanelOpen} isUploadMode={isUploadMode} onToggle={() => setIsCodePanelOpen(false)} />
@@ -108,7 +139,7 @@ const NewCode: React.FC = () => {
             <i className="bi bi-code-slash" style={{ fontSize: '1.2rem' }}></i>
           </button>
 
-          {/* RIGHT PANEL: STAGE & MANAGEMENT - Smooth Transition */}
+          {/* RIGHT PANEL: STAGE & MANAGEMENT */}
           <div
             className={`p-0 bg-light ${!isUploadMode ? 'border-start' : ''}`}
             id="right-panel"
@@ -144,18 +175,53 @@ const NewCode: React.FC = () => {
                       >
                         <i
                           className={`bi ${isSerialConnected ? 'bi-usb-plug-fill' : 'bi-usb-plug'}`}
-                          style={{ color: isSerialConnected ? '#22c55e' : 'inherit' }}
+                          style={{
+                            color: isSerialConnected ? '#22c55e' : 'inherit',
+                          }}
                         ></i>
                         Interagir Placa
                       </button>
                     </div>
-                    <div className="stage-controls">
-                      <button id="btnGo" className="btn btn-link p-0 me-2 btn-go" title="Iniciar" onClick={handleRun}>
-                        <i className="bi bi-flag-fill"></i>
+
+                    {/* RIGHTSIDE: Botões Interagir/Fechar */}
+                    <div className="d-flex align-items-center justify-content-end gap-3" style={{ flex: 1 }}>
+                      <button
+                        id="btnMaximize"
+                        className="btn btn-link p-0 d-flex align-items-center text-secondary"
+                        title={isStageFullScreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
+                        style={{ transition: 'color 0.2s' }}
+                        onClick={() => setIsStageFullScreen(!isStageFullScreen)}
+                      >
+                        <i className={`bi ${isStageFullScreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'}`} style={{ fontSize: '1.1rem' }}></i>
                       </button>
-                      <button id="btnStop" className="btn btn-link p-0 btn-stop" title="Parar" onClick={handleStop}>
-                        <i className="bi bi-stop-fill"></i>
-                      </button>
+                      {activeExtensions.includes('piboard') && (
+                        <button
+                          id="btnInteractBoard"
+                          className="btn btn-sm btn-outline-secondary d-flex align-items-center py-0 px-2 flex-shrink-0"
+                          style={{
+                            fontSize: '0.75rem',
+                            borderRadius: '20px',
+                            backgroundColor: '#fff',
+                          }}
+                          onClick={() => {
+                            if (!isSerialConnected) {
+                              alert('Conecte a placa primeiro clicando no ícone de USB na barra superior.');
+                              return;
+                            }
+                            setShowRestoreConfirmModal(true);
+                          }}
+                          title={isSerialConnected ? 'Clique para restaurar novamente' : 'Clique para interagir (Restaurar Firmware)'}
+                        >
+                          <i
+                            className={`bi ${isSerialConnected ? 'bi-usb-plug-fill' : 'bi-usb-plug'} me-1`}
+                            style={{
+                              color: isSerialConnected ? '#22c55e' : 'inherit',
+                              fontSize: '1rem',
+                            }}
+                          ></i>
+                          <span>Interagir Placa</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 

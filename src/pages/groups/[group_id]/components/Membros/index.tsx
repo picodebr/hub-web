@@ -29,7 +29,6 @@ import { useInputHandler } from '@/_base/hooks';
 import { HUB_GROUP_ROLES, HubGroupRole, IHubGroup, IUpdateHubGroupParams, updateHubGroupSchema } from '@/_base/interfaces/group';
 import { IHubUser } from '@/_base/interfaces/user';
 import { formatCoin, formatShortName } from '@/_base/utils';
-import { AvatarList } from '@/components/AvatarList';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { NumberScaleInput } from '@/components/Inputs/NumberScale';
 import { TextInput } from '@/components/Inputs/Text';

@@ -8,37 +8,33 @@
  * 4. Acionamento do processo de compilação e envio de código.
  */
 
+/**
+ * Barra de navegação principal com controles de projeto (Salvar, Abrir, Conectar).
+ */
 'use client';
 
 import { useRef, useState } from 'react';
-import RocketLoader from './RocketLoader';
-import SerialMonitor from './SerialMonitor';
-import ToolsModal from './ToolsModal';
-import { useStage } from '@/_base/context/StageContext';
-import { useSerial } from '@/_base/context/SerialContext';
-import { ProjectManager } from '@/_base/utils/ProjectManager';
+import Image from 'next/image';
+import RocketLoader from './shared/RocketLoader';
+import SerialMonitor from './serial/SerialMonitor';
+import ToolsModal from './shared/ToolsModal';
+import { useExecutionRunner } from '@/_base/context/ExecutionRunnerContext';
+import { useUI } from '@/_base/context/UIContext';
+import { useProject } from '@/_base/context/ProjectContext';
+import { useFirmware } from '@/_base/context/FirmwareContext';
+import { IProjectContextUI, SerializationService } from '@/_base/services/code';
 
-export default function CodeNavbar() {
+export default function Navbar() {
   // Contextos globais para gerenciar o estado do palco e da conexão serial
-  const stageContext = useStage();
-  const {
-    isUploadMode,
-    setIsUploadMode,
-    uploadCode,
-    // Estados de UI para o upload (Vindos do Contexto)
-    rocketPhase,
-    setRocketPhase,
-    showRocket,
-    setShowRocket,
-    isUploading,
-    setIsUploading,
-    isBusy,
-    setIsBusy,
-    rocketErrorMessage,
-  } = stageContext;
+  const runnerContext = useExecutionRunner();
+  const uiContext = useUI();
+  const projectContext = useProject();
 
-  // Contexto Serial para gerenciar a conexão física com a placa
-  const { isConnected: isSerialConnected, status: serialStatus, connect: connectSerial, disconnect: disconnectSerial, serialPort } = useSerial();
+  // UI states from UIContext
+  const { isUploadMode, setIsUploadMode, rocketPhase, showRocket, isUploading, isBusy, rocketErrorMessage } = uiContext;
+
+  // Firmware Context
+  const { isSerialConnected, connectSerial, disconnectSerial, uploadSketch } = useFirmware();
 
   // Estados locais para modais específicos
   const [showTools, setShowTools] = useState(false);
@@ -48,20 +44,40 @@ export default function CodeNavbar() {
   const [isUploadingLocal, setIsUploadingLocal] = useState(false);
 
   // Helpers de Estado Visual
-  // Verifica se estamos no processo de conexão (janela de seleção aberta ou handshake inicial)
-  const isConnecting = serialStatus === 'connecting';
+  const isConnecting = false; // Simplified, or can be tracked inside FirmwareContext if needed
   // Define se o botão deve estar "ativo" (Verde)
   const isActive = isSerialConnected || isConnecting || isBusy || isUploading || isUploadingLocal;
 
   // Referência para o input de arquivo oculto
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Adapter to decouple SerializationService from React Contexts
+  const contextAdapter: IProjectContextUI = {
+    projectId: undefined, // Could be added to a State if needed
+    projectName: 'meu_projeto',
+    isUploadMode: isUploadMode,
+    uploadModeBlocks: uiContext.uploadModeBlocks,
+    uploadCode: uiContext.uploadCode,
+    setIsUploadMode: setIsUploadMode,
+    setUploadModeBlocks: uiContext.setUploadModeBlocks,
+    setUploadCode: uiContext.setUploadCode,
+    backdrops: projectContext.backdrops,
+    activeBackdropId: projectContext.activeBackdropId,
+    activeSpriteId: projectContext.activeSpriteId,
+    activeExtensions: uiContext.activeExtensions,
+    setActiveExtensions: uiContext.setActiveExtensions,
+    activeStageMLModel: projectContext.activeStageMLModel,
+    setActiveStageMLModel: projectContext.setActiveStageMLModel,
+    activeUploadMLModel: projectContext.activeUploadMLModel,
+    setActiveUploadMLModel: projectContext.setActiveUploadMLModel,
+  };
+
   /**
    * Lida com a exportação do projeto atual para um arquivo JSON.
    */
   const handleSaveProject = () => {
-    const workspace = stageContext.blocklyWorkspaceRef?.current?.getWorkspace?.();
-    ProjectManager.saveProject(stageContext, 'meu_projeto.json', workspace);
+    const workspace = runnerContext.blocklyWorkspaceRef?.current?.getWorkspace?.();
+    SerializationService.saveProject(contextAdapter, 'meu_projeto.json', workspace || undefined);
   };
 
   /**
@@ -75,32 +91,9 @@ export default function CodeNavbar() {
    * Processa o arquivo selecionado pelo usuário e carrega os blocos no workspace.
    */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    ProjectManager.handleFileSelect(e, stageContext);
+    SerializationService.handleFileSelect(e, contextAdapter);
     // Reseta o valor para permitir selecionar o mesmo arquivo novamente
     if (e.target) e.target.value = '';
-  };
-
-  /**
-   * Reseta a comunicação serial (Lógica de limpeza/segurança).
-   * Fecha monitor, desconecta Firmata e tenta liberar a porta no SO.
-   */
-  const resetCommunication = async () => {
-    if (showMonitor) setShowMonitor(false);
-
-    if (isSerialConnected) {
-      await disconnectSerial();
-    }
-
-    if (serialPort && serialPort.readable) {
-      try {
-        await serialPort.close();
-      } catch (e) {
-        console.warn('Aviso ao forçar fechamento da porta:', e);
-      }
-    }
-
-    // Aguarda um tempo para o SO liberar o recurso
-    await new Promise((r) => setTimeout(r, 500));
   };
 
   /**
@@ -112,8 +105,8 @@ export default function CodeNavbar() {
       return;
     }
 
-    // Delega a lógica complexa de upload para o StageContext
-    await stageContext.uploadSketch();
+    // Delega a lógica complexa de upload para o FirmwareContext
+    await uploadSketch();
   };
 
   return (
@@ -121,8 +114,8 @@ export default function CodeNavbar() {
       <nav className="navbar navbar-expand px-3 py-2" style={{ backgroundColor: '#fff', borderBottom: '1px solid #e8e8e8' }}>
         <div className="container-fluid p-0 d-flex align-items-center justify-content-between">
           {/* Logotipo */}
-          <a className="navbar-brand d-flex align-items-center" href="#">
-            <img src="/img/picode-logo-light.svg" alt="PiCode" style={{ height: '36px', width: 'auto' }} />
+          <a className="navbar-brand d-flex align-items-center" href="#" suppressHydrationWarning={true}>
+            <Image src="/img/picode-logo-light.png" alt="PiCode" width={120} height={27} style={{ width: 'auto' }} priority />
           </a>
 
           {/* Conteúdo Central e Botões de Ação */}
@@ -130,8 +123,8 @@ export default function CodeNavbar() {
             <div className="d-flex align-items-center gap-2">
               {/* Botão de Conectar/Desconectar USB */}
               <button
-                className="btn btn-sm fw-semibold d-flex align-items-center gap-2"
-                onClick={isSerialConnected ? disconnectSerial : () => connectSerial(true)}
+                className="btn btn-sm  d-flex align-items-center gap-2"
+                onClick={isSerialConnected ? disconnectSerial : () => connectSerial()}
                 disabled={false}
                 title={isSerialConnected ? 'Clique para desconectar' : 'Clique para conectar'}
                 style={{
@@ -144,13 +137,13 @@ export default function CodeNavbar() {
                   cursor: 'pointer',
                 }}
               >
-                <i className={`bi ${isActive ? 'bi-usb-plug-fill' : 'bi-usb-plug'}`}></i>
+                <i className={`bi ${isActive ? 'bi-usb-plug-fill' : 'bi-usb-plug'}`} style={{ fontSize: '14px' }}></i>
                 {isSerialConnected || isUploading || isUploadingLocal || isBusy ? 'Conectado' : 'Conectar'}
               </button>
 
               {/* Botão Salvar */}
               <button
-                className="btn btn-sm fw-semibold"
+                className="btn btn-sm "
                 onClick={handleSaveProject}
                 style={{
                   backgroundColor: '#4483ff',
@@ -160,7 +153,7 @@ export default function CodeNavbar() {
                   padding: '6px 12px',
                 }}
               >
-                <i className="bi bi-download me-1"></i> Salvar
+                <i className="bi bi-download me-1" style={{ fontSize: '14px' }}></i> Salvar
               </button>
 
               {/* Botão Abrir */}
@@ -175,7 +168,7 @@ export default function CodeNavbar() {
                   padding: '6px 12px',
                 }}
               >
-                <i className="bi bi-folder2-open me-1"></i> Abrir
+                <i className="bi bi-folder2-open me-1" style={{ fontSize: '14px' }}></i> Abrir
               </button>
 
               {/* Input de Arquivos Escondido */}
@@ -198,7 +191,7 @@ export default function CodeNavbar() {
                     padding: '6px 12px',
                   }}
                 >
-                  <i className="bi bi-speedometer2"></i> Monitores
+                  <i className="bi bi-speedometer2" style={{ fontSize: '14px' }}></i> Monitores
                 </button>
               )}
 
@@ -227,7 +220,7 @@ export default function CodeNavbar() {
                     </span>
                   ) : (
                     <span>
-                      <i className="bi bi-lightning-fill me-1"></i> Carregar
+                      <i className="bi bi-lightning-fill me-1" style={{ fontSize: '14px' }}></i> Carregar
                     </span>
                   )}
                 </button>
@@ -253,7 +246,7 @@ export default function CodeNavbar() {
                     transition: 'all 0.2s',
                   }}
                 >
-                  <i className="bi bi-play-circle-fill"></i> Palco
+                  <i className="bi bi-play-circle-fill" style={{ fontSize: '14px' }}></i> Palco
                 </button>
                 <button
                   className="btn btn-sm px-3 fw-semibold d-flex align-items-center gap-2"
@@ -266,7 +259,7 @@ export default function CodeNavbar() {
                     transition: 'all 0.2s',
                   }}
                 >
-                  <i className="bi bi-cpu-fill"></i> Upload
+                  <i className="bi bi-cpu-fill" style={{ fontSize: '14px' }}></i> Upload
                 </button>
               </div>
             </div>

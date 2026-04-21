@@ -1,0 +1,283 @@
+/**
+ * Gerencia o salvamento e carregamento de projetos seguindo a arquitetura Clean.
+ * Converte estados de UI em entidades de domínio e DTOs para persistência.
+ */
+import { registerCustomBlockFromSpec } from '../../config/custom_definitions';
+import {
+  SpriteData,
+  CostumeData,
+  BackdropData,
+  IBlocklyBlock,
+  IBlocklyWorkspaceJson,
+  IMLModel,
+  IExtensionData,
+  CustomBlockSpec,
+  CustomBlockArg,
+} from '../../domain/entities';
+import * as Blockly from 'blockly/core';
+import { javascriptGenerator } from 'blockly/javascript';
+import { LocalStorageProjectRepository } from '../../adapters/LocalStorageProjectRepository';
+import { SaveProjectUseCase } from '../../use-cases/SaveProjectUseCase';
+import { ProjectMapper } from '../../adapters/mappers/ProjectMapper';
+import { getProjectService } from './ProjectService';
+
+// Re-exporta interface para componentes que a utilizam
+export interface IProjectContextUI {
+  projectId?: string;
+  projectName?: string;
+  isUploadMode: boolean;
+  uploadModeBlocks: IBlocklyWorkspaceJson | null;
+  uploadCode: string;
+  setIsUploadMode: (val: boolean) => void;
+  setUploadModeBlocks: (val: IBlocklyWorkspaceJson | null) => void;
+  setUploadCode: (val: string) => void;
+  backdrops: BackdropData[];
+  activeBackdropId: string;
+  activeSpriteId: string;
+  activeExtensions: string[];
+  setActiveExtensions: (exts: string[]) => void;
+  activeStageMLModel: IMLModel | null;
+  setActiveStageMLModel: (model: IMLModel | null) => void;
+  activeUploadMLModel: IMLModel | null;
+  setActiveUploadMLModel: (model: IMLModel | null) => void;
+}
+
+// Re-exporta DTO de ProjectFile para compatibilidade retroativa
+export interface SpriteDataDTO extends Partial<SpriteData> {
+  blocks: IBlocklyWorkspaceJson;
+  costumes?: CostumeData[];
+  currentCostumeId?: string;
+}
+
+export interface ProjectFile {
+  metadata: { version: string; timestamp: string };
+  settings: { mode: 'stage' | 'upload' };
+  stage: { activeSpriteId: string; backdrops?: BackdropData[]; activeBackdropId?: string };
+  sprites: SpriteDataDTO[];
+  uploadMode: { blocks: IBlocklyWorkspaceJson | null; code: string };
+  extensions?: string[];
+  extensionData?: IExtensionData;
+  customProcedures?: CustomBlockSpec[];
+  broadcastMessages?: string[];
+  updatedAt: number;
+}
+
+const repository = new LocalStorageProjectRepository();
+const saveUseCase = new SaveProjectUseCase(repository);
+// loadUseCase removido (carregamento é feito por arquivo direto, não por ID)
+
+export const SerializationService = {
+  /**
+   * Helper legado para compatibilidade com a UI atual, mas internamente usa Clean Architecture.
+   */
+  saveProject: async (context: IProjectContextUI, fileName: string = 'meu_projeto.json', currentWorkspace?: Blockly.WorkspaceSvg) => {
+    try {
+      // 1. SINCRONIZAÇÃO: Antes de salvar o arquivo, extraímos o JSON do workspace
+      // ativo (Blockly) e o código gerado, atualizando o ProjectService para
+      // garantir que o arquivo final reflita o estado atual da tela.
+      if (currentWorkspace && !context.isUploadMode) {
+        const projectService = getProjectService();
+        const activeSpriteId = projectService.getActiveSpriteId();
+        const json = Blockly.serialization.workspaces.save(currentWorkspace);
+        const code = javascriptGenerator.workspaceToCode(currentWorkspace);
+
+        const blocksJson: IBlocklyWorkspaceJson = {
+          blocks: (json.blocks as IBlocklyWorkspaceJson['blocks']) || { languageVersion: 0, blocks: [] },
+          variables: json.variables as IBlocklyWorkspaceJson['variables'],
+        };
+
+        projectService.updateSpriteBlocks(activeSpriteId, blocksJson, code);
+      }
+
+      // 2. MAPEAMENTO E PERSISTÊNCIA: Converte o contexto da UI em uma entidade
+      // de domínio e salva no LocalStorage via UseCase.
+      const projectEntity = ProjectMapper.contextToEntity(context);
+      await saveUseCase.execute(projectEntity);
+
+      // 3. DOWNLOAD: Gera o Blob do DTO para permitir que o usuário salve o arquivo físico.
+      const dto = ProjectMapper.entityToDto(projectEntity);
+      const jsonString = JSON.stringify(dto, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Erro ao salvar projeto:', e);
+      alert('Erro ao salvar projeto.');
+    }
+  },
+
+  /**
+   * Carrega um projeto a partir de um JSON importado pelo usuário.
+   */
+  loadProject: async (json: ProjectFile, context: IProjectContextUI) => {
+    try {
+      // Nota: Em um cenário real, poderíamos carregar por ID do repositório,
+      // mas para upload de arquivos, mapeamos o JSON de entrada (DTO) para domínio.
+      // Por enquanto, mantemos a lógica de mapeamento legada durante a transição.
+
+      if (!json || !json.sprites) return;
+
+      // 1. Restaura o modo (Palco vs Upload)
+      if (json.settings && json.settings.mode) context.setIsUploadMode(json.settings.mode === 'upload');
+
+      // 2. Restaura as extensões ativas
+      if (json.extensions) context.setActiveExtensions(json.extensions);
+      if (json.extensionData?.ia) {
+        context.setActiveStageMLModel(json.extensionData.ia.activeStageModel);
+        context.setActiveUploadMLModel(json.extensionData.ia.activeUploadModel);
+      }
+
+      // 3. Mapeia sprites e cenários do JSON para entidades
+      const projectService = getProjectService();
+      const newSprites: SpriteData[] = json.sprites
+        .filter((s: SpriteDataDTO) => !s.isClone)
+        .map((s: SpriteDataDTO) => ({
+          id: s.id || crypto.randomUUID(),
+          name: s.name || 'Sem nome',
+          x: s.x ?? 0,
+          y: s.y ?? 0,
+          size: s.size ?? 100,
+          angle: s.angle ?? 90,
+          visible: s.visible ?? true,
+          costume: s.costume || '',
+          costumes: s.costumes || [{ id: 'default', name: 'default', url: s.costume || '' }],
+          currentCostumeId: s.currentCostumeId || 'default',
+          sounds: s.sounds || [],
+          currentSoundId: s.currentSoundId ?? null,
+          volume: s.volume ?? 100,
+          bubbleText: s.bubbleText || '',
+          bubbleType: s.bubbleType || null,
+          blocks: s.blocks,
+          variables: s.variables || [],
+          code: s.code || '',
+          rotationStyle: s.rotationStyle || 'all around',
+        }));
+
+      // Registra blocos customizados por varredura (Fallback para arquivos antigos)
+      const registeredIDs = new Set<string>();
+      json.sprites.forEach((sprite: SpriteDataDTO) => {
+        if (sprite.blocks?.blocks?.blocks) {
+          const traverseBlocks = (block: IBlocklyBlock) => {
+            if (!block) return;
+            if (typeof block.type === 'string' && block.type.startsWith('custom_def_')) {
+              const id = block.type.replace('custom_def_', '');
+              if (!registeredIDs.has(id)) {
+                let protoBlock: IBlocklyBlock | null = null;
+                const inputs = block.inputs as unknown as Record<string, { block: IBlocklyBlock }>;
+                if (inputs?.PROTOTYPE?.block) {
+                  protoBlock = inputs.PROTOTYPE.block;
+                }
+
+                if (protoBlock) {
+                  const fields = protoBlock.fields as Record<string, string>;
+                  const protoInputs = protoBlock.inputs as unknown as Record<
+                    string,
+                    { shadow?: Record<string, string>; block?: Record<string, string> }
+                  >;
+                  const name = fields ? fields.NAME : 'Function ' + id;
+                  const args: CustomBlockArg[] = [];
+                  if (protoInputs) {
+                    let i = 0;
+                    // eslint-disable-next-line no-constant-condition
+                    while (true) {
+                      const key = 'ARG_' + i;
+                      if (!protoInputs[key]) break;
+                      const input = protoInputs[key];
+                      const shadow = input.shadow || input.block;
+                      if (shadow) {
+                        let type = 'input';
+                        if (shadow.type === 'argument_reporter_number') type = 'number';
+                        else if (shadow.type === 'argument_reporter_boolean') type = 'bool';
+                        else if (shadow.type === 'argument_reporter_string') type = 'input';
+                        args.push({ type: type, value: `arg${i + 1} ` });
+                      } else {
+                        args.push({ type: 'input', value: `arg${i + 1} ` });
+                      }
+                      i++;
+                    }
+                  }
+                  try {
+                    registerCustomBlockFromSpec({ id, name, args });
+                    registeredIDs.add(id);
+                  } catch (e) {
+                    console.error('Falha no registro de fallback para', id, e);
+                  }
+                }
+              }
+            }
+            if (block.next) traverseBlocks(block.next.block);
+          };
+
+          const topBlocks = sprite.blocks.blocks.blocks;
+          if (Array.isArray(topBlocks)) {
+            topBlocks.forEach((b: IBlocklyBlock) => traverseBlocks(b));
+          }
+        }
+      });
+
+      // Usa Metadados se disponíveis (Método preferido)
+      if (json.customProcedures && Array.isArray(json.customProcedures)) {
+        json.customProcedures.forEach((proc: CustomBlockSpec) => {
+          registerCustomBlockFromSpec(proc);
+        });
+      }
+
+      projectService.setSprites(newSprites);
+      if (json.stage?.backdrops) {
+        projectService.setBackdrops(
+          json.stage.backdrops.map((b: BackdropData & { sounds?: unknown; currentSoundId?: unknown }) => ({
+            id: b.id,
+            name: b.name,
+            url: b.url,
+            sounds: Array.isArray(b.sounds) ? b.sounds : [],
+            currentSoundId: typeof b.currentSoundId === 'string' ? b.currentSoundId : null,
+          })),
+        );
+      }
+
+      if (json.stage?.activeSpriteId) projectService.setActiveSpriteId(json.stage.activeSpriteId);
+      if (json.stage?.activeBackdropId) projectService.setActiveBackdropId(json.stage.activeBackdropId);
+
+      if (json.uploadMode) {
+        const blocks = json.uploadMode.blocks || null;
+        const uploadBlocksJson = blocks as unknown as { blocks?: { blocks?: unknown[] } };
+        const hasContents = !!(uploadBlocksJson?.blocks?.blocks && uploadBlocksJson.blocks.blocks.length > 0);
+        context.setUploadModeBlocks(hasContents ? blocks : null);
+        context.setUploadCode(json.uploadMode.code || '');
+      }
+
+      // 5. Restaura mensagens de broadcast
+      if (json.broadcastMessages) {
+        projectService.setBroadcastMessages(json.broadcastMessages);
+      }
+
+      // AVISA QUE O PROJETO MUDOU: Essencial para forçar reload do Blockly
+      projectService.emit('projectLoaded', undefined);
+    } catch (err) {
+      console.error('Erro ao carregar projeto:', err);
+    }
+  },
+
+  handleFileSelect: (event: React.ChangeEvent<HTMLInputElement>, context: IProjectContextUI) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target?.result as string);
+        SerializationService.loadProject(json, context);
+      } catch (err) {
+        console.error('Erro ao ler arquivo:', err);
+        alert('Erro ao ler arquivo de projeto.');
+      }
+    };
+    reader.readAsText(file);
+  },
+};

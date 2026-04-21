@@ -1,564 +1,446 @@
 /**
- * ProjectService - Gerenciador de Estado do Projeto.
+ * ProjectService - Fachada Singleton para gestão do estado e ciclo de vida do projeto.
  *
- * Este serviço atua como a "única fonte de verdade" para os dados do projeto.
- * Ele gerencia a lista de atores (sprites), cenários (backdrops), fantasias e o
- * código associado a cada bloco. Utiliza o EventEmitter para notificar a UI e
- * outros serviços sempre que algo muda (ex: posição de um ator, troca de cenário).
+ * Responsabilidade: Orquestrar todas as operações de alto nível sobre o projeto,
+ * servindo como ponto único de entrada para a UI. Delega lógica específica para
+ * sub-serviços especializados e notifica observadores via EventEmitter.
+ *
+ * Operações Principais:
+ * - Gestão centralizada de Sprites, Fantasias (Costumes) e Cenários (Backdrops).
+ * - Sincronização de variáveis e código entre workspaces Blockly.
+ * - Seleção e atualização de estado ativo (Sprite/Cenário selecionado).
+ *
+ * Dependências: SpriteService, CostumeService, BackdropService, VariableService
+ * e lib/EventEmitter para propagação de mudanças.
  */
-
-import { SpriteData, CostumeData, BackdropData, BlocklyJson, ProjectEvents, SpriteVariable } from '../../interfaces/code';
+import { SpriteData, BackdropData, IBlocklyWorkspaceJson, SpriteVariable, SpriteList, ProjectEvents } from '@/_base/domain/entities';
 import { EventEmitter } from '../../lib/EventEmitter';
+import { SpriteService } from './SpriteService';
+import { CostumeService } from './CostumeService';
+import { BackdropService } from './BackdropService';
+import { VariableService } from './VariableService';
+import { SoundService } from './SoundService';
 
 export class ProjectService extends EventEmitter<ProjectEvents> {
-  private sprites: SpriteData[] = [];
-  private activeSpriteId: string = '';
-  private backdrops: BackdropData[] = [];
-  private activeBackdropId: string = '';
-  private stageVariables: { name: string; type: string }[] = [{ name: 'minha variável', type: 'Number' }];
-  private uploadVariables: { name: string; type: string }[] = [{ name: 'minha variável', type: 'Number' }];
+  private spriteService: SpriteService;
+  private costumeService: CostumeService;
+  private backdropService: BackdropService;
+  private variableService: VariableService;
+  private soundService: SoundService;
+  private broadcastMessages: string[] = ['mensagem1'];
 
+  // Construtor é chamado apenas no getProjectService (Singleton)
   constructor() {
     super();
-    this.initializeDefaults();
+    this.spriteService = new SpriteService(this);
+    this.costumeService = new CostumeService(this);
+    this.backdropService = new BackdropService(this);
+    this.variableService = new VariableService(this);
+    this.soundService = new SoundService(this);
   }
 
-  /**
-   * Initialize with default sprite and backdrop
-   */
-  private initializeDefaults(): void {
-    // Default backdrop
-    this.backdrops = [{ id: 'bg1', name: 'Fundo 1', url: '/img/fundo.jpg' }];
-    this.activeBackdropId = 'bg1';
+  // ==========================================
+  // DELEGAÇÃO: SPRITES
+  // ==========================================
 
-    // Default sprite
-    this.sprites = [
-      {
-        id: 'sprite1',
-        name: 'Ator 1',
-        x: 0,
-        y: 0,
-        angle: 90,
-        size: 100,
-        visible: true,
-        costume: '/img/deco.png',
-        currentCostumeId: 'c1',
-        costumes: [{ id: 'c1', name: 'padrão', url: '/img/deco.png' }],
-        bubbleText: '',
-        bubbleType: null,
-        blocks: undefined,
-        code: '',
-      },
-    ];
-    this.activeSpriteId = 'sprite1';
-  }
-
-  // ========== SPRITE MANAGEMENT ==========
-
-  /**
-   * Get all sprites
-   */
   public getSprites(): SpriteData[] {
-    return this.sprites;
+    return this.spriteService.getSprites();
   }
 
-  /**
-   * Get the active sprite
-   */
+  public getStateRevision(): number {
+    return this.spriteService.getStateRevision();
+  }
+
+  // Para uso interno em alguns lugares
+  public get sprites(): SpriteData[] {
+    return this.spriteService.getSprites();
+  }
+
+  public get activeSpriteId(): string {
+    return this.spriteService.getActiveSpriteId();
+  }
+  public set activeSpriteId(id: string) {
+    this.spriteService.setActiveSpriteId(id);
+  }
+
   public getActiveSprite(): SpriteData {
-    return this.sprites.find((s) => s.id === this.activeSpriteId) || this.sprites[0];
+    const id = this.spriteService.getActiveSpriteId();
+    const sprite = this.getSpriteById(id);
+    return sprite || this.spriteService.getActiveSprite();
   }
 
-  /**
-   * Get active sprite ID
-   */
-  public getActiveSpriteId(): string {
-    return this.activeSpriteId;
-  }
-
-  /**
-   * Get a specific sprite by ID
-   */
   public getSpriteById(id: string): SpriteData | undefined {
-    return this.sprites.find((s) => s.id === id);
+    return this.spriteService.getSpriteById(id, this.backdropService.getActiveBackdropId(), this.backdropService.getBackdrops());
   }
 
-  /**
-   * Add a new sprite
-   */
   public async addSprite(file?: File): Promise<void> {
-    const newId = `sprite${Date.now()}`;
-
-    const createSprite = (url: string = '/img/deco.png', costumeName: string = 'padrão'): SpriteData => {
-      return {
-        id: newId,
-        name: `Ator ${this.sprites.length + 1}`,
-        x: 0,
-        y: 0,
-        angle: 90,
-        size: 100,
-        visible: true,
-        costume: url,
-        currentCostumeId: 'c1',
-        costumes: [{ id: 'c1', name: costumeName, url: url }],
-        bubbleText: '',
-        bubbleType: null,
-        blocks: {
-          blocks: {
-            languageVersion: 0,
-            blocks: [],
-          },
-          variables: [], // Initialize empty, workspace handles injection from Service
-        },
-        variables: [], // Initialize explicit variables
-        code: '',
-      };
-    };
-
-    if (file) {
-      const url = await this.readFileAsDataURL(file);
-      const name = file.name.split('.')[0];
-      this.sprites.push(createSprite(url, name));
-    } else {
-      this.sprites.push(createSprite());
-    }
-
-    this.activeSpriteId = newId;
-    this.emit('spritesChange', this.sprites);
-    this.emit('activeSpriteChange', newId);
+    return this.spriteService.addSprite(file);
   }
 
-  /**
-   * Delete a sprite
-   */
+  public async addSpriteFromLibrary(
+    name: string,
+    url: string,
+    costumes?: { name: string; url: string }[],
+    sounds?: { name: string; url: string; format: 'wav' | 'mp3' }[],
+  ): Promise<void> {
+    return this.spriteService.addSpriteFromLibrary(name, url, costumes, sounds);
+  }
+
+  public async addSurpriseSprite(): Promise<void> {
+    return this.spriteService.addSurpriseSprite();
+  }
+
   public deleteSprite(id: string): void {
-    if (this.sprites.length <= 1) {
-      console.warn('[ProjectService] Cannot delete last sprite');
-      return;
-    }
-
-    this.sprites = this.sprites.filter((s) => s.id !== id);
-
-    // If deleted active sprite, select another
-    if (this.activeSpriteId === id) {
-      this.activeSpriteId = this.sprites[0].id;
-      this.emit('activeSpriteChange', this.activeSpriteId);
-    }
-
-    this.emit('spritesChange', this.sprites);
+    this.spriteService.deleteSprite(id);
   }
 
-  /**
-   * Select a sprite as active
-   */
   public selectSprite(id: string): void {
-    const exists = this.sprites.find((s) => s.id === id);
-    if (exists) {
-      this.activeSpriteId = id;
-      this.emit('activeSpriteChange', id);
+    this.spriteService.selectSprite(id);
+    if (id === 'stage') {
+      this.emit('activeSpriteChange', 'stage');
     }
   }
 
   /**
-   * Update sprite properties
+   * Atualiza as propriedades de um ator e dispara eventos de mudança.
+   * O padrão de EventEmitter garante que tanto a UI (React) quanto os
+   * monitores de execução reajam à mudança de estado.
    */
-  public updateSprite(id: string, changes: Partial<SpriteData>): void {
-    const sprite = this.sprites.find((s) => s.id === id);
-    if (sprite) {
-      Object.assign(sprite, changes);
-      this.emit('spritesChange', this.sprites);
-    }
+  public updateSprite(id: string, changes: Partial<SpriteData>, silent: boolean = false): void {
+    this.spriteService.updateSprite(id, changes, (backdropId: string) => this.backdropService.switchBackdrop(backdropId), silent);
   }
 
-  /**
-   * Update sprite blocks and code
-   */
-  public updateSpriteBlocks(id: string, blocks: BlocklyJson, code: string, variables?: SpriteVariable[]): void {
-    const sprite = this.sprites.find((s) => s.id === id);
-    if (sprite) {
-      sprite.blocks = blocks;
-      sprite.code = code;
-      if (variables) {
-        sprite.variables = variables;
-      }
-      // Don't emit change for performance (blocks update frequently)
-    }
+  public updateSpriteBlocks(id: string, blocks: IBlocklyWorkspaceJson, code: string, variables?: SpriteVariable[]): void {
+    this.spriteService.updateSpriteBlocks(id, blocks, code, variables);
   }
 
-  /**
-   * Set all sprites (for loading projects)
-   */
+  public getStageBlocks(): { blocks: IBlocklyWorkspaceJson | undefined; code: string } {
+    return this.spriteService.getStageBlocks();
+  }
+
   public setSprites(newSprites: SpriteData[]): void {
-    this.sprites = newSprites;
-    this.emit('spritesChange', this.sprites);
+    this.spriteService.setSprites(newSprites);
   }
 
-  /**
-   * Set active sprite ID (for loading projects)
-   */
-  public setActiveSpriteId(id: string): void {
-    if (this.sprites.find((s) => s.id === id)) {
-      this.activeSpriteId = id;
-      this.emit('activeSpriteChange', id);
-    }
+  public duplicateSprite(id: string): SpriteData | undefined {
+    return this.spriteService.duplicateSprite(id);
   }
 
-  // ========== COSTUME MANAGEMENT ==========
-
-  /**
-   * Add a costume to a sprite
-   */
-  public async addCostumeToSprite(spriteId: string, file: File): Promise<void> {
-    const sprite = this.sprites.find((s) => s.id === spriteId);
-    if (!sprite) return;
-
-    const url = await this.readFileAsDataURL(file);
-    const newCostume: CostumeData = {
-      id: `costume${Date.now()}`,
-      name: file.name.split('.')[0],
-      url: url,
-    };
-
-    sprite.costumes.push(newCostume);
-    sprite.currentCostumeId = newCostume.id;
-    sprite.costume = newCostume.url;
-
-    this.emit('spritesChange', this.sprites);
+  public clearClones(): void {
+    this.spriteService.clearClones();
   }
 
-  /**
-   * Remove a costume from a sprite
-   */
-  public removeCostumeFromSprite(spriteId: string, costumeId: string): void {
-    const sprite = this.sprites.find((s) => s.id === spriteId);
-    if (!sprite || sprite.costumes.length <= 1) return;
-
-    sprite.costumes = sprite.costumes.filter((c) => c.id !== costumeId);
-
-    // If current costume was deleted, switch to first
-    if (sprite.currentCostumeId === costumeId) {
-      const first = sprite.costumes[0];
-      sprite.currentCostumeId = first.id;
-      sprite.costume = first.url;
-    }
-
-    this.emit('spritesChange', this.sprites);
-  }
-
-  // ========== BACKDROP MANAGEMENT ==========
-
-  /**
-   * Get all backdrops
-   */
-  public getBackdrops(): BackdropData[] {
-    return this.backdrops;
-  }
-
-  /**
-   * Get active backdrop
-   */
-  public getActiveBackdrop(): BackdropData {
-    return this.backdrops.find((b) => b.id === this.activeBackdropId) || this.backdrops[0];
-  }
-
-  /**
-   * Get active backdrop ID
-   */
-  public getActiveBackdropId(): string {
-    return this.activeBackdropId;
-  }
-
-  /**
-   * Add a new backdrop
-   */
-  public async addBackdrop(file: File): Promise<void> {
-    const url = await this.readFileAsDataURL(file);
-    const newBackdrop: BackdropData = {
-      id: `bg${Date.now()}`,
-      name: file.name.split('.')[0],
-      url: url,
-    };
-
-    this.backdrops.push(newBackdrop);
-    this.activeBackdropId = newBackdrop.id;
-    this.emit('backdropChange', this.backdrops);
-    this.emit('activeBackdropChange', newBackdrop.id);
-  }
-
-  /**
-   * Delete a backdrop
-   */
-  public deleteBackdrop(id: string): void {
-    if (this.backdrops.length <= 1) return;
-
-    this.backdrops = this.backdrops.filter((b) => b.id !== id);
-
-    // If deleted active backdrop, select first
-    if (this.activeBackdropId === id) {
-      this.activeBackdropId = this.backdrops[0].id;
-    }
-
-    this.emit('backdropChange', this.backdrops);
-  }
-
-  /**
-   * Select a backdrop as active
-   */
-  public selectBackdrop(id: string): void {
-    if (this.backdrops.find((b) => b.id === id)) {
-      this.activeBackdropId = id;
-      this.emit('backdropChange', this.backdrops);
-      this.emit('activeBackdropChange', id);
-    }
-  }
-
-  /**
-   * Set all backdrops (for loading projects)
-   */
-  public setBackdrops(newBackdrops: BackdropData[]): void {
-    this.backdrops = newBackdrops;
-    this.emit('backdropChange', this.backdrops);
-  }
-
-  /**
-   * Set active backdrop ID (for loading projects)
-   */
-  public setActiveBackdropId(id: string): void {
-    if (this.backdrops.find((b) => b.id === id)) {
-      this.activeBackdropId = id;
-      this.emit('backdropChange', this.backdrops);
-      this.emit('activeBackdropChange', id);
-    }
-  }
-
-  /**
-   * Refreshes all sprite listeners (forces an update).
-   * Useful when modifying sprite properties directly by reference.
-   */
   public syncSprites(): void {
-    this.emit('spritesChange', this.sprites);
+    this.spriteService.syncSprites();
+  }
+
+  // ==========================================
+  // DELEGAÇÃO: FANTASIAS (COSTUMES)
+  // ==========================================
+
+  public async addCostumeToSprite(spriteId: string, file?: File): Promise<void> {
+    const result = await this.costumeService.addCostumeToSprite(spriteId, this.spriteService.getSprites(), file, (f) =>
+      this.backdropService.addBackdrop(f),
+    );
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+    return result;
+  }
+
+  public updateCostume(spriteId: string, costumeId: string, thumbnailUrl: string, stageUrl?: string): void {
+    this.costumeService.updateCostume(
+      spriteId,
+      costumeId,
+      thumbnailUrl,
+      stageUrl,
+      this.spriteService.getSprites(),
+      this.backdropService.getBackdrops(),
+      this.backdropService.getActiveBackdropId(),
+    );
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+  }
+
+  public updateCostumeThumbnail(spriteId: string, costumeId: string, thumbnailUrl: string, stageUrl?: string): void {
+    this.costumeService.updateCostumeThumbnail(
+      spriteId,
+      costumeId,
+      thumbnailUrl,
+      stageUrl,
+      this.spriteService.getSprites(),
+      this.backdropService.getBackdrops(),
+    );
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+  }
+
+  public renameCostume(spriteId: string, costumeId: string, newName: string): void {
+    this.costumeService.renameCostume(spriteId, costumeId, newName, this.spriteService.getSprites());
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+  }
+
+  public switchCostume(spriteId: string, costumeId: string): void {
+    this.costumeService.switchCostume(spriteId, costumeId, this.spriteService.getSprites(), (bId) => this.backdropService.selectBackdrop(bId));
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+  }
+
+  public removeCostumeFromSprite(spriteId: string, costumeId: string): void {
+    this.costumeService.removeCostumeFromSprite(spriteId, costumeId, this.spriteService.getSprites(), (bId) =>
+      this.backdropService.deleteBackdrop(bId),
+    );
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+  }
+
+  // ==========================================
+  // DELEGAÇÃO: SONS (SOUNDS)
+  // ==========================================
+
+  public async addSoundToSprite(spriteId: string, file?: File): Promise<void> {
+    await this.soundService.addSoundToSprite(spriteId, this.spriteService.getSprites(), file);
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+  }
+
+  public renameSound(spriteId: string, soundId: string, newName: string): void {
+    this.soundService.renameSound(spriteId, soundId, newName, this.spriteService.getSprites());
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+  }
+
+  public switchSound(spriteId: string, soundId: string): void {
+    this.soundService.switchSound(spriteId, soundId, this.spriteService.getSprites());
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+  }
+
+  public removeSoundFromSprite(spriteId: string, soundId: string): void {
+    this.soundService.removeSoundFromSprite(spriteId, soundId, this.spriteService.getSprites());
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
   }
 
   /**
-   * Refreshes all backdrop listeners (forces an update).
+   * Atualiza o conteúdo binário de um som (aplicado após efeitos no SoundEditor).
+   * Delega para SoundService ou BackdropService conforme o spriteId.
    */
-  public syncBackdrops(): void {
-    this.emit('backdropChange', this.backdrops);
-  }
-
-  // ========== GLOBAL & LOCAL VARIABLES MANAGEMENT ==========
-  // Separated by Mode (Stage vs Upload)
-
-  /**
-   * Get all variables available for the current context (Global + Local to Active Sprite)
-   */
-  public getUserVariables(mode: 'stage' | 'upload'): { name: string; type: string; scope: 'global' | 'local'; id: string; ownerId?: string }[] {
-    const globalVars = (mode === 'upload' ? this.uploadVariables : this.stageVariables).map((v) => ({
-      ...v,
-      scope: 'global' as const,
-      id: v.name, // ID is name for globals for now
-    }));
-
-    if (mode === 'stage') {
-      const activeSprite = this.getActiveSprite();
-      if (activeSprite && activeSprite.variables) {
-        const localVars = activeSprite.variables.map((v) => ({
-          name: v.name,
-          type: v.type, // Map internal type if needed, but usually consistent
-          scope: 'local' as const,
-          id: v.id,
-          ownerId: activeSprite.id,
-        }));
-        return [...globalVars, ...localVars];
-      }
-    }
-
-    return globalVars;
-  }
-
-  // Helper to get raw storage array (legacy support)
-  public getVariables(mode: 'stage' | 'upload'): { name: string; type: string }[] {
-    return mode === 'upload' ? this.uploadVariables : this.stageVariables;
-  }
-
-  public addVariable(mode: 'stage' | 'upload', name: string, type: string, scope: 'global' | 'local' = 'global', ownerId?: string): void {
-    if (scope === 'local' && mode === 'stage' && ownerId) {
-      const sprite = this.getSpriteById(ownerId);
-      if (sprite) {
-        // Initialize if undefined
-        if (!sprite.variables) sprite.variables = [];
-
-        // Check duplicate LOCAL
-        if (!sprite.variables.find((v) => v.name === name)) {
-          sprite.variables.push({
-            id: name, // Simple ID for now
-            name: name,
-            type: type,
-            value: 0,
-            isGlobal: false,
-          });
-
-          this.emitVariablesChange('stage'); // Re-emit stage vars to force update
-        }
-      }
+  public async updateSoundData(spriteId: string, soundId: string, blob: Blob): Promise<void> {
+    if (spriteId === 'stage') {
+      await this.backdropService.updateSoundDataOnBackdrop(this.backdropService.getActiveBackdropId(), soundId, blob);
     } else {
-      // Global
-      const targetList = mode === 'upload' ? this.uploadVariables : this.stageVariables;
-      if (!targetList.find((v) => v.name === name)) {
-        targetList.push({ name, type });
-
-        this.emitVariablesChange(mode);
-      }
+      await this.soundService.updateSoundData(spriteId, soundId, blob, this.spriteService.getSprites());
+      this.spriteService.syncAllClones();
     }
+    this.spriteService.bumpRevision();
   }
 
-  public renameVariable(mode: 'stage' | 'upload', oldName: string, newName: string, scope: 'global' | 'local' = 'global', ownerId?: string): void {
-    if (scope === 'local' && mode === 'stage' && ownerId) {
-      const sprite = this.getSpriteById(ownerId);
-      if (sprite && sprite.variables) {
-        const v = sprite.variables.find((myVar) => myVar.name === oldName);
-        if (v) {
-          v.name = newName;
-          v.id = newName; // Update ID too if simple mapping
-
-          // Propagate to BLOCKS (Only for this sprite)
-          if (sprite.blocks) {
-            try {
-              this.updateVariableInBlocks(sprite.blocks.blocks, oldName, newName);
-            } catch (e) {
-              console.error(e);
-            }
-          }
-          this.emitVariablesChange('stage');
-        }
-      }
-    } else {
-      // Global
-      const targetList = mode === 'upload' ? this.uploadVariables : this.stageVariables;
-      const variable = targetList.find((v) => v.name === oldName);
-
-      if (variable) {
-        variable.name = newName;
-
-        if (mode === 'stage') {
-          this.sprites.forEach((sprite) => {
-            if (sprite.blocks) {
-              try {
-                // 1. Update variables list in JSON
-                if (sprite.blocks.variables) {
-                  sprite.blocks.variables.forEach((v: any) => {
-                    if (v.name === oldName) {
-                      v.name = newName;
-                      if (v.id === oldName) v.id = newName;
-                    }
-                  });
-                }
-                // 2. Update fields
-                this.updateVariableInBlocks(sprite.blocks.blocks, oldName, newName);
-              } catch (e) {
-                console.error(`[ProjectService] Failed to propagate stage var rename to sprite ${sprite.id}:`, e);
-              }
-            }
-          });
-          this.emit('spritesChange', [...this.sprites]);
-        }
-
-        this.emitVariablesChange(mode);
-      }
-    }
+  public async playSound(url: string, volume?: number): Promise<void> {
+    await this.soundService.playSound(url, volume);
   }
 
-  private updateVariableInBlocks(blocksRoot: any, oldName: string, newName: string) {
-    if (!blocksRoot || !blocksRoot.blocks) return;
-
-    const updateBlocks = (blocks: any[]) => {
-      blocks.forEach((block) => {
-        // Check fields
-        if (block.fields) {
-          for (const key in block.fields) {
-            const field = block.fields[key];
-            if (field.id === oldName) {
-              field.id = newName;
-            }
-            if (field.value === oldName && (key === 'VAR' || key === 'VARIABLE')) {
-              // checks if it is a variable field
-            }
-          }
-        }
-        // Recurse inputs
-        if (block.inputs) {
-          for (const key in block.inputs) {
-            const input = block.inputs[key];
-            if (input.block) updateBlocks([input.block]);
-            if (input.shadow) updateBlocks([input.shadow]);
-          }
-        }
-        // Recurse next
-        if (block.next && block.next.block) {
-          updateBlocks([block.next.block]);
-        }
-      });
-    };
-    updateBlocks(blocksRoot.blocks);
+  public async playSoundUntilDone(url: string, volume?: number): Promise<void> {
+    await this.soundService.playSoundUntilDone(url, volume);
   }
 
-  public deleteVariable(mode: 'stage' | 'upload', name: string, scope: 'global' | 'local' = 'global', ownerId?: string): void {
-    if (scope === 'local' && mode === 'stage' && ownerId) {
-      const sprite = this.getSpriteById(ownerId);
-      if (sprite && sprite.variables) {
-        sprite.variables = sprite.variables.filter((v) => v.name !== name);
-
-        this.emitVariablesChange('stage');
-      }
-    } else {
-      if (mode === 'upload') {
-        this.uploadVariables = this.uploadVariables.filter((v) => v.name !== name);
-      } else {
-        this.stageVariables = this.stageVariables.filter((v) => v.name !== name);
-      }
-
-      this.emitVariablesChange(mode);
-    }
+  public stopAllSounds(): void {
+    this.soundService.stopAllSounds();
   }
 
-  private emitVariablesChange(mode: 'stage' | 'upload') {
-    if (mode === 'upload') {
-      this.emit('uploadVariablesChange', [...this.uploadVariables]);
-    } else {
-      this.emit('stageVariablesChange', [...this.stageVariables]);
-    }
+  // ==========================================
+  // DELEGAÇÃO: CENÁRIOS (BACKDROPS)
+  // ==========================================
+
+  public get backdrops(): BackdropData[] {
+    return this.backdropService.getBackdrops();
   }
 
-  // Legacy support or "All" sync?
+  public get activeBackdropId(): string {
+    return this.backdropService.getActiveBackdropId();
+  }
+
+  public get activeBackdrop(): BackdropData | undefined {
+    return this.backdropService.getActiveBackdrop();
+  }
+
+  public async addBackdrop(file?: File): Promise<void> {
+    await this.backdropService.addBackdrop(file);
+    this.spriteService.bumpRevision();
+  }
+
+  public switchBackdrop(id: string): void {
+    this.backdropService.switchBackdrop(id);
+    this.spriteService.bumpRevision();
+  }
+
+  public deleteBackdrop(id: string): void {
+    this.backdropService.deleteBackdrop(id);
+    this.spriteService.bumpRevision();
+  }
+
+  public selectBackdrop(id: string): void {
+    this.backdropService.selectBackdrop(id);
+    this.spriteService.bumpRevision();
+  }
+
+  public async addBackdropFromLibrary(name: string, url: string): Promise<void> {
+    await this.backdropService.addBackdropFromLibrary(name, url);
+    this.spriteService.bumpRevision();
+  }
+
+  public async addSurpriseBackdrop(): Promise<void> {
+    await this.backdropService.addSurpriseBackdrop();
+    this.spriteService.bumpRevision();
+  }
+
+  // ==========================================
+  // DELEGAÇÃO: SONS DO CENÁRIO (BACKDROP SOUNDS)
+  // ==========================================
+
+  public async addSoundToBackdrop(backdropId: string, file?: File): Promise<void> {
+    await this.backdropService.addSoundToBackdrop(backdropId, file);
+    this.spriteService.bumpRevision();
+  }
+
+  public renameSoundOnBackdrop(backdropId: string, soundId: string, newName: string): void {
+    this.backdropService.renameSoundOnBackdrop(backdropId, soundId, newName);
+    this.spriteService.bumpRevision();
+  }
+
+  public switchSoundOnBackdrop(backdropId: string, soundId: string): void {
+    this.backdropService.switchSoundOnBackdrop(backdropId, soundId);
+    this.spriteService.bumpRevision();
+  }
+
+  public removeSoundFromBackdrop(backdropId: string, soundId: string): void {
+    this.backdropService.removeSoundFromBackdrop(backdropId, soundId);
+    this.spriteService.bumpRevision();
+  }
+
+  // ==========================================
+  // DELEGAÇÃO: VARIÁVEIS (VARIABLES)
+  // ==========================================
+
+  public get stageVariables(): SpriteVariable[] {
+    return this.variableService.getUserVariables('stage');
+  }
+
+  public get uploadVariables(): SpriteVariable[] {
+    return this.variableService.getUserVariables('upload');
+  }
+
+  public getActiveSpriteId(): string {
+    return this.spriteService.getActiveSpriteId();
+  }
+
+  public setActiveSpriteId(id: string): void {
+    this.spriteService.setActiveSpriteId(id);
+  }
+
+  public getBackdrops(): BackdropData[] {
+    return this.backdropService.getBackdrops();
+  }
+
+  public getActiveBackdropId(): string {
+    return this.backdropService.getActiveBackdropId();
+  }
+
+  public setActiveBackdropId(id: string): void {
+    this.backdropService.setActiveBackdropId(id);
+  }
+
+  public setBackdrops(newBackdrops: BackdropData[]): void {
+    this.backdropService.setBackdrops(newBackdrops);
+  }
+
+  public getVariables(mode: 'stage' | 'upload'): SpriteVariable[] {
+    return this.variableService.getUserVariables(mode);
+  }
+
+  public getUserVariables(mode: 'stage' | 'upload', activeSpriteId?: string | null): SpriteVariable[] {
+    return this.variableService.getUserVariables(mode, activeSpriteId);
+  }
+
+  public addVariable(mode: 'stage' | 'upload', name: string, type: string, scope?: 'global' | 'local', ownerId?: string): void {
+    this.variableService.addVariable(mode, name, type, scope, ownerId);
+  }
+
+  public renameVariable(mode: 'stage' | 'upload', oldName: string, newName: string): void {
+    this.variableService.renameVariable(mode, oldName, newName);
+  }
+
+  public deleteVariable(mode: 'stage' | 'upload', name: string): void {
+    this.variableService.deleteVariable(mode, name);
+  }
+
+  public updateVariableInBlocks(name: string, value: string | number | boolean, mode: 'stage' | 'upload'): void {
+    this.variableService.updateVariableInBlocks(name, value, mode);
+  }
+
   public forceSyncVariables(): void {
-    this.emit('stageVariablesChange', [...this.stageVariables]); // Listeners will re-fetch getUserVariables
-    this.emit('uploadVariablesChange', [...this.uploadVariables]);
+    this.variableService.forceSyncVariables();
   }
 
-  // ========== EVENT SYSTEM (Inherited from EventEmitter) ==========
+  // ── LISTAS ────────────────────────────────────────────────
+
+  public getLists(mode: 'stage' | 'upload'): SpriteList[] {
+    return this.variableService.getUserLists(mode);
+  }
+
+  public getUserLists(mode: 'stage' | 'upload', activeSpriteId?: string | null): SpriteList[] {
+    return this.variableService.getUserLists(mode, activeSpriteId);
+  }
+
+  public addList(mode: 'stage' | 'upload', name: string, scope?: 'global' | 'local', ownerId?: string): SpriteList | null {
+    return this.variableService.addList(mode, name, scope, ownerId);
+  }
+
+  public renameList(mode: 'stage' | 'upload', oldName: string, newName: string): void {
+    this.variableService.renameList(mode, oldName, newName);
+  }
+
+  public deleteList(mode: 'stage' | 'upload', name: string): void {
+    this.variableService.deleteList(mode, name);
+  }
+
+  public forceSyncLists(): void {
+    this.variableService.forceSyncLists();
+  }
 
   /**
-   * Read a file as Data URL
+   * Transmite uma mensagem global para todo o projeto.
+   * Atua como a ponte de comunicação entre atores (sprites).
    */
-  private readFileAsDataURL(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        resolve(result);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+  public broadcast(message: string): void {
+    this.emit('broadcast', message);
+  }
+
+  public getBroadcastMessages(): string[] {
+    return this.broadcastMessages;
+  }
+
+  public setBroadcastMessages(messages: string[]): void {
+    this.broadcastMessages = messages;
+  }
+
+  public addBroadcastMessage(name: string): void {
+    if (!this.broadcastMessages.includes(name)) {
+      this.broadcastMessages.push(name);
+      this.spriteService.bumpRevision();
+    }
   }
 }
 
-// Export singleton instance
+// Exporta instância singleton do ProjectService
 let projectServiceInstance: ProjectService | null = null;
 
 export const getProjectService = (): ProjectService => {
   if (!projectServiceInstance) {
     projectServiceInstance = new ProjectService();
+    if (typeof window !== 'undefined') {
+      (window as unknown as { project: ProjectService }).project = projectServiceInstance;
+    }
   }
   return projectServiceInstance;
 };

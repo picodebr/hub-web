@@ -4,6 +4,22 @@ import type { AppProps } from 'next/app';
 import 'moment/locale/pt-br';
 //@ts-ignore
 import '../styles/globals.css';
+//@ts-ignore
+import '../styles/ai-modal.css';
+//@ts-ignore
+import '../styles/blockly.css';
+//@ts-ignore
+import '../styles/components.css';
+//@ts-ignore
+import '../styles/dropdown.css';
+//@ts-ignore
+import '../styles/features.css';
+//@ts-ignore
+import '../styles/layout.css';
+//@ts-ignore
+import '../styles/panels.css';
+//@ts-ignore
+import '../styles/theme.css';
 
 import { api } from '@/_base/classes/api';
 import { CustomRouterProvider } from '@/_base/hooks/CustomRouter';
