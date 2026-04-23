@@ -20,7 +20,7 @@ interface VariableModalProps {
   isUploadMode: boolean;
 }
 
-export function VariableModal({ isOpen, onClose, workspace, isUploadMode }: VariableModalProps) {
+export default function VariableModal({ isOpen, onClose, workspace, isUploadMode }: VariableModalProps) {
   const [name, setName] = useState('');
   const [type, setType] = useState('Number'); // Pode ser 'Number' ou 'String'
   const [scope, setScope] = useState('global'); // 'global' ou 'local'

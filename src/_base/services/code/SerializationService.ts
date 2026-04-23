@@ -20,6 +20,8 @@ import { LocalStorageProjectRepository } from '../../adapters/LocalStorageProjec
 import { SaveProjectUseCase } from '../../use-cases/SaveProjectUseCase';
 import { ProjectMapper } from '../../adapters/mappers/ProjectMapper';
 import { getProjectService } from './ProjectService';
+import { updateCodeProject } from '../codeProject';
+import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
 
 // Re-exporta interface para componentes que a utilizam
 export interface IProjectContextUI {
@@ -62,15 +64,20 @@ export interface ProjectFile {
   updatedAt: number;
 }
 
-const repository = new LocalStorageProjectRepository();
-const saveUseCase = new SaveProjectUseCase(repository);
+// const repository = new LocalStorageProjectRepository();
+// const saveUseCase = new SaveProjectUseCase(repository);
 // loadUseCase removido (carregamento é feito por arquivo direto, não por ID)
 
 export const SerializationService = {
   /**
    * Helper legado para compatibilidade com a UI atual, mas internamente usa Clean Architecture.
    */
-  saveProject: async (context: IProjectContextUI, fileName: string = 'meu_projeto.json', currentWorkspace?: Blockly.WorkspaceSvg) => {
+  saveProject: async (
+    context: IProjectContextUI,
+    project: ICodeProject,
+    fileName: string = 'meu_projeto.json',
+    currentWorkspace?: Blockly.WorkspaceSvg,
+  ) => {
     try {
       // 1. SINCRONIZAÇÃO: Antes de salvar o arquivo, extraímos o JSON do workspace
       // ativo (Blockly) e o código gerado, atualizando o ProjectService para
@@ -91,22 +98,25 @@ export const SerializationService = {
 
       // 2. MAPEAMENTO E PERSISTÊNCIA: Converte o contexto da UI em uma entidade
       // de domínio e salva no LocalStorage via UseCase.
+      // await saveUseCase.execute(projectEntity);
       const projectEntity = ProjectMapper.contextToEntity(context);
-      await saveUseCase.execute(projectEntity);
 
       // 3. DOWNLOAD: Gera o Blob do DTO para permitir que o usuário salve o arquivo físico.
       const dto = ProjectMapper.entityToDto(projectEntity);
-      const jsonString = JSON.stringify(dto, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
 
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      await updateCodeProject({ id: project.id, metadata: dto });
+
+      // const jsonString = JSON.stringify(dto, null, 2);
+      // const blob = new Blob([jsonString], { type: 'application/json' });
+      // const url = URL.createObjectURL(blob);
+
+      // const link = document.createElement('a');
+      // link.href = url;
+      // link.download = fileName;
+      // document.body.appendChild(link);
+      // link.click();
+      // document.body.removeChild(link);
+      // URL.revokeObjectURL(url);
     } catch (e) {
       console.error('Erro ao salvar projeto:', e);
       alert('Erro ao salvar projeto.');

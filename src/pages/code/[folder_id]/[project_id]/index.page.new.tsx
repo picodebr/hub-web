@@ -22,12 +22,17 @@ import { useFirmware } from '@/_base/context/FirmwareContext';
 import { useProject } from '@/_base/context/ProjectContext';
 import { useExecutionRunner } from '@/_base/context/ExecutionRunnerContext';
 import { MLRecognitionWindow } from './components/ml/MLRecognitionWindow';
-import { BoardConnectionWarningModal, DeviceLostModal, RestoreConfirmModal, UploadTimeoutModal } from './components/modals';
 import { BlocklyWorkspaceRef } from '@/_base/domain/entities';
 import StageBridge from './components/stage/StageBridge';
 import BlocklyWorkspace from './components/blockly/BlocklyWorkspace';
 import StageArea from './components/stage/StageArea';
 import SpriteList from './components/sprites/SpriteList';
+import { BoardConnectionWarningModal } from './components/modals/BoardConnectionWarningModal';
+import { DeviceLostModal } from './components/modals/DeviceLostModal';
+import { RestoreConfirmModal } from './components/modals/RestoreConfirmModal';
+import { UploadTimeoutModal } from './components/modals/UploadTimeoutModal';
+import CodeNavbar from './components/Navbar';
+import { Flex } from '@chakra-ui/react';
 
 const getDefaultSourceCode = (project: ICodeProject | null) =>
   project?.source_code ||
@@ -46,7 +51,8 @@ interface IProps {
   folderId: string;
 }
 
-const NewCode: React.FC = () => {
+const NewCode: React.FC<IProps> = ({ project, isDefaultProject, iframeUrl, projectId, folderId }) => {
+  console.log('project: ', project);
   const { isUploadMode, activeExtensions, isStageFullScreen, setIsStageFullScreen, setShowRestoreConfirmModal } = useUI();
 
   const { isSerialConnected, restoreBoard } = useFirmware();
@@ -85,11 +91,12 @@ const NewCode: React.FC = () => {
   const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
 
   return (
-    <div className="d-flex flex-column flex-grow-1 overflow-hidden">
+    <Flex direction="column" flex="1" position="fixed" top="0" left="0" right="0" bottom="0" overflow="hidden" zIndex="100">
+      <CodeNavbar project={project} />
       <StageBridge />
 
       <div className="container-fluid flex-grow-1 d-flex flex-column px-0" style={{ overflow: 'hidden' }}>
-        <div className="row h-100 g-0">
+        <div className="row h-100 g-0 p-0 m-0">
           {/* BLOCKLY CONTAINER - Smooth Transition */}
           <div
             className="p-0"
@@ -237,12 +244,12 @@ const NewCode: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Flex>
   );
 };
 export default NewCode;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
+export const getServerSideProps: GetServerSideProps = async ({ req, query, params }) => {
   cookieManager.updateToken(req);
 
   const projectId = query.project_id || ``;

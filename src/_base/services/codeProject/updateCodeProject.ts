@@ -1,8 +1,12 @@
-import { IUpdateProjectParams } from '@/_base/interfaces/project';
+import { ICreateProjectParams } from '@/_base/interfaces/codeProject/ICreateProjectParams';
 import { ICodeProject } from '../../interfaces/codeProject/IProject';
 import { api } from '@/_base/classes/api';
 
-type FuncType = (params: IUpdateProjectParams) => Promise<ICodeProject>;
+interface IUpdateCodeProject extends Partial<ICreateProjectParams> {
+  id: string;
+}
+
+type FuncType = (params: IUpdateCodeProject) => Promise<ICodeProject>;
 
 export const updateCodeProject: FuncType = async ({ id, ...params }) => {
   const { data } = await api.patch(`code/project/${id}`, params);

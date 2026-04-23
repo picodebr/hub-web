@@ -955,7 +955,7 @@ export function useStageRunner() {
       if (key === 'ArrowRight') return 'right arrow';
       if (key === 'ArrowLeft') return 'left arrow';
       if (key === 'Enter') return 'enter';
-      return key.length === 1 ? key.toLowerCase() : key;
+      return key?.length === 1 ? key.toLowerCase() : key;
     };
 
     // Purity fix: ensure timer starts at first mount if not already set

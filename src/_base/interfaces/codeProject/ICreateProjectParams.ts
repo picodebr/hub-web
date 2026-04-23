@@ -1,3 +1,4 @@
+import { ProjectFile } from '@/_base/services/code';
 import { IProjectSourceCode } from './IProject';
 
 export interface ICreateProjectParams {
@@ -6,4 +7,5 @@ export interface ICreateProjectParams {
   source_code: IProjectSourceCode;
   snapshot?: string;
   private: boolean;
+  metadata?: ProjectFile;
 }

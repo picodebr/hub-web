@@ -63,8 +63,9 @@ interface IProps {
   openNewCode: boolean;
 }
 
-const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, iframeUrl, folderId, openNewCode }) => {
-  if (openNewCode) return <NewCode />;
+const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, iframeUrl, folderId, openNewCode, projectId }) => {
+  if (openNewCode)
+    return <NewCode project={_project} folderId={folderId} iframeUrl={iframeUrl} isDefaultProject={isDefaultProject} projectId={projectId} />;
 
   const sourceCodeRef = useRef(getDefaultSourceCode(_project));
   const board = useMemo(() => supportedBoards[0], []);

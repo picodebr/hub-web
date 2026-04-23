@@ -24,7 +24,7 @@ interface VariableDeleteModalProps {
   initialSelection?: string | null;
 }
 
-export const VariableDeleteModal: React.FC<VariableDeleteModalProps> = ({ isOpen, onClose, workspace, isUploadMode, initialSelection }) => {
+const VariableDeleteModal: React.FC<VariableDeleteModalProps> = ({ isOpen, onClose, workspace, isUploadMode, initialSelection }) => {
   const { stageVariables, uploadVariables, deleteVariable, forceSyncVariables } = useProject();
   const [selectedVars, setSelectedVars] = useState<string[]>([]);
   const availableVars = useMemo(() => {
@@ -163,3 +163,5 @@ export const VariableDeleteModal: React.FC<VariableDeleteModalProps> = ({ isOpen
     </div>
   );
 };
+
+export default VariableDeleteModal;

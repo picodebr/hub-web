@@ -1,22 +1,22 @@
 /**
  * ProjectService - Fachada Singleton para gestão do estado e ciclo de vida do projeto.
- * 
- * Responsabilidade: Orquestrar todas as operações de alto nível sobre o projeto, 
- * servindo como ponto único de entrada para a UI. Delega lógica específica para 
- * sub-serviços especializados (Costume, Sprite, Variable) e notifica 
+ *
+ * Responsabilidade: Orquestrar todas as operações de alto nível sobre o projeto,
+ * servindo como ponto único de entrada para a UI. Delega lógica específica para
+ * sub-serviços especializados (Costume, Sprite, Variable) e notifica
  * observadores via EventEmitter para manter a UI reativa.
- * 
+ *
  * Padrão de Projeto: Facade + Singleton + Mediator.
  */
 // app/lib/CodeExecutor.ts
 
 export class CodeExecutor {
-    public iframe: HTMLIFrameElement | null = null;
-    public spriteId: string;
-    private readyPromise: Promise<void> | null = null;
+  public iframe: HTMLIFrameElement | null = null;
+  public spriteId: string;
+  private readyPromise: Promise<void> | null = null;
 
-    // O Motor (pode ser static pois é constante)
-    private static readonly RUNNER_HTML = `
+  // O Motor (pode ser static pois é constante)
+  private static readonly RUNNER_HTML = `
         <!DOCTYPE html>
         <html>
         <body>
@@ -394,77 +394,85 @@ export class CodeExecutor {
         </html>
     `;
 
-    constructor(spriteId: string) {
-        this.spriteId = spriteId;
+  constructor(spriteId: string) {
+    this.spriteId = spriteId;
+  }
+
+  init(): Promise<void> {
+    if (typeof window === 'undefined') return Promise.resolve();
+    if (this.iframe && this.readyPromise) return this.readyPromise;
+
+    if (this.iframe) {
+      try {
+        document.body.removeChild(this.iframe);
+      } catch {
+        console.error('Erro ao remover iframe antigo do sandbox:', this.iframe);
+      }
+      this.iframe = null;
     }
 
-    init(): Promise<void> {
-        if (typeof window === 'undefined') return Promise.resolve();
-        if (this.iframe && this.readyPromise) return this.readyPromise;
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.sandbox.add('allow-scripts');
+    document.body.appendChild(iframe);
+    this.iframe = iframe;
+    iframe.id = 'sandbox-' + this.spriteId;
 
-        if (this.iframe) {
-            try { document.body.removeChild(this.iframe); } catch { }
-            this.iframe = null;
+    this.readyPromise = new Promise<void>((resolve) => {
+      const readyHandler = (event: MessageEvent) => {
+        if (event.data && event.data.type === 'SANDBOX_READY' && (event.source === iframe.contentWindow || event.data.spriteId === this.spriteId)) {
+          window.removeEventListener('message', readyHandler);
+          resolve();
         }
+      };
+      window.addEventListener('message', readyHandler);
 
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.sandbox.add('allow-scripts');
-        document.body.appendChild(iframe);
-        this.iframe = iframe;
-        iframe.id = 'sandbox-' + this.spriteId;
+      setTimeout(() => {
+        window.removeEventListener('message', readyHandler);
+        resolve();
+      }, 2500);
+    });
 
-        this.readyPromise = new Promise<void>((resolve) => {
-            const readyHandler = (event: MessageEvent) => {
-                if (event.data && event.data.type === 'SANDBOX_READY' && (event.source === iframe.contentWindow || event.data.spriteId === this.spriteId)) {
-                    window.removeEventListener('message', readyHandler);
-                    resolve();
-                }
-            };
-            window.addEventListener('message', readyHandler);
+    iframe.srcdoc = CodeExecutor.RUNNER_HTML.replace(/__SPRITE_ID__/g, this.spriteId);
 
-            setTimeout(() => {
-                window.removeEventListener('message', readyHandler);
-                resolve();
-            }, 2500);
-        });
+    return this.readyPromise;
+  }
 
-        iframe.srcdoc = CodeExecutor.RUNNER_HTML.replace(/__SPRITE_ID__/g, this.spriteId);
-
-        return this.readyPromise;
+  async run(code: string, hatId?: string): Promise<void> {
+    if (!this.iframe || !this.readyPromise) {
+      await this.init();
     }
+    await this.readyPromise;
 
-    async run(code: string, hatId?: string): Promise<void> {
-        if (!this.iframe || !this.readyPromise) {
-            await this.init();
+    return new Promise((resolve, reject) => {
+      const requestId = Math.random().toString(36).substr(2, 9);
+
+      const handler = (event: MessageEvent) => {
+        if (!event.data) return;
+
+        if (event.data.type === 'EXECUTION_DONE' && event.data.requestId === requestId) {
+          window.removeEventListener('message', handler);
+          resolve();
+        } else if (event.data.type === 'RUNTIME_ERROR' && event.data.requestId === requestId) {
+          window.removeEventListener('message', handler);
+          reject(new Error(event.data.message));
         }
-        await this.readyPromise;
+      };
 
-        return new Promise((resolve, reject) => {
-            const requestId = Math.random().toString(36).substr(2, 9);
+      window.addEventListener('message', handler);
+      this.iframe?.contentWindow?.postMessage({ type: 'EXECUTE', code, requestId, hatId }, '*');
+    });
+  }
 
-            const handler = (event: MessageEvent) => {
-                if (!event.data) return;
-
-                if (event.data.type === 'EXECUTION_DONE' && event.data.requestId === requestId) {
-                    window.removeEventListener('message', handler);
-                    resolve();
-                } else if (event.data.type === 'RUNTIME_ERROR' && event.data.requestId === requestId) {
-                    window.removeEventListener('message', handler);
-                    reject(new Error(event.data.message));
-                }
-            };
-
-            window.addEventListener('message', handler);
-            this.iframe?.contentWindow?.postMessage({ type: 'EXECUTE', code, requestId, hatId }, '*');
-        });
+  dispose() {
+    if (this.iframe) {
+      try {
+        document.body.removeChild(this.iframe);
+      } catch {
+        console.error('Erro ao remover iframe do sandbox:', this.iframe);
+      }
+      this.iframe = null;
     }
-
-    dispose() {
-        if (this.iframe) {
-            try { document.body.removeChild(this.iframe); } catch { }
-            this.iframe = null;
-        }
-        this.readyPromise = null;
-    }
+    this.readyPromise = null;
+  }
 }

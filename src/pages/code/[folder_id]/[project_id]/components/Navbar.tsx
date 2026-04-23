@@ -13,7 +13,7 @@
  */
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import RocketLoader from './shared/RocketLoader';
 import SerialMonitor from './serial/SerialMonitor';
@@ -23,12 +23,25 @@ import { useUI } from '@/_base/context/UIContext';
 import { useProject } from '@/_base/context/ProjectContext';
 import { useFirmware } from '@/_base/context/FirmwareContext';
 import { IProjectContextUI, SerializationService } from '@/_base/services/code';
+import { dimensions } from '@/styles/global';
+import { Logo } from '@/components/Logo';
+import { useCustomRouter } from '@/_base/hooks';
+import { Button, Flex, Icon, Text, useColorMode } from '@chakra-ui/react';
+import { FiLogOut } from 'react-icons/fi';
+import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
 
-export default function Navbar() {
+interface IProps {
+  project: ICodeProject | null;
+}
+
+export default function CodeNavbar({ project }: IProps) {
   // Contextos globais para gerenciar o estado do palco e da conexão serial
   const runnerContext = useExecutionRunner();
   const uiContext = useUI();
   const projectContext = useProject();
+
+  const router = useCustomRouter();
+  const { colorMode } = useColorMode();
 
   // UI states from UIContext
   const { isUploadMode, setIsUploadMode, rocketPhase, showRocket, isUploading, isBusy, rocketErrorMessage } = uiContext;
@@ -53,8 +66,8 @@ export default function Navbar() {
 
   // Adapter to decouple SerializationService from React Contexts
   const contextAdapter: IProjectContextUI = {
-    projectId: undefined, // Could be added to a State if needed
-    projectName: 'meu_projeto',
+    projectId: project?.id, // Could be added to a State if needed
+    projectName: project?.name,
     isUploadMode: isUploadMode,
     uploadModeBlocks: uiContext.uploadModeBlocks,
     uploadCode: uiContext.uploadCode,
@@ -72,12 +85,18 @@ export default function Navbar() {
     setActiveUploadMLModel: projectContext.setActiveUploadMLModel,
   };
 
+  useEffect(() => {
+    if (!project?.metadata) return;
+    SerializationService.loadProject(project.metadata, contextAdapter);
+  }, [project]);
+
   /**
    * Lida com a exportação do projeto atual para um arquivo JSON.
    */
   const handleSaveProject = () => {
+    if (!project) return;
     const workspace = runnerContext.blocklyWorkspaceRef?.current?.getWorkspace?.();
-    SerializationService.saveProject(contextAdapter, 'meu_projeto.json', workspace || undefined);
+    SerializationService.saveProject(contextAdapter, project, 'meu_projeto.json', workspace || undefined);
   };
 
   /**
@@ -111,11 +130,20 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="navbar navbar-expand px-3 py-2" style={{ backgroundColor: '#fff', borderBottom: '1px solid #e8e8e8' }}>
+      <nav
+        className="navbar navbar-expand px-3 py-2"
+        style={{
+          backgroundColor: '#fff',
+          borderBottom: '1px solid #e8e8e8',
+          maxHeight: dimensions.header.height,
+          minHeight: dimensions.header.height,
+          position: 'relative',
+        }}
+      >
         <div className="container-fluid p-0 d-flex align-items-center justify-content-between">
           {/* Logotipo */}
           <a className="navbar-brand d-flex align-items-center" href="#" suppressHydrationWarning={true}>
-            <Image src="/img/picode-logo-light.png" alt="PiCode" width={120} height={27} style={{ width: 'auto' }} priority />
+            <Logo size="md" className="only-desktop" />
           </a>
 
           {/* Conteúdo Central e Botões de Ação */}
@@ -153,11 +181,11 @@ export default function Navbar() {
                   padding: '6px 12px',
                 }}
               >
-                <i className="bi bi-download me-1" style={{ fontSize: '14px' }}></i> Salvar
+                <i className="bi bi-save me-1" style={{ fontSize: '14px' }}></i> Salvar
               </button>
 
               {/* Botão Abrir */}
-              <button
+              {/* <button
                 className="btn btn-sm"
                 onClick={handleOpenProjectClick}
                 style={{
@@ -169,11 +197,28 @@ export default function Navbar() {
                 }}
               >
                 <i className="bi bi-folder2-open me-1" style={{ fontSize: '14px' }}></i> Abrir
-              </button>
+              </button> */}
 
               {/* Input de Arquivos Escondido */}
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".piboard,.json" onChange={handleFileChange} />
             </div>
+
+            <Flex flex="1" align="center" justify="center" position="absolute" left="50%" transform="translateX(-50%)" pointerEvents="none">
+              {/* Nome do Projeto Centralizado */}
+              <Flex
+                bg={colorMode === 'light' ? 'primary.50' : 'primary.900'}
+                color={colorMode === 'light' ? 'primary.700' : 'primary.100'}
+                px="1.25rem"
+                py="0.35rem"
+                borderRadius="full"
+                gap="0.5rem"
+                border="1px"
+              >
+                <Text fontSize="14px" fontWeight="600" letterSpacing="0.2px" textAlign="center">
+                  {project ? project.name : 'Carregando...'}
+                </Text>
+              </Flex>
+            </Flex>
 
             {/* Lado Direito: Alternador de Modo e Ações Específicas */}
             <div className="d-flex align-items-center gap-3">
@@ -262,6 +307,27 @@ export default function Navbar() {
                   <i className="bi bi-cpu-fill" style={{ fontSize: '14px' }}></i> Upload
                 </button>
               </div>
+
+              <Button
+                variant="ghost"
+                colorScheme="red"
+                w="2rem"
+                h="2.25rem"
+                justifyContent="center"
+                alignItems="center"
+                gap="0.5rem"
+                fontSize="15px"
+                fontWeight="600"
+                borderRadius="xl"
+                color="error600"
+                _hover={{ bg: 'error50' }}
+                onClick={() => {
+                  router.back();
+                }}
+              >
+                <Icon as={FiLogOut} fontSize="18px" />
+                {/* Sair */}
+              </Button>
             </div>
           </div>
         </div>

@@ -332,9 +332,14 @@ export default function StageArea() {
             width: '480px',
             height: '360px',
             transform: `scale(${scale})`,
-            transformOrigin: 'top left',
             border: '1px solid #ccc',
             borderRadius: '16px',
+            position: `absolute !important` as any,
+            top: 0,
+            right: 0,
+            left: `auto`,
+            transformOrigin: `top right`,
+            margin: 0,
           }}
           onMouseDown={handleStageMouseDown}
         >

@@ -1,4 +1,5 @@
-type FuncType = (code: string) => Promise<any>;
+type ResponseType = { success: boolean; data: any; status: number };
+type FuncType = (code: string) => Promise<ResponseType>;
 
 // Nova função do novo code
 export const compileCode: FuncType = async (code) => {
@@ -29,7 +30,7 @@ export const compileCode: FuncType = async (code) => {
         'Content-Type': 'application/json',
         'X-API-KEY': apiKey, // AQUI A MÁGICA ACONTECE: A chave é inserida apenas aqui no lado do servidor
       },
-      body: code,
+      body: JSON.stringify({ code }),
     });
 
     // 4. Recebe a resposta da API externa
@@ -46,7 +47,7 @@ export const compileCode: FuncType = async (code) => {
 
     // 5. Retorna a resposta para o frontend
     // Repassamos exatamente o que o servidor de compilação devolveu, mantendo o status code.
-    return { data, status: response.status };
+    return { data, status: response.status, success: response.ok };
   } catch (error: any) {
     // Tratamento de erros inesperados (ex: falha de rede ao conectar com a API externa)
     throw new Error(`Erro interno no servidor de compilação (Proxy): ${error.message || 'Erro desconhecido'}`);

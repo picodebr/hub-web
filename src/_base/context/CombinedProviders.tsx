@@ -15,6 +15,7 @@ import { ProjectProvider } from './ProjectContext';
 import { UIProvider } from './UIContext';
 import { FirmwareProvider } from './FirmwareContext';
 import { RuntimeProvider } from './RuntimeContext';
+import { ExecutionRunnerProvider } from './ExecutionRunnerContext';
 
 export function CombinedProviders({ children }: { children: ReactNode }) {
   return (
@@ -22,7 +23,9 @@ export function CombinedProviders({ children }: { children: ReactNode }) {
       <UIProvider>
         <FirmwareProvider>
           <ProjectProvider>
-            <RuntimeProvider>{children}</RuntimeProvider>
+            <ExecutionRunnerProvider>
+              <RuntimeProvider>{children}</RuntimeProvider>
+            </ExecutionRunnerProvider>
           </ProjectProvider>
         </FirmwareProvider>
       </UIProvider>

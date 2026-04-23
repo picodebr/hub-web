@@ -564,8 +564,8 @@ html body .btn-add-backdrop-main {
 
 @media (min-width: 1900px) {
   html body:not(.upload-mode) #right-panel {
-    flex: 0 0 550px;
-    width: 550px;
+    flex: 0 0 1fr;
+    width: 100%;
   }
 }
 

@@ -42,7 +42,7 @@ export class WebGLRenderer {
     });
 
     if (!gl) {
-      throw new Error('WebGL2 n?o suportado pelo navegador.');
+      throw new Error('WebGL2 não suportado pelo navegador.');
     }
 
     this.gl = gl;
@@ -222,7 +222,7 @@ export class WebGLRenderer {
   private drawSprite(sprite: SpriteData, imgW: number, imgH: number, texture: WebGLTexture, isActive: boolean = false) {
     // Conversão de Rotation Style do Scratch
     let scaleX = sprite.size / 100;
-    let scaleY = sprite.size / 100;
+    const scaleY = sprite.size / 100;
     let rotDeg = 90 - sprite.angle; // Scratch 0 = cima. WebGL 0 = direita. Então glDeg = 90 - scratchDeg
 
     if (sprite.rotationStyle === 'left-right') {
