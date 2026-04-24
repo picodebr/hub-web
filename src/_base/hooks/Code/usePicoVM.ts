@@ -208,18 +208,12 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
   // ─────────────────────────────────────────────────────────
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
-      const engine = getExecutionEngine();
-      if (!engine.isProjectRunning()) {
-        engine.start();
-        runner.start();
-      }
+      if (!getExecutionEngine().isProjectRunning()) return;
       vm.triggerKeyPress(e.key);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [vm, runner]);
+  }, [vm]);
 
   // ─────────────────────────────────────────────────────────
   // Escuta mudança de cenário → vm.triggerBackdropChange

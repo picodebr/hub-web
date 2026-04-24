@@ -37,13 +37,29 @@ const SpeechBubble = ({ text, type, targetX, isFlippedY }: { text: string; type:
     const translateX = isFlippedX ? `-${w - 20}px` : '-20px';
 
     return (
-      <div className="balao-wrapper" style={{ width: `${w}px`, height: `${h + 35}px`, transform: `translate(${translateX}, ${translateY})` }}>
+      <div
+        className="balao-wrapper"
+        style={{
+          width: `${w}px`,
+          height: `${h + 35}px`,
+          transform: `translate(${translateX}, ${translateY})`,
+        }}
+      >
         <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h + 35}`} fill="none" style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.06))' }}>
           <rect x="2" y={bodyY} width={w - 4} height={h - 4} rx="22" fill="white" stroke="#CED4D9" strokeWidth="3" />
           <circle cx={isFlippedX ? w - 35 : 35} cy={circ1Y} r="7" fill="white" stroke="#CED4D9" strokeWidth="2.5" />
           <circle cx={isFlippedX ? w - 20 : 20} cy={circ2Y} r="5" fill="white" stroke="#CED4D9" strokeWidth="2" />
         </svg>
-        <div className="balao-texto" style={{ width: `${w - 30}px`, left: '15px', top: `${bodyY + 8}px`, height: `${h - 20}px`, fontSize: '13px' }}>
+        <div
+          className="balao-texto"
+          style={{
+            width: `${w - 30}px`,
+            left: '15px',
+            top: `${bodyY + 8}px`,
+            height: `${h - 20}px`,
+            fontSize: '13px',
+          }}
+        >
           {text}
         </div>
       </div>
@@ -66,13 +82,26 @@ const SpeechBubble = ({ text, type, targetX, isFlippedY }: { text: string; type:
   const translateY = isFlippedY ? '5px' : '-85%';
 
   return (
-    <div className="balao-wrapper" style={{ width: `${wrapperWidth}px`, height: '75px', transform: `translate(${translateX}px, ${translateY})` }}>
+    <div
+      className="balao-wrapper"
+      style={{
+        width: `${wrapperWidth}px`,
+        height: '75px',
+        transform: `translate(${translateX}px, ${translateY})`,
+      }}
+    >
       <svg width="100%" height="100%" viewBox={`0 0 ${wrapperWidth} 75`} fill="none" style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.06))' }}>
         <path d={path} fill="white" stroke="#CED4D9" strokeWidth="3" strokeLinejoin="round" />
       </svg>
       <div
         className="balao-texto"
-        style={{ width: `${w - 25}px`, left: isFlippedX ? '12px' : '18px', top: isFlippedY ? '33px' : '8px', height: '35px', fontSize: '15px' }}
+        style={{
+          width: `${w - 25}px`,
+          left: isFlippedX ? '12px' : '18px',
+          top: isFlippedY ? '33px' : '8px',
+          height: '35px',
+          fontSize: '15px',
+        }}
       >
         {text}
       </div>
@@ -291,7 +320,11 @@ export default function StageArea() {
       // Dispara eventos apenas se não houve arraste significativo
       if (!hasDraggedRef.current) {
         if (potentialClickIdRef.current) {
-          window.dispatchEvent(new CustomEvent('sprite-clicked', { detail: { spriteId: potentialClickIdRef.current } }));
+          window.dispatchEvent(
+            new CustomEvent('sprite-clicked', {
+              detail: { spriteId: potentialClickIdRef.current },
+            }),
+          );
         } else {
           window.dispatchEvent(new CustomEvent('stage-clicked'));
         }
@@ -320,9 +353,19 @@ export default function StageArea() {
     <div
       ref={containerRef}
       className={`w-100 d-flex align-items-center ${isStageFullScreen ? 'justify-content-center' : 'justify-content-start'} stage-area-container`}
-      style={{ backgroundColor: '#e9eef2', flex: '1 1 auto', overflow: 'hidden' }}
+      style={{
+        backgroundColor: '#e9eef2',
+        flex: '1 1 auto',
+        overflow: 'hidden',
+      }}
     >
-      <div style={{ width: `${480 * scale}px`, height: `${360 * scale}px`, position: 'relative' }}>
+      <div
+        style={{
+          width: `${480 * scale}px`,
+          height: `${360 * scale}px`,
+          position: 'relative',
+        }}
+      >
         <div
           ref={stageRef}
           id="stage-main-container"
@@ -334,11 +377,11 @@ export default function StageArea() {
             transform: `scale(${scale})`,
             border: '1px solid #ccc',
             borderRadius: '16px',
+            transformOrigin: `top right`,
             position: `absolute !important` as any,
             top: 0,
             right: 0,
             left: `auto`,
-            transformOrigin: `top right`,
             margin: 0,
           }}
           onMouseDown={handleStageMouseDown}
@@ -357,7 +400,17 @@ export default function StageArea() {
           />
 
           {/* OVERLAYS (Balões, Modais, Monitores) via DOM -> zIndex alto */}
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 100 }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 100,
+            }}
+          >
             {spritesWithBubble.map((spr) => {
               if (!spr.bubbleText) return null;
 
@@ -413,7 +466,15 @@ export default function StageArea() {
 
           <div
             className="stage-monitors-layer"
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 200 }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 200,
+            }}
           >
             {monitors.map((monitor) =>
               monitor.type === 'list' ? (

@@ -3,7 +3,7 @@
    =============================== */
 
 /* Barra de Navegação (Navbar Override) */
-html body .navbar-dark.bg-primary {
+ .navbar-dark.bg-primary {
   background-color: var(--rocket-blue);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -67,11 +67,11 @@ html body .navbar-dark.bg-primary {
 }
 
 /* Cores de Ícones de Suporte */
-html body .text-info {
+ .text-info {
   color: var(--rocket-blue);
 }
 
-html body .text-success {
+ .text-success {
   color: var(--rocket-green);
 }
 

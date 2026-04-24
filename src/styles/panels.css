@@ -5,7 +5,7 @@
 /* 1. Layout & Estrutura Base
    ========================================================================== */
 
-html body #right-panel {
+ #right-panel {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -17,14 +17,14 @@ html body #right-panel {
   max-width: 540px;
 }
 
-/* html body:not(.upload-mode) #right-panel { } */
+/* :not(.upload-mode) #right-panel { } */
 
-html body #blockly-container {
+ #blockly-container {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-html body .stage-column {
+ .stage-column {
   flex-shrink: 0;
   flex: 0 0 90px;
   width: 90px;
@@ -121,7 +121,7 @@ html body .stage-column {
 /* 2. Seção do Palco (Superior)
    ========================================================================== */
 
-html body .stage-section {
+ .stage-section {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -199,7 +199,7 @@ html body .stage-section {
 }
 
 /* Estado de Tela Cheia do Palco */
-html body .stage-section.fullscreen {
+ .stage-section.fullscreen {
   position: fixed;
   top: 0;
   left: 0;
@@ -211,20 +211,20 @@ html body .stage-section.fullscreen {
   background-color: #ffffff;
 }
 
-html body .stage-section.fullscreen .stage-header {
+ .stage-section.fullscreen .stage-header {
   width: 100%;
   height: 52px;
   flex: 0 0 52px;
 }
 
-html body .stage-section.fullscreen .stage-area-container {
+ .stage-section.fullscreen .stage-area-container {
   flex: 1 1 auto;
   width: 100%;
   padding: 0;
   border-radius: 0;
 }
 
-html body .stage-section.fullscreen .stage-content {
+ .stage-section.fullscreen .stage-content {
   border-radius: 0;
   border: none;
 }
@@ -232,7 +232,7 @@ html body .stage-section.fullscreen .stage-content {
 /* 3. Seção de Gestão (Sprites e Cenários)
    ========================================================================== */
 
-html body .management-section {
+ .management-section {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -242,7 +242,7 @@ html body .management-section {
   overflow: hidden;
 }
 
-html body .sprite-management-area {
+ .sprite-management-area {
   flex: 1 1 auto;
   display: flex;
   flex-direction: row;
@@ -300,8 +300,8 @@ html body .sprite-management-area {
 }
 
 /* Estado Selecionado (Active) */
-html body .sprite-card.border-primary,
-html body .stage-card.border-primary {
+ .sprite-card.border-primary,
+ .stage-card.border-primary {
   border-color: #4C97FF;
   border-width: 2px;
   background-color: #e6f0ff;
@@ -364,8 +364,8 @@ html body .stage-card.border-primary {
 /* 6. Botões e Menus de Adição
    ========================================================================== */
 
-html body .btn-add-sprite-main,
-html body .btn-add-backdrop-main {
+ .btn-add-sprite-main,
+ .btn-add-backdrop-main {
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -556,14 +556,14 @@ html body .btn-add-backdrop-main {
    ========================================================================== */
 
 @media (max-width: 1200px) {
-  html body:not(.upload-mode) #right-panel {
+  :not(.upload-mode) #right-panel {
     flex: 0 0 400px;
     width: 400px;
   }
 }
 
 @media (min-width: 1900px) {
-  html body:not(.upload-mode) #right-panel {
+  :not(.upload-mode) #right-panel {
     flex: 0 0 1fr;
     width: 100%;
   }
@@ -575,12 +575,12 @@ html body .btn-add-backdrop-main {
 
 /* --- Step 1: 850px --- */
 @media (max-height: 850px) {
-  html body .sprite-card {
+   .sprite-card {
     width: 62px;
     height: 72px;
   }
-  html body .sprite-card-img-area,
-  html body .sprite-card-img-area img {
+   .sprite-card-img-area,
+   .sprite-card-img-area img {
     height: 44px;
     min-height: 44px;
     max-height: 44px;
@@ -589,10 +589,10 @@ html body .btn-add-backdrop-main {
 
 /* --- Step 2: 800px --- */
 @media (max-height: 800px) {
-  html body .stage-card-image-container {
+   .stage-card-image-container {
     height: 45px;
   }
-  html body .sprite-management-area {
+   .sprite-management-area {
     gap: 8px;
     padding: 8px;
   }
@@ -600,15 +600,15 @@ html body .btn-add-backdrop-main {
 
 /* --- Step 3: 750px --- */
 @media (max-height: 750px) {
-  html body .sprite-card {
+   .sprite-card {
     width: 54px;
     height: 64px;
   }
-  html body .sprite-name-label {
+   .sprite-name-label {
     font-size: 9px;
   }
-  html body .sprite-card-img-area,
-  html body .sprite-card-img-area img {
+   .sprite-card-img-area,
+   .sprite-card-img-area img {
     height: 36px;
     min-height: 36px;
     max-height: 36px;
@@ -617,14 +617,14 @@ html body .btn-add-backdrop-main {
 
 /* --- Step 4: 700px --- */
 @media (max-height: 700px) {
-  html body .stage-card-image-container {
+   .stage-card-image-container {
     height: 35px;
   }
-  html body .sprite-management-area {
+   .sprite-management-area {
     gap: 4px;
     padding: 4px;
   }
-  html body .properties-panel {
+   .properties-panel {
     padding: 0.25rem 0.5rem;
   }
   .properties-panel .d-flex.align-items-center.gap-2.mb-2 {
@@ -641,22 +641,22 @@ html body .btn-add-backdrop-main {
 /* --- Step 5: 650px (Breakpoint Crítico) --- */
 @media (max-height: 650px) {
   /* Largura reduzida para o Sprite List conforme pedido manual */
-  html body:not(.upload-mode) #right-panel {
+  :not(.upload-mode) #right-panel {
     flex: 0 0 330px;
     width: 330px;
   }
-  html body .sprite-card {
+   .sprite-card {
     width: 48px;
     height: 60px;
   }
-  html body .stage-card-image-container {
+   .stage-card-image-container {
     height: 30px;
   }
-  html body .stage-header {
+   .stage-header {
     padding: 2px 10px;
   }
-  html body .sprite-card-img-area,
-  html body .sprite-card-img-area img {
+   .sprite-card-img-area,
+   .sprite-card-img-area img {
     height: 30px;
     min-height: 30px;
     max-height: 30px;
@@ -679,20 +679,20 @@ html body .btn-add-backdrop-main {
 
 /* --- Step 7: 550px --- */
 @media (max-height: 550px) {
-  html body .management-section {
+   .management-section {
     min-height: 120px;
   }
-  html body .sprite-card {
+   .sprite-card {
     width: 42px;
     height: 42px;
   }
-  html body .sprite-card-img-area,
-  html body .sprite-card-img-area img {
+   .sprite-card-img-area,
+   .sprite-card-img-area img {
     height: 18px;
     min-height: 18px;
     max-height: 18px;
   }
-  html body .properties-panel {
+   .properties-panel {
     padding: 0.15rem 0.4rem;
   }
   .properties-panel .gap-2,
@@ -707,12 +707,12 @@ html body .btn-add-backdrop-main {
 
 /* --- Step 8: 500px --- */
 @media (max-height: 500px) {
-  html body .sprite-card {
+   .sprite-card {
     width: 36px;
     height: 36px;
   }
-  html body .sprite-card-img-area,
-  html body .sprite-card-img-area img {
+   .sprite-card-img-area,
+   .sprite-card-img-area img {
     height: 12px;
     min-height: 12px;
     max-height: 12px;

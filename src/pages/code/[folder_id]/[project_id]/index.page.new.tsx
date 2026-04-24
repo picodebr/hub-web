@@ -97,6 +97,7 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                 width: isUploadMode ? '100%' : 'auto',
                 maxWidth: isUploadMode ? '100%' : 'none',
                 minWidth: 0,
+                border: `none`,
               }}
             >
               <BlocklyWorkspace ref={blocklyRef} onBlockClick={handleBlockClick} onRunCode={handleRunCode} />

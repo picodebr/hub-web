@@ -406,7 +406,7 @@ export class CodeExecutor {
       try {
         document.body.removeChild(this.iframe);
       } catch {
-        console.error('Erro ao remover iframe antigo do sandbox:', this.iframe);
+        // Ignorar erros de remoção (ex: iframe já removido)
       }
       this.iframe = null;
     }
@@ -469,7 +469,7 @@ export class CodeExecutor {
       try {
         document.body.removeChild(this.iframe);
       } catch {
-        console.error('Erro ao remover iframe do sandbox:', this.iframe);
+        // Ignorar erros de remoção (ex: iframe já removido)
       }
       this.iframe = null;
     }

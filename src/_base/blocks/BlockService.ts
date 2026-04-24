@@ -56,7 +56,6 @@ export class BlockService {
 
       this.blocksRegistered = true;
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('[BlockService] Erro ao registrar blocos:', error);
       throw error;
     }

@@ -2,7 +2,7 @@
 /** @type {import('postcss').Config} */
 module.exports = {
   plugins: {
-    tailwindcss: {},
+    '@tailwindcss/postcss': {}, // <--- O nome novo entra aqui
     autoprefixer: {},
   },
 }

@@ -3,7 +3,7 @@
    =============================== */
 
 /* Forçar aplicação da fonte global e cor de fundo */
-html body {
+ {
   font-family: var(--font-outfit), sans-serif;
   background-color: #e9eef2;
 }
@@ -24,7 +24,7 @@ body {
 }
 
 /* Contêiner principal que preenche o resto da tela */
-html body /**
+ /**
  * Definição do grid estrutural e organização das seções principais.
  */
 .main-container {
@@ -45,7 +45,7 @@ html body /**
 }
 
 /* Wrapper do Workspace - Apenas container de posicionamento */
-html body .blockly-workspace-wrapper {
+ .blockly-workspace-wrapper {
   border: none;
 }
 

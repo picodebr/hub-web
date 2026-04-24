@@ -1,11 +1,11 @@
 /**
  * DirectionPicker - Seletor de Direção Visual (Scratch-style).
- * 
- * Implementa um dial circular para ajuste de ângulo e seleção de estilo de 
- * rotação (all-around, left-right, none). 
- * 
- * Regra Técnica: Mapeia o sistema de coordenadas trigonométricas do navegador 
- * para o sistema do Scratch onde 0° é para cima, 90° para a direita e 
+ *
+ * Implementa um dial circular para ajuste de ângulo e seleção de estilo de
+ * rotação (all-around, left-right, none).
+ *
+ * Regra Técnica: Mapeia o sistema de coordenadas trigonométricas do navegador
+ * para o sistema do Scratch onde 0° é para cima, 90° para a direita e
  * limites entre -179° e 180°.
  */
 import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
@@ -13,9 +13,9 @@ import { createPortal } from 'react-dom';
 
 interface DirectionPickerProps {
   angle: number;
-  rotationStyle: 'all around' | 'left-right' | 'don\'t rotate';
+  rotationStyle: 'all around' | 'left-right' | "don't rotate";
   onSelectAngle: (angle: number) => void;
-  onSelectRotationStyle: (style: 'all around' | 'left-right' | 'don\'t rotate') => void;
+  onSelectRotationStyle: (style: 'all around' | 'left-right' | "don't rotate") => void;
   onClose: () => void;
   targetElementRef?: React.RefObject<HTMLElement | null>;
 }
@@ -26,7 +26,7 @@ export const DirectionPicker: React.FC<DirectionPickerProps> = ({
   onSelectAngle,
   onSelectRotationStyle,
   onClose,
-  targetElementRef
+  targetElementRef,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const dialRef = useRef<HTMLDivElement>(null);
@@ -37,7 +37,7 @@ export const DirectionPicker: React.FC<DirectionPickerProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       const isInsideContainer = containerRef.current && containerRef.current.contains(event.target as Node);
       const isTargetElement = targetElementRef?.current && targetElementRef.current.contains(event.target as Node);
-      
+
       if (!isInsideContainer && !isTargetElement) {
         onClose();
       }
@@ -52,26 +52,29 @@ export const DirectionPicker: React.FC<DirectionPickerProps> = ({
     };
   }, [onClose, targetElementRef]);
 
-  const updateAngle = useCallback((clientX: number, clientY: number) => {
-    if (!dialRef.current) return;
-    const rect = dialRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+  const updateAngle = useCallback(
+    (clientX: number, clientY: number) => {
+      if (!dialRef.current) return;
+      const rect = dialRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
 
-    const dx = clientX - centerX;
-    const dy = clientY - centerY;
+      const dx = clientX - centerX;
+      const dy = clientY - centerY;
 
-    // atan2(dy, dx) nos dá o ângulo em radianos
-    // Mapeamos para o sistema do Scratch (0 = cima, 90 = direita, 180 = baixo, -90 = esquerda)
-    const rad = Math.atan2(dy, dx);
-    let deg = (rad * 180) / Math.PI + 90;
+      // atan2(dy, dx) nos dá o ângulo em radianos
+      // Mapeamos para o sistema do Scratch (0 = cima, 90 = direita, 180 = baixo, -90 = esquerda)
+      const rad = Math.atan2(dy, dx);
+      let deg = (rad * 180) / Math.PI + 90;
 
-    // Normaliza para -179 a 180
-    if (deg > 180) deg -= 360;
-    if (deg < -179) deg += 360;
+      // Normaliza para -179 a 180
+      if (deg > 180) deg -= 360;
+      if (deg < -179) deg += 360;
 
-    onSelectAngle(Math.round(deg));
-  }, [onSelectAngle]);
+      onSelectAngle(Math.round(deg));
+    },
+    [onSelectAngle],
+  );
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -105,7 +108,7 @@ export const DirectionPicker: React.FC<DirectionPickerProps> = ({
       const rect = targetElementRef.current.getBoundingClientRect();
       setCoords({
         top: rect.top - 230, // Altura aproximada do modal + margem
-        left: rect.left - 65   // Ajuste lateral para centralizar no input
+        left: rect.left - 65, // Ajuste lateral para centralizar no input
       });
     }
   }, [targetElementRef]);
@@ -139,7 +142,7 @@ export const DirectionPicker: React.FC<DirectionPickerProps> = ({
         onMouseDown={handleMouseDown}
         style={{
           background: getDialBackground(),
-          border: 'none' // Sobrescreve a borda padrão para ficar mais limpo
+          border: 'none', // Sobrescreve a borda padrão para ficar mais limpo
         }}
       >
         {/* Marcadores de hora */}
@@ -149,7 +152,7 @@ export const DirectionPicker: React.FC<DirectionPickerProps> = ({
             className="dial-marker"
             style={{
               transform: `translateX(-50%) rotate(${i * 30}deg)`,
-              backgroundColor: 'rgba(255,255,255,0.4)' // Marcadores claros sobre fundo azul
+              backgroundColor: 'rgba(255,255,255,0.4)', // Marcadores claros sobre fundo azul
             }}
           />
         ))}
@@ -181,8 +184,17 @@ export const DirectionPicker: React.FC<DirectionPickerProps> = ({
           title="Girar sempre"
           style={{ height: '32px' }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38" />
           </svg>
         </button>
 
@@ -193,7 +205,16 @@ export const DirectionPicker: React.FC<DirectionPickerProps> = ({
           title="Esquerda/Direita"
           style={{ height: '32px' }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <polyline points="7 10 4 12 7 14" />
             <polyline points="17 10 20 12 17 14" />
             <line x1="12" y1="4" x2="12" y2="20" />
@@ -203,30 +224,41 @@ export const DirectionPicker: React.FC<DirectionPickerProps> = ({
         {/* Don't Rotate */}
         <button
           className={`btn btn-sm flex-grow-1 mx-1 d-flex align-items-center justify-content-center ${rotationStyle === "don't rotate" ? 'btn-primary-subtle border-primary text-primary' : 'btn-outline-secondary border-0 opacity-50'}`}
-          onClick={() => onSelectRotationStyle('don\'t rotate')}
+          onClick={() => onSelectRotationStyle("don't rotate")}
           title="Não girar"
           style={{ height: '32px' }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-             <circle cx="12" cy="12" r="10" />
-             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
           </svg>
         </button>
       </div>
 
       {/* Seta do popover (baixo) */}
-      <div style={{
-        position: 'absolute',
-        bottom: '-10px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '0',
-        height: '0',
-        borderLeft: '10px solid transparent',
-        borderRight: '10px solid transparent',
-        borderTop: '10px solid #fff'
-      }} />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '0',
+          height: '0',
+          borderLeft: '10px solid transparent',
+          borderRight: '10px solid transparent',
+          borderTop: '10px solid #fff',
+        }}
+      />
     </div>,
-    document.body
+    document.body,
   );
 };

@@ -201,7 +201,6 @@ export default function SoundEditor() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSprite?.currentSoundId, activeSprite?.sounds, viewMode]);
 
   // ── Parar playback ──────────────────────────────────────────────────

@@ -10,7 +10,6 @@
 
 import { RefObject } from 'react';
 import * as Blockly from 'blockly/core';
-import { javascriptGenerator } from 'blockly/javascript';
 import { MonitorData, ExtendedWorkspace, ExtendedFlyout, ExtendedBlock } from '@/_base/domain/entities';
 
 const MONITORABLE_BLOCKS = [

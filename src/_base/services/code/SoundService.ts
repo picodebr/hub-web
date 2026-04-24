@@ -8,6 +8,7 @@ import { SoundData, SpriteData } from '../../domain/entities';
 import { EventEmitter } from '../../lib/EventEmitter';
 import { BrowserFileSystem } from '../../adapters/BrowserFileSystem';
 import { ProjectEvents } from '../../domain/entities';
+import { getPresignedUrl, uploadFile } from '../upload';
 
 export class SoundService {
   private emitter: EventEmitter<ProjectEvents>;
@@ -16,6 +17,12 @@ export class SoundService {
 
   constructor(emitter: EventEmitter<ProjectEvents>) {
     this.emitter = emitter;
+  }
+
+  private async uploadToS3(file: File): Promise<string> {
+    const { link, full_path } = await getPresignedUrl(file.type || 'audio/wav', `code-assets`, `public-read`);
+    await uploadFile(link, file);
+    return full_path;
   }
 
   private getAudioContext(): AudioContext {
@@ -44,18 +51,23 @@ export class SoundService {
     let format: 'wav' | 'mp3' = 'wav';
 
     if (file) {
+      let fileToUpload: File;
+
       if (file instanceof File) {
-        url = await BrowserFileSystem.readFileAsDataURL(file);
         name = file.name.split('.')[0];
         format = file.name.split('.').pop()?.toLowerCase() === 'mp3' ? 'mp3' : 'wav';
+        fileToUpload = file;
       } else {
         // É um Blob de gravação
-        url = await BrowserFileSystem.readFileAsDataURL(file as File); // BrowserFileSystem.readFileAsDataURL funciona com Blob
         name = `gravação${sprites[spriteIndex].sounds.length + 1}`;
         format = 'wav';
+        fileToUpload = new File([file], `${name}.wav`, { type: 'audio/wav' });
       }
+
+      // Upload direto para o S3
+      url = await this.uploadToS3(fileToUpload);
     } else {
-      // Som padrão (bipe curto ou silêncio)
+      // Som padrão (bipe curto ou silêncio) - Mantido local para não onerar o S3
       url = 'data:audio/wav;base64,UklGRigAAABXQVZFav7//v8BAAgAZGF0YQAAAAA=';
       name = `som${sprites[spriteIndex].sounds.length + 1}`;
     }
@@ -67,7 +79,7 @@ export class SoundService {
       format: format,
     };
 
-    // Opcional: Extrair metadados (duração)
+    // Extrair metadados (duração)
     try {
       const audio = new Audio(url);
       await new Promise((resolve) => {
@@ -153,7 +165,10 @@ export class SoundService {
     const soundIndex = sprite.sounds.findIndex((s) => s.id === soundId);
     if (soundIndex === -1) return;
 
-    const url = await BrowserFileSystem.readFileAsDataURL(blob as File);
+    // Transforma o Blob em File e faz upload para o S3
+    const soundName = sprite.sounds[soundIndex].name;
+    const fileToUpload = new File([blob], `${soundName}-editado.wav`, { type: 'audio/wav' });
+    const url = await this.uploadToS3(fileToUpload);
 
     const updatedSounds = [...sprite.sounds];
     updatedSounds[soundIndex] = { ...updatedSounds[soundIndex], url };
@@ -162,7 +177,7 @@ export class SoundService {
     try {
       const audio = new Audio(url);
       await new Promise((resolve) => {
-        const timeout = setTimeout(() => resolve(false), 2000); // Segurança contra travamento de carregamento
+        const timeout = setTimeout(() => resolve(false), 2000);
         audio.onloadedmetadata = () => {
           clearTimeout(timeout);
           updatedSounds[soundIndex].duration = audio.duration;

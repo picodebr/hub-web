@@ -524,7 +524,6 @@ export const MLRecognitionWindow: React.FC<MLRecognitionWindowProps> = React.mem
             ) : /* Aba ARQUIVO */
             uploadedImageUrl ? (
               <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   ref={fileImgRef}
                   src={uploadedImageUrl}
