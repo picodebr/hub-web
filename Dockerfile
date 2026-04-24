@@ -54,9 +54,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
+# 1. Injeta a variável que o server.js vai ler para liberar o acesso de rede
 ENV HOSTNAME="0.0.0.0"
+
+# 2. Garante a porta correta
 ENV PORT=3001
 EXPOSE 3001
 
-
-CMD ["yarn", "start", "-H", "0.0.0.0"]
+# 3. Volta para o comando nativo e otimizado do standalone
+CMD ["node", "server.js"]
