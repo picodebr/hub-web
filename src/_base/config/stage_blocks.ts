@@ -1,26 +1,34 @@
 /**
- * BlockStageDefinitions - Definições de Blocos para o Modo Palco (Simulação).
- * 
- * Este arquivo define os blocos usados para programar atores (sprites) no palco.
- * Refatorado para usar definições modulares em ./stage/
+ * stage_blocks.ts - Agregador de definições para o modo Palco (Stage).
+ *
+ * Responsabilidade: Consolidar todas as definições JSON de blocos que compõem
+ * o ambiente de simulação Scratch-like, facilitando a importação em lote pelo
+ * BlockService e garantindo a separação clara do domínio visual.
  */
 
-import { blockMotion } from "./stage/motion";
-import { blockLooks } from "./stage/looks";
-import { blockSound } from "./stage/sound";
-import { blockEvents } from "./stage/events";
-import { blockControl } from "./stage/control";
-import { blockPrimitives } from "./stage/primitives";
-import { blockSensing } from "./stage/sensing";
-import { blockBoard } from "./stage/board";
+import { blockMotion } from "./blocks/stage/motion";
+import { blockLooks } from "./blocks/stage/looks";
+import { blockSound } from "./blocks/stage/sound";
+import { blockEvents } from "./blocks/stage/events";
+import { blockControl } from "./blocks/stage/control";
+import { blockPrimitives } from "./blocks/stage/primitives";
+import { blockSensing } from "./blocks/stage/sensing";
+import { blockOperators } from "./blocks/stage/operators";
+import { blockBoard } from "./blocks/stage/board";
+import { blockMachineLearning } from "./blocks/stage/ml";
+import { blockVariables } from "./blocks/stage/variables";
+import { IBlockDefinition } from "../domain/entities";
 
-export const BlockStageDefinitions = [
-    ...blockMotion,
-    ...blockLooks,
-    ...blockSound,
-    ...blockEvents,
-    ...blockControl, // Primitives were often mixed or standalone, putting them before or after doesn't matter much for definition list
-    ...blockPrimitives,
-    ...blockSensing,
-    ...blockBoard
-] as any;
+export const BlockStageDefinitions: IBlockDefinition[] = [
+  ...blockMotion,
+  ...blockLooks,
+  ...blockSound,
+  ...blockEvents,
+  ...blockControl,
+  ...blockPrimitives,
+  ...blockSensing,
+  ...blockOperators,
+  ...blockBoard,
+  ...blockMachineLearning,
+  ...blockVariables,
+];

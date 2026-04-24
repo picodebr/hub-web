@@ -1,0 +1,20 @@
+[
+    {
+        "id": "padrao",
+        "name": "Fundo",
+        "url": "/img/fundo.png",
+        "tags": [
+            "natureza",
+            "exterior"
+        ]
+    },
+    {
+        "id": "florest",
+        "name": "Floresta",
+        "url": "/img/floresta.jpg",
+        "tags": [
+            "interior",
+            "quarto"
+        ]
+    }
+]

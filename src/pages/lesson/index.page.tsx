@@ -66,24 +66,12 @@ const Lesson: React.FC<IProps> = ({ user }) => {
           isLoading={isLoading}
           bg={needSave ? 'primary500' : 'primary800'}
           color="white"
-          
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}
         />
       </Flex>
       <Flex>
-        <Flex
-          w="300px"
-          h="400px"
-          direction="column"
-          bgColor="white"
-          
-          borderRadius="6px"
-          mr="1.5rem"
-          p="1.5rem"
-          border="1px"
-          borderColor="gray200"
-        >
+        <Flex w="300px" h="400px" direction="column" bgColor="white" borderRadius="6px" mr="1.5rem" p="1.5rem" border="1px" borderColor="gray200">
           <Flex justify="center" direction="row" color="gray300" gap="2px" align="center" fontSize="17px" mb="6px">
             Enunciado
             <FiMessageCircle />
