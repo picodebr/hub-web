@@ -1,52 +1,24 @@
-# ==========================================
-# Estágio 1: Base
-# ==========================================
-FROM node:20-alpine AS base
+FROM node:20-alpine
 
-# ==========================================
-# Estágio 2: Dependências
-# ==========================================
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copia apenas os arquivos necessários para instalar as dependências
+# Adiciona dependência exigida por algumas bibliotecas do Node no Alpine
+RUN apk add --no-cache libc6-compat
+
+# 1. Instalação de Dependências
 COPY package.json yarn.lock ./
-# Como confirmamos o yarn.lock, usamos o comando nativo congelado
 RUN yarn install --frozen-lockfile
 
-# ==========================================
-# Estágio 3: Build
-# ==========================================
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app .
-
-# Copia o resto do projeto (respeitando o .dockerignore)
+# 2. Build da Aplicação
 COPY . .
-
-# Variáveis de ambiente de build (adicione aqui se alguma lib exigir no momento da compilação)
-ENV NEXT_TELEMETRY_DISABLED=1
-
-RUN yarn build
-
-# ==========================================
-# Estágio 4: Runner (Produção)
-# ==========================================
-FROM base AS runner
-WORKDIR /app
-
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+RUN yarn build
 
-# Copia a pasta public (necessário para imagens estáticas)
-COPY --from=builder /app .
-
-# 1. Injeta a variável que o server.js vai ler para liberar o acesso de rede
-ENV HOSTNAME="0.0.0.0"
-
+# 3. Configurações de Rede para o AWS App Runner
 ENV PORT=3001
+ENV HOSTNAME="0.0.0.0"
 EXPOSE 3001
 
-# A flag -H obriga o Next a usar o 0.0.0.0
+# Inicia a aplicação no modo padrão do Next.js liberando o IP
 CMD ["yarn", "start", "-H", "0.0.0.0"]
