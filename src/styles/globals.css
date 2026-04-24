@@ -4,23 +4,16 @@
 @import "tailwindcss";
 
 @theme {
-  /* Fontes Customizadas */
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-heading: 'Poppins', sans-serif;
   --font-outfit: 'Outfit', sans-serif;
 
-  /* Paleta de Cores Rocket (Gera classes como bg-rocket-blue, text-rocket-red) */
   --color-rocket-red: #FF6B6B;
   --color-rocket-yellow: #FFD93D;
   --color-rocket-blue: #4D96FF;
   --color-rocket-green: #6BCB77;
   --color-rocket-bg: #F0F4F8;
 
-  /* Cores Educacionais (Utilizadas nos @apply) */
-  --color-education-primary: hsl(227 57% 60%);
-  --color-education-secondary: hsl(273 87% 38%);
-
-  /* Integração das Variáveis Shadcn UI com o Tailwind v4 */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -40,13 +33,14 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+  
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 }
 
 p {
-  margin: 0
+  margin: 0;
 }
 
 @layer base {
@@ -57,35 +51,25 @@ p {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 224 71% 4%;
     --popover-foreground: 210 20% 98%;
-
-    --primary: 227 57% 60%; /* Educational blue */
+    --primary: 227 57% 60%;
     --primary-foreground: 210 40% 98%;
-
-    --secondary: 273 87% 38%; /* Purple */
+    --secondary: 273 87% 38%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 227 57% 60%;
-
     --radius: 0.75rem;
 
-    /* Sidebar variables */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -99,33 +83,24 @@ p {
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 227 57% 60%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
     --secondary: 273 87% 38%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
     
-    /* Sidebar variables */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -135,9 +110,7 @@ p {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -149,23 +122,11 @@ p {
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
   }
-  
-  .question-card {
-    @apply bg-white rounded-xl p-6 shadow-md mb-6 border border-gray-100 transition-all hover:shadow-lg;
-  }
-  
-.btn-primary {
-    @apply bg-education-primary text-white px-6 py-3 rounded-lg font-medium transition-all hover:bg-education-primary/90 active:scale-[0.98];
-  }
-  
-  .btn-secondary {
-    @apply bg-education-secondary text-white px-6 py-3 rounded-lg font-medium transition-all hover:bg-education-secondary/90 active:scale-[0.98];
-  }
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 px-4 py-2;
+  .question-card {
+    @apply bg-white rounded-xl p-6 shadow-md mb-6 border border-gray-100 transition-all hover:shadow-lg;
   }
   
   .card {
@@ -173,10 +134,34 @@ p {
   }
 
   .input-field {
-    @apply w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none px-4 py-2;
+    @apply w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none px-4 py-2;
+  }
+
+  /* Unificação dos Botões (Deduplicados) */
+  .btn-primary {
+    @apply bg-[var(--color-rocket-blue)] text-white px-6 py-2 rounded-lg font-medium transition-colors hover:bg-[#3b7dd8] active:scale-95 border border-[var(--color-rocket-blue)];
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-white px-6 py-2 rounded-lg font-medium transition-all hover:opacity-90 active:scale-95;
+  }
+
+  .btn-success {
+    @apply bg-[var(--color-rocket-green)] text-white px-4 py-2 rounded-lg font-medium border border-[var(--color-rocket-green)] transition-colors hover:bg-[#5ab566] hover:border-[#5ab566];
+  }
+
+  .btn-danger {
+    @apply bg-[var(--color-rocket-red)] text-white px-4 py-2 rounded-lg font-medium border border-[var(--color-rocket-red)] transition-colors hover:bg-[#e55a5a] hover:border-[#e55a5a];
+  }
+
+  .btn-warning {
+    @apply bg-[var(--color-rocket-yellow)] text-zinc-900 px-4 py-2 rounded-lg font-medium border border-[var(--color-rocket-yellow)] transition-colors hover:bg-[#eec42d] hover:border-[#eec42d];
   }
 }
 
+/* ===============================
+   ESTILOS GERAIS (Sem duplicatas)
+   =============================== */
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -190,20 +175,18 @@ p {
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -212,19 +195,11 @@ p {
   }
 }
 
-.card {
-  padding: 2em;
-}
-
 .read-the-docs {
   color: #888;
 }
 
-/* ===============================
-   Blockly Overrides
-   =============================== */
-
-/* Tipografia Direcionada para Labels e Categorias (Blockly v12) */
+/* Blockly Overrides */
 .blocklyText,
 .blocklyToolboxCategoryLabel,
 .blocklyFlyoutLabelText,
@@ -232,14 +207,12 @@ div[role="treeitem"] {
   font-family: var(--font-outfit) !important;
 }
 
-/* Fix específico para Flyout Labels (Cabeçalhos de Categoria) */
 .blocklyFlyoutLabelText {
   font-weight: 700 !important;
   font-size: 30px !important;
   fill: #555 !important;
 }
 
-/* Fix para "Texto Fantasma" nos inputs do Blockly */
 .blocklyHtmlInput {
   background-color: white !important;
   color: black !important;
@@ -251,58 +224,11 @@ body {
   flex-direction: column;
 }
 
-/* Navbar Override */
 .navbar-dark.bg-primary {
   background-color: var(--color-rocket-blue) !important;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Buttons Override */
-.btn-primary {
-  background-color: var(--color-rocket-blue);
-  border-color: var(--color-rocket-blue);
-}
-
-.btn-primary:hover {
-  background-color: #3b7dd8;
-  border-color: #3b7dd8;
-}
-
-.btn-success {
-  background-color: var(--color-rocket-green);
-  border-color: var(--color-rocket-green);
-  color: #fff;
-}
-
-.btn-success:hover {
-  background-color: #5ab566;
-  border-color: #5ab566;
-  color: #fff;
-}
-
-.btn-danger {
-  background-color: var(--color-rocket-red);
-  border-color: var(--color-rocket-red);
-}
-
-.btn-danger:hover {
-  background-color: #e55a5a;
-  border-color: #e55a5a;
-}
-
-.btn-warning {
-  background-color: var(--color-rocket-yellow);
-  border-color: var(--color-rocket-yellow);
-  color: #333;
-}
-
-.btn-warning:hover {
-  background-color: #eec42d;
-  border-color: #eec42d;
-  color: #333;
-}
-
-/* Modal Header Accent */
 .modal-header {
   background-color: var(--color-rocket-blue);
   color: white;
@@ -312,16 +238,9 @@ body {
   filter: invert(1);
 }
 
-/* Icons Colors */
-.text-info {
-  color: var(--color-rocket-blue) !important;
-}
+.text-info { color: var(--color-rocket-blue) !important; }
+.text-success { color: var(--color-rocket-green) !important; }
 
-.text-success {
-  color: var(--color-rocket-green) !important;
-}
-
-/* Contêiner principal preenche o resto da tela */
 .main-container {
   flex-grow: 1;
   min-height: 0;
@@ -338,57 +257,37 @@ body {
   min-height: 0;
 }
 
-/* ===============================
-   LAYOUT CUSTOMIZADO: STAGE MODE (PERCENTUAL)
-   =============================== */
-/* ===============================
-   LAYOUT CUSTOMIZADO: STAGE MODE (RESPONSIVE)
-   =============================== */
 @media (min-width: 768px) {
-
-  /* Default Desktop/Tablet Behavior */
   body:not(.upload-mode) #right-panel {
     flex: 0 0 40%;
-    /* Start wider on tablets/small laptops */
     max-width: 500px;
-    /* Limit maximum width */
     min-width: 320px;
-    /* Ensure it doesn't get too small */
     transition: all 0.4s ease-in-out;
   }
-
   body:not(.upload-mode) #blockly-container {
     flex: 1 1 auto;
-    /* Take remaining space */
     width: auto !important;
   }
 }
 
 @media (min-width: 1200px) {
-
-  /* Large Screens: Revert to ~30% or fixed width */
   body:not(.upload-mode) #right-panel {
     flex: 0 0 33.33333%;
     max-width: 33.33333%;
   }
 }
 
-/* CUSTOM TOOLBOX WIDTH (NARROW) */
 .blocklyToolboxDiv {
   width: 50px !important;
   max-width: 50px !important;
 }
 
-/* Round Toolbox Categories (Blockly v12) */
 .blocklyToolboxCategory {
   border-radius: 8px !important;
   margin-left: 4px !important;
   margin-right: 4px !important;
 }
 
-/* ===============================
-   Coluna Esquerda: Blockly
-   =============================== */
 #blockly-container {
   height: 100%;
   border-right: 1px solid #dee2e6;
@@ -401,23 +300,19 @@ body {
   width: 100%;
 }
 
-/* Bolinha colorida na Toolbox */
 .categoryBubble {
   margin: 0 auto 0.125rem;
   border-radius: 50% !important;
-  /* Circular for Scratch 3.0 look */
   width: 1.5rem;
   height: 1.5rem;
   border-color: transparent;
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Animação de bolinha crescente no hover */
 .blocklyToolboxCategory:hover .categoryBubble {
   transform: scale(1.4);
 }
 
-/* Reduced Toolbox for Stage Mode (Scratch Style) */
 body.stage-mode .blocklyToolboxDiv,
 body.upload-mode .blocklyToolboxDiv {
   width: 55px;
@@ -432,7 +327,6 @@ body.upload-mode .categoryBubble {
   border-width: 1px;
 }
 
-/* Label da Categoria no Stage Mode (Blockly v12) */
 body.stage-mode .blocklyToolboxCategoryLabel,
 body.upload-mode .blocklyToolboxCategoryLabel,
 body.stage-mode .blocklyToolboxCategory .blocklyToolboxCategoryLabel,
@@ -442,7 +336,6 @@ body.stage-mode .blocklyToolboxCategory div[id$=".label"] {
   margin-top: 0 !important;
 }
 
-/* Linha da Categoria no Stage Mode (Blockly v12) */
 body.stage-mode .blocklyToolboxCategory,
 body.upload-mode .blocklyToolboxCategory {
   height: 45px !important;
@@ -453,7 +346,6 @@ body.upload-mode .blocklyToolboxCategory {
   justify-content: center;
 }
 
-/* Estilo da categoria personalizada */
 .myCategoryContainer {
   cursor: pointer;
 }
@@ -471,18 +363,11 @@ body .myCategoryLabel {
   color: #FFFFFF !important;
 }
 
-
-/* ===============================
-   Coluna Direita: Stage (Palco)
-   =============================== */
-
-
 #right-panel {
   height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   background-color: #ffffff;
-  /* Clean white */
   overflow: hidden !important;
 }
 
@@ -493,7 +378,6 @@ body .myCategoryLabel {
   background-color: #fff;
   z-index: 10;
   min-height: 350px;
-  /* Default */
 }
 
 .management-section {
@@ -501,38 +385,20 @@ body .myCategoryLabel {
   display: flex !important;
   flex-direction: column !important;
   min-height: 250px;
-  /* Default */
   overflow: hidden !important;
   background-color: #f1f3f5;
 }
 
-/* Vertical Responsiveness for small displays (like 8.9") */
 @media (max-height: 720px) {
-  .stage-section {
-    min-height: 280px !important;
-  }
-
-  .management-section {
-    min-height: 180px !important;
-  }
-
-  .stage-card-image-container {
-    height: 45px !important;
-  }
+  .stage-section { min-height: 280px !important; }
+  .management-section { min-height: 180px !important; }
+  .stage-card-image-container { height: 45px !important; }
 }
 
 @media (max-height: 600px) {
-  .stage-section {
-    min-height: 240px !important;
-  }
-
-  .management-section {
-    min-height: 150px !important;
-  }
-
-  .stage-card-image-container {
-    height: 35px !important;
-  }
+  .stage-section { min-height: 240px !important; }
+  .management-section { min-height: 150px !important; }
+  .stage-card-image-container { height: 35px !important; }
 }
 
 .stage-card-image-container {
@@ -540,7 +406,6 @@ body .myCategoryLabel {
   transition: height 0.30s ease;
 }
 
-/* Cabeçalho do Palco */
 .stage-header {
   flex: 0 0 auto;
   padding: 10px 15px;
@@ -560,13 +425,11 @@ body .myCategoryLabel {
   line-height: 1;
 }
 
-/* Área Visual do Palco */
 .stage-area-container {
   width: 100% !important;
   height: auto !important;
   aspect-ratio: 4 / 3 !important;
   max-height: calc(30vw * 0.75 - 80px) !important;
-  /* Redução de 80px aplicada em telas grandes */
   margin: 0 auto !important;
   overflow: hidden;
 }
@@ -577,7 +440,6 @@ body .myCategoryLabel {
   aspect-ratio: 4 / 3;
   align-self: center;
   margin: 6px;
-  /* Tighter margin like Scratch */
   background-color: #ffffff;
   border: 1px solid #dee2e6;
   border-radius: 8px;
@@ -598,13 +460,11 @@ body .myCategoryLabel {
   pointer-events: none;
 }
 
-/* Área de Gestão (Inputs + Listas) */
 .sprite-management-area {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   background-color: #e9f0ff;
-  /* Scratch characteristic light blue */
   border-top: 1px solid #dee2e6;
   min-height: 0;
   overflow: hidden;
@@ -614,7 +474,6 @@ body .myCategoryLabel {
   flex: 0 0 auto;
   background-color: #fff;
   padding: 6px 12px;
-  /* Tighter vertical padding */
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -651,9 +510,6 @@ body .myCategoryLabel {
   align-items: center;
 }
 
-/* ===============================
-   BLOCOS (Miniaturas)
-   =============================== */
 .sprite-thumbnail {
   width: 70px;
   height: 80px;
@@ -729,9 +585,6 @@ body .myCategoryLabel {
   display: flex;
 }
 
-/* ===============================
-   UPLOAD CODE AREA
-   =============================== */
 #code-area {
   height: 100%;
   display: flex;
@@ -787,9 +640,6 @@ body .myCategoryLabel {
   font-size: 0.85rem;
 }
 
-/* ===============================
-   Toggle Mode e Navbar
-   =============================== */
 .mode-toggle-container {
   background-color: #bde0fe;
   border-radius: 20px;
@@ -817,24 +667,17 @@ body .myCategoryLabel {
   color: white;
 }
 
-/* Responsividade (Mobile) */
 @media (max-width: 767.98px) {
-
   html,
-  body {
-    overflow: auto;
-  }
-
+  body { overflow: auto; }
   .main-container {
     height: auto;
     display: block;
   }
-
   #blockly-container {
     height: 60vh;
     border-bottom: 2px solid #dee2e6;
   }
-
   #right-panel,
   #code-area {
     height: auto;
@@ -844,7 +687,6 @@ body .myCategoryLabel {
   }
 }
 
-/* Modal de Cenários */
 .backdrop-select-item {
   width: 120px;
   height: 90px;
@@ -918,7 +760,6 @@ body .myCategoryLabel {
   transform: scale(1.1);
 }
 
-/* Balões de Fala */
 .speech-bubble {
   position: absolute;
   background: white;
@@ -984,7 +825,6 @@ body .myCategoryLabel {
   z-index: 1001;
 }
 
-/* ROCKET LOADER ANIMATION */
 #loader-rocket {
   position: fixed;
   top: 0;
@@ -1036,9 +876,7 @@ body .myCategoryLabel {
   filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
 }
 
-#loader-rocket.phase-ready .rocket-container {
-  transform: translateY(20px);
-}
+#loader-rocket.phase-ready .rocket-container { transform: translateY(20px); }
 
 #loader-rocket.phase-flying .rocket-container,
 #loader-rocket.phase-compiling .rocket-container {
@@ -1053,9 +891,7 @@ body .myCategoryLabel {
   animation: vibration 0.2s infinite;
 }
 
-#loader-rocket.phase-failure {
-  background: linear-gradient(to bottom, #3a0000, #1a0000);
-}
+#loader-rocket.phase-failure { background: linear-gradient(to bottom, #3a0000, #1a0000); }
 
 #loader-rocket.phase-failure .rocket-container {
   transform: translateY(0);
@@ -1117,15 +953,8 @@ body .myCategoryLabel {
 }
 
 @keyframes fadeInText {
-  from {
-    opacity: 0;
-    transform: translateY(-40%);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(-50%);
-  }
+  from { opacity: 0; transform: translateY(-40%); }
+  to { opacity: 1; transform: translateY(-50%); }
 }
 
 #loader-rocket.phase-failure .failure-message h2 {
@@ -1152,80 +981,39 @@ body .myCategoryLabel {
 }
 
 @keyframes vibration {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-
-  25% {
-    transform: translate(-2px, 2px) rotate(-1deg);
-  }
-
-  50% {
-    transform: translate(0, -2px) rotate(0deg);
-  }
-
-  75% {
-    transform: translate(2px, 0) rotate(1deg);
-  }
-
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-2px, 2px) rotate(-1deg); }
+  50% { transform: translate(0, -2px) rotate(0deg); }
+  75% { transform: translate(2px, 0) rotate(1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
 }
 
 @keyframes fumes {
-  from {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-
-  to {
-    transform: scaleY(0.6);
-    opacity: 0.6;
-  }
+  from { transform: scaleY(1); opacity: 1; }
+  to { transform: scaleY(0.6); opacity: 0.6; }
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-#loader-rocket.phase-success .loading-text {
-  display: none;
-}
+#loader-rocket.phase-success .loading-text { display: none; }
+#loader-rocket.phase-success .success-message { animation: fadeInUp 0.5s forwards 0.5s; }
 
-#loader-rocket.phase-success .success-message {
-  animation: fadeInUp 0.5s forwards 0.5s;
-}
-
-/* ===============================
-   BLOCKLY MODAL FIXES
-   =============================== */
 .blocklyWidgetDiv,
 .blocklyTooltipDiv,
 .blocklyDropDownDiv {
   z-index: 100000 !important;
 }
 
-/* Garante que a barra de rolagem do flyout desapareça visualmente se o flyout estiver oculto */
 .blocklyFlyout[style*="display: none"] .blocklyFlyoutScrollbar,
-.blocklyFlyout[style*="visibility: hidden"] .blocklyFlyoutScrollbar {
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-}
-
-/* Reforço para garantir que o scrollbar suma se o SVG pai estiver oculto */
+.blocklyFlyout[style*="visibility: hidden"] .blocklyFlyoutScrollbar,
 svg[style*="display: none"] .blocklyFlyoutScrollbar,
 div[style*="display: none"] .blocklyFlyoutScrollbar {
   display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 div.blocklyHtmlInput {
@@ -1244,7 +1032,6 @@ div.blocklyHtmlInput {
   text-align: center !important;
 }
 
-/* Scratch-style Add Sprite Menu */
 .add-sprite-container {
   position: absolute;
   bottom: 10px;
@@ -1331,10 +1118,6 @@ div.blocklyHtmlInput {
   transform: scale(1.1);
 }
 
-.add-sprite-item i {
-  font-size: 0.9rem;
-}
-
 .btn-add-sprite-main {
   width: 32px !important;
   height: 32px !important;
@@ -1370,7 +1153,6 @@ div.blocklyHtmlInput {
   position: relative;
 }
 
-/* Backdrop Menu Style */
 .add-backdrop-container {
   position: absolute;
   bottom: 10px;
@@ -1454,12 +1236,8 @@ div.blocklyHtmlInput {
   padding: 0 !important;
 }
 
-.btn-add-backdrop-main i {
-  color: white !important;
-  font-size: 1.1rem !important;
-}
+.btn-add-backdrop-main i { color: white !important; font-size: 1.1rem !important; }
 
-/* Vision Lab Tools Modal Redesign */
 .vision-lab-modal .modal-content {
   border-radius: 24px !important;
   border: none !important;
@@ -1488,14 +1266,8 @@ div.blocklyHtmlInput {
   transition: opacity 0.2s;
 }
 
-.vision-lab-modal .btn-close:hover {
-  opacity: 1;
-}
-
-.vision-lab-modal .modal-body {
-  padding: 24px !important;
-}
-
+.vision-lab-modal .btn-close:hover { opacity: 1; }
+.vision-lab-modal .modal-body { padding: 24px !important; }
 
 .tool-icon-wrapper {
   width: 64px;
@@ -1508,39 +1280,12 @@ div.blocklyHtmlInput {
   margin-bottom: 4px;
 }
 
-.tool-icon-serial {
-  background-color: #e0e7ff;
-  color: #4338ca;
-}
+.tool-icon-serial { background-color: #e0e7ff; color: #4338ca; }
+.tool-icon-humidity { background-color: #f0f9ff; color: #0ea5e9; }
+.tool-icon-light { background-color: #fffbeb; color: #f59e0b; }
+.tool-icon-percent { background-color: #f0fdf4; color: #10b981; }
 
-.tool-icon-humidity {
-  background-color: #f0f9ff;
-  color: #0ea5e9;
-}
-
-.tool-icon-light {
-  background-color: #fffbeb;
-  color: #f59e0b;
-}
-
-.tool-icon-percent {
-  background-color: #f0fdf4;
-  color: #10b981;
-}
-
-
-.card-serial:hover {
-  box-shadow: 0 15px 30px rgba(76, 151, 255, 0.25) !important;
-}
-
-.card-humidity:hover {
-  box-shadow: 0 15px 30px rgba(14, 165, 233, 0.25) !important;
-}
-
-.card-light:hover {
-  box-shadow: 0 15px 30px rgba(245, 158, 11, 0.25) !important;
-}
-
-.card-percent:hover {
-  box-shadow: 0 15px 30px rgba(16, 185, 129, 0.25) !important;
-}
+.card-serial:hover { box-shadow: 0 15px 30px rgba(76, 151, 255, 0.25) !important; }
+.card-humidity:hover { box-shadow: 0 15px 30px rgba(14, 165, 233, 0.25) !important; }
+.card-light:hover { box-shadow: 0 15px 30px rgba(245, 158, 11, 0.25) !important; }
+.card-percent:hover { box-shadow: 0 15px 30px rgba(16, 185, 129, 0.25) !important; }

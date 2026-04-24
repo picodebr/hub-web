@@ -30,7 +30,6 @@ export default function VariableModal({ isOpen, onClose, workspace, isUploadMode
   // Sincroniza o estado inicial ao abrir o modal
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName('');
 
       setType('Number');

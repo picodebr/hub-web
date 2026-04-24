@@ -85,7 +85,9 @@ export default function SerialMonitor({ isOpen, onClose, onBack }: SerialMonitor
           try {
             const res = boardEx.setBaudRate(DEFAULT_SERIAL_CONFIG.baudRate);
             if (res && typeof res.catch === 'function') res.catch(() => {});
-          } catch {}
+          } catch {
+            // Falha ao resetar baud rate, mas não é crítico. Apenas loga o erro.
+          }
         }
       }
       return;
@@ -122,7 +124,9 @@ export default function SerialMonitor({ isOpen, onClose, onBack }: SerialMonitor
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (board as any).setExternalDataListener(null);
-        } catch {}
+        } catch {
+          console.error('Erro ao remover listener do Monitor Serial:');
+        }
       }
     };
   }, [isOpen, isSerialConnected, isMonitoring, board]);

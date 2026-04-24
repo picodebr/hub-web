@@ -308,8 +308,8 @@ export default function StageArea() {
       }
 
       if (draggingId) {
-        let newX = dragStartRef.current.spriteX + deltaX;
-        let newY = dragStartRef.current.spriteY - deltaY;
+        const newX = dragStartRef.current.spriteX + deltaX;
+        const newY = dragStartRef.current.spriteY - deltaY;
         updateSprite(draggingId, { x: newX, y: newY });
       }
     };
