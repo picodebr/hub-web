@@ -85,10 +85,6 @@ export function StageColumn({
         <button className="btn btn-primary btn-add-backdrop-main shadow-sm" title="Escolher um Cenário" onClick={() => openBackdropGallery()}>
           <div className="position-relative d-flex align-items-center justify-content-center">
             <i className="bi bi-image-fill"></i>
-            <i
-              className="bi bi-plus-lg position-absolute"
-              style={{ fontSize: '0.7rem', top: '-4px', right: '-6px', WebkitTextStroke: '1px white', color: 'white' }}
-            ></i>
           </div>
         </button>
       </div>

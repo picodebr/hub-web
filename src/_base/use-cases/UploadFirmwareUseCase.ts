@@ -14,6 +14,7 @@ import { parseHexFile } from '../lib/byteUtils';
 import { uploadFirmware } from '../lib/stk500';
 import { ISerialPort, NavigatorWithSerial } from '../domain/entities';
 import { CompilerService } from '../services/code/CompilerService';
+import { restoreCode } from '../services/code';
 
 export interface UploadProgressCallbacks {
   onPhaseChange: (phase: 'ready' | 'compiling' | 'flying' | 'success' | 'failure' | '') => void;
@@ -205,11 +206,10 @@ export class UploadFirmwareUseCase {
     }
 
     try {
-      // 3. Busca o HEX do Firmata via proxy interno (rota /api/restore)
-      const response = await fetch('/api/restore');
+      const response = await restoreCode();
 
       if (!response.ok) throw new Error('Erro ao baixar firmware.');
-      const data = await response.json();
+      const data = await response.data;
       if (!data || !data.hex) throw new Error(data.logs || 'Erro ao baixar arquivo do firmware da placa.');
 
       // 3. Parse do HEX e gravação na placa via STK500

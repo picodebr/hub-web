@@ -25,7 +25,7 @@ import { useFirmware } from '@/_base/context/FirmwareContext';
 import { IProjectContextUI, SerializationService } from '@/_base/services/code';
 import { dimensions } from '@/styles/global';
 import { Logo } from '@/components/Logo';
-import { useCustomRouter } from '@/_base/hooks';
+import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { Button, Flex, Icon, Text, useColorMode } from '@chakra-ui/react';
 import { FiLogOut } from 'react-icons/fi';
 import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
@@ -42,6 +42,7 @@ export default function CodeNavbar({ project }: IProps) {
 
   const router = useCustomRouter();
   const { colorMode } = useColorMode();
+  const toast = useCustomToast();
 
   // UI states from UIContext
   const { isUploadMode, setIsUploadMode, rocketPhase, showRocket, isUploading, isBusy, rocketErrorMessage } = uiContext;
@@ -97,6 +98,7 @@ export default function CodeNavbar({ project }: IProps) {
     if (!project) return;
     const workspace = runnerContext.blocklyWorkspaceRef?.current?.getWorkspace?.();
     SerializationService.saveProject(contextAdapter, project, 'meu_projeto.json', workspace || undefined);
+    toast({ title: 'Projeto salvo com sucesso!', status: 'success' });
   };
 
   /**

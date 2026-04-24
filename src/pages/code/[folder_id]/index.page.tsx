@@ -11,7 +11,7 @@ import { BsMotherboard } from 'react-icons/bs';
 import { useEffect, useState } from 'react';
 import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
 import { getCodeProjectFolder } from '@/_base/services/codeProjectFolder';
-import { removeCodeProject, shareCodeProject } from '@/_base/services/codeProject';
+import { createCodeProject, removeCodeProject, shareCodeProject } from '@/_base/services/codeProject';
 import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
 import { SmallModal } from '@/components/Modal/Small';
 import { LuSquareDashedBottomCode } from 'react-icons/lu';
@@ -20,6 +20,7 @@ import { listRelatedUsers } from '@/_base/services/user';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 import { AvatarList } from '@/components/AvatarList';
 import { BiCode } from 'react-icons/bi';
+import { TextInput } from '@/components/Inputs/Text';
 
 interface IProps {
   folderId: string;
@@ -32,6 +33,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
   const [usersToShare, setUsersToShare] = useState<IHubUser[]>([]);
   const [relatedUsers, setRelatedUsers] = useState<IHubUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [newProjectName, setNewProjectName] = useState<string | null>(null);
 
   const toast = useCustomToast();
   const router = useCustomRouter();
@@ -84,10 +86,36 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
     () => setIsLoading(false),
   );
 
+  const handleCreateProject = useAsyncCallback(
+    async () => {
+      if (!newProjectName) {
+        toast({ status: 'error', description: 'O nome do projeto não pode ser vazio' });
+        return;
+      }
+      setIsLoading(true);
+      const newProject = await createCodeProject({
+        folder_id: folderId,
+        name: newProjectName || 'Novo projeto',
+      });
+      router.push(`/code/${folderId}/${newProject.id}?_p=${newProject.name}&allow-new-code=true`);
+      setNewProjectName(null);
+      toast({
+        status: 'success',
+        position: `top`,
+        duration: 5000,
+        description: 'Redirecionando você para o novo projeto',
+        title: `Projeto criado com sucesso!`,
+      });
+    },
+    [],
+    true,
+    () => setIsLoading(false),
+  );
+
   return (
     <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
       <Flex align="center" justify="flex-end" h="fit-content">
-        <PlusButton label="Novo projeto" leftIcon={<FaPlus />} onClick={() => router.push(`/code/${folderId}/example`)} />
+        <PlusButton label="Novo projeto" leftIcon={<FaPlus />} onClick={() => setNewProjectName(``)} />
       </Flex>
       <Skeleton
         display="grid"
@@ -115,7 +143,11 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
             cursor="pointer"
             transition="all 0.1s"
             _hover={{ boxShadow: `md` }}
-            onClick={() => router.push(`/code/${folderId}/${project.id}?_p=${project.name}`)}
+            onClick={() =>
+              Object.keys(project.metadata || {}).length
+                ? router.push(`/code/${folderId}/${project.id}?_p=${project.name}&allow-new-code=true`)
+                : router.push(`/code/${folderId}/${project.id}?_p=${project.name}`)
+            }
           >
             <Flex w="100%" justify="space-between">
               <Flex gap="16px" align="center">
@@ -272,6 +304,21 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
             max={10}
             emptyMessage="-"
           />
+        </Flex>
+      </SmallModal>
+
+      <SmallModal
+        show={newProjectName !== null}
+        topIcon="checked"
+        onCancel={() => setNewProjectName(null)}
+        onConfirm={handleCreateProject}
+        title="Defina um nome para esse projeto"
+        okText="Confirmar"
+        size="md"
+        isLoading={isLoading}
+      >
+        <Flex direction="column" gap="1rem" mt="1rem">
+          <TextInput value={newProjectName || ''} onChange={(e) => setNewProjectName(e.target.value)} />
         </Flex>
       </SmallModal>
     </Flex>

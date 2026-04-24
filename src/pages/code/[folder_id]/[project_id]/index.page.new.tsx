@@ -34,15 +34,6 @@ import { UploadTimeoutModal } from './components/modals/UploadTimeoutModal';
 import CodeNavbar from './components/Navbar';
 import { Flex } from '@chakra-ui/react';
 
-const getDefaultSourceCode = (project: ICodeProject | null) =>
-  project?.source_code ||
-  ({
-    code: '',
-    mode: 'block',
-    simulation_elements_layout: [],
-    variables: [],
-  } as IProjectSourceCode);
-
 interface IProps {
   project: ICodeProject | null;
   isDefaultProject: boolean;
@@ -51,8 +42,7 @@ interface IProps {
   folderId: string;
 }
 
-const NewCode: React.FC<IProps> = ({ project, isDefaultProject, iframeUrl, projectId, folderId }) => {
-  console.log('project: ', project);
+const NewCode: React.FC<IProps> = ({ project }) => {
   const { isUploadMode, activeExtensions, isStageFullScreen, setIsStageFullScreen, setShowRestoreConfirmModal } = useUI();
 
   const { isSerialConnected, restoreBoard } = useFirmware();
@@ -93,154 +83,155 @@ const NewCode: React.FC<IProps> = ({ project, isDefaultProject, iframeUrl, proje
   return (
     <Flex direction="column" flex="1" position="fixed" top="0" left="0" right="0" bottom="0" overflow="hidden" zIndex="100">
       <CodeNavbar project={project} />
-      <StageBridge />
+      <div className="d-flex flex-column flex-grow-1 overflow-hidden" style={{ position: 'relative' }}>
+        <StageBridge />
 
-      <div className="container-fluid flex-grow-1 d-flex flex-column px-0" style={{ overflow: 'hidden' }}>
-        <div className="row h-100 g-0 p-0 m-0">
-          {/* BLOCKLY CONTAINER - Smooth Transition */}
-          <div
-            className="p-0"
-            id="blockly-container"
-            style={{
-              transition: 'all 0.4s ease-in-out',
-              flex: isUploadMode ? '0 0 100%' : '0 0 66.66667%',
-              width: isUploadMode ? '100%' : '66.66667%',
-              maxWidth: isUploadMode ? '100%' : '66.66667%',
-            }}
-          >
-            <BlocklyWorkspace ref={blocklyRef} onBlockClick={handleBlockClick} onRunCode={handleRunCode} />
-          </div>
+        <div className="container-fluid flex-grow-1 d-flex flex-column px-0" style={{ overflow: 'hidden' }}>
+          <div className="row h-100 g-0 flex-nowrap">
+            {/* BLOCKLY CONTAINER */}
+            <div
+              className="p-0"
+              id="blockly-container"
+              style={{
+                flex: isUploadMode ? '0 0 100%' : '1 1 0%',
+                width: isUploadMode ? '100%' : 'auto',
+                maxWidth: isUploadMode ? '100%' : 'none',
+                minWidth: 0,
+              }}
+            >
+              <BlocklyWorkspace ref={blocklyRef} onBlockClick={handleBlockClick} onRunCode={handleRunCode} />
+            </div>
 
-          {/* ML Recognition floating window (STAGE MODE ONLY) */}
-          {!isUploadMode && <MLRecognitionWindow isOpen={isRecognitionWindowOpen} onClose={() => setIsRecognitionWindowOpen(false)} />}
+            {/* ML Recognition floating window (STAGE MODE ONLY) */}
+            {!isUploadMode && <MLRecognitionWindow isOpen={isRecognitionWindowOpen} onClose={() => setIsRecognitionWindowOpen(false)} />}
 
-          {/* Warning Modal for Disconnected Board Runs */}
-          <BoardConnectionWarningModal />
-          <DeviceLostModal />
-          <RestoreConfirmModal />
-          <UploadTimeoutModal />
+            {/* Warning Modal for Disconnected Board Runs */}
+            <BoardConnectionWarningModal />
+            <DeviceLostModal />
+            <RestoreConfirmModal />
+            <UploadTimeoutModal />
 
-          {/* Floating Code Preview Overlay - Always render for Smooth Transitions */}
-          <CodePreview isOpen={isCodePanelOpen} isUploadMode={isUploadMode} onToggle={() => setIsCodePanelOpen(false)} />
+            {/* Floating Code Preview Overlay - Always render for Smooth Transitions */}
+            <CodePreview isOpen={isCodePanelOpen} isUploadMode={isUploadMode} onToggle={() => setIsCodePanelOpen(false)} />
 
-          {/* Floating button to reopen code panel when hidden - Animated */}
-          <button
-            className="btn shadow-sm position-absolute d-flex align-items-center justify-content-center"
-            style={{
-              right: '30px',
-              top: '80px',
-              width: '45px',
-              height: '45px',
-              borderRadius: '12px',
-              zIndex: 1000,
-              backgroundColor: '#131432',
-              border: 'none',
-              color: '#fff',
-              transition: 'all 0.4s ease-in-out',
-              opacity: isUploadMode && !isCodePanelOpen ? 1 : 0,
-              transform: isUploadMode && !isCodePanelOpen ? 'scale(1)' : 'scale(0.5)',
-              pointerEvents: isUploadMode && !isCodePanelOpen ? 'all' : 'none',
-            }}
-            onClick={() => setIsCodePanelOpen(true)}
-          >
-            <i className="bi bi-code-slash" style={{ fontSize: '1.2rem' }}></i>
-          </button>
+            {/* Floating button to reopen code panel when hidden - Animated */}
+            <button
+              className="btn shadow-sm position-absolute d-flex align-items-center justify-content-center"
+              style={{
+                right: '15px',
+                top: '10px',
+                width: '45px',
+                height: '45px',
+                borderRadius: '12px',
+                zIndex: 1000,
+                backgroundColor: '#131432',
+                border: 'none',
+                color: '#fff',
+                opacity: isUploadMode && !isCodePanelOpen ? 1 : 0,
+                transform: isUploadMode && !isCodePanelOpen ? 'scale(1)' : 'scale(0.5)',
+                pointerEvents: isUploadMode && !isCodePanelOpen ? 'all' : 'none',
+              }}
+              onClick={() => setIsCodePanelOpen(true)}
+            >
+              <i className="bi bi-code-slash" style={{ fontSize: '1.2rem' }}></i>
+            </button>
 
-          {/* RIGHT PANEL: STAGE & MANAGEMENT */}
-          <div
-            className={`p-0 bg-light ${!isUploadMode ? 'border-start' : ''}`}
-            id="right-panel"
-            style={{
-              transition: 'all 0.4s ease-in-out',
-              flex: isUploadMode ? '0 0 0' : undefined,
-              width: isUploadMode ? '0' : undefined,
-              maxWidth: isUploadMode ? '0' : undefined,
-              opacity: isUploadMode ? 0 : 1,
-              pointerEvents: isUploadMode ? 'none' : 'auto',
-              overflowX: 'hidden',
-              overflowY: 'auto' /* Allow scrolling the whole panel if needed */,
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {!isUploadMode && (
-              <>
-                {/* 1. STAGE SECTION (FIXED SIZE) */}
-                <div className="stage-section d-flex flex-column border-bottom bg-white" style={{ flex: '0 0 auto' }}>
-                  <div className="stage-header d-flex justify-content-between align-items-center p-2 bg-light border-bottom">
-                    <div className="d-flex align-items-center">
-                      <h6 className="m-0 fw-bold text-secondary me-2">
-                        <i className="bi bi-aspect-ratio me-1"></i>Palco
-                      </h6>
-                      <button
-                        id="btnInteractBoard"
-                        className="btn btn-sm btn-outline-secondary py-0 px-2"
-                        style={{ fontSize: '0.75rem', borderRadius: '20px' }}
-                        onClick={() => restoreBoard()} // Restore & Connect
-                        title={isSerialConnected ? 'Clique para restaurar novamente' : 'Clique para interagir (Restaurar Firmware)'}
-                      >
-                        <i
-                          className={`bi ${isSerialConnected ? 'bi-usb-plug-fill' : 'bi-usb-plug'}`}
-                          style={{
-                            color: isSerialConnected ? '#22c55e' : 'inherit',
-                          }}
-                        ></i>
-                        Interagir Placa
-                      </button>
-                    </div>
+            {/* RIGHT PANEL: STAGE & MANAGEMENT */}
+            <div
+              className="p-0"
+              id="right-panel"
+              style={{
+                opacity: isUploadMode ? 0 : 1,
+                pointerEvents: isUploadMode ? 'none' : 'auto',
+                overflow: isUploadMode ? 'hidden' : undefined,
+                flex: isUploadMode ? '0 0 0' : undefined,
+                backgroundColor: '#e9eef2',
+                minWidth: 0,
+                display: isUploadMode ? 'none' : 'flex',
+                flexDirection: 'column',
+                paddingLeft: '12px',
+                paddingRight: '12px',
+                paddingTop: '0px',
+              }}
+            >
+              {!isUploadMode && (
+                <>
+                  {/* 1. STAGE SECTION (FLEX AUTO TO SHRINK-WRAP STAGE HEIGHT) */}
+                  <div
+                    className={`stage-section d-flex flex-column ${isStageFullScreen ? 'align-items-center fullscreen' : 'align-items-start'} w-100`}
+                    style={{ flex: '0 0 auto', backgroundColor: '#e9eef2' }}
+                  >
+                    <div
+                      className="stage-header w-100 d-flex align-items-center px-3"
+                      style={{ backgroundColor: '#e9eef2', minHeight: '52px', position: 'relative' }}
+                    >
+                      {/* LEFTSIDE: Controles do Palco (Bandeiras) */}
+                      <div className="d-flex align-items-center justify-content-start" style={{ flex: 1 }}>
+                        <div className="stage-controls d-flex align-items-center mb-0 gap-3">
+                          <button
+                            id="btnGo"
+                            className={`btn btn-link p-0 btn-go d-flex align-items-center ${runnerContext.isAnyCodeRunning ? 'inactive' : 'active'}`}
+                            title="Play"
+                            onClick={handleRun}
+                          >
+                            <i className="bi bi-play-fill" style={{ fontSize: '1.8rem' }}></i>
+                          </button>
+                          <button
+                            id="btnStop"
+                            className={`btn btn-link p-0 btn-stop d-flex align-items-center ${runnerContext.isAnyCodeRunning ? 'active' : 'inactive'}`}
+                            title="Parar"
+                            onClick={handleStop}
+                          >
+                            <i className="bi bi-octagon-fill" style={{ fontSize: '1.4rem' }}></i>
+                          </button>
+                        </div>
+                      </div>
 
-                    {/* RIGHTSIDE: Botões Interagir/Fechar */}
-                    <div className="d-flex align-items-center justify-content-end gap-3" style={{ flex: 1 }}>
-                      <button
-                        id="btnMaximize"
-                        className="btn btn-link p-0 d-flex align-items-center text-secondary"
-                        title={isStageFullScreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
-                        style={{ transition: 'color 0.2s' }}
-                        onClick={() => setIsStageFullScreen(!isStageFullScreen)}
-                      >
-                        <i className={`bi ${isStageFullScreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'}`} style={{ fontSize: '1.1rem' }}></i>
-                      </button>
-                      {activeExtensions.includes('piboard') && (
+                      {/* RIGHTSIDE: Botões Interagir/Fechar */}
+                      <div className="d-flex align-items-center justify-content-end gap-3" style={{ flex: 1 }}>
                         <button
-                          id="btnInteractBoard"
-                          className="btn btn-sm btn-outline-secondary d-flex align-items-center py-0 px-2 flex-shrink-0"
-                          style={{
-                            fontSize: '0.75rem',
-                            borderRadius: '20px',
-                            backgroundColor: '#fff',
-                          }}
-                          onClick={() => {
-                            if (!isSerialConnected) {
-                              alert('Conecte a placa primeiro clicando no ícone de USB na barra superior.');
-                              return;
-                            }
-                            setShowRestoreConfirmModal(true);
-                          }}
-                          title={isSerialConnected ? 'Clique para restaurar novamente' : 'Clique para interagir (Restaurar Firmware)'}
+                          id="btnMaximize"
+                          className="btn btn-link p-0 d-flex align-items-center text-secondary"
+                          title={isStageFullScreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
+                          style={{ transition: 'color 0.2s' }}
+                          onClick={() => setIsStageFullScreen(!isStageFullScreen)}
                         >
-                          <i
-                            className={`bi ${isSerialConnected ? 'bi-usb-plug-fill' : 'bi-usb-plug'} me-1`}
-                            style={{
-                              color: isSerialConnected ? '#22c55e' : 'inherit',
-                              fontSize: '1rem',
-                            }}
-                          ></i>
-                          <span>Interagir Placa</span>
+                          <i className={`bi ${isStageFullScreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'}`} style={{ fontSize: '1.1rem' }}></i>
                         </button>
-                      )}
+                        {activeExtensions.includes('piboard') && (
+                          <button
+                            id="btnInteractBoard"
+                            className="btn btn-sm btn-outline-secondary d-flex align-items-center py-0 px-2 flex-shrink-0"
+                            style={{ fontSize: '0.75rem', borderRadius: '20px', backgroundColor: '#fff' }}
+                            onClick={() => {
+                              if (!isSerialConnected) {
+                                alert('Conecte a placa primeiro clicando no ícone de USB na barra superior.');
+                                return;
+                              }
+                              setShowRestoreConfirmModal(true);
+                            }}
+                            title={isSerialConnected ? 'Clique para restaurar novamente' : 'Clique para interagir (Restaurar Firmware)'}
+                          >
+                            <i
+                              className={`bi ${isSerialConnected ? 'bi-usb-plug-fill' : 'bi-usb-plug'} me-1`}
+                              style={{ color: isSerialConnected ? '#22c55e' : 'inherit', fontSize: '1rem' }}
+                            ></i>
+                            <span>Interagir Placa</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    <StageArea />
                   </div>
 
-                  <StageArea />
-                </div>
-
-                {/* 2. MANAGEMENT SECTION (DYNAMIC SIZE & SCROLL) */}
-                <div className="management-section flex-grow-1 d-flex flex-column">
-                  <SpriteList />
-                </div>
-              </>
-            )}
+                  {/* 2. MANAGEMENT SECTION (DYNAMIC SIZE & SCROLL) */}
+                  <div className="management-section flex-grow-1 d-flex flex-column">
+                    <SpriteList />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -305,8 +305,12 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
         .then((res) => res.text())
         .then((svgText) => importSvgString(svgText, true))
         .catch(() => {
-          const raster = new scope.Raster(initialUrl);
-          raster.onLoad = () => handleRasterLoad(raster, true);
+          try {
+            const raster = new scope.Raster(initialUrl);
+            raster.onLoad = () => handleRasterLoad(raster, true);
+          } catch (e) {
+            console.error('Erro ao carregar imagem como SVG ou Raster:', e);
+          }
         });
     } else {
       const raster = new scope.Raster(initialUrl);

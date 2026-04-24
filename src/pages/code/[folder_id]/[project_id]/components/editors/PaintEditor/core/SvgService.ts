@@ -71,8 +71,14 @@ export class SvgService {
       thumbBounds = new this.scope.Rectangle(artboardCenter.x - 1, artboardCenter.y - 1, 2, 2);
     }
 
-    const thumbInner = dl.exportSVG({ asString: true } as IPaintExportOptions) as string;
-    const thumbnailSvg = buildFullSvg(thumbInner, thumbBounds);
+    let thumbnailSvg = '';
+    try {
+      const thumbInner = dl.exportSVG({ asString: true } as IPaintExportOptions) as string;
+      thumbnailSvg = buildFullSvg(thumbInner, thumbBounds);
+    } catch (e) {
+      console.error('Erro ao exportar SVG para thumbnail:', e);
+      thumbnailSvg = '';
+    }
 
     // 2. Stage SVG:
     // Se for Backdrop: 480x360 estático.
@@ -108,9 +114,14 @@ export class SvgService {
         stageBounds = new this.scope.Rectangle(artboardCenter.x - sizeX / 2, artboardCenter.y - sizeY / 2, sizeX, sizeY);
       }
     }
-
-    const stageInner = dl.exportSVG({ asString: true } as IPaintExportOptions) as string;
-    const stageSvg = buildFullSvg(stageInner, stageBounds);
+    let stageSvg = '';
+    try {
+      const stageInner = dl.exportSVG({ asString: true } as IPaintExportOptions) as string;
+      stageSvg = buildFullSvg(stageInner, stageBounds);
+    } catch (e) {
+      console.error('Erro ao exportar SVG para stage:', e);
+      stageSvg = '';
+    }
 
     // Restaura tudo
     hiddenItems.forEach((i) => (i.visible = true));
