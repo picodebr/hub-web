@@ -5,6 +5,7 @@ const { version } = require('./package.json');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  productionBrowserSourceMaps: false,
   reactStrictMode: false,
   experimental: { largePageDataBytes: 256 * 1000000 },
   typescript: { ignoreBuildErrors: true },
