@@ -28,3 +28,4 @@ jobs:
           secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           region: us-east-1
           image: hub-web-prod
+          port: 3001

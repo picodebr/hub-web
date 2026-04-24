@@ -1,7 +1,6 @@
 /* eslint-disable no-undef */
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   reactStrictMode: false,
   experimental: { largePageDataBytes: 256 * 1000000 },
   typescript: { ignoreBuildErrors: true },

@@ -10,7 +10,7 @@
     "push:dev": "npm run project:lint && git push origin development",
     "project:lint": "npm run lint && npm run prettier",
     "docker:build": "docker build -t hub-web-local .",
-    "docker:run": "docker run -p 3000:3000 --env-file .env hub-web-local",
+    "docker:run": "docker run -p 3001:3001 --env-file .env hub-web-local",
     "eslint:fix": "eslint --fix --ext .js,.ts src",
     "lint": "next lint",
     "prettier": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
