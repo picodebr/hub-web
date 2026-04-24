@@ -1,15 +1,10 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-undef */
-const { version } = require('./package.json');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  productionBrowserSourceMaps: false,
   reactStrictMode: false,
   experimental: { largePageDataBytes: 256 * 1000000 },
   typescript: { ignoreBuildErrors: true },
-  publicRuntimeConfig: { version },
   pageExtensions: ['page.tsx'],
   images: {
     remotePatterns: [
