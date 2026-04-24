@@ -465,7 +465,6 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
                 <>
                   {uploadedImageUrl ? (
                     <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         ref={fileImgRef}
                         src={uploadedImageUrl}
