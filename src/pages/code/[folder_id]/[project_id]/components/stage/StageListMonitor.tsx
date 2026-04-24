@@ -64,8 +64,8 @@ export const StageListMonitor: React.FC<StageListMonitorProps> = ({ monitor, sca
     const handleMouseMove = (e: MouseEvent) => {
       const dx = (e.clientX - dragStartPos.current.x) / scale;
       const dy = (e.clientY - dragStartPos.current.y) / scale;
-      let newX = Math.max(0, Math.min(dragStartPos.current.monitorX + dx, 480 - size.width));
-      let newY = Math.max(0, Math.min(dragStartPos.current.monitorY + dy, 360 - size.height));
+      const newX = Math.max(0, Math.min(dragStartPos.current.monitorX + dx, 480 - size.width));
+      const newY = Math.max(0, Math.min(dragStartPos.current.monitorY + dy, 360 - size.height));
       updateMonitorPosition(monitor.id, newX, newY);
     };
     const handleMouseUp = () => setIsDragging(false);

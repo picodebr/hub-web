@@ -148,7 +148,7 @@ export const MLRecognitionWindow: React.FC<MLRecognitionWindowProps> = React.mem
         let newWidth = startResize.current.width;
         let newHeight = startResize.current.height;
         let newX = startResize.current.x;
-        let newY = startResize.current.y;
+        const newY = startResize.current.y;
 
         if (dir.includes('e')) {
           newWidth = Math.max(280, Math.min(800, startResize.current.width + dx));
