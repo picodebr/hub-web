@@ -63,8 +63,9 @@ interface IProps {
   openNewCode: boolean;
 }
 
-const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, iframeUrl, folderId, openNewCode }) => {
-  if (openNewCode) return <NewCode />;
+const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, iframeUrl, folderId, openNewCode, projectId }) => {
+  if (openNewCode)
+    return <NewCode project={_project} folderId={folderId} iframeUrl={iframeUrl} isDefaultProject={isDefaultProject} projectId={projectId} />;
 
   const sourceCodeRef = useRef(getDefaultSourceCode(_project));
   const board = useMemo(() => supportedBoards[0], []);
@@ -308,7 +309,7 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
         const element = document.querySelector('#blocklyDiv') as HTMLElement;
         const mimetype = 'image/png';
 
-        if (element && params.source_code.mode === 'block') {
+        if (element && params.source_code?.mode === 'block') {
           const [canvas, { link, path }] = await Promise.all([
             html2canvas(element, {
               x: 380,

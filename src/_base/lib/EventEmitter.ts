@@ -6,10 +6,13 @@
  * É fundamental para a comunicação entre a lógica de serviços e os hooks de UI.
  */
 
-type Listener<T = any> = (data: T) => void;
+type Listener<T = unknown> = (data: T) => void;
 
-export class EventEmitter<Events extends Record<string, any>> {
-    private listeners: Map<keyof Events, Listener[]> = new Map();
+/**
+ * Simples emissor de eventos para comunicação desacoplada entre módulos.
+ */
+export class EventEmitter<Events extends object> {
+    private listeners: { [K in keyof Events]?: Listener<Events[K]>[] } = {};
 
     /**
      * Subscribe to an event
@@ -17,10 +20,10 @@ export class EventEmitter<Events extends Record<string, any>> {
      * @param listener Callback function
      */
     on<K extends keyof Events>(event: K, listener: Listener<Events[K]>): void {
-        if (!this.listeners.has(event)) {
-            this.listeners.set(event, []);
+        if (!this.listeners[event]) {
+            this.listeners[event] = [];
         }
-        this.listeners.get(event)!.push(listener);
+        this.listeners[event]!.push(listener);
     }
 
     /**
@@ -29,9 +32,9 @@ export class EventEmitter<Events extends Record<string, any>> {
      * @param listener Callback function to remove
      */
     off<K extends keyof Events>(event: K, listener: Listener<Events[K]>): void {
-        const eventListeners = this.listeners.get(event);
+        const eventListeners = this.listeners[event];
         if (eventListeners) {
-            this.listeners.set(event, eventListeners.filter(l => l !== listener));
+            this.listeners[event] = eventListeners.filter(l => l !== listener) as Listener<Events[K]>[];
         }
     }
 
@@ -40,10 +43,10 @@ export class EventEmitter<Events extends Record<string, any>> {
      * @param event Event name
      * @param data Data to pass to listeners
      */
-    protected emit<K extends keyof Events>(event: K, data: Events[K]): void {
-        const eventListeners = this.listeners.get(event);
+    public emit<K extends keyof Events>(event: K, data: Events[K]): void {
+        const eventListeners = this.listeners[event];
         if (eventListeners) {
-            eventListeners.forEach(listener => {
+            (eventListeners as Listener<Events[K]>[]).forEach(listener => {
                 try {
                     listener(data);
                 } catch (e) {
@@ -57,6 +60,6 @@ export class EventEmitter<Events extends Record<string, any>> {
      * Remove all listeners (useful for cleanup)
      */
     removeAllListeners(): void {
-        this.listeners.clear();
+        this.listeners = {};
     }
 }

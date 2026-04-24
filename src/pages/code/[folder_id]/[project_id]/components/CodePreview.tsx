@@ -5,7 +5,7 @@
  * Ele inclui realce de sintaxe básico (Syntax Highlighting) para palavras-chave do C++/Arduino.
  */
 
-import { useStage } from '@/_base/context/StageContext';
+import { useUI } from '@/_base/context/UIContext';
 import React from 'react';
 
 interface CodePreviewProps {
@@ -15,7 +15,7 @@ interface CodePreviewProps {
 }
 
 export default function CodePreview({ onToggle, isOpen = true, isUploadMode = true }: CodePreviewProps) {
-  const { uploadCode } = useStage();
+  const { uploadCode } = useUI();
   const [copied, setCopied] = React.useState(false);
 
   const isVisible = isOpen && isUploadMode;
@@ -36,20 +36,20 @@ export default function CodePreview({ onToggle, isOpen = true, isUploadMode = tr
       className="d-flex flex-column bg-white shadow-lg"
       style={{
         position: 'fixed',
-        right: isVisible ? '25px' : '-450px',
-        top: '85px',
+        right: isVisible ? '10px' : '-450px',
+        top: '70px',
         bottom: '25px',
         width: '400px',
         borderRadius: '16px',
         zIndex: 1050,
-        border: '1px solid rgba(0,0,0,0.05)',
+        border: 'none',
         transition: 'all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)',
         opacity: isVisible ? 1 : 0,
         pointerEvents: isVisible ? 'all' : 'none',
       }}
     >
       {/* Cabeçalho do Painel de Código */}
-      <div className="d-flex justify-content-between align-items-center p-3 border-bottom">
+      <div className="d-flex justify-content-between align-items-center p-3">
         <div className="d-flex align-items-center">
           <span className="me-2" style={{ color: '#22c55e', fontSize: '0.6rem' }}>
             ●
@@ -110,7 +110,7 @@ export default function CodePreview({ onToggle, isOpen = true, isUploadMode = tr
           <code style={{ color: '#e2e8f0' }}>
             {uploadCode.split('\n').map((line, i) => {
               // Escapa caracteres HTML para evitar injeção
-              let escapedLine = line.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              const escapedLine = line.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
               // Aplica realce de sintaxe via Regex (Substitui palavras-chave por spans coloridos)
               const highlightedLine = escapedLine
@@ -130,7 +130,7 @@ export default function CodePreview({ onToggle, isOpen = true, isUploadMode = tr
             })}
           </code>
         ) : (
-          <span style={{ color: '#64748b' }}>// Nenhum bloco conectado...</span>
+          <span style={{ color: '#64748b' }}>{`// Nenhum bloco conectado...`}</span>
         )}
       </div>
     </div>

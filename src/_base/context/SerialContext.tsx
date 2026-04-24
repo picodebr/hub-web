@@ -1,44 +1,39 @@
 /**
- * SerialContext - Contexto React para o Estado da Comunicação Serial.
+ * SerialContext - Gestão do estado da conexão física via Web Serial.
  *
- * Este contexto gerencia a conexão física com a placa (Arduino/ESP32).
- * Ele expõe para a aplicação:
- * 1. O status atual da conexão (conectado/desconectado).
- * 2. Referência direta à porta serial (Web Serial API).
- * 3. A instância do `StageBoard` para envio/recebimento de comandos.
- * 4. Funções globais de `connect` e `disconnect`.
+ * Responsabilidade: Gerenciar o ciclo de vida do link USB com a placa controladora.
+ * Abstrai a complexidade do handshake serial e monitora o status da porta em tempo
+ * real (conectado, desconectado, erro), expondo a camada de comando (`board`).
+ *
+ * Operações Principais:
+ * - connect/disconnect: Fluxo de controle para solicitação e fechamento da porta física.
+ * - Gestão centralizada do status de conexão para toda a aplicação.
  */
-
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import StageBoard from '../lib/StageBoard';
-import { ISerialPort, SerialStatus } from '../interfaces/code';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
+import { SerialStatus, ISerialPort } from '../domain/entities';
+import { IHardwareBoard } from '../domain/ports/IHardwareBoard';
 import { getSerialService, SerialService } from '../services/code';
 
 interface SerialContextType {
   isConnected: boolean;
   status: SerialStatus;
   serialPort: ISerialPort | null;
-  board: StageBoard;
-  connect: (forceNew?: boolean) => Promise<void>;
+  board: IHardwareBoard;
+  connect: (explicitPort?: ISerialPort) => Promise<void>;
   disconnect: () => Promise<void>;
 }
 
 const SerialContext = createContext<SerialContextType | null>(null);
 
 export function SerialProvider({ children }: { children: ReactNode }) {
-  const [serialService, setSerialService] = useState<SerialService>();
-  const [isConnected, setIsConnected] = useState(false);
-  const [status, setStatus] = useState<SerialStatus>(SerialStatus.DISCONNECTED);
-  const [serialPort, setSerialPort] = useState<ISerialPort | null>(null);
+  const [serialService] = useState<SerialService>(() => getSerialService());
+  const [isConnected, setIsConnected] = useState(() => serialService.isConnected());
+  const [status, setStatus] = useState<SerialStatus>(() => serialService.getStatus());
+  const [serialPort, setSerialPort] = useState<ISerialPort | null>(() => serialService.getPort());
 
   useEffect(() => {
-    setSerialService(() => getSerialService());
-  }, []);
-
-  useEffect(() => {
-    if (!serialService) return;
     // Subscribe to serial service status changes
     const handleStatusChange = (newStatus: SerialStatus) => {
       setStatus(newStatus);
@@ -53,48 +48,45 @@ export function SerialProvider({ children }: { children: ReactNode }) {
     serialService.on('statusChange', handleStatusChange);
     serialService.on('disconnect', handleDisconnect);
 
-    // Initialize state from service
-    setStatus(serialService.getStatus());
-    setIsConnected(serialService.isConnected());
-    setSerialPort(serialService.getPort());
-
     return () => {
       serialService.off('statusChange', handleStatusChange);
       serialService.off('disconnect', handleDisconnect);
     };
   }, [serialService]);
 
-  const connect = async (forceNew?: boolean) => {
-    try {
-      if (!serialService) return;
-      await serialService.connect(forceNew);
-      setSerialPort(serialService.getPort());
-    } catch (error) {
-      console.error('[SerialContext] Connection error:', error);
-      throw error;
-    }
-  };
+  const connect = useCallback(
+    async (explicitPort?: ISerialPort) => {
+      try {
+        await serialService.connect(explicitPort);
+        setSerialPort(serialService.getPort());
+      } catch (error) {
+        console.error('[SerialContext] Connection error:', error);
+        throw error;
+      }
+    },
+    [serialService],
+  );
 
-  const disconnect = async () => {
+  const disconnect = useCallback(async () => {
     try {
-      await serialService?.disconnect();
+      await serialService.disconnect();
       setSerialPort(null);
     } catch (error) {
       console.error('[SerialContext] Disconnection error:', error);
       throw error;
     }
-  };
+  }, [serialService]);
 
   const value: SerialContextType = useMemo(
     () => ({
       isConnected,
       status,
       serialPort,
-      board: serialService?.getBoard() as any,
+      board: serialService.getBoard(),
       connect,
       disconnect,
     }),
-    [isConnected, status, serialPort, serialService],
+    [isConnected, status, serialPort, serialService, connect, disconnect],
   );
 
   return <SerialContext.Provider value={value}>{children}</SerialContext.Provider>;

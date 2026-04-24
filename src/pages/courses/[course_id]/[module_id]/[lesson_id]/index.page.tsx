@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import moment from 'moment';
-import { Flex, Image, ListItem, Text, UnorderedList, Box, Icon, Grid, useColorMode, Button } from '@chakra-ui/react';
+import { Flex, Image, Text, Box, Icon, Grid, useColorMode } from '@chakra-ui/react';
 import { FiClock, FiTarget, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 
 import { useCustomRouter, useCustomToast } from '@/_base/hooks';

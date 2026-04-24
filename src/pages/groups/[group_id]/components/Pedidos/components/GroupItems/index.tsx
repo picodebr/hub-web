@@ -252,9 +252,7 @@ export const GroupItems: React.FC<IProps> = ({ group, refreshStock }) => {
                           whileTap={{ scale: 0.75 }}
                           style={{
                             display: `flex`,
-                            background: !!((item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0))
-                              ? `#3356B7`
-                              : `#05AD7D`,
+                            background: (item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0) ? `#3356B7` : `#05AD7D`,
                             color: `#fff`,
                             borderRadius: `6px`,
                             padding: `0.15rem 0.75rem`,

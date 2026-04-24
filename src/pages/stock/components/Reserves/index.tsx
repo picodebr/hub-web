@@ -1,15 +1,12 @@
 import { Flex, Grid, Text, Image, Tooltip } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 import { IHubGroup, IHubGroupOrder, IHubGroupOrderItem, IHubGroupOrderItemMetadata } from '@/_base/interfaces/group';
 import { SmallModal } from '@/components/Modal/Small';
 import { IStoreMakerItem } from '@/_base/interfaces/storeMaker';
-import { useAsyncCallback, useAuth, useCustomToast, useInputHandler } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomToast } from '@/_base/hooks';
 import { NumberInput } from '@/components/Inputs/Number';
-import { EMPTY_RESALE_STOCK_ITEM, IResaleStockParams, resaleStockSchema } from '@/_base/interfaces/storeMaker/IResaleStockMakerParams';
-import { resaleStockItem } from '@/_base/services/storeMaker';
-import { useSelectedSchool } from '@/components/Page/components/Header';
 import { formatCurrency, formatDateInput } from '@/_base/utils';
 import { MdOutlineShoppingCart } from 'react-icons/md';
 import { TabSwitch } from '@/components/TabSwitch';
@@ -210,9 +207,7 @@ export const Reserves: React.FC<IProps> = ({ groups, refreshStock }) => {
                           whileTap={{ scale: 0.75 }}
                           style={{
                             display: `flex`,
-                            background: !!((item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0))
-                              ? `#3356B7`
-                              : `#05AD7D`,
+                            background: (item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0) ? `#3356B7` : `#05AD7D`,
                             color: `#fff`,
                             borderRadius: `6px`,
                             padding: `0.15rem 0.75rem`,

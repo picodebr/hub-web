@@ -6,19 +6,29 @@
  * A ordem dos provedores importa caso um dependa do outro.
  */
 
-'use client';
-
+/**
+ * Agregador central de todos os Context Providers da aplicação.
+ */
 import React, { ReactNode } from 'react';
 import { SerialProvider } from './SerialContext';
 import { ProjectProvider } from './ProjectContext';
-import { StageProvider } from './StageContext';
+import { UIProvider } from './UIContext';
+import { FirmwareProvider } from './FirmwareContext';
+import { RuntimeProvider } from './RuntimeContext';
+import { ExecutionRunnerProvider } from './ExecutionRunnerContext';
 
 export function CombinedProviders({ children }: { children: ReactNode }) {
   return (
     <SerialProvider>
-      <ProjectProvider>
-        <StageProvider>{children}</StageProvider>
-      </ProjectProvider>
+      <UIProvider>
+        <FirmwareProvider>
+          <ProjectProvider>
+            <ExecutionRunnerProvider>
+              <RuntimeProvider>{children}</RuntimeProvider>
+            </ExecutionRunnerProvider>
+          </ProjectProvider>
+        </FirmwareProvider>
+      </UIProvider>
     </SerialProvider>
   );
 }

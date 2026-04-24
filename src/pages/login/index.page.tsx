@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Checkbox, Flex, Image, Link, Text } from '@chakra-ui/react';
+import { Checkbox, Flex, Link, Text } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { useState } from 'react';
 import { FiUser } from 'react-icons/fi';
@@ -7,14 +7,13 @@ import { FiUser } from 'react-icons/fi';
 import { useAsyncCallback, useAuth, useCustomToast, useInputHandler, useLoading } from '@/_base/hooks';
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { googleLogin, hubLogin, validateSession } from '@/_base/services/auth';
-import { logError, showErrorToClient, cookieManager } from '@/_base/utils';
+import { logError, cookieManager } from '@/_base/utils';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { TextInput } from '@/components/Inputs/Text';
 import { Logo } from '@/components/Logo';
 import { IAuthRequest, authSchema } from '@/_base/interfaces/auth';
 import { api } from '@/_base/classes/api';
-import { useSelectedSchool } from '@/components/Page/components/Header';
 
 const LoginPage: React.FC = () => {
   const [submitLoading, setSubmitLoading] = useState(false);

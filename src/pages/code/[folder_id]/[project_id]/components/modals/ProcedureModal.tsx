@@ -10,7 +10,7 @@
  * onde o bloco é montado e editado visualmente antes de ser registrado no projeto.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as Blockly from 'blockly/core';
 import 'blockly/blocks';
 import { CustomBlockDefinitions, registerCustomBlockFromSpec, registerCustomExtensions } from '@/_base/config/custom_definitions';
@@ -18,8 +18,10 @@ import { CustomBlockDefinitions, registerCustomBlockFromSpec, registerCustomExte
 // CORREÇÃO: Forçar desativação da lógica de toque globalmente para este módulo para prevenir prompts nativos.
 // Isso garante que mesmo em dispositivos de toque (ou simulados), o editor inline (WidgetDiv) seja usado.
 try {
-  if ((Blockly as any).FieldTextInput) {
-    (Blockly as any).FieldTextInput.prototype.useTouchInteraction_ = () => false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const FieldTextInput = (Blockly as any).FieldTextInput;
+  if (FieldTextInput) {
+    FieldTextInput.prototype.useTouchInteraction_ = () => false;
   }
 } catch (e) {
   console.warn('Failed to override Blockly touch interaction', e);
@@ -31,19 +33,20 @@ interface ProcedureModalProps {
   workspace: Blockly.WorkspaceSvg | null;
 }
 
+interface IProcedureArg {
+  type: string;
+  value: string;
+}
+
 export default function ProcedureModal({ isOpen, onClose, workspace }: ProcedureModalProps) {
   const previewDiv = useRef<HTMLDivElement>(null);
   const previewWorkspace = useRef<Blockly.WorkspaceSvg | null>(null);
 
   // Estado interno do bloco em construção: Nome principal e lista de argumentos/rótulos.
-  const blockStateRef = useRef<{ mainName: string; args: { type: string; value: string }[] }>({
+  const blockStateRef = useRef<{ mainName: string; args: IProcedureArg[] }>({
     mainName: 'nome do bloco',
     args: [],
   });
-
-  // Ainda precisamos de algum estado react para acionar re-renderizações se elementos da UI precisarem,
-  // mas a lógica do blockly deve depender de estado mutável ou sincronização.
-  // Na verdade, para este modal, estado React estrito é bom SE sincronizarmos do Blockly antes das mutações.
 
   const [screenRefresh, setScreenRefresh] = useState(false);
   const [selectedArgIndex, setSelectedArgIndex] = useState(-1);
@@ -51,133 +54,81 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
   const [deleteBubblePos, setDeleteBubblePos] = useState({ top: 0, left: 0 });
   const hideTrashTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Configuração Inicial
-  useEffect(() => {
-    registerCustomExtensions();
-    Blockly.defineBlocksWithJsonArray(CustomBlockDefinitions);
-  }, []);
+  // --- HELPERS E AÇÕES ---
 
-  // Gerenciar Workspace de Pré-visualização
-  useEffect(() => {
-    if (isOpen && previewDiv.current) {
-      // CORREÇÃO: Forçar descarte da referência antiga do workspace para prevenir Workspaces Zumbis (desconectados)
-      if (previewWorkspace.current) {
-        previewWorkspace.current.dispose();
-      }
-
-      previewWorkspace.current = Blockly.inject(previewDiv.current, {
-        renderer: 'zelos',
-        readOnly: false,
-        scrollbars: false,
-        trashcan: false,
-        zoom: { controls: false, startScale: 1.0 },
-        move: { scrollbars: false, drag: false, wheel: false },
-        sounds: false,
-      });
-
-      // Resetar estado ao abrir
-      blockStateRef.current = { mainName: 'nome do bloco', args: [] };
-      setScreenRefresh(false);
-
-      // CORREÇÃO: Forçar desativação da lógica de toque para prevenir prompts nativos (garantir que Editor Inline use WidgetDiv)
-      if ((Blockly as any).FieldTextInput) {
-        (Blockly as any).FieldTextInput.prototype.useTouchInteraction_ = () => false;
-      }
-
-      // Reconstruir
-      rebuildBlock();
-
-      // Adicionar ouvinte
-      previewWorkspace.current.addChangeListener(onSelectionChange);
-    }
-  }, [isOpen]);
-
-  const onSelectionChange = (event: Blockly.Events.Abstract) => {
-    if (event.type === Blockly.Events.SELECTED) {
-      const e = event as Blockly.Events.Selected;
-      if (e.newElementId && previewWorkspace.current) {
-        let block = previewWorkspace.current.getBlockById(e.newElementId);
-        if (block) {
-          let type = block.type;
-          if (type.startsWith('arg_helper')) {
-            let index = findArgIndex(block);
-            if (index !== -1) {
-              if (hideTrashTimer.current) clearTimeout(hideTrashTimer.current);
-              setSelectedArgIndex(index);
-              showDeleteBubble(block);
-              return;
-            }
-          }
-        }
-      }
-      scheduleHideTrash();
-    }
-  };
-
-  const findArgIndex = (block: Blockly.Block): number => {
-    let parent = block.getParent();
+  const findArgIndex = useCallback((block: Blockly.Block): number => {
+    const parent = block.getParent();
     if (!parent) return -1;
     for (let i = 0; i < parent.inputList.length; i++) {
-      let input = parent.inputList[i];
+      const input = parent.inputList[i];
       if (input.connection && input.connection.targetBlock() === block) {
         if (input.name.startsWith('ARG_')) return parseInt(input.name.split('_')[1]);
       }
     }
     return -1;
-  };
+  }, []);
 
-  const showDeleteBubble = (block: Blockly.Block | null, targetField: Blockly.Field | null = null) => {
+  const hideDeleteBubble = useCallback(() => {
+    setDeleteBubbleVisible(false);
+    setSelectedArgIndex(-1);
+  }, []);
+
+  const scheduleHideTrash = useCallback(() => {
+    if (hideTrashTimer.current) clearTimeout(hideTrashTimer.current);
+    hideTrashTimer.current = setTimeout(() => {
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+      hideDeleteBubble();
+    }, 200);
+  }, [hideDeleteBubble]);
+
+  const showDeleteBubble = useCallback((block: Blockly.Block | null, targetField: Blockly.Field | null = null) => {
     if (!block && !targetField) return;
-
     let svgRoot;
     if (targetField) {
       svgRoot = targetField.getSvgRoot();
     } else if (block) {
       svgRoot = (block as Blockly.BlockSvg).getSvgRoot();
     }
-
     if (!svgRoot || !previewDiv.current) return;
-
     const relativeBlock = svgRoot.getBoundingClientRect();
     const previewRect = previewDiv.current.getBoundingClientRect();
-
-    // Calcular posição relativa ao container
-    const topPos = relativeBlock.top - previewRect.top - 40; // 35-40px acima
-    const leftPos = relativeBlock.left - previewRect.left + relativeBlock.width / 2 - 16; // Centralizado
-
+    const topPos = relativeBlock.top - previewRect.top - 40;
+    const leftPos = relativeBlock.left - previewRect.left + relativeBlock.width / 2 - 16;
     setDeleteBubblePos({ top: topPos, left: leftPos });
     setDeleteBubbleVisible(true);
-  };
+  }, []);
 
-  const hideDeleteBubble = () => {
-    setDeleteBubbleVisible(false);
-    setSelectedArgIndex(-1);
-  };
+  const onSelectionChange = useCallback(
+    (event: Blockly.Events.Abstract) => {
+      if (event.type === Blockly.Events.SELECTED) {
+        const e = event as Blockly.Events.Selected;
+        if (e.newElementId && previewWorkspace.current) {
+          const block = previewWorkspace.current.getBlockById(e.newElementId);
+          if (block) {
+            const type = block.type;
+            if (type.startsWith('arg_helper')) {
+              const index = findArgIndex(block);
+              if (index !== -1) {
+                if (hideTrashTimer.current) clearTimeout(hideTrashTimer.current);
+                setSelectedArgIndex(index);
+                showDeleteBubble(block);
+                return;
+              }
+            }
+          }
+        }
+        scheduleHideTrash();
+      }
+    },
+    [findArgIndex, scheduleHideTrash, showDeleteBubble],
+  );
 
-  const scheduleHideTrash = () => {
-    if (hideTrashTimer.current) clearTimeout(hideTrashTimer.current);
-    hideTrashTimer.current = setTimeout(() => {
-      if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
-      hideDeleteBubble();
-    }, 200);
-  };
-
-  // Lógica de Salvar: Sincroniza de Bloco Blockly -> Estado do Bloco
-  const saveCurrentValues = () => {
+  const saveCurrentValues = useCallback(() => {
     if (!previewWorkspace.current) return;
-    const blocks = previewWorkspace.current.getAllBlocks(false);
-    if (blocks.length === 0) return;
-
     const main = previewWorkspace.current.getTopBlocks()[0];
     if (!main) return;
-
-    // Salvar Nome Principal
     const nameField = main.getFieldValue('NAME');
-    if (nameField !== null) {
-      blockStateRef.current.mainName = nameField;
-    }
-
-    // Salvar Valores dos Argumentos
+    if (nameField !== null) blockStateRef.current.mainName = nameField;
     blockStateRef.current.args.forEach((arg, index) => {
       if (arg.type === 'label') {
         const labelText = main.getFieldValue('LABEL_' + index);
@@ -185,37 +136,29 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
       } else {
         const input = main.getInput('ARG_' + index);
         if (input && input.connection && input.connection.targetBlock()) {
-          // Helpers são inputs, então olhamos o campo do bloco alvo
           arg.value = input.connection.targetBlock()!.getFieldValue('TEXT');
         }
       }
     });
-  };
+  }, []);
 
-  // Lógica de Reconstrução: Estado do Bloco -> Bloco Blockly
-  const rebuildBlock = () => {
+  const rebuildBlock = useCallback(() => {
     if (!previewWorkspace.current) return;
     const ws = previewWorkspace.current;
     ws.clear();
-
     const state = blockStateRef.current;
-    const uniqueBlockType = 'dyn_block_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-
+    const uniqueBlockType = 'dyn_block_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     let msg = 'Defina %1';
-    const args0: any[] = [{ type: 'field_input', name: 'NAME', text: state.mainName }];
-
+    const args0: Array<{ type: string; name: string; text?: string; check?: string }> = [{ type: 'field_input', name: 'NAME', text: state.mainName }];
     state.args.forEach((arg, i) => {
+      msg += ' %' + (args0.length + 1);
       if (arg.type === 'label') {
-        msg += ' %' + (args0.length + 1);
         args0.push({ type: 'field_input', name: 'LABEL_' + i, text: arg.value });
       } else {
-        msg += ' %' + (args0.length + 1);
         const check = arg.type === 'bool' ? 'Boolean' : arg.type === 'number' ? 'Number' : 'String';
         args0.push({ type: 'input_value', name: 'ARG_' + i, check: check });
       }
     });
-
-    // 1. Definir o Bloco de Pré-visualização
     Blockly.defineBlocksWithJsonArray([
       {
         type: uniqueBlockType,
@@ -227,41 +170,29 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
         colour: '#FF6680',
       },
     ]);
-
-    // 2. Criar Bloco Principal
     const main = ws.newBlock(uniqueBlockType);
     main.setMovable(false);
     main.setDeletable(false);
     main.initSvg();
     main.render();
-
-    // 3. Anexar Helpers
     state.args.forEach((arg, i) => {
       if (arg.type !== 'label') {
         const helperType =
           arg.type === 'input' ? 'arg_helper_string' : arg.type === 'number' ? 'arg_helper_number' : arg.type === 'bool' ? 'arg_helper_boolean' : '';
-
         if (helperType) {
           const child = ws.newBlock(helperType);
           child.setFieldValue(arg.value, 'TEXT');
           child.setShadow(true);
           child.initSvg();
           child.render();
-
           const input = main.getInput('ARG_' + i);
           if (input) input.connection?.connect(child.outputConnection);
         }
       }
     });
-
-    // 4. Centralizar
     const m = ws.getMetrics();
     const hw = main.getHeightWidth();
-    const x = m.viewWidth / 2 - hw.width / 2;
-    const y = m.viewHeight / 2 - hw.height / 2;
-    main.moveBy(x, y);
-
-    // 5. Anexar Ouvintes para Deleção (Campos de Rótulo) - Imitando custom_procedures.js
+    main.moveBy(m.viewWidth / 2 - hw.width / 2, m.viewHeight / 2 - hw.height / 2);
     main.inputList.forEach((input) => {
       input.fieldRow.forEach((field) => {
         if (field.name && field.name.startsWith('LABEL_')) {
@@ -270,22 +201,46 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
             Blockly.browserEvents.bind(svgRoot, 'mousedown', null, (e: Event) => {
               const mouseEvent = e as MouseEvent;
               if (mouseEvent.button !== 0) return;
-
               const idx = parseInt(field.name!.split('_')[1]);
               setSelectedArgIndex(idx);
               showDeleteBubble(main, field);
-              // Não parar propagação para permitir edição
             });
           }
         }
       });
     });
-  };
+  }, [showDeleteBubble]);
+
+  // --- EFEITOS ---
+
+  useEffect(() => {
+    registerCustomExtensions();
+    Blockly.defineBlocksWithJsonArray(CustomBlockDefinitions);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && previewDiv.current) {
+      if (previewWorkspace.current) previewWorkspace.current.dispose();
+      previewWorkspace.current = Blockly.inject(previewDiv.current, {
+        renderer: 'zelos',
+        readOnly: false,
+        scrollbars: false,
+        trashcan: false,
+        zoom: { controls: false, startScale: 1.0 },
+        move: { scrollbars: false, drag: false, wheel: false },
+        sounds: false,
+      });
+      blockStateRef.current = { mainName: 'nome do bloco', args: [] };
+      rebuildBlock();
+      const ws = previewWorkspace.current;
+      if (ws) {
+        ws.addChangeListener(onSelectionChange);
+      }
+    }
+  }, [isOpen, rebuildBlock, onSelectionChange]);
 
   const handleDeleteArg = (indexOrEvent: number | React.MouseEvent) => {
-    // Se acionado por evento de clique (bolha), usar índice do estado
-    let index = typeof indexOrEvent === 'number' ? indexOrEvent : selectedArgIndex;
-
+    const index = typeof indexOrEvent === 'number' ? indexOrEvent : selectedArgIndex;
     if (index !== -1) {
       saveCurrentValues();
       blockStateRef.current.args.splice(index, 1);
@@ -294,21 +249,17 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
     }
   };
 
-  // Ações
   const addArg = (type: string, defaultValue: string) => {
-    saveCurrentValues(); // Salvar texto antes de adicionar
+    saveCurrentValues();
     blockStateRef.current.args.push({ type, value: defaultValue });
     rebuildBlock();
   };
 
   const handleConfirm = () => {
     if (!workspace) return;
-    saveCurrentValues(); // Salvamento final
-
+    saveCurrentValues();
     const state = blockStateRef.current;
     const validName = state.mainName.trim() || 'função sem nome';
-
-    // Verificar duplicatas
     const allBlocks = workspace.getAllBlocks(false);
     const nameExists = allBlocks.some((block) => {
       if (block.type.startsWith('custom_def_')) {
@@ -320,96 +271,64 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
       }
       return false;
     });
-
     if (nameExists) {
       alert('Já existe uma função com esse nome.');
       return;
     }
-
     const uniqueID = Date.now();
-    // Construir Mensagens
-    // let protoMsg = "%1"; ... (moved to helper)
-
-    // 1. & 2. Registrar Gerador e Blocos via Helper
-
-    // 1. & 2. Registrar Gerador e Blocos via Helper
     const spec = {
       id: uniqueID.toString(),
       name: validName,
       args: state.args.map((a) => ({ type: a.type, value: a.value, label: a.type === 'label' ? a.value : undefined })),
     };
-
-    // Import helper inside component file? No, imported at top.
-    // Wait, I need to make sure I import it.
-    // I will trust that I will add the import or it is already there? No, I need to add import.
-    // But this replace_file_content is for lines 341-369.
-    // I will use a separate edit for import if needed.
-    // Actually, let's just replace the logic block.
-
-    // Note: The helper expects specific arg format.
-    // procedureModal args: { type: string, value: string }
-    // helper args: { type: string, value?: string, label?: string }
-
-    // Let's call the helper:
-    const { defBlockType, callBlockType, protoBlockType } = registerCustomBlockFromSpec(spec);
-
-    // 3. Criar Blocos usando Serialização (Combina com Lógica Legada)
-    // Isso garante que a estrutura seja criada atomicamente e corretamente conectada.
-
-    let definitionInputs: any = {};
-
+    const { defBlockType, protoBlockType } = registerCustomBlockFromSpec(spec);
+    // Usamos Record<string, unknown> com cast final para satisfazer o tipo ConnectionState do Blockly
+    const definitionInputs: Record<string, unknown> = {};
     state.args.forEach((arg, i) => {
       if (arg.type !== 'label') {
         let reporterType = 'argument_reporter_string';
         if (arg.type === 'bool') reporterType = 'argument_reporter_boolean';
         if (arg.type === 'number') reporterType = 'argument_reporter_number';
-
         definitionInputs['ARG_' + i] = {
           block: {
             type: reporterType,
             fields: { VALUE: arg.value },
             movable: false,
             deletable: false,
-            shadow: true, // Reporters são sombras
+            shadow: true,
           },
         };
       }
     });
-
     const prototypeStructure = {
       block: {
         type: protoBlockType,
-        inputs: definitionInputs,
+        inputs: definitionInputs as Record<string, { block: unknown }>,
         movable: false,
         deletable: false,
         editable: false,
-        shadow: true, // O protótipo em si é uma sombra no bloco de definição
+        shadow: true,
       },
     };
-
     const blockDefJson = {
       type: defBlockType,
       inputs: { PROTOTYPE: prototypeStructure },
       editable: false,
-      'top-level': true,
       x: 0,
-      y: 0, // Posição será atualizada
+      y: 0,
     };
-
-    // Anexar ao Workspace
-    const createdBlock = Blockly.serialization.blocks.append(blockDefJson, workspace);
-
+    const createdBlock = Blockly.serialization.blocks.append(blockDefJson as unknown as Blockly.serialization.blocks.State, workspace);
     if (createdBlock) {
-      // Centralizar na Visualização
       const metrics = workspace.getMetrics();
       createdBlock.moveBy(metrics.viewWidth / 2 - 100, metrics.viewHeight / 2 - 50);
-
       const blockSvg = createdBlock as Blockly.BlockSvg;
       blockSvg.initSvg();
       blockSvg.render();
     }
-
-    workspace.refreshToolboxSelection();
+    const toolbox = workspace.getToolbox();
+    if (toolbox) {
+      toolbox.refreshSelection();
+    }
     onClose();
   };
 
@@ -417,8 +336,9 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
 
   // Estilos
   const cardStyle: React.CSSProperties = {
-    width: '140px',
-    height: '120px',
+    flex: '1 1 120px',
+    minHeight: '110px',
+    maxWidth: '180px',
     border: '1px solid #ddd',
     borderRadius: '8px',
     display: 'flex',
@@ -441,10 +361,13 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
 
   return (
     <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex={-1}>
-      <div className="modal-dialog modal-lg modal-dialog-centered" style={{ maxWidth: '800px' }}>
-        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px', overflow: 'hidden' }}>
+      <div className="modal-dialog modal-lg modal-dialog-centered mx-2 mx-sm-auto" style={{ maxWidth: '800px', width: 'auto' }}>
+        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px', overflow: 'hidden', isolation: 'isolate' }}>
           {/* Header */}
-          <div className="modal-header border-0 text-white" style={{ backgroundColor: '#FF6680' }}>
+          <div
+            className="modal-header border-0 text-white"
+            style={{ backgroundColor: '#FF6680', borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}
+          >
             <h5 className="modal-title fw-bold">Criar um Bloco</h5>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
@@ -494,7 +417,7 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
             </div>
 
             {/* Options Cards */}
-            <div className="d-flex justify-content-between gap-3 mb-4">
+            <div className="d-flex flex-wrap justify-content-center justify-content-sm-between gap-2 gap-sm-3 mb-4">
               {/* Number */}
               <div className="card-option" style={cardStyle} onClick={() => addArg('number', 'Numero')}>
                 <div style={iconBoxStyle}>
@@ -605,7 +528,10 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
           </div>
 
           {/* Footer */}
-          <div className="modal-footer border-top-0 p-3 bg-white d-flex justify-content-end gap-2">
+          <div
+            className="modal-footer border-top-0 p-3 bg-white d-flex justify-content-end gap-2"
+            style={{ borderBottomLeftRadius: '15px', borderBottomRightRadius: '15px' }}
+          >
             <button
               type="button"
               className="btn btn-secondary px-4 rounded-pill"
@@ -627,8 +553,8 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
       </div>
       <style>{`
                 .card-option:hover {
-                    border-color: #FF6680 !important;
-                    background-color: #FFF0F5 !important;
+                    border-color: #FF6680;
+                    background-color: #FFF0F5;
                 }
             `}</style>
     </div>
