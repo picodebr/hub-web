@@ -35,7 +35,7 @@ export const restoreCode: FuncType = async () => {
     const data = await response.json();
 
     // 5. Retorna os dados para o frontend
-    return NextResponse.json(data);
+    return { ok: true, data };
   } catch (error: any) {
     // Tratamento de erros inesperados
     console.error('Erro no proxy de restauração:', error);

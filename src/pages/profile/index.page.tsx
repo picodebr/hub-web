@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
-import { useEffect, useMemo, useState } from 'react';
-import { Box, Img, Switch, useColorMode, Flex, Text, Grid, Divider, Icon, Button } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import { Box, Img, Switch, useColorMode, Flex, Text, Grid, Icon, Button } from '@chakra-ui/react';
 import { FiExternalLink, FiSettings, FiAward, FiMoon } from 'react-icons/fi';
 
 import { TeacherProfile } from './components/TeacherProfile';

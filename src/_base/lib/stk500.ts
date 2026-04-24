@@ -1,8 +1,6 @@
+/* eslint-disable no-empty */
 /**
- * stk500.ts - Implementação Otimizada do Protocolo STK500v1
- *
- * Substitui o polling (checkBuffer) por uma arquitetura orientada a eventos,
- * garantindo uploads muito mais rápidos e estáveis.
+ * Implementação do protocolo STK500v1 para comunicação estável com bootloaders AVR.
  */
 
 import { STK, uploadConfig } from './serialConfig';
@@ -19,17 +17,24 @@ type SerialEvents = {
   disconnect: void;
 };
 
+interface ISerialPort {
+  readable: ReadableStream<Uint8Array> | null;
+  writable: WritableStream<Uint8Array> | null;
+  open(options: { baudRate: number }): Promise<void>;
+  setSignals(signals: { dataTerminalReady?: boolean; requestToSend?: boolean }): Promise<void>;
+}
+
 /**
  * SerialConnection - Wrapper inteligente para Web Serial API
  * Gerencia leitura em background e emissão de eventos.
  */
 class SerialConnection extends EventEmitter<SerialEvents> {
-  private port: any; // SerialPort type is not globally available in TS by default
+  private port: ISerialPort;
   private reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   private writer: WritableStreamDefaultWriter<Uint8Array> | null = null;
   private isReading: boolean = false;
 
-  constructor(port: any) {
+  constructor(port: ISerialPort) {
     super();
     this.port = port;
   }
@@ -101,9 +106,7 @@ class SerialConnection extends EventEmitter<SerialEvents> {
     if (this.reader) {
       try {
         await this.reader.cancel();
-      } catch (e) {
-        console.error(e);
-      }
+      } catch {}
       this.reader.releaseLock();
       this.reader = null;
     }
@@ -111,9 +114,7 @@ class SerialConnection extends EventEmitter<SerialEvents> {
     if (this.writer) {
       try {
         this.writer.releaseLock();
-      } catch (e) {
-        console.error(e);
-      }
+      } catch {}
       this.writer = null;
     }
 
@@ -144,14 +145,6 @@ const formatCodeLength = (length: number) => {
  */
 const waitForDeviceSync = (serial: SerialConnection, timeoutMs = 1000): Promise<void> => {
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line prefer-const
-    let timer: NodeJS.Timeout;
-
-    const cleanup = () => {
-      clearTimeout(timer);
-      serial.off('chunk', handler);
-    };
-
     const handler = (data: Uint8Array) => {
       // Verifica se contém 0x10 (OK)
       if (data.includes(STK.OK)) {
@@ -160,14 +153,18 @@ const waitForDeviceSync = (serial: SerialConnection, timeoutMs = 1000): Promise<
       }
     };
 
-    // Escuta o evento
-    serial.on('chunk', handler);
-
-    // Timeout de segurança
-    timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       cleanup();
       reject(new Error(`Timeout aguardando resposta do dispositivo (${timeoutMs}ms)`));
     }, timeoutMs);
+
+    function cleanup() {
+      clearTimeout(timer);
+      serial.off('chunk', handler);
+    }
+
+    // Escuta o evento
+    serial.on('chunk', handler);
   });
 };
 
@@ -227,7 +224,7 @@ const loopThroughCodePages = async (serial: SerialConnection, firmwareBytes: num
 // ==========================================
 
 export async function uploadFirmware(
-  port: any, // stageContext passa o obj 'port' do Web Serial
+  port: ISerialPort, // stageContext passa o obj 'port' do Web Serial
   firmwareBytes: number[],
   onLog?: (log: string) => void,
 ) {
@@ -268,7 +265,7 @@ export async function uploadFirmware(
         await waitForDeviceSync(serial, 400); // 400ms timeout por tentativa
         synced = true;
         break;
-      } catch (e) {
+      } catch {
         // Tenta novamente
         // onLog?.(`Tentativa de sync ${i + 1} falhou...\n`);
         await delay(100);

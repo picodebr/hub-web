@@ -1,16 +1,10 @@
 /**
- * UploadService - Orquestrador de Upload de Firmware.
- *
- * Este serviço coordena o fluxo completo de transformar blocos em hardware:
- * 1. Recebe o código C++ gerado.
- * 2. Chama o CompilerService para compilação remota.
- * 3. Libera a porta serial (desconecta o Firmata se necessário).
- * 4. Utiliza o stk500 para gravar o binário na placa.
- * 5. Gerencia o feedback visual do progresso (animação do foguete e logs).
+ * Orquestra o processo de gravação de firmware na placa.
+ * Coordena a compilação, preparação da porta serial e execução do protocolo de flash.
  */
 
-import { UploadStatus, UploadPhase, INITIAL_UPLOAD_STATUS } from '../../interfaces/code';
-import { CompilerService } from '../../lib/CompilerService';
+import { UploadStatus, INITIAL_UPLOAD_STATUS } from '../../domain/entities/IUpload';
+import { CompilerService } from './CompilerService';
 import { uploadFirmware } from '../../lib/stk500';
 import { parseHexFile } from '../../lib/byteUtils';
 import { EventEmitter } from '../../lib/EventEmitter';
@@ -18,7 +12,7 @@ import { getSerialService } from './SerialService';
 
 interface UploadEvents {
   statusChange: UploadStatus;
-  phaseChange: string; // Could be stricter union type
+  phaseChange: string; // Tipo da fase atual (poderia ser um union type mais restrito)
   logUpdate: string;
   error: unknown;
 }
@@ -32,15 +26,15 @@ export class UploadService extends EventEmitter<UploadEvents> {
   }
 
   /**
-   * Get current upload status
+   * Retorna o status atual do upload (cópia imutável).
    */
   public getStatus(): UploadStatus {
     return { ...this.status };
   }
 
   /**
-   * Upload a sketch to the connected board
-   * @param code - C++ code to compile and upload
+   * Envia um sketch (código C++) para a placa conectada.
+   * @param code - Código C++ a ser compilado e gravado na placa.
    */
   public async uploadSketch(code: string): Promise<void> {
     this.updateStatus({
@@ -50,7 +44,7 @@ export class UploadService extends EventEmitter<UploadEvents> {
     });
 
     try {
-      // 1. Compile the code
+      // 1. Compila o código C++ no servidor remoto
 
       const hexData = await this.compiler.compile(code);
 
@@ -58,13 +52,13 @@ export class UploadService extends EventEmitter<UploadEvents> {
         throw new Error('Compilação falhou: HEX vazio retornado.');
       }
 
-      // 2. Get serial port from SerialService
+      // 2. Obtém a porta serial do SerialService
       const serialService = getSerialService();
 
-      // Disconnect Firmata to free the port
+      // Desconecta o Firmata para liberar o lock da porta
       if (serialService.isConnected()) {
         await serialService.disconnect();
-        await new Promise((r) => setTimeout(r, 500)); // Wait for port release
+        await new Promise((r) => setTimeout(r, 500)); // Aguarda a liberação da porta pelo SO
       }
 
       const port = serialService.getPort();
@@ -72,28 +66,26 @@ export class UploadService extends EventEmitter<UploadEvents> {
         throw new Error('Nenhuma porta serial disponível. Conecte a placa primeiro.');
       }
 
-      // 3. Parse HEX file
+      // 3. Faz o parse do arquivo HEX em blocos de bytes para gravação
 
       const firmware = parseHexFile(hexData.hex);
 
-      // 4. Upload firmware
-      await uploadFirmware(port, firmware, (log: string) => {
-        // Log ignored
+      // 4. Grava o firmware na placa via protocolo STK500
+      await uploadFirmware(port, firmware, () => {
+        // Log ignorado
       });
 
-      // 5. Mark as success
+      // 5. Marca como sucesso
       this.updateStatus({
         phase: 'success',
         isUploading: false,
       });
 
-      // Auto-hide rocket after 2 seconds
+      // Esconde o foguete automaticamente após 2 segundos
       setTimeout(() => {
         this.updateStatus({ showRocket: false });
       }, 2000);
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-
       this.updateStatus({
         phase: 'failure',
         isUploading: false,
@@ -105,7 +97,7 @@ export class UploadService extends EventEmitter<UploadEvents> {
   }
 
   /**
-   * Restore default Firmata firmware to the board
+   * Restaura o firmware padrão (Firmata) na placa conectada.
    */
   public async restoreBoard(): Promise<void> {
     this.updateStatus({
@@ -115,7 +107,7 @@ export class UploadService extends EventEmitter<UploadEvents> {
     });
 
     try {
-      // 1. Fetch default Firmata HEX
+      // 1. Busca o arquivo HEX do Firmata padrão no servidor
 
       const response = await fetch('/firmata_standard.hex');
 
@@ -125,7 +117,7 @@ export class UploadService extends EventEmitter<UploadEvents> {
 
       const hexData = await response.text();
 
-      // 2. Get serial port
+      // 2. Obtém a porta serial
       const serialService = getSerialService();
 
       if (serialService.isConnected()) {
@@ -138,12 +130,12 @@ export class UploadService extends EventEmitter<UploadEvents> {
         throw new Error('Nenhuma porta serial disponível.');
       }
 
-      // 3. Parse and upload
+      // 3. Faz o parse e grava o firmware na placa
 
       const firmware = parseHexFile(hexData);
 
-      await uploadFirmware(port, firmware, (log: string) => {
-        // Log ignored
+      await uploadFirmware(port, firmware, () => {
+        // Log ignorado
       });
 
       this.updateStatus({
@@ -151,13 +143,11 @@ export class UploadService extends EventEmitter<UploadEvents> {
         isUploading: false,
       });
 
-      // Auto-hide rocket after 2 seconds
+      // Esconde o foguete automaticamente após 2 segundos
       setTimeout(() => {
         this.updateStatus({ showRocket: false });
       }, 2000);
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-
       this.updateStatus({
         phase: 'failure',
         isUploading: false,
@@ -169,7 +159,7 @@ export class UploadService extends EventEmitter<UploadEvents> {
   }
 
   /**
-   * Reset upload status to ready state
+   * Reseta o status do upload para o estado inicial (pronto).
    */
   public reset(): void {
     this.status = { ...INITIAL_UPLOAD_STATUS };
@@ -177,7 +167,7 @@ export class UploadService extends EventEmitter<UploadEvents> {
   }
 
   /**
-   * Update upload status and notify listeners
+   * Atualiza o status do upload e notifica todos os listeners registrados.
    */
   private updateStatus(changes: Partial<UploadStatus>): void {
     const oldPhase = this.status.phase;
@@ -195,11 +185,11 @@ export class UploadService extends EventEmitter<UploadEvents> {
   }
 
   /**
-   * Append text to upload logs
+   * Adiciona texto ao log de upload.
    */
 }
 
-// Export singleton instance
+// Exporta instância singleton do serviço de upload
 let uploadServiceInstance: UploadService | null = null;
 
 export const getUploadService = (): UploadService => {

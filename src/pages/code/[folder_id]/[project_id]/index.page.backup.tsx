@@ -24,7 +24,6 @@ import {
   writeSerialCode,
 } from '@/_base/utils';
 import { AppStatus } from '@/_base/interfaces/appStatus/AppStatus';
-import { ICompiledCode } from '@/_base/interfaces/code/ICode';
 import { headerEvents } from '@/components/Page/components/Header/HeaderEvents';
 import { uploadConfig } from '@/_base/config/upload';
 import { compileCode } from '@/_base/services/compile/compileCode';
@@ -43,6 +42,7 @@ import { isUuid } from 'uuidv4';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { useNavbar } from '@/components/Page/components/Navbar';
+import { ICompiledCode } from '@/_base/interfaces/code/ICode';
 
 const getDefaultSourceCode = (project: ICodeProject | null) =>
   project?.source_code ||
