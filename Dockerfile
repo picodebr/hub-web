@@ -20,7 +20,7 @@ RUN yarn install --frozen-lockfile
 # ==========================================
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app .
 
 # Copia o resto do projeto (respeitando o .dockerignore)
 COPY . .
@@ -39,27 +39,14 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
 # Copia a pasta public (necessário para imagens estáticas)
-COPY --from=builder /app/public ./public
-
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Copia os artefatos gerados pelo output: 'standalone' do next.config.js
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
+COPY --from=builder /app .
 
 # 1. Injeta a variável que o server.js vai ler para liberar o acesso de rede
 ENV HOSTNAME="0.0.0.0"
 
-# 2. Garante a porta correta
 ENV PORT=3001
 EXPOSE 3001
 
-# 3. Volta para o comando nativo e otimizado do standalone
-CMD ["node", "server.js"]
+# A flag -H obriga o Next a usar o 0.0.0.0
+CMD ["yarn", "start", "-H", "0.0.0.0"]
