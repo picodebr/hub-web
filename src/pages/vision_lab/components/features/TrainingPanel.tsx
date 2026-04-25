@@ -1,32 +1,25 @@
-import { useVisionLabStore } from "@/store/useStore";
-import { trainModel } from "@/lib/ml";
-import { BrainCircuit, Play } from "lucide-react";
+import { useVisionLabStore } from '@/_base/hooks';
+import { trainModel } from '@/_base/lib/ml';
+import { BrainCircuit, Play } from 'lucide-react';
 
 export function TrainingPanel() {
-  const {
-    classes,
-    isTraining,
-    isTrained,
-    trainingProgress,
-    setTrainingState,
-    openConfirmModal,
-  } = useVisionLabStore();
+  const { classes, isTraining, isTrained, trainingProgress, setTrainingState, openConfirmModal } = useVisionLabStore();
 
   const handleTrain = async () => {
     // Validação
     const invalidClasses = classes.filter((c) => c.samples.length === 0);
     if (invalidClasses.length > 0) {
-      openConfirmModal(null, "error_no_samples");
+      openConfirmModal(null, 'error_no_samples');
       return;
     }
     if (classes.length < 2) {
-      openConfirmModal(null, "error_min_classes_train");
+      openConfirmModal(null, 'error_min_classes_train');
       return;
     }
 
     setTrainingState({
       isTraining: true,
-      trainingProgress: "Preparando Dados...",
+      trainingProgress: 'Preparando Dados...',
     });
 
     try {
@@ -42,13 +35,13 @@ export function TrainingPanel() {
       setTrainingState({
         isTraining: false,
         isTrained: true,
-        trainingProgress: "Modelo Treinado!",
+        trainingProgress: 'Modelo Treinado!',
       });
     } catch (err) {
       console.error(err);
       setTrainingState({
         isTraining: false,
-        trainingProgress: "Erro no treinamento",
+        trainingProgress: 'Erro no treinamento',
       });
     }
   };
@@ -60,27 +53,21 @@ export function TrainingPanel() {
       </div>
 
       <h3 className="text-xl font-black text-slate-800 mb-1">Treinamento</h3>
-      <p className="text-slate-400 text-[10px] font-bold mb-5 text-center px-2 leading-tight uppercase tracking-widest">
-        Ensine o computador!
-      </p>
+      <p className="text-slate-400 text-[10px] font-bold mb-5 text-center px-2 leading-tight uppercase tracking-widest">Ensine o computador!</p>
 
       <button
         onClick={handleTrain}
         disabled={isTraining}
         className={`w-full text-white text-sm font-black py-3 rounded-xl shadow-lg transform transition-all flex items-center justify-center gap-2 ${
           isTraining
-            ? "bg-slate-400 cursor-not-allowed"
+            ? 'bg-slate-400 cursor-not-allowed'
             : isTrained
-              ? "bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 shadow-green-500/30"
-              : "bg-[var(--color-pi-blue)] hover:bg-blue-700 hover:scale-105 active:scale-95 shadow-blue-500/30"
+              ? 'bg-green-500 hover:bg-green-600 hover:scale-105 active:scale-95 shadow-green-500/30'
+              : 'bg-[var(--color-pi-blue)] hover:bg-blue-700 hover:scale-105 active:scale-95 shadow-blue-500/30'
         }`}
       >
         {!isTraining && <Play className="w-6 h-6" />}
-        {isTraining
-          ? trainingProgress
-          : isTrained
-            ? "TREINAR NOVAMENTE"
-            : "TREINAR AGORA"}
+        {isTraining ? trainingProgress : isTrained ? 'TREINAR NOVAMENTE' : 'TREINAR AGORA'}
       </button>
 
       {isTraining && (
@@ -89,11 +76,7 @@ export function TrainingPanel() {
         </div>
       )}
 
-      {isTrained && !isTraining && (
-        <div className="mt-4 text-sm font-bold text-green-500">
-          {trainingProgress}
-        </div>
-      )}
+      {isTrained && !isTraining && <div className="mt-4 text-sm font-bold text-green-500">{trainingProgress}</div>}
     </div>
   );
 }

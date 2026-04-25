@@ -1,6 +1,6 @@
-import { useVisionLabStore } from "@/store/useStore";
-import { PlusCircle, Tags } from "lucide-react";
-import { ClassCard } from "./ClassCard";
+import { PlusCircle, Tags } from 'lucide-react';
+import { ClassCard } from './ClassCard';
+import { useVisionLabStore } from '@/_base/hooks';
 
 export function ClassManager() {
   const { classes, addClass } = useVisionLabStore();

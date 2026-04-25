@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { useVisionLabStore } from "@/store/useStore";
-import { getGlobalWebcam, getGlobalWebcamStream } from "@/lib/webcam";
-import { extractFeatures } from "@/lib/ml";
-import { X, Video as VideoIcon, Disc } from "lucide-react";
+import { useEffect, useRef, useState } from 'react';
+import { X, Video as VideoIcon, Disc } from 'lucide-react';
+import { useVisionLabStore } from '@/_base/hooks';
+import { getGlobalWebcam, getGlobalWebcamStream } from '@/_base/lib/webcam';
+import { extractFeatures } from '@/_base/lib/ml';
 
 export function VisionLabWebcamModal() {
-  const { activeModalClassId, classes, closeWebcamModal, addSample } =
-    useVisionLabStore();
+  const { activeModalClassId, classes, closeWebcamModal, addSample } = useVisionLabStore();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isRecording, setIsRecording] = useState(false);
   const recordIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -34,10 +33,7 @@ export function VisionLabWebcamModal() {
   const captureFrame = async () => {
     if (!videoRef.current) return;
     try {
-      const { activation, thumbnail } = await extractFeatures(
-        videoRef.current,
-        true,
-      );
+      const { activation, thumbnail } = await extractFeatures(videoRef.current, true);
       addSample(activeClass.id, thumbnail, activation);
     } catch (err) {
       console.error(err);
@@ -61,10 +57,7 @@ export function VisionLabWebcamModal() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity"
-        onClick={closeWebcamModal}
-      />
+      <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity" onClick={closeWebcamModal} />
 
       {/* Modal Content */}
       <div className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden ring-4 ring-white/50 animate-float w-full max-w-xl max-h-[95vh] h-auto">
@@ -73,10 +66,7 @@ export function VisionLabWebcamModal() {
           <div className="flex items-center gap-2">
             <VideoIcon className="text-[var(--color-pi-blue)] w-5 h-5" />
             <h3 className="font-bold text-slate-700 text-lg">
-              Capturar Imagens -{" "}
-              <span className="text-[var(--color-pi-blue)]">
-                {activeClass.name}
-              </span>
+              Capturar Imagens - <span className="text-[var(--color-pi-blue)]">{activeClass.name}</span>
             </h3>
           </div>
           <button
@@ -90,13 +80,7 @@ export function VisionLabWebcamModal() {
         {/* Body */}
         <div className="flex-1 p-4 sm:p-6 flex flex-col items-center justify-center gap-4 bg-slate-50/50 overflow-y-auto">
           <div className="relative w-full max-w-lg aspect-square max-h-[40vh] md:max-h-[50vh] mx-auto bg-black rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl ring-4 ring-white flex-shrink-0">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover transform -scale-x-100"
-            />
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
             {isRecording && (
               <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse">
                 REC
@@ -119,21 +103,12 @@ export function VisionLabWebcamModal() {
 
         {/* Footer */}
         <div className="p-4 bg-white border-t border-slate-100">
-          <p className="text-xs font-bold text-slate-400 uppercase mb-2 px-1">
-            Capturadas Agora ({activeClass.samples.length})
-          </p>
+          <p className="text-xs font-bold text-slate-400 uppercase mb-2 px-1">Capturadas Agora ({activeClass.samples.length})</p>
           <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar min-h-[80px]">
             {activeClass.samples.slice(-15).map((sample) => (
-              <div
-                key={sample.id}
-                className="w-16 h-16 rounded-lg overflow-hidden border-2 border-slate-200 relative flex-shrink-0 animate-pop-in"
-              >
+              <div key={sample.id} className="w-16 h-16 rounded-lg overflow-hidden border-2 border-slate-200 relative flex-shrink-0 animate-pop-in">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={sample.thumbnail}
-                  className="w-full h-full object-cover"
-                  alt="sample"
-                />
+                <img src={sample.thumbnail} className="w-full h-full object-cover" alt="sample" />
               </div>
             ))}
           </div>

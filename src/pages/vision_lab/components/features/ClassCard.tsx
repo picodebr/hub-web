@@ -1,7 +1,7 @@
-import { useRef } from "react";
-import { useVisionLabStore, VisionLabClassData } from "@/store/useStore";
-import { extractFeatures } from "@/lib/ml";
-import { Trash2, Video, Upload } from "lucide-react";
+import { useRef } from 'react';
+import { Trash2, Video, Upload } from 'lucide-react';
+import { useVisionLabStore, VisionLabClassData } from '@/_base/hooks';
+import { extractFeatures } from '@/_base/lib/ml';
 
 interface ClassCardProps {
   classData: VisionLabClassData;
@@ -9,50 +9,40 @@ interface ClassCardProps {
 }
 
 export function ClassCard({ classData, index }: ClassCardProps) {
-  const {
-    classes,
-    updateClassName,
-    removeClass,
-    removeSample,
-    addSample,
-    openWebcamModal,
-    openConfirmModal,
-  } = useVisionLabStore();
+  const { classes, updateClassName, removeClass, removeSample, addSample, openWebcamModal, openConfirmModal } = useVisionLabStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const focusColors = [
-    "focus-within:border-[var(--color-pi-blue)]",
-    "focus-within:border-[var(--color-pi-green)]",
-    "focus-within:border-[var(--color-pi-yellow)]",
+    'focus-within:border-[var(--color-pi-blue)]',
+    'focus-within:border-[var(--color-pi-green)]',
+    'focus-within:border-[var(--color-pi-yellow)]',
   ];
   const focusClass = focusColors[index % focusColors.length];
 
   const borderColors = [
-    "border-[var(--color-pi-yellow)]",
-    "border-[var(--color-pi-green)]",
-    "border-[var(--color-pi-blue)]",
-    "border-[var(--color-pi-blue-dark)]",
+    'border-[var(--color-pi-yellow)]',
+    'border-[var(--color-pi-green)]',
+    'border-[var(--color-pi-blue)]',
+    'border-[var(--color-pi-blue-dark)]',
   ];
   const activeBorder = borderColors[index % borderColors.length];
 
   const btnColor =
     index % 2 === 0
-      ? "text-[var(--color-pi-blue)] bg-blue-50 hover:bg-[var(--color-pi-blue)] hover:text-white"
-      : "text-[var(--color-pi-green)] bg-green-50 hover:bg-[var(--color-pi-green)] hover:text-white";
+      ? 'text-[var(--color-pi-blue)] bg-blue-50 hover:bg-[var(--color-pi-blue)] hover:text-white'
+      : 'text-[var(--color-pi-green)] bg-green-50 hover:bg-[var(--color-pi-green)] hover:text-white';
 
   const hasSamples = classData.samples.length > 0;
 
   const handleDeleteClassClick = () => {
     if (classes.length <= 2) {
-      openConfirmModal(classData.id, "info_min_classes");
+      openConfirmModal(classData.id, 'info_min_classes');
     } else {
-      openConfirmModal(classData.id, "remove");
+      openConfirmModal(classData.id, 'remove');
     }
   };
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -66,7 +56,7 @@ export function ClassCard({ classData, index }: ClassCardProps) {
             const { activation, thumbnail } = await extractFeatures(img, false);
             addSample(classData.id, thumbnail, activation);
           } catch (err) {
-            console.error("Erro ao processar imagem:", err);
+            console.error('Erro ao processar imagem:', err);
           }
           URL.revokeObjectURL(url);
           resolve();
@@ -74,7 +64,7 @@ export function ClassCard({ classData, index }: ClassCardProps) {
         img.src = url;
       });
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -97,7 +87,7 @@ export function ClassCard({ classData, index }: ClassCardProps) {
         <button
           className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
           onClick={handleDeleteClassClick}
-          title={classes.length <= 2 ? "Limpar" : "Remover"}
+          title={classes.length <= 2 ? 'Limpar' : 'Remover'}
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -124,9 +114,7 @@ export function ClassCard({ classData, index }: ClassCardProps) {
           </div>
         ) : (
           <div>
-            <div className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide px-1">
-              {classData.samples.length} Exemplos
-            </div>
+            <div className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide px-1">{classData.samples.length} Exemplos</div>
             <div className="flex gap-3 items-start">
               {/* Botões laterais */}
               <div className="flex flex-col gap-1.5">
@@ -155,11 +143,7 @@ export function ClassCard({ classData, index }: ClassCardProps) {
                     onClick={() => removeSample(classData.id, sample.id)}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={sample.thumbnail}
-                      alt="Amostra"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={sample.thumbnail} alt="Amostra" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
                       <Trash2 className="w-6 h-6 text-white" />
                     </div>
@@ -171,14 +155,7 @@ export function ClassCard({ classData, index }: ClassCardProps) {
         )}
       </div>
 
-      <input
-        type="file"
-        accept="image/*"
-        multiple
-        ref={fileInputRef}
-        onChange={handleFileUpload}
-        className="hidden"
-      />
+      <input type="file" accept="image/*" multiple ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
     </div>
   );
 }
