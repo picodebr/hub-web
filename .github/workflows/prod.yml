@@ -6,13 +6,6 @@ on:
       - master
 
 jobs:
-  Setup:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Get repository source
-        uses: actions/checkout@v3
-
   BuildAndPushImageToECR:
     runs-on: ubuntu-latest
 
@@ -20,7 +13,18 @@ jobs:
       - name: Get repository source
         uses: actions/checkout@v3
 
-      - run: docker build --tag hub-web-prod .
+      - name: Build Docker Image
+        # A MÁGICA ACONTECE AQUI: Injetando os secrets como argumentos de build
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_ADDRESS=${{ secrets.NEXT_PUBLIC_API_ADDRESS }} \
+            --build-arg NEXT_PUBLIC_RECAPTCHA_KEY=${{ secrets.NEXT_PUBLIC_RECAPTCHA_KEY }} \
+            --build-arg NEXT_PUBLIC_RECAPTCHA_API_KEY=${{ secrets.NEXT_PUBLIC_RECAPTCHA_API_KEY }} \
+            --build-arg NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL=${{ secrets.NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL }} \
+            --build-arg NEXT_PUBLIC_COMPILER_API_KEY=${{ secrets.NEXT_PUBLIC_COMPILER_API_KEY }} \
+            --build-arg NEXT_PUBLIC_COMPILER_API_URL=${{ secrets.NEXT_PUBLIC_COMPILER_API_URL }} \
+            --tag hub-web-prod .
+
       - name: Push to ECR
         uses: jwalton/gh-ecr-push@v1
         with:
@@ -28,4 +32,3 @@ jobs:
           secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           region: us-east-1
           image: hub-web-prod
-          port: 3001
