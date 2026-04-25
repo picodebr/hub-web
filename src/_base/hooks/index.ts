@@ -10,6 +10,8 @@ export * from './Page';
 export * from './Platform';
 export * from './ScrollDirection';
 export * from './ScrollThreshold';
+export * from './TensorFlow';
 export * from './Throttle';
 export * from './UndoRedu';
 export * from './UpdateEffect';
+export * from './VisionLab';

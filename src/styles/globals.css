@@ -34,9 +34,19 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   
+  
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  
+  --vlab-color-background: var(--vlab-background);
+  --vlab-color-foreground: var(--vlab-foreground);
+  --vlab-color-pi-blue: var(--vlab-pi-blue);
+  --vlab-color-pi-blue-dark: var(--vlab-pi-blue-dark);
+  --vlab-color-pi-yellow: var(--vlab-pi-yellow);
+  --vlab-color-pi-green: var(--vlab-pi-green);
+  --vlab-color-pi-light: var(--vlab-pi-light);
+  --vlab-color-pi-text: var(--vlab-pi-text);
 }
 
 p {
@@ -78,6 +88,16 @@ p {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --vlab-background: #f8fafc;
+    --vlab-foreground: #2b2d42;
+    
+    --vlab-pi-blue: #0052CC;
+    --vlab-pi-blue-dark: #0747A6;
+    --vlab-pi-yellow: #FACC15;
+    --vlab-pi-green: #10B981;
+    --vlab-pi-light: #f8f9fa;
+    --vlab-pi-text: #2b2d42;
   }
 
   .dark {
