@@ -1,10 +1,35 @@
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { Eye, Image as ImageIcon, X, Download, FlaskConical } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Image as ImageIcon, X, Download } from 'lucide-react';
+import { Box, Flex, Text, Heading, Button, IconButton, Image, Input } from '@chakra-ui/react';
+import { keyframes as emotionKeyframes } from '@emotion/react';
 import { useVisionLabStore } from '@/_base/hooks';
 import { getTrainedModel, predictImage } from '@/_base/lib/ml';
 import { getGlobalWebcam, getGlobalWebcamStream } from '@/_base/lib/webcam';
 
+// ==========================================
+// ANIMAÇÕES
+// ==========================================
+const pulse = emotionKeyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+`;
+
+// ==========================================
+// PALETA DE CORES E ESTILOS
+// ==========================================
+const piBlue = '#0052CC';
+const piGreen = '#10B981';
+
+const customScrollbar = {
+  '&::-webkit-scrollbar': { width: '6px', height: '6px' },
+  '&::-webkit-scrollbar-track': { background: 'rgba(0, 0, 0, 0.05)', borderRadius: '4px' },
+  '&::-webkit-scrollbar-thumb': { background: '#cbd5e1', borderRadius: '4px' },
+  '&::-webkit-scrollbar-thumb:hover': { background: '#94a3b8' },
+};
+
+// ==========================================
+// COMPONENTE: PreviewPanel
+// ==========================================
 export function PreviewPanel() {
   const { classes, isTrained } = useVisionLabStore();
   const [mode, setMode] = useState<'webcam' | 'file'>('webcam');
@@ -81,9 +106,7 @@ export function PreviewPanel() {
         labels: classes.map((c) => c.name),
         createdAt: new Date().toISOString(),
       };
-      const blob = new Blob([JSON.stringify(metadata, null, 2)], {
-        type: 'application/json',
-      });
+      const blob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -94,124 +117,270 @@ export function PreviewPanel() {
   };
 
   return (
-    <div className="bg-white rounded-[24px] p-5 sm:p-6 shadow-2xl shadow-slate-200/50 border border-slate-100 flex-1 flex flex-col relative overflow-hidden min-h-[450px] lg:min-h-0">
+    <Flex
+      direction="column"
+      bg="white"
+      borderRadius="24px"
+      p={{ base: 5, sm: 6 }}
+      boxShadow="0 25px 50px -12px rgba(226, 232, 240, 0.5)"
+      border="1px solid"
+      borderColor="gray.100"
+      flex={1}
+      position="relative"
+      overflow="hidden"
+      minH={{ base: '450px', lg: '0' }}
+      fontFamily='"Nunito", "Poppins", sans-serif'
+    >
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-pi-green)] shadow-[0_0_8px_var(--color-pi-green)] animate-pulse" />
-          <h2 className="text-lg font-black text-slate-800 tracking-tight">Câmera IA</h2>
-        </div>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Flex align="center" gap={3}>
+          <Box
+            w="10px"
+            h="10px"
+            borderRadius="full"
+            bg={piGreen}
+            boxShadow={`0 0 8px ${piGreen}`}
+            animation={`${pulse} 2s cubic-bezier(0.4, 0, 0.6, 1) infinite`}
+          />
+          <Text size="md" fontWeight="black" color="gray.800" letterSpacing="tight">
+            Câmera IA
+          </Text>
+        </Flex>
 
-        <div className="flex items-center gap-4">
-          <div className="flex bg-[#F1F5F9] p-1 rounded-xl shadow-inner">
-            <button
+        <Flex align="center" gap={4}>
+          <Flex bg="#F1F5F9" p={1} borderRadius="xl" boxShadow="inner">
+            <Button
+              size="sm"
+              variant="unstyled"
+              px={5}
+              py={1.5}
+              h="auto"
+              borderRadius="lg"
+              fontSize="xs"
+              fontWeight="black"
+              bg={mode === 'webcam' ? 'white' : 'transparent'}
+              color={mode === 'webcam' ? piBlue : 'gray.400'}
+              boxShadow={mode === 'webcam' ? 'sm' : 'none'}
+              _hover={{ color: mode === 'webcam' ? piBlue : 'gray.600' }}
               onClick={() => setMode('webcam')}
-              className={`px-5 py-1.5 rounded-lg text-xs font-black transition-all ${
-                mode === 'webcam' ? 'bg-white text-[var(--color-pi-blue)] shadow-sm' : 'text-slate-400 hover:text-slate-600'
-              }`}
             >
               Webcam
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
+              variant="unstyled"
+              px={5}
+              py={1.5}
+              h="auto"
+              borderRadius="lg"
+              fontSize="xs"
+              fontWeight="black"
+              bg={mode === 'file' ? 'white' : 'transparent'}
+              color={mode === 'file' ? piBlue : 'gray.400'}
+              boxShadow={mode === 'file' ? 'sm' : 'none'}
+              _hover={{ color: mode === 'file' ? piBlue : 'gray.600' }}
               onClick={() => setMode('file')}
-              className={`px-5 py-1.5 rounded-lg text-xs font-black transition-all ${
-                mode === 'file' ? 'bg-white text-[var(--color-pi-blue)] shadow-sm' : 'text-slate-400 hover:text-slate-600'
-              }`}
             >
               Arquivo
-            </button>
-          </div>
-          <div className="flex gap-1.5">
-            <button className="w-8 h-8 rounded-lg bg-[#F1F5F9] flex items-center justify-center text-slate-400 hover:bg-slate-200 transition-all">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+            </Button>
+          </Flex>
+          <Flex gap={1.5}>
+            <IconButton
+              aria-label="Fechar"
+              icon={<X size={16} />}
+              size="sm"
+              bg="#F1F5F9"
+              color="gray.400"
+              borderRadius="lg"
+              _hover={{ bg: 'gray.200' }}
+            />
+          </Flex>
+        </Flex>
+      </Flex>
 
-      <div className="flex-1 flex flex-col items-center overflow-y-auto pr-1 custom-scrollbar min-h-0">
+      <Flex direction="column" flex={1} align="center" overflowY="auto" pr={1} sx={customScrollbar} minH="0">
         {/* Preview Area */}
-        <div className="relative w-full max-w-[360px] aspect-[4/3] mx-auto mb-6 flex-shrink-0 group">
-          <div className="w-full h-full bg-black rounded-[32px] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] overflow-hidden relative border-4 border-white">
+        <Box w="full" maxW="360px" aspectRatio={4 / 3} mx="auto" mb={6} flexShrink={0} position="relative" role="group">
+          <Box
+            w="full"
+            h="full"
+            bg="black"
+            borderRadius="32px"
+            boxShadow="0 20px 50px -10px rgba(0,0,0,0.15)"
+            overflow="hidden"
+            position="relative"
+            border="4px solid white"
+          >
             {mode === 'webcam' ? (
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
+              <Box as="video" ref={videoRef} autoPlay playsInline muted w="full" h="full" objectFit="cover" transform="scaleX(-1)" />
             ) : (
-              <div className="w-full h-full relative bg-slate-50 flex flex-col">
+              <Flex w="full" h="full" position="relative" bg="gray.50" direction="column">
                 {!fileUrl ? (
-                  <div
-                    className="flex-1 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors border-4 border-dashed border-slate-200 m-5 rounded-[28px] group/file"
+                  <Flex
+                    flex={1}
+                    direction="column"
+                    align="center"
+                    justify="center"
+                    cursor="pointer"
+                    border="4px dashed"
+                    borderColor="gray.200"
+                    m={5}
+                    borderRadius="28px"
+                    transition="all 0.2s"
+                    _hover={{ bg: 'gray.100' }}
                     onClick={() => fileInputRef.current?.click()}
+                    role="group"
                   >
-                    <div className="bg-white p-5 rounded-full shadow-sm mb-3 group-hover/file:scale-110 transition-transform">
-                      <ImageIcon className="w-8 h-8 text-[var(--color-pi-blue)]" />
-                    </div>
-                    <span className="font-black text-slate-400 text-xs uppercase tracking-wider">Enviar Foto</span>
-                  </div>
-                ) : (
-                  <div className="w-full h-full relative p-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img ref={imageRef} src={fileUrl} onLoad={onImageLoad} alt="Predição" className="w-full h-full object-contain rounded-[24px]" />
-                    <button
-                      onClick={clearFile}
-                      className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-red-500 p-2.5 rounded-2xl shadow-xl hover:bg-red-50 transition-all z-20"
+                    <Box
+                      bg="white"
+                      p={5}
+                      borderRadius="full"
+                      boxShadow="sm"
+                      mb={3}
+                      transition="transform 0.2s"
+                      _groupHover={{ transform: 'scale(1.1)' }}
                     >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
+                      <ImageIcon size={32} color={piBlue} />
+                    </Box>
+                    <Text fontWeight="black" color="gray.400" fontSize="xs" textTransform="uppercase" letterSpacing="wider">
+                      Enviar Foto
+                    </Text>
+                  </Flex>
+                ) : (
+                  <Box w="full" h="full" position="relative" p={2}>
+                    <Image
+                      ref={imageRef}
+                      src={fileUrl}
+                      onLoad={onImageLoad}
+                      alt="Predição"
+                      w="full"
+                      h="full"
+                      objectFit="contain"
+                      borderRadius="24px"
+                    />
+                    <IconButton
+                      aria-label="Limpar imagem"
+                      icon={<X size={20} />}
+                      position="absolute"
+                      top={4}
+                      right={4}
+                      bg="rgba(255, 255, 255, 0.9)"
+                      backdropFilter="blur(4px)"
+                      color="red.500"
+                      p={2.5}
+                      borderRadius="2xl"
+                      boxShadow="xl"
+                      zIndex={20}
+                      _hover={{ bg: 'red.50' }}
+                      onClick={clearFile}
+                    />
+                  </Box>
                 )}
-              </div>
+              </Flex>
             )}
-          </div>
-        </div>
+          </Box>
+        </Box>
 
         {/* Progress Bars */}
-        <div className="w-full space-y-3 px-1 flex-1 overflow-y-auto custom-scrollbar">
+        <Box w="full" px={1} flex={1} overflowY="auto" sx={customScrollbar} display="flex" flexDirection="column" gap={3}>
           {!isTrained ? (
-            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-center">
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest animate-pulse">Aguardando Treinamento...</p>
-            </div>
+            <Box bg="gray.50" p={5} borderRadius="2xl" border="1px solid" borderColor="gray.100" textAlign="center">
+              <Text
+                color="gray.400"
+                fontSize="10px"
+                fontWeight="black"
+                textTransform="uppercase"
+                letterSpacing="widest"
+                animation={`${pulse} 2s infinite`}
+              >
+                Aguardando Treinamento...
+              </Text>
+            </Box>
           ) : (
             classes.map((cls, index) => {
               const score = predictions[index] || 0;
               const percent = Math.round(score * 100);
               return (
-                <div key={cls.id} className="flex items-center gap-2 group/row">
-                  <span className="w-14 sm:w-16 font-black text-[10px] text-slate-400 uppercase tracking-widest truncate text-right">{cls.name}</span>
-                  <div className="flex-1 h-8 bg-[#F1F5F9] rounded-full relative overflow-hidden shadow-inner ring-1 ring-slate-200/50">
-                    <div
-                      className="absolute left-0 top-0 h-full bg-[var(--color-pi-blue)] transition-all duration-700 ease-out rounded-full shadow-[4px_0_12px_rgba(0,82,204,0.2)]"
-                      style={{ width: `${percent}%` }}
+                <Flex key={cls.id} align="center" gap={2} role="group">
+                  <Text
+                    w={{ base: '14', sm: '16' }}
+                    fontWeight="black"
+                    fontSize="10px"
+                    color="gray.400"
+                    letterSpacing="widest"
+                    isTruncated
+                    textAlign="right"
+                  >
+                    {cls.name}
+                  </Text>
+                  <Box
+                    flex={1}
+                    h="8"
+                    bg="#F1F5F9"
+                    borderRadius="full"
+                    position="relative"
+                    overflow="hidden"
+                    boxShadow="inner"
+                    border="1px solid"
+                    borderColor="whiteAlpha.500"
+                  >
+                    <Box
+                      position="absolute"
+                      left={0}
+                      top={0}
+                      h="full"
+                      bg={piBlue}
+                      transition="width 0.7s ease-out"
+                      borderRadius="full"
+                      boxShadow="4px 0 12px rgba(0,82,204,0.2)"
+                      w={`${percent}%`}
                     />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[10px] sm:text-xs font-black text-slate-400 tracking-tighter">{percent}%</span>
-                    </div>
-                  </div>
-                </div>
+                    <Flex position="absolute" inset={0} align="center" justify="center">
+                      <Text
+                        fontSize={{ base: '10px', sm: 'xs' }}
+                        fontWeight="black"
+                        color="gray.400"
+                        letterSpacing="tighter"
+                        mixBlendMode="difference"
+                        sx={{ color: 'white' }}
+                      >
+                        {percent}%
+                      </Text>
+                    </Flex>
+                  </Box>
+                </Flex>
               );
             })
           )}
-        </div>
+        </Box>
 
         {/* Botão de Salvar/Exportar Modelo */}
         {isTrained && (
-          <div className="mt-6 flex flex-col gap-2">
-            <button
+          <Box mt={4} w="full" alignSelf="flex-start">
+            <Button
+              bg="blue.50"
+              color={piBlue}
+              border="1px dashed"
+              borderColor="blue.200"
+              fontWeight="bold"
+              px={4}
+              py={2}
+              borderRadius="xl"
+              fontSize="xs"
+              transition="colors 0.2s"
+              gap={1.5}
+              _hover={{ bg: 'blue.100', borderColor: piBlue }}
               onClick={handleExport}
-              className="w-full bg-blue-50 hover:bg-blue-100 text-[var(--color-pi-blue)] border-2 border-dashed border-blue-200 hover:border-[var(--color-pi-blue)] font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
             >
-              <Download className="w-5 h-5" />
-              Salvar Modelo Treinado
-            </button>
-            <Link
-              href="/tester"
-              className="w-full bg-green-50 hover:bg-green-100 text-green-700 border-2 border-dashed border-green-200 hover:border-green-500 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              <FlaskConical className="w-5 h-5" />
-              Testar Modelo
-            </Link>
-          </div>
+              <Download size={14} />
+              Salvar Modelo
+            </Button>
+          </Box>
         )}
-      </div>
-    </div>
+      </Flex>
+
+      {/* Input de arquivo invisível */}
+      <Input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} display="none" />
+    </Flex>
   );
 }

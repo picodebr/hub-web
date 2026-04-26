@@ -1,10 +1,29 @@
-import { useVisionLabStore } from '@/_base/hooks';
 import { Trash2, AlertCircle } from 'lucide-react';
+import { Box, Flex, Heading, Text, Button } from '@chakra-ui/react';
+import { keyframes as emotionKeyframes } from '@emotion/react';
+import { useVisionLabStore } from '@/_base/hooks';
 
+// ==========================================
+// ANIMAÇÕES
+// ==========================================
+const popIn = emotionKeyframes`
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+// ==========================================
+// PALETA DE CORES E ESTILOS
+// ==========================================
+const piBlue = '#0052CC';
+
+// ==========================================
+// COMPONENTE: ConfirmModal
+// ==========================================
 export function VisionLabConfirmModal() {
   const { classes, activeConfirmModal, closeConfirmModal, removeClass, removeSample } = useVisionLabStore();
 
   if (!activeConfirmModal) return null;
+
   const { classId, action } = activeConfirmModal;
   const classData = classId !== null ? classes.find((c) => c.id === classId) : null;
 
@@ -22,13 +41,38 @@ export function VisionLabConfirmModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={closeConfirmModal} />
-      <div className="relative bg-white rounded-[2rem] shadow-2xl p-6 sm:p-8 w-full max-w-sm animate-pop-in border-4 border-slate-50 ring-4 ring-slate-100/50">
-        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${isError ? 'bg-blue-50' : 'bg-red-50'}`}>
-          {isError ? <AlertCircle className="w-8 h-8 text-[var(--color-pi-blue)]" /> : <Trash2 className="w-8 h-8 text-red-500" />}
-        </div>
-        <h3 className="text-xl sm:text-2xl font-black text-slate-800 mb-2">
+    <Flex position="fixed" inset={0} zIndex={100} align="center" justify="center" p={4} fontFamily='"Nunito", "Poppins", sans-serif'>
+      {/* Backdrop com Blur */}
+      <Box
+        position="absolute"
+        inset={0}
+        bg="rgba(15, 23, 42, 0.4)" // slate-900/40
+        backdropFilter="blur(4px)"
+        transition="opacity 0.2s"
+        onClick={closeConfirmModal}
+      />
+
+      {/* Modal Box */}
+      <Box
+        position="relative"
+        bg="white"
+        borderRadius="2rem"
+        p={{ base: 6, sm: 8 }}
+        w="full"
+        maxW="sm"
+        animation={`${popIn} 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards`}
+        border="4px solid"
+        borderColor="gray.50"
+        // Combinando shadow-2xl do tailwind com o ring-4
+        boxShadow="0 0 0 4px rgba(241, 245, 249, 0.5), 0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+      >
+        {/* Ícone */}
+        <Flex w={16} h={16} borderRadius="2xl" align="center" justify="center" mb={6} bg={isError ? 'blue.50' : 'red.50'}>
+          {isError ? <AlertCircle size={32} color={piBlue} /> : <Trash2 size={32} color="#EF4444" />}
+        </Flex>
+
+        {/* Título */}
+        <Heading as="h3" fontSize={{ base: 'xl', sm: '2xl' }} fontWeight="black" color="gray.800" mb={2}>
           {action === 'error_no_samples'
             ? 'Faltam exemplos!'
             : action === 'error_min_classes_train'
@@ -38,8 +82,10 @@ export function VisionLabConfirmModal() {
                 : action === 'clear'
                   ? 'Limpar as Fotos?'
                   : 'Remover Classe?'}
-        </h3>
-        <p className="text-slate-500 mb-8 font-medium text-sm sm:text-base leading-snug">
+        </Heading>
+
+        {/* Mensagem */}
+        <Text color="gray.500" mb={8} fontWeight="medium" fontSize={{ base: 'sm', sm: 'base' }} lineHeight="snug">
           {action === 'error_no_samples'
             ? 'Todas as classes precisam ter pelo menos um exemplo ou foto para que eu possa aprender!'
             : action === 'error_min_classes_train'
@@ -49,33 +95,67 @@ export function VisionLabConfirmModal() {
                 : action === 'clear'
                   ? 'Como você só tem 2 classes, podemos apenas apagar todas as fotos dela. Tem certeza?'
                   : `Tem certeza que deseja jogar a classe "${classData?.name}" fora? Todas as fotos dela serão perdidas.`}
-        </p>
-        <div className="flex gap-3">
+        </Text>
+
+        {/* Botões */}
+        <Flex gap={3}>
           {isError ? (
-            <button
+            <Button
+              flex={1}
+              px={4}
+              py={3}
+              h="auto"
+              bg={piBlue}
+              color="white"
+              fontWeight="bold"
+              borderRadius="xl"
+              transition="colors 0.2s"
+              boxShadow="0 10px 15px -3px rgba(0, 82, 204, 0.3)"
+              _hover={{ bg: 'blue.600' }}
+              _active={{ transform: 'scale(0.95)' }}
               onClick={closeConfirmModal}
-              className="flex-1 px-4 py-3 bg-[var(--color-pi-blue)] hover:bg-blue-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-500/30 active:scale-95"
             >
               Entendi
-            </button>
+            </Button>
           ) : (
             <>
-              <button
+              <Button
+                flex={1}
+                px={4}
+                py={3}
+                h="auto"
+                bg="gray.100"
+                color="gray.600"
+                fontWeight="bold"
+                borderRadius="xl"
+                transition="colors 0.2s"
+                _hover={{ bg: 'gray.200' }}
+                _active={{ transform: 'scale(0.95)' }}
                 onClick={closeConfirmModal}
-                className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors active:scale-95"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
+                flex={1}
+                px={4}
+                py={3}
+                h="auto"
+                bg="red.500"
+                color="white"
+                fontWeight="bold"
+                borderRadius="xl"
+                transition="colors 0.2s"
+                boxShadow="0 10px 15px -3px rgba(239, 68, 68, 0.3)"
+                _hover={{ bg: 'red.600' }}
+                _active={{ transform: 'scale(0.95)' }}
                 onClick={handleConfirm}
-                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-500/30 active:scale-95"
               >
                 Sim, {action === 'clear' ? 'Limpar' : 'Remover'}
-              </button>
+              </Button>
             </>
           )}
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </Box>
+    </Flex>
   );
 }

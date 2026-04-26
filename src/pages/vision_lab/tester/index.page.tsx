@@ -177,17 +177,17 @@ export default function VisionLabTester() {
       {/* Sub-header */}
       <div className="bg-white border-b border-slate-100 px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="bg-[var(--vlab-color-pi-blue)] p-1.5 rounded-xl text-white shadow-md shadow-blue-200">
+          <div className="bg-[var(--color-vlab-pi-blue)] p-1.5 rounded-xl text-white shadow-md shadow-blue-200">
             <FlaskConical className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-base font-black text-[var(--vlab-color-pi-blue)] leading-none">Model Tester</h1>
+            <h1 className="text-base font-black text-[var(--color-vlab-pi-blue)] leading-none">Model Tester</h1>
             <p className="text-[0.6rem] font-bold text-gray-400 uppercase tracking-widest">Testar modelo exportado</p>
           </div>
         </div>
         <Link
           href="/"
-          className="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-[var(--vlab-color-pi-blue)] transition-colors"
+          className="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-[var(--color-vlab-pi-blue)] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Voltar
@@ -201,7 +201,7 @@ export default function VisionLabTester() {
           <div className="bg-white rounded-3xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
             <div className="flex items-center gap-3 mb-5">
               <div className="bg-blue-50 p-2.5 rounded-2xl">
-                <Cpu className="w-5 h-5 text-[var(--vlab-color-pi-blue)]" />
+                <Cpu className="w-5 h-5 text-[var(--color-vlab-pi-blue)]" />
               </div>
               <h2 className="text-sm font-black text-slate-800">1. Carregar Modelo</h2>
             </div>
@@ -247,7 +247,7 @@ export default function VisionLabTester() {
                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   : isLoading
                     ? 'bg-slate-300 text-white cursor-not-allowed'
-                    : 'bg-[var(--vlab-color-pi-blue)] text-white hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-200'
+                    : 'bg-[var(--color-vlab-pi-blue)] text-white hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-200'
               }`}
             >
               <Upload className="w-4 h-4" />
@@ -257,7 +257,7 @@ export default function VisionLabTester() {
 
           {/* Instructions */}
           <div className="bg-blue-50 rounded-3xl p-5 border border-blue-100">
-            <p className="text-xs font-black text-[var(--vlab-color-pi-blue)] mb-3">ℹ Como usar?</p>
+            <p className="text-xs font-black text-[var(--color-vlab-pi-blue)] mb-3">ℹ Como usar?</p>
             <ul className="space-y-2 text-xs text-slate-600 font-semibold">
               <li>• Exporte seu modelo na página principal.</li>
               <li>
@@ -277,7 +277,7 @@ export default function VisionLabTester() {
             <div className="flex items-center gap-3">
               <div
                 className={`w-2.5 h-2.5 rounded-full ${
-                  isModelLoaded ? 'bg-[var(--vlab-color-pi-green)] shadow-[0_0_8px_var(--vlab-color-pi-green)] animate-pulse' : 'bg-slate-300'
+                  isModelLoaded ? 'bg-[var(--color-vlab-pi-green)] shadow-[0_0_8px_var(--color-vlab-pi-green)] animate-pulse' : 'bg-slate-300'
                 }`}
               />
               <h2 className="text-sm font-black text-slate-800">2. Testar</h2>
@@ -288,7 +288,7 @@ export default function VisionLabTester() {
                   key={m}
                   onClick={() => setMode(m)}
                   className={`px-4 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${
-                    mode === m ? 'bg-white text-[var(--vlab-color-pi-blue)] shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                    mode === m ? 'bg-white text-[var(--color-vlab-pi-blue)] shadow-sm' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
                   {m === 'webcam' ? 'Webcam' : 'Arquivo'}
@@ -379,8 +379,8 @@ export default function VisionLabTester() {
                           <div
                             className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out ${
                               isTop
-                                ? 'bg-[var(--vlab-color-pi-green)] shadow-[2px_0_10px_rgba(16,185,129,0.3)]'
-                                : 'bg-[var(--vlab-color-pi-blue)] shadow-[2px_0_10px_rgba(0,82,204,0.2)]'
+                                ? 'bg-[var(--color-vlab-pi-green)] shadow-[2px_0_10px_rgba(16,185,129,0.3)]'
+                                : 'bg-[var(--color-vlab-pi-blue)] shadow-[2px_0_10px_rgba(0,82,204,0.2)]'
                             }`}
                             style={{ width: `${percent}%` }}
                           />
@@ -421,11 +421,11 @@ function FileSelector({
       <button
         onClick={() => inputRef.current?.click()}
         className={`w-full border-2 border-dashed rounded-2xl p-4 flex flex-col items-center gap-2 transition-all ${
-          file ? 'border-[var(--vlab-color-pi-blue)] bg-blue-50' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+          file ? 'border-[var(--color-vlab-pi-blue)] bg-blue-50' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
         }`}
       >
-        <div className={file ? 'text-[var(--vlab-color-pi-blue)]' : 'text-slate-400'}>{icon}</div>
-        <span className={`text-xs font-bold truncate max-w-full px-2 ${file ? 'text-[var(--vlab-color-pi-blue)]' : 'text-slate-500'}`}>
+        <div className={file ? 'text-[var(--color-vlab-pi-blue)]' : 'text-slate-400'}>{icon}</div>
+        <span className={`text-xs font-bold truncate max-w-full px-2 ${file ? 'text-[var(--color-vlab-pi-blue)]' : 'text-slate-500'}`}>
           {file ? file.name : label}
         </span>
       </button>

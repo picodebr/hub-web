@@ -1,71 +1,137 @@
 'use client';
 
 import { Bot } from 'lucide-react';
-import { Flex } from '@chakra-ui/react';
-import { VisionLabHeader } from './components/layout/Header';
+import { Box, Flex, Heading, Text } from '@chakra-ui/react';
+import { keyframes as emotionKeyframes } from '@emotion/react';
 import { useTensorFlow } from '@/_base/hooks';
+import { ClassManager } from './components/features/ClassManager';
+import { TrainingPanel } from './components/features/TrainingPanel';
+import { PreviewPanel } from './components/features/PreviewPanel';
 import { VisionLabWebcamModal } from './components/modals/WebcamModal';
 import { VisionLabConfirmModal } from './components/modals/ConfirmModal';
-import { TrainingPanel } from './components/features/TrainingPanel';
-import { ClassManager } from './components/features/ClassManager';
-import { PreviewPanel } from './components/features/PreviewPanel';
 import { GetServerSideProps } from 'next';
 import { cookieManager } from '@/_base/utils';
 
+// ==========================================
+// ANIMAÇÕES
+// ==========================================
+const pulse = emotionKeyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+`;
+
+const bounce = emotionKeyframes`
+  0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+  50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+`;
+
+// ==========================================
+// PALETA DE CORES E ESTILOS
+// ==========================================
+const piBlue = '#0052CC';
+
+const customScrollbar = {
+  '&::-webkit-scrollbar': { width: '6px', height: '6px' },
+  '&::-webkit-scrollbar-track': { background: 'rgba(0, 0, 0, 0.05)', borderRadius: '4px' },
+  '&::-webkit-scrollbar-thumb': { background: '#cbd5e1', borderRadius: '4px' },
+  '&::-webkit-scrollbar-thumb:hover': { background: '#94a3b8' },
+};
+
+// ==========================================
+// PÁGINA: Home
+// ==========================================
 export default function VisionLab() {
   const { isLoaded, error } = useTensorFlow();
 
+  // Tela de Erro Crítico
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-red-50 text-red-500 p-6 rounded-2xl">
-          <h2 className="font-bold text-xl">{error}</h2>
-        </div>
-      </div>
+      <Flex flex={1} align="center" justify="center" p={4} fontFamily='"Nunito", "Poppins", sans-serif'>
+        <Box bg="red.50" color="red.500" p={6} borderRadius="2xl" boxShadow="sm">
+          <Heading size="md" fontWeight="bold">
+            {error}
+          </Heading>
+        </Box>
+      </Flex>
     );
   }
 
   return (
-    <Flex
-      direction="column"
-      m="auto"
-      flex="1"
-      className="h-full w-full bg-[var(--vlab-color-background)] overflow-hidden text-[var(--vlab-color-pi-text)]"
-    >
-      <VisionLabHeader />
-
+    <>
       {/* Loading Overlay */}
-      <div
-        className={`fixed inset-0 z-[100] bg-slate-50 flex flex-col items-center justify-center transition-opacity duration-500 ${
-          isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
-        }`}
+      <Flex
+        position="fixed"
+        inset={0}
+        zIndex={100}
+        bg="gray.50"
+        direction="column"
+        align="center"
+        justify="center"
+        opacity={isLoaded ? 0 : 1}
+        pointerEvents={isLoaded ? 'none' : 'auto'}
+        transition="opacity 0.5s ease-in-out"
+        fontFamily='"Nunito", "Poppins", sans-serif'
       >
-        <div className="flex flex-col items-center gap-6 animate-pulse">
-          <Bot className="w-16 h-16 text-[var(--vlab-color-pi-blue)] animate-bounce" />
-          <h2 className="text-2xl font-black text-slate-700 tracking-tight">Acordando a máquina...</h2>
-        </div>
-      </div>
+        <Flex direction="column" align="center" gap={6} animation={`${pulse} 2s cubic-bezier(0.4, 0, 0.6, 1) infinite`}>
+          <Box animation={`${bounce} 1s infinite`}>
+            <Bot size={64} color={piBlue} />
+          </Box>
+          <Heading as="h2" fontSize="2xl" fontWeight="black" color="gray.700" letterSpacing="tight">
+            Acordando a máquina...
+          </Heading>
+        </Flex>
+      </Flex>
 
-      <div className="flex-1 flex flex-col lg:flex-row relative p-2 lg:p-4 gap-3 lg:gap-4 overflow-y-auto lg:overflow-hidden">
+      {/* Main Container */}
+      <Flex
+        as="main"
+        flex={1}
+        direction={{ base: 'column', lg: 'row' }}
+        position="relative"
+        p={{ base: 2, lg: 4 }}
+        gap={{ base: 3, lg: 4 }}
+        overflowY={{ base: 'auto', lg: 'hidden' }}
+        fontFamily='"Nunito", "Poppins", sans-serif'
+      >
         {/* Coluna 1: Classes */}
-        <div className="w-full lg:w-1/3 flex flex-col z-10 space-y-4 order-1 lg:overflow-y-auto custom-scrollbar pb-2">
+        <Flex
+          w={{ base: 'full', lg: '33.333%' }}
+          direction="column"
+          zIndex={10}
+          gap={4}
+          order={1}
+          overflowY={{ lg: 'auto' }}
+          pb={2}
+          sx={customScrollbar}
+        >
           <ClassManager />
-        </div>
+        </Flex>
 
         {/* Coluna 2: Treinamento */}
-        <div className="w-full lg:w-1/3 flex flex-col z-10 items-center justify-center order-2 py-4 lg:py-0 lg:overflow-y-auto custom-scrollbar">
+        <Flex
+          w={{ base: 'full', lg: '33.333%' }}
+          direction="column"
+          zIndex={10}
+          align="center"
+          justify="center"
+          order={2}
+          py={{ base: 4, lg: 0 }}
+          overflowY={{ lg: 'auto' }}
+          sx={customScrollbar}
+        >
           <TrainingPanel />
-        </div>
+        </Flex>
 
         {/* Coluna 3: Preview/Predição */}
-        <div className="w-full lg:w-1/3 flex flex-col z-10 order-3 lg:overflow-y-auto custom-scrollbar pb-2">
+        <Flex w={{ base: 'full', lg: '33.333%' }} direction="column" zIndex={10} order={3} overflowY={{ lg: 'auto' }} pb={2} sx={customScrollbar}>
           <PreviewPanel />
-        </div>
-      </div>
+        </Flex>
+      </Flex>
 
+      {/* Modais (Renderizados no mesmo nível da página) */}
       <VisionLabWebcamModal />
       <VisionLabConfirmModal />
-    </Flex>
+    </>
   );
 }
 
