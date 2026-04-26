@@ -9,6 +9,8 @@ import { VisionLabConfirmModal } from './components/modals/ConfirmModal';
 import { TrainingPanel } from './components/features/TrainingPanel';
 import { ClassManager } from './components/features/ClassManager';
 import { PreviewPanel } from './components/features/PreviewPanel';
+import { GetServerSideProps } from 'next';
+import { cookieManager } from '@/_base/utils';
 
 export default function VisionLab() {
   const { isLoaded, error } = useTensorFlow();
@@ -24,7 +26,12 @@ export default function VisionLab() {
   }
 
   return (
-    <Flex direction="column" className="h-screen w-full bg-[var(--vlab-color-background)] overflow-hidden text-[var(--vlab-color-pi-text)]">
+    <Flex
+      direction="column"
+      m="auto"
+      flex="1"
+      className="h-full w-full bg-[var(--vlab-color-background)] overflow-hidden text-[var(--vlab-color-pi-text)]"
+    >
       <VisionLabHeader />
 
       {/* Loading Overlay */}
@@ -39,7 +46,7 @@ export default function VisionLab() {
         </div>
       </div>
 
-      <main className="flex-1 flex flex-col lg:flex-row relative p-2 lg:p-4 gap-3 lg:gap-4 overflow-y-auto lg:overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row relative p-2 lg:p-4 gap-3 lg:gap-4 overflow-y-auto lg:overflow-hidden">
         {/* Coluna 1: Classes */}
         <div className="w-full lg:w-1/3 flex flex-col z-10 space-y-4 order-1 lg:overflow-y-auto custom-scrollbar pb-2">
           <ClassManager />
@@ -54,10 +61,24 @@ export default function VisionLab() {
         <div className="w-full lg:w-1/3 flex flex-col z-10 order-3 lg:overflow-y-auto custom-scrollbar pb-2">
           <PreviewPanel />
         </div>
-      </main>
+      </div>
 
       <VisionLabWebcamModal />
       <VisionLabConfirmModal />
     </Flex>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
+  const selectedPage = 'vision_lab';
+
+  try {
+    cookieManager.updateToken(req);
+
+    return { props: { selectedPage, pageTitle: `Vision Lab` } };
+  } catch (err: any) {
+    cookieManager.forceTokenExpires(res);
+
+    return { redirect: { destination: '/login', permanent: false } };
+  }
+};
