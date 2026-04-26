@@ -44,7 +44,6 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
       setIsLoading(true);
       try {
         const [projectFolder, relatedUsersRes] = await Promise.all([getCodeProjectFolder(folderId), listRelatedUsers()]);
-        if (!projectFolder?.projects.length) router.push(`/code/${folderId}/example`);
         setTargetFolder(projectFolder);
         setRelatedUsers(relatedUsersRes);
       } catch {
