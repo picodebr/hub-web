@@ -2,7 +2,7 @@ import { WebGLRenderer } from './WebGLRenderer';
 import { SpriteData } from '@/_base/domain/entities';
 
 // Passo de amostragem em pixels do palco (granularidade da colisão)
-const SAMPLE_STEP = 4;
+const SAMPLE_STEP = 1;
 
 interface AlphaMask {
   data: Uint8Array; // canal alpha da imagem original (1 byte por pixel)
@@ -34,6 +34,11 @@ export class CollisionEngine {
   /** Chamado uma vez por frame pelo render loop do StageArea, sincronizado com drawSceneSync. */
   public tickFrame(): void {
     this.currentFrameId++;
+  }
+
+  /** Limpa o cache de colisão manualmente (útil após mudar fantasia ou posição no mesmo frame). */
+  public clearCache(): void {
+    this.touchCache.clear();
   }
 
   // ─── Construção de máscara (uma vez por URL) ─────────────────────────────
@@ -129,14 +134,26 @@ export class CollisionEngine {
       this.lastCacheFrameId = this.currentFrameId;
     }
 
-    const wA = (spriteA.width || 50) * ((spriteA.size || 100) / 100);
-    const hA = (spriteA.height || 50) * ((spriteA.size || 100) / 100);
-
+    // Carrega a máscara de A antes do AABB para usar as dimensões reais da imagem.
+    // sprite.width/height podem ser undefined até o renderer renderizar o primeiro frame.
     if (spriteA.costume) this.ensureMask(spriteA.costume);
+    const mA = spriteA.costume ? this.maskCache.get(spriteA.costume) : undefined;
+
+    // Usa dimensões da máscara (reais) quando disponíveis; fallback para sprite.width ou 50px.
+    const imgWA = (mA && mA !== 'loading') ? mA.w : (spriteA.width || 50);
+    const imgHA = (mA && mA !== 'loading') ? mA.h : (spriteA.height || 50);
+    const wA = imgWA * ((spriteA.size || 100) / 100);
+    const hA = imgHA * ((spriteA.size || 100) / 100);
 
     for (const cand of candidates) {
-      const wB = (cand.width || 50) * ((cand.size || 100) / 100);
-      const hB = (cand.height || 50) * ((cand.size || 100) / 100);
+      // Carrega a máscara do candidato antes do AABB pelo mesmo motivo.
+      if (cand.costume) this.ensureMask(cand.costume);
+      const mB = cand.costume ? this.maskCache.get(cand.costume) : undefined;
+
+      const imgWB = (mB && mB !== 'loading') ? mB.w : (cand.width || 50);
+      const imgHB = (mB && mB !== 'loading') ? mB.h : (cand.height || 50);
+      const wB = imgWB * ((cand.size || 100) / 100);
+      const hB = imgHB * ((cand.size || 100) / 100);
 
       // AABB: descarte rápido
       if (Math.abs(spriteA.x - cand.x) >= (wA + wB) / 2 || Math.abs(spriteA.y - cand.y) >= (hA + hB) / 2) continue;
@@ -150,12 +167,7 @@ export class CollisionEngine {
         continue;
       }
 
-      if (cand.costume) this.ensureMask(cand.costume);
-
-      const mA = spriteA.costume ? this.maskCache.get(spriteA.costume) : undefined;
-      const mB = cand.costume ? this.maskCache.get(cand.costume) : undefined;
-
-      // Máscara ainda carregando → AABB conservador
+      // Máscara ainda carregando → resultado conservador (assume colisão)
       if (!mA || mA === 'loading' || !mB || mB === 'loading') return true;
 
       // Pré-computa rotação inversa (1× por candidato, não por ponto amostrado)

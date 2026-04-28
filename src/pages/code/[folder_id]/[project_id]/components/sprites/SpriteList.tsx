@@ -21,6 +21,7 @@ import { SpriteGrid } from './SpriteGrid';
 import { StageColumn } from '../stage/StageColumn';
 import { useProject } from '@/_base/context/ProjectContext';
 import { useUI } from '@/_base/context/UIContext';
+import { BackdropData } from '@/_base/domain/entities';
 
 export default function SpriteList() {
   // Acessa dados consolidados do Projeto (Atores e Cenários)
@@ -43,6 +44,7 @@ export default function SpriteList() {
     addSurpriseSprite,
     addSurpriseBackdrop,
     lastRealSpriteId,
+    duplicateSprite,
   } = useProject();
 
   // Filtra para mostrar apenas atores reais na lista (clones aparecem apenas no palco)
@@ -52,7 +54,7 @@ export default function SpriteList() {
 
   // switchCostume removed
 
-  const backdropImage = activeBackdrop?.url ?? '/img/fundo.png';
+  const backdropImage = (activeBackdrop as BackdropData)?.url ?? '/img/fundo.png';
 
   // Estados para modais
   const [isBackdropModalOpen, setIsBackdropModalOpen] = React.useState(false);
@@ -65,29 +67,12 @@ export default function SpriteList() {
   const costumeInputRef = React.useRef<HTMLInputElement>(null);
   const spriteInputRef = React.useRef<HTMLInputElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const [buttonScale, setButtonScale] = React.useState(1);
 
   const activeSprite = getSpriteById(activeSpriteId);
 
   // O sprite que será exibido no painel de propriedades.
   // Se o palco estiver selecionado, mantém as propriedades do último ator real visível.
   const displaySprite = activeSpriteId === 'stage' ? (getSpriteById(lastRealSpriteId) ?? null) : (activeSprite ?? null);
-
-  // Escalonamento de botões baseado no resize
-  React.useEffect(() => {
-    if (!containerRef.current) return;
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const height = entry.contentRect.height;
-        const newScale = Math.min(Math.max(height / 300, 0.7), 1.3);
-        setButtonScale(newScale);
-      }
-    });
-
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
 
   // Handlers para ações de pintura (abrir o Paint Editor)
   const handleOpenPaintEditorForSprite = async () => {
@@ -103,7 +88,7 @@ export default function SpriteList() {
 
   return (
     <React.Fragment>
-      <div className="sprite-management-area h-100 d-flex" ref={containerRef} style={{ fontSize: '0.80rem', overflow: 'hidden' }}>
+      <div className="sprite-management-area h-100 d-flex" ref={containerRef}>
         {/* COLUNA ESQUERDA: Propriedades + Lista de Atores */}
         <div
           className="d-flex flex-column flex-grow-1 bg-white border overflow-hidden position-relative"
@@ -125,8 +110,8 @@ export default function SpriteList() {
             addSurpriseSprite={addSurpriseSprite}
             openSpriteGallery={() => setIsSpriteGalleryOpen(true)}
             openPaintEditor={handleOpenPaintEditorForSprite}
-            buttonScale={buttonScale}
             spriteInputRef={spriteInputRef}
+            duplicateSprite={duplicateSprite}
           />
         </div>
 
@@ -139,7 +124,6 @@ export default function SpriteList() {
           addSurpriseBackdrop={addSurpriseBackdrop}
           openBackdropGallery={() => setIsBackdropGalleryOpen(true)}
           openPaintEditor={handleOpenPaintEditorForBackdrop}
-          buttonScale={buttonScale}
           backdropInputRef={backdropInputRef}
         />
       </div>

@@ -277,7 +277,7 @@ export function useSandboxExecutor() {
       executor = new CodeExecutor(spriteId);
       executorsRef.current.set(spriteId, executor);
     }
-    console.log('executor: ', executor);
+    console.log(`[useSandboxExecutor] Rodando código para o sprite ${spriteId}${hatId ? ` (Hat: ${hatId})` : ''}`);
     return executor.run(code, hatId);
   }, []);
 

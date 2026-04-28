@@ -82,6 +82,12 @@ function wrapCode(workspace: Blockly.WorkspaceSvg, code: string): string {
 
 const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceProps>(({ onBlockClick, onRunCode }, ref) => {
   const blocklyDiv = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
 
   // --- CONTEXTS ---
   const {
@@ -93,6 +99,8 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
     uploadVariables,
     renameVariable,
     deleteVariable,
+    renameList,
+    deleteList,
     getUserVariables,
     activeStageMLModel,
     activeUploadMLModel,
@@ -269,13 +277,13 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
       if (event.type === Blockly.Events.VAR_DELETE) {
         const varEvent = event as Blockly.Events.VarDelete;
         const varName = varEvent.varName;
+        const varType = varEvent.varType;
 
         if (varName) {
           const mode = isUploadModeRef.current ? 'upload' : 'stage';
-          const targetVars = isUploadModeRef.current ? uploadVariables : stageVariables;
-          const isGlobal = targetVars.some((v) => v.name === varName);
-
-          if (isGlobal) {
+          if (varType === 'list') {
+            deleteList(mode, varName);
+          } else {
             deleteVariable(mode, varName);
           }
         }
@@ -285,13 +293,16 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
         const varEvent = event as Blockly.Events.VarRename;
         const oldName = varEvent.oldName;
         const newName = varEvent.newName;
+        const varId = varEvent.varId;
 
         if (oldName && newName) {
-          const targetVars = isUploadModeRef.current ? uploadVariables : stageVariables;
-          const isGlobal = targetVars.some((v) => v.name === oldName);
+          const mode = isUploadModeRef.current ? 'upload' : 'stage';
+          const variable = workspaceRef.current.getVariableById(varId);
+          const varType = variable?.type;
 
-          if (isGlobal) {
-            const mode = isUploadModeRef.current ? 'upload' : 'stage';
+          if (varType === 'list') {
+            renameList(mode, oldName, newName);
+          } else {
             renameVariable(mode, oldName, newName);
           }
         }
@@ -305,6 +316,8 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
       uploadVariables,
       deleteVariable,
       renameVariable,
+      deleteList,
+      renameList,
       setUploadModeBlocks,
       setUploadCode,
     ],
@@ -857,6 +870,11 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
               display: 'flex',
               minHeight: 0,
               overflow: 'hidden',
+              borderTop: '1px solid #ccc',
+              borderRight: '1px solid #ccc',
+              borderLeft: 'none',
+              borderBottom: 'none',
+              borderRadius: '0 16px 0 0',
               zIndex: activeTab === 'costumes' ? 10 : 1,
               visibility: activeTab === 'costumes' ? 'visible' : 'hidden',
             }}
@@ -876,6 +894,11 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
               minHeight: 0,
               overflow: 'hidden',
               backgroundColor: '#f0f0f0',
+              borderTop: '1px solid #ccc',
+              borderRight: '1px solid #ccc',
+              borderLeft: 'none',
+              borderBottom: 'none',
+              borderRadius: '0 16px 0 0',
               zIndex: activeTab === 'sounds' ? 10 : 1,
               visibility: activeTab === 'sounds' ? 'visible' : 'hidden',
             }}
@@ -887,30 +910,32 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
         )}
       </div>
 
-      <BlocklyModals
-        workspace={workspace}
-        isUploadMode={isUploadMode}
-        isVarModalOpen={isVarModalOpen}
-        setIsVarModalOpen={setIsVarModalOpen}
-        isVarDeleteModalOpen={isVarDeleteModalOpen}
-        setIsVarDeleteModalOpen={setIsVarDeleteModalOpen}
-        preselectedVar={preselectedVar}
-        setPreselectedVar={setPreselectedVar}
-        isListModalOpen={isListModalOpen}
-        setIsListModalOpen={setIsListModalOpen}
-        isListDeleteModalOpen={isListDeleteModalOpen}
-        setIsListDeleteModalOpen={setIsListDeleteModalOpen}
-        isProcModalOpen={isProcModalOpen}
-        setIsProcModalOpen={setIsProcModalOpen}
-        isExtensionModalOpen={isExtensionModalOpen}
-        setIsExtensionModalOpen={setIsExtensionModalOpen}
-        activeExtensions={activeExtensions}
-        setActiveExtensions={setActiveExtensions}
-        isMLModalOpen={isMLModalOpen}
-        setIsMLModalOpen={setIsMLModalOpen}
-        isBroadcastModalOpen={isBroadcastModalOpen}
-        setIsBroadcastModalOpen={setIsBroadcastModalOpen}
-      />
+      {isMounted && (
+        <BlocklyModals
+          workspace={workspace}
+          isUploadMode={isUploadMode}
+          isVarModalOpen={isVarModalOpen}
+          setIsVarModalOpen={setIsVarModalOpen}
+          isVarDeleteModalOpen={isVarDeleteModalOpen}
+          setIsVarDeleteModalOpen={setIsVarDeleteModalOpen}
+          preselectedVar={preselectedVar}
+          setPreselectedVar={setPreselectedVar}
+          isListModalOpen={isListModalOpen}
+          setIsListModalOpen={setIsListModalOpen}
+          isListDeleteModalOpen={isListDeleteModalOpen}
+          setIsListDeleteModalOpen={setIsListDeleteModalOpen}
+          isProcModalOpen={isProcModalOpen}
+          setIsProcModalOpen={setIsProcModalOpen}
+          isExtensionModalOpen={isExtensionModalOpen}
+          setIsExtensionModalOpen={setIsExtensionModalOpen}
+          activeExtensions={activeExtensions}
+          setActiveExtensions={setActiveExtensions}
+          isMLModalOpen={isMLModalOpen}
+          setIsMLModalOpen={setIsMLModalOpen}
+          isBroadcastModalOpen={isBroadcastModalOpen}
+          setIsBroadcastModalOpen={setIsBroadcastModalOpen}
+        />
+      )}
     </div>
   );
 });

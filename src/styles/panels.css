@@ -5,26 +5,27 @@
 /* 1. Layout & Estrutura Base
    ========================================================================== */
 
- #right-panel {
+html body * {
+  box-sizing: border-box;
+}
+
+html body #right-panel {
   height: 100%;
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
   overflow: hidden;
-  /* Dimensão padrão */
-  flex: 0 0 528px;
-  width: 528px;
+  flex: 0 0 504px;
+  width: 504px;
   max-width: 540px;
 }
 
-/* :not(.upload-mode) #right-panel { } */
-
- #blockly-container {
+html body #blockly-container {
   flex: 1 1 auto;
   min-width: 0;
 }
 
- .stage-column {
+html body .stage-column {
   flex-shrink: 0;
   flex: 0 0 90px;
   width: 90px;
@@ -121,7 +122,7 @@
 /* 2. Seção do Palco (Superior)
    ========================================================================== */
 
- .stage-section {
+html body .stage-section {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -159,8 +160,8 @@
 }
 
 .stage-controls .btn-stop {
-  color: #ba3d49; /* Vermelho discreto base */
-  opacity: 0.5; /* Opacidade reduzida quando nada está rodando */
+  color: #ba3d49;
+  opacity: 0.5;
   font-size: 1.5rem;
   line-height: 1;
   transition: all 0.2s ease;
@@ -168,7 +169,7 @@
 
 .stage-controls .btn-stop.active {
   opacity: 1;
-  color: #ff0000; /* Vermelho vibrante quando ativo */
+  color: #ff0000;
   filter: drop-shadow(0 0 5px rgba(220, 53, 69, 0.4));
   transform: scale(1.1);
 }
@@ -178,7 +179,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0 6px 6px 6px;
+  padding: 0 0px 6px 0px;
   overflow: hidden;
 }
 
@@ -199,7 +200,7 @@
 }
 
 /* Estado de Tela Cheia do Palco */
- .stage-section.fullscreen {
+html body .stage-section.fullscreen {
   position: fixed;
   top: 0;
   left: 0;
@@ -211,20 +212,20 @@
   background-color: #ffffff;
 }
 
- .stage-section.fullscreen .stage-header {
+html body .stage-section.fullscreen .stage-header {
   width: 100%;
   height: 52px;
   flex: 0 0 52px;
 }
 
- .stage-section.fullscreen .stage-area-container {
+html body .stage-section.fullscreen .stage-area-container {
   flex: 1 1 auto;
   width: 100%;
   padding: 0;
   border-radius: 0;
 }
 
- .stage-section.fullscreen .stage-content {
+html body .stage-section.fullscreen .stage-content {
   border-radius: 0;
   border: none;
 }
@@ -232,7 +233,7 @@
 /* 3. Seção de Gestão (Sprites e Cenários)
    ========================================================================== */
 
- .management-section {
+html body .management-section {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -242,7 +243,7 @@
   overflow: hidden;
 }
 
- .sprite-management-area {
+html body .sprite-management-area {
   flex: 1 1 auto;
   display: flex;
   flex-direction: row;
@@ -250,7 +251,7 @@
   min-height: 0;
   overflow: hidden;
   gap: 8px;
-  padding: 8px;
+  padding: 8px 0px;
 }
 
 .sprite-info-panel {
@@ -276,10 +277,10 @@
 /* 4. Itens da Lista (Cards de Sprites)
    ========================================================================== */
 
-.sprite-card,
-.stage-card {
+html body .sprite-card,
+html body .stage-card {
   width: 70px;
-  height: 70px;
+  height: 80px;
   transition: all 0.2s ease;
   cursor: pointer;
   background-color: #fff;
@@ -300,8 +301,8 @@
 }
 
 /* Estado Selecionado (Active) */
- .sprite-card.border-primary,
- .stage-card.border-primary {
+html body .sprite-card.border-primary,
+html body .stage-card.border-primary {
   border-color: #4C97FF;
   border-width: 2px;
   background-color: #e6f0ff;
@@ -310,21 +311,25 @@
 
 .sprite-name-label {
   font-size: 10px;
-  color: #666;
-  max-width: 100%;
+  font-weight: 500;
+  color: #575e75;
+  width: 100%;
+  padding: 0 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: center;
+  margin-top: auto;
+  padding-bottom: 2px;
 }
 
 .sprite-card-img-area {
-  height: 52px;
-  min-height: 52px;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  min-height: 48px;
   overflow: hidden;
 }
 
@@ -364,8 +369,8 @@
 /* 6. Botões e Menus de Adição
    ========================================================================== */
 
- .btn-add-sprite-main,
- .btn-add-backdrop-main {
+html body .btn-add-sprite-main,
+html body .btn-add-backdrop-main {
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -382,173 +387,45 @@
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-.btn-add-sprite-main:hover,
-.btn-add-backdrop-main:hover {
-  transform: scale(1.1);
-  background-color: #3373cc;
+.scratch-add-button-main {
+  width: 46px;
+  height: 46px;
+  font-size: 1.4rem;
 }
 
-.add-sprite-container,
-.add-backdrop-container {
-  position: absolute;
-  right: 15px;
-  bottom: 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 1000;
+.scratch-add-button-menu {
+  width: 42px;
 }
 
-.add-sprite-container.container-center,
-.add-backdrop-container.container-center {
-  right: 50%;
-  transform: translateX(50%);
-  bottom: 10px;
+.scratch-add-button-item {
+  width: 42px;
+  height: 38px;
+  font-size: 1.1rem;
 }
 
-.add-sprite-menu,
-.add-backdrop-menu {
-  position: absolute;
-  bottom: 25px;
-  left: 0;
-  width: 38px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 5px 0 15px 0;
-  background-color: #5591f2;
-  border-radius: 20px 20px 0 0;
-  z-index: -1;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.5s ease 0.5s, visibility 0.5s ease 0.5s;
+@media (max-height: 750px) {
+  .scratch-add-button-main {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+  .scratch-add-button-menu {
+    width: 32px;
+  }
+  .scratch-add-button-item {
+    width: 32px;
+    height: 30px;
+    font-size: 0.9rem;
+  }
 }
 
-.add-sprite-container:hover .add-sprite-menu,
-.add-backdrop-container:hover .add-backdrop-menu {
-  opacity: 1;
-  visibility: visible;
-  transition-delay: 0s;
+/* Modo Upload - Ocupar tela cheia */
+html body.upload-mode #right-panel {
+  display: none !important;
 }
 
-.add-sprite-item {
-  width: 38px;
-  height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 0.9rem;
-  background-color: transparent;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.add-sprite-item:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: scale(1.15);
-}
-
-.add-sprite-label,
-.add-backdrop-label {
-  position: absolute;
-  right: 50px;
-  bottom: 6px;
-  background: #4C97FF;
-  color: white;
-  padding: 5px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: bold;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.add-sprite-container:hover .add-sprite-label,
-.add-backdrop-container:hover .add-backdrop-label,
-.add-sprite-container:hover .label-right {
-  opacity: 1;
-}
-
-.label-right {
-  left: 50px;
-  right: auto;
-}
-
-/* 7. Utilitários e Código
-   ========================================================================== */
-
-#code-area {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: #ffffff;
-}
-
-.code-footer .tab-content {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 10px;
-  background-color: #1e1e1e;
-  color: #0f0;
-  font-family: monospace;
-  font-size: 0.85rem;
-}
-
-/* Scrollbars Customizadas */
-#sprite-list-wrapper::-webkit-scrollbar,
-.sprite-management-area .overflow-auto::-webkit-scrollbar {
-  width: 6px;
-}
-
-#sprite-list-wrapper::-webkit-scrollbar-thumb,
-.sprite-management-area .overflow-auto::-webkit-scrollbar-thumb,
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #dbdbdb;
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #c0c0c0;
-}
-
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #dbdbdb transparent;
-}
-
-.bg-checkerboard {
-  background-color: #ffffff;
-  background-image:
-    linear-gradient(45deg, #e5e7eb 25%, transparent 25%, transparent 75%, #e5e7eb 75%, #e5e7eb),
-    linear-gradient(45deg, #e5e7eb 25%, transparent 25%, transparent 75%, #e5e7eb 75%, #e5e7eb);
-  background-size: 20px 20px;
-  background-position: 0 0, 10px 10px;
-}
-
-/* Animação de Piscar (para a bolinha verde da câmera) */
-@keyframes blink-green {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.8); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.blink-dot {
-  animation: blink-green 1.5s infinite ease-in-out;
+html body.upload-mode #blockly-container {
+  flex: 1 1 100% !important;
 }
 
 /* ==========================================================================
@@ -556,16 +433,16 @@
    ========================================================================== */
 
 @media (max-width: 1200px) {
-  :not(.upload-mode) #right-panel {
+  html body:not(.upload-mode) #right-panel {
     flex: 0 0 400px;
     width: 400px;
   }
 }
 
 @media (min-width: 1900px) {
-  :not(.upload-mode) #right-panel {
-    flex: 0 0 1fr;
-    width: 100%;
+  html body:not(.upload-mode) #right-panel {
+    flex: 0 0 550px;
+    width: 550px;
   }
 }
 
@@ -575,24 +452,24 @@
 
 /* --- Step 1: 850px --- */
 @media (max-height: 850px) {
-   .sprite-card {
-    width: 62px;
-    height: 72px;
+  html body .sprite-card {
+    width: 64px;
+    height: 76px;
   }
-   .sprite-card-img-area,
-   .sprite-card-img-area img {
-    height: 44px;
-    min-height: 44px;
-    max-height: 44px;
+  html body .sprite-card-img-area,
+  html body .sprite-card-img-area img {
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
   }
 }
 
 /* --- Step 2: 800px --- */
 @media (max-height: 800px) {
-   .stage-card-image-container {
+  html body .stage-card-image-container {
     height: 45px;
   }
-   .sprite-management-area {
+  html body .sprite-management-area {
     gap: 8px;
     padding: 8px;
   }
@@ -600,31 +477,31 @@
 
 /* --- Step 3: 750px --- */
 @media (max-height: 750px) {
-   .sprite-card {
-    width: 54px;
-    height: 64px;
+  html body .sprite-card {
+    width: 58px;
+    height: 68px;
   }
-   .sprite-name-label {
+  html body .sprite-name-label {
     font-size: 9px;
   }
-   .sprite-card-img-area,
-   .sprite-card-img-area img {
-    height: 36px;
-    min-height: 36px;
-    max-height: 36px;
+  html body .sprite-card-img-area,
+  html body .sprite-card-img-area img {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
   }
 }
 
 /* --- Step 4: 700px --- */
 @media (max-height: 700px) {
-   .stage-card-image-container {
+  html body .stage-card-image-container {
     height: 35px;
   }
-   .sprite-management-area {
+  html body .sprite-management-area {
     gap: 4px;
     padding: 4px;
   }
-   .properties-panel {
+  html body .properties-panel {
     padding: 0.25rem 0.5rem;
   }
   .properties-panel .d-flex.align-items-center.gap-2.mb-2 {
@@ -640,26 +517,22 @@
 
 /* --- Step 5: 650px (Breakpoint Crítico) --- */
 @media (max-height: 650px) {
-  /* Largura reduzida para o Sprite List conforme pedido manual */
-  :not(.upload-mode) #right-panel {
-    flex: 0 0 330px;
-    width: 330px;
+  /* Removido o override de largura de 330px que cortava o conteúdo */
+  html body .sprite-card {
+    width: 50px;
+    height: 62px;
   }
-   .sprite-card {
-    width: 48px;
-    height: 60px;
-  }
-   .stage-card-image-container {
+  html body .stage-card-image-container {
     height: 30px;
   }
-   .stage-header {
+  html body .stage-header {
     padding: 2px 10px;
   }
-   .sprite-card-img-area,
-   .sprite-card-img-area img {
-    height: 30px;
-    min-height: 30px;
-    max-height: 30px;
+  html body .sprite-card-img-area,
+  html body .sprite-card-img-area img {
+    height: 28px;
+    min-height: 28px;
+    max-height: 28px;
   }
 }
 
@@ -679,20 +552,20 @@
 
 /* --- Step 7: 550px --- */
 @media (max-height: 550px) {
-   .management-section {
+  html body .management-section {
     min-height: 120px;
   }
-   .sprite-card {
+  html body .sprite-card {
     width: 42px;
     height: 42px;
   }
-   .sprite-card-img-area,
-   .sprite-card-img-area img {
+  html body .sprite-card-img-area,
+  html body .sprite-card-img-area img {
     height: 18px;
     min-height: 18px;
     max-height: 18px;
   }
-   .properties-panel {
+  html body .properties-panel {
     padding: 0.15rem 0.4rem;
   }
   .properties-panel .gap-2,
@@ -707,12 +580,12 @@
 
 /* --- Step 8: 500px --- */
 @media (max-height: 500px) {
-   .sprite-card {
+  html body .sprite-card {
     width: 36px;
     height: 36px;
   }
-   .sprite-card-img-area,
-   .sprite-card-img-area img {
+  html body .sprite-card-img-area,
+  html body .sprite-card-img-area img {
     height: 12px;
     min-height: 12px;
     max-height: 12px;

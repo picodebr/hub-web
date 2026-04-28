@@ -11,12 +11,8 @@ import LiveWaveform from '../shared/LiveWaveform';
 import { Undo2, Redo2, Volume2, Volume1, VolumeX, FastForward, Rewind, Waves, Bot, ChevronRight, ChevronLeft, Mic } from 'lucide-react';
 import { applyEffect, EffectName } from '@/_base/lib/audio/AudioEffects';
 import { AudioRecorder } from '@/_base/lib/audio/AudioRecorder';
+import { ScratchAddButton } from '../shared/ScratchAddButton';
 
-// Azul principal do site
-const BLUE = '#4c97ff';
-const BLUE_DARK = '#3373cc';
-const BLUE_BG = '#eef4ff';
-const BLUE_BORDER = '#cce0ff';
 /* ── UI Helpers (Matching PaintEditor Pattern) ── */
 const RibbonGroup: React.FC<{ label: string; color?: string; gap?: string; children: React.ReactNode; isShort?: boolean }> = ({
   label,
@@ -75,7 +71,7 @@ export default function SoundEditor() {
   const [bufferHistory, setBufferHistory] = useState<AudioBuffer[]>([]);
   const [redoHistory, setRedoHistory] = useState<AudioBuffer[]>([]);
   const [applyingEffect, setApplyingEffect] = useState(false);
-  const [activeEffectKey, setActiveEffectKey] = useState<EffectName | null>(null);
+  const [, setActiveEffectKey] = useState<EffectName | null>(null);
   const [selection, setSelection] = useState<WaveSelection | null>(null);
 
   // Refs síncronos — evitam stale closures e race conditions entre efeitos
@@ -426,18 +422,14 @@ export default function SoundEditor() {
   const playSize = S ? 48 : 80; // Aumentado ligeiramente para telas grandes
   const playBorder = S ? 4 : 5;
   const playIconFs = S ? 20 : 28;
-  const fxWidth = S ? 58 : 64;
-  const fxPad = S ? '5px 4px' : '8px 4px';
-  const fxFs = S ? 9 : 10;
-  const undoSize = S ? 28 : 36;
 
   // ── Render ──────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex h-full w-full bg-[#f0f0f0] overflow-hidden min-h-0 min-w-0">
-      {/* Unified Container with border matching Blockly Workspace */}
-      <div className="flex-1 flex overflow-hidden border-t-[1px] border-r-[1px] border-[#ccc] rounded-tr-[16px] bg-[#fafafa] shadow-[inset_-3px_0_0_0_black]">
-        {/* ── Sidebar ──────────────────────────────────────────── */}
-        <div className="w-[90px] flex flex-col bg-[#f8fafc] border-r border-[#ccc] flex-shrink-0 relative z-[200] overflow-visible">
+      {/* Unified Container - Clean look without heavy borders */}
+      <div className="flex-1 flex overflow-hidden rounded-tr-[16px] bg-[#fafafa]">
+        {/* ── Sidebar ── */}
+        <div className="flex flex-col bg-[#f8fafc] shrink-0 relative z-[200] overflow-visible" style={{ width: '90px', borderRight: '1px solid #ccc' }}>
           <div className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-2 items-center custom-scrollbar relative">
             {(activeSprite.sounds ?? []).map((sound, index) => {
               const isActive = activeSprite.currentSoundId === sound.id && viewMode === 'editor';
@@ -458,7 +450,7 @@ export default function SoundEditor() {
                                         ${
                                           isActive
                                             ? 'bg-[#4483ff] text-white border-2 border-[#4483ff] shadow-[0_0_0_2px_rgba(68,131,255,0.3)]'
-                                            : 'bg-white text-[#575e75] border-2 border-[#c3cddb] hover:border-[#4483ff]'
+                                            : 'bg-white text-[#575e75] border-2 border-[#ddd] hover:border-[#4483ff]'
                                         }`}
                   style={{
                     paddingTop: S ? '12px' : '20px',
@@ -530,23 +522,23 @@ export default function SoundEditor() {
           </div>
 
           {/* Bottom Add Menu (Scratch Style) */}
-          <div className="add-sprite-container container-center">
-            <div className="add-sprite-label label-right shadow-sm">Escolher um Som</div>
-            <div className="add-sprite-menu shadow">
-              <button className="add-sprite-item" onClick={() => setViewMode('recorder')} title="Gravar Som">
-                <i className="bi bi-mic-fill"></i>
-              </button>
-              <button className="add-sprite-item" onClick={() => fileInputRef.current?.click()} title="Carregar Som">
-                <i className="bi bi-upload"></i>
-              </button>
-              <button className="add-sprite-item" onClick={() => addSoundToSprite(activeSprite.id)} title="Surpresa">
-                <i className="bi bi-stars"></i>
-              </button>
+          <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '80px', pointerEvents: 'none' }}>
+            <div style={{ pointerEvents: 'auto' }}>
+              <ScratchAddButton
+                mainLabel="Escolher um Som"
+                mainTitle="Adicionar Som"
+                mainIcon="bi-plus-lg"
+                onMainClick={() => {}}
+                center={true}
+                alignLabel="right"
+                items={[
+                  { icon: 'bi-mic-fill', title: 'Gravar Som', onClick: () => setViewMode('recorder') },
+                  { icon: 'bi-upload', title: 'Carregar Som', onClick: () => fileInputRef.current?.click() },
+                  { icon: 'bi-stars', title: 'Surpresa', onClick: () => addSoundToSprite(activeSprite.id) },
+                ]}
+              />
+              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="audio/*" style={{ display: 'none' }} />
             </div>
-            <button className="btn btn-primary btn-add-sprite-main shadow" title="Adicionar Som">
-              <i className="bi bi-plus-lg"></i>
-            </button>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="audio/*" style={{ display: 'none' }} />
           </div>
         </div>
 

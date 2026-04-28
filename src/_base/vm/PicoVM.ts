@@ -28,7 +28,6 @@ export class PicoVM extends EventEmitter<any> {
   private targetLists = new Map<string, Map<string, unknown[]>>();
   private interpreter: BlockInterpreter | null = null;
   private config: VMConfig | null = null;
-  private _framePromise: Promise<void> | null = null;
 
   // ── Debug state ───────────────────────────────────────────
   private _debugMode = false;
@@ -37,10 +36,17 @@ export class PicoVM extends EventEmitter<any> {
   private _pauseResolvers: Array<() => void> = [];
 
   // ── Scheduler state ───────────────────────────────────────
-  /** Máximo de blocos executados por frame antes de ceder ao rAF */
-  readonly MAX_STEPS_PER_FRAME = 1000;
+  /** Máximo de blocos executados por frame antes de ceder ao rAF (Scratch style ~40) */
+  readonly MAX_STEPS_PER_FRAME = 40;
   private _frameSteps = 0;
-  private _frameScheduled = false;
+  /**
+   * Fila de continuações de threads aguardando o próximo frame.
+   * Cada thread que chama _waitOneFrame() insere seu próprio resolver aqui.
+   * Na próxima rAF, todos são retomados em ordem FIFO — round-robin por frame,
+   * equivalente ao scheduler cooperativo do Scratch.
+   */
+  private _yieldResolvers: Array<() => void> = [];
+  private _rafHandle: number | null = null;
 
   // ─────────────────────────────────────────────────────────
   // Configuração (chamada pelo hook React a cada render)
@@ -161,17 +167,30 @@ export class PicoVM extends EventEmitter<any> {
     }
   }
 
+  /**
+   * Suspende a thread atual até o próximo frame de animação.
+   *
+   * Cada thread insere seu próprio resolver na fila _yieldResolvers.
+   * Quando o rAF dispara, TODOS os resolvers são chamados em ordem FIFO:
+   * Thread A roda até seu próximo yield → Thread B roda até seu próximo yield → ...
+   * Isso garante round-robin por frame — equivalente ao scheduler do Scratch.
+   */
   private _waitOneFrame(): Promise<void> {
-    if (this._framePromise) return this._framePromise;
-
-    this._framePromise = new Promise((resolve) => {
-      requestAnimationFrame(() => {
-        this._resetFrameBudget();
-        this._framePromise = null;
-        resolve();
-      });
+    return new Promise<void>((resolve) => {
+      this._yieldResolvers.push(resolve);
+      this._scheduleRaf();
     });
-    return this._framePromise;
+  }
+
+  private _scheduleRaf(): void {
+    if (this._rafHandle !== null) return;
+    this._rafHandle = requestAnimationFrame(() => {
+      this._rafHandle = null;
+      this._resetFrameBudget();
+      // Retoma todas as threads em ordem de registro (FIFO round-robin)
+      const resolvers = this._yieldResolvers.splice(0);
+      resolvers.forEach((r) => r());
+    });
   }
 
   private _resetFrameBudget(): void {
@@ -241,6 +260,16 @@ export class PicoVM extends EventEmitter<any> {
       thread.abort();
     }
     this.threads.clear();
+
+    // Cancela o rAF pendente e libera todas as threads em espera
+    if (this._rafHandle !== null) {
+      cancelAnimationFrame(this._rafHandle);
+      this._rafHandle = null;
+    }
+    // Resolve os resolvers pendentes para que as threads que estão em _waitOneFrame
+    // possam terminar normalmente (o isAborted já foi setado acima via thread.abort()).
+    const resolvers = this._yieldResolvers.splice(0);
+    resolvers.forEach((r) => r());
 
     if (stopEngine) {
       this.config?.runner?.clearClones?.();
@@ -757,6 +786,7 @@ export function getPicoVM(): PicoVM {
     _instance = new PicoVM();
     if (typeof window !== 'undefined') {
       (window as unknown as Record<string, unknown>).__picovm = _instance;
+      (window as unknown as Record<string, unknown>).__PICO_VM__ = _instance;
     }
   }
   return _instance;

@@ -56,8 +56,8 @@ export function setupContextMenu(options?: ContextMenuOptions): void {
       };
     }
 
-    // Limpa os que já existirerem
-    ['variableDelete', 'variableRename', 'blockDuplicate', 'cleanWorkspace', 'blockCollapseExpand', 'blockInline'].forEach((id) => {
+    // Limpa apenas os que realmente precisam ser substituídos ou ocultos
+    ['variableDelete', 'variableRename', 'blockDuplicate'].forEach((id) => {
       if (registry.getItem(id)) registry.unregister(id);
     });
 

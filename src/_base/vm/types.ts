@@ -93,6 +93,9 @@ export interface VMRunnerMethods {
     // Runtime lifecycle
     clearClones?(): void;
 
+    // Debugging
+    debugMode?: boolean;
+
     // Hardware board (null quando não conectado)
     board: IHardwareBoard | null;
 }

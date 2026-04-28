@@ -209,8 +209,7 @@ export function useStageRunner() {
           },
           true,
         );
-
-        await yieldFrame();
+        getCollisionEngine()?.clearCache();
       }
     },
     [projectService, checkExecution, yieldFrame, clampX, clampY],
@@ -231,7 +230,7 @@ export function useStageRunner() {
           },
           true,
         );
-        await yieldFrame();
+        getCollisionEngine()?.clearCache();
       }
     },
     [projectService, checkExecution, yieldFrame],
@@ -249,7 +248,7 @@ export function useStageRunner() {
 
       const sprite = projectService.getSpriteById(id);
       projectService.updateSprite(id, { x: clampX(x, sprite), y: clampY(y, sprite) });
-      await yieldFrame();
+      getCollisionEngine()?.clearCache();
     },
     [projectService, checkExecution, yieldFrame, clampX, clampY],
   );
@@ -268,7 +267,7 @@ export function useStageRunner() {
 
       const sprite = projectService.getSpriteById(id);
       projectService.updateSprite(id, { x: clampX(numX, sprite) }, true);
-      await yieldFrame();
+      getCollisionEngine()?.clearCache();
     },
     [projectService, checkExecution, yieldFrame, clampX],
   );
@@ -287,7 +286,7 @@ export function useStageRunner() {
 
       const sprite = projectService.getSpriteById(id);
       projectService.updateSprite(id, { y: clampY(numY, sprite) }, true);
-      await yieldFrame();
+      getCollisionEngine()?.clearCache();
     },
     [projectService, checkExecution, yieldFrame, clampY],
   );
@@ -562,6 +561,7 @@ export function useStageRunner() {
           },
           true,
         );
+        getCollisionEngine()?.clearCache();
       }
     },
     [projectService, checkExecution],
@@ -800,7 +800,7 @@ export function useStageRunner() {
       // Fallback para getActiveSpriteId() apenas quando callerSpriteId não é fornecido
       // (compatibilidade com chamadas diretas sem contexto de execução).
       const idToClone = targetId === 'myself' ? callerSpriteId || projectService.getActiveSpriteId() : targetId;
-      const newClone = projectService.duplicateSprite(idToClone);
+      const newClone = projectService.createClone(idToClone);
 
       if (newClone) {
         console.log(`[useStageRunner] Clone criado: ${newClone.id} a partir de ${idToClone}`);

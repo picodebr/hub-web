@@ -62,7 +62,7 @@ export class BackdropService {
     let newBackdrop;
 
     if (file) {
-      const url = await BrowserFileSystem.processFile(file);
+      const url = await BrowserFileSystem.processFile(file, true);
       const name = file.name.split('.')[0];
       newBackdrop = { id: newId, name, url, sounds: [], currentSoundId: null };
     } else {
@@ -268,5 +268,24 @@ export class BackdropService {
 
     this.backdrops[idx] = { ...backdrop, sounds: updatedSounds };
     this.emitChange();
+  }
+
+  public duplicateBackdrop(id: string): void {
+    const backdrop = this.backdrops.find((b) => b.id === id);
+    if (!backdrop) return;
+
+    const newId = `backdrop${Date.now()}`;
+    const newBackdrop = {
+      ...backdrop,
+      id: newId,
+      name: `${backdrop.name} 2`,
+      sounds: [...backdrop.sounds],
+    };
+
+    this.backdrops = [...this.backdrops, newBackdrop];
+    this.activeBackdropId = newId;
+    this.emitChange();
+    this.emitter.emit('activeBackdropChange', newId);
+    this.emitter.emit('activeSpriteChange', 'stage');
   }
 }

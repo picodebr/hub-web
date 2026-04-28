@@ -20,8 +20,12 @@ import { useUI } from '../../context/UIContext';
 import { ExecutionTask } from '../../domain/entities';
 import { getExecutionEngine } from '@/_base/services/code/ExecutionEngine';
 import { getProjectService } from '@/_base/services/code';
+import { getPicoVM } from '../../vm/PicoVM';
 
 export function useCodeExecution(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null>) {
+  // Inicializa a VM para depuração global
+  getPicoVM();
+
   const stageContext = useExecutionRunner();
   const { sprites, activeSpriteId } = useProject();
   const { executeInSandbox, stopExecutors } = useSandboxExecutor();
@@ -42,6 +46,8 @@ export function useCodeExecution(blocklyRef: React.RefObject<BlocklyWorkspaceRef
 
       if (setForceExecution) setForceExecution(true);
       if (incrementActiveCode) incrementActiveCode();
+
+      console.log(`[Executing] Sprite: ${spriteId}, Origin: ${origin}, Code:\n${code}`);
 
       const blockId = hatId?.split('_').pop();
       if (blockId && blocklyRef.current?.setBlockHighlight) {

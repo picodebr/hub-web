@@ -71,55 +71,39 @@ export class SvgService {
       thumbBounds = new this.scope.Rectangle(artboardCenter.x - 1, artboardCenter.y - 1, 2, 2);
     }
 
+    const exportOptions: IPaintExportOptions = {
+      asString: true,
+      match: (item: paper.Item) => {
+        // Inclui itens visíveis OU nossos marcadores especiais (mesmo que ocultos)
+        return item.visible || item.name === 'PBT_BOUNDS_BOX' || (item as any).guide || item.name === 'SCRATCH_BBOX_HACK';
+      }
+    };
+
     let thumbnailSvg = '';
     try {
-      const thumbInner = dl.exportSVG({ asString: true } as IPaintExportOptions) as string;
+      // 🛡️ FIX: paper.js exportSVG can throw SecurityError if there's a tainted canvas
+      const thumbInner = dl.exportSVG(exportOptions) as string;
       thumbnailSvg = buildFullSvg(thumbInner, thumbBounds);
     } catch (e) {
-      console.error('Erro ao exportar SVG para thumbnail:', e);
-      thumbnailSvg = '';
+      console.warn('[SvgService] Fallback: Could not export thumbnail SVG due to security/taint constraints.', e);
+      thumbnailSvg = ''; // Fallback: A UI mostrará um placeholder ou a última imagem válida
     }
 
     // 2. Stage SVG:
-    // Se for Backdrop: 480x360 estático.
-    // Se for Sprite: Crop simétrico em relação ao centro do Artboard.
-    // Isso garante que o centro (0,0) do Ator continue no centro do desenho,
-    // mas o 'bounding box' seja o menor possível para os balões e sensores.
-    let stageBounds: paper.Rectangle;
-
-    if (options?.isBackdrop) {
-      stageBounds = new this.scope.Rectangle(DRAWING_CONFIG.abX, DRAWING_CONFIG.abY, DRAWING_CONFIG.artboard.w, DRAWING_CONFIG.artboard.h);
-    } else {
-      // Calcula o bounding box REAL apenas dos elementos de desenho (pula guias e invisíveis)
-      let contentBounds: paper.Rectangle | null = null;
-      dl.children.forEach((item) => {
-        if (item.visible && !item.locked && !(item as any).guide && item.name !== 'PBT_BOUNDS_BOX') {
-          if (!contentBounds) contentBounds = item.bounds.clone();
-          else contentBounds = contentBounds.unite(item.bounds);
-        }
-      });
-
-      if (!contentBounds) {
-        // Caso vazio, exporta um pequeno box central
-        stageBounds = new this.scope.Rectangle(artboardCenter.x - 1, artboardCenter.y - 1, 2, 2);
-      } else {
-        const cb = contentBounds as paper.Rectangle;
-        // Calcula a distância máxima do centro do artboard até os limites do conteúdo
-        const dx = Math.max(Math.abs(cb.left - artboardCenter.x), Math.abs(cb.right - artboardCenter.x));
-        const dy = Math.max(Math.abs(cb.top - artboardCenter.y), Math.abs(cb.bottom - artboardCenter.y));
-
-        // Cria um retângulo simétrico para manter o centro do Artboard como centro do SVG (Rotation Center)
-        const sizeX = Math.ceil(dx * 2 + 4);
-        const sizeY = Math.ceil(dy * 2 + 4);
-        stageBounds = new this.scope.Rectangle(artboardCenter.x - sizeX / 2, artboardCenter.y - sizeY / 2, sizeX, sizeY);
-      }
-    }
+    // Sempre exportamos no tamanho do artboard (480x360) para garantir mapeamento 1:1 com o palco.
+    // Isso evita que o ator mude de tamanho ou estique dependendo da sua posição no editor.
+    const stageBounds = new this.scope.Rectangle(
+      DRAWING_CONFIG.abX,
+      DRAWING_CONFIG.abY,
+      DRAWING_CONFIG.artboard.w,
+      DRAWING_CONFIG.artboard.h,
+    );
     let stageSvg = '';
     try {
-      const stageInner = dl.exportSVG({ asString: true } as IPaintExportOptions) as string;
+      const stageInner = dl.exportSVG(exportOptions) as string;
       stageSvg = buildFullSvg(stageInner, stageBounds);
     } catch (e) {
-      console.error('Erro ao exportar SVG para stage:', e);
+      console.error('[SvgService] Critical: Could not export stage SVG.', e);
       stageSvg = '';
     }
 
@@ -131,8 +115,8 @@ export class SvgService {
       dl.clipped = true;
     }
 
-    const dl_again = project.layers.find((l) => l.name === 'drawing');
-    if (dl_again) dl_again.activate();
+    const projectLayer = project.layers.find((l) => l.name === 'drawing');
+    if (projectLayer) projectLayer.activate();
 
     return { thumbnailSvg, stageSvg };
   }
@@ -159,6 +143,23 @@ export class SvgService {
       // Garante que as transformações (scale, rotate, translate) sejam aplicadas aos caminhos
       // Em paper.js, applyMatrix é uma propriedade de Item.
       (node as IPaintItem).applyMatrix = true;
+
+      // HACK FIX: Scratch injects a 480x360 transparent rectangle to force costume bounds.
+      // We must lock it so the SelectTool doesn't pick it up when clicking the canvas.
+      if (node instanceof this.scope.Path.Rectangle || node instanceof this.scope.PathItem) {
+        const b = node.bounds;
+        if (Math.abs(b.width - DRAWING_CONFIG.artboard.w) < 2 && Math.abs(b.height - DRAWING_CONFIG.artboard.h) < 2) {
+          const hasVisibleFill = node.fillColor && node.fillColor.alpha > 0.01;
+          const hasVisibleStroke = node.strokeColor && node.strokeColor.alpha > 0.01;
+          
+          if (!hasVisibleFill && !hasVisibleStroke) {
+            node.locked = true;
+            (node as any).guide = true; // Força a ser ignorado pelo HitTest completamente
+            node.name = 'SCRATCH_BBOX_HACK';
+            node.visible = false;
+          }
+        }
+      }
 
       // Recursividade para processar todos os filhos sem destruir grupos
       if (node.children && node.children.length > 0) {

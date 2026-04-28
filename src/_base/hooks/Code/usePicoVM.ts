@@ -185,6 +185,9 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
       // Runtime lifecycle
       clearClones: () => getProjectService().clearClones(),
 
+      // Debugging
+      debugMode: vm.debugMode,
+
       // Hardware board
       board: board ?? null,
     }),
@@ -195,6 +198,11 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
   // Configura a VM sempre que as dependências mudam
   // ─────────────────────────────────────────────────────────
   useEffect(() => {
+    // Injetamos globalmente para depuração via console
+    if (typeof window !== 'undefined') {
+      (window as any).__PICO_VM__ = vm;
+    }
+
     vm.configure({
       runner: vmRunner,
       getActiveWorkspace: () => blocklyRef.current?.getWorkspace() ?? null,

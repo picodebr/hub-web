@@ -8,28 +8,25 @@ import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useProject } from '@/_base/context/ProjectContext';
 import dynamic from 'next/dynamic';
+import { ScratchAddButton } from '../shared/ScratchAddButton';
+import { LoadingEditor } from '../shared/LoadingEditor';
 
 const PaintEditor = dynamic(() => import('./PaintEditor/index'), {
   ssr: false,
-  loading: () => (
-    <div className="flex-1 flex items-center justify-center bg-[#f8fafc]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-4 border-[#4483ff] border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-slate-500 font-medium">Carregando Editor...</span>
-      </div>
-    </div>
-  ),
+  loading: LoadingEditor,
 });
 
 export default function BackdropEditor() {
-  const { activeSprite, addCostumeToSprite, removeCostumeFromSprite, renameCostume, switchCostume } = useProject();
+  const { activeSprite, addCostumeToSprite, removeCostumeFromSprite, renameCostume, switchCostume, duplicateCostume } = useProject();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [editingCostumeId, setEditingCostumeId] = useState<string | null>(null);
   const [tempName, setTempName] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; costumeId: string } | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handleClick = () => setContextMenu(null);
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
@@ -97,10 +94,10 @@ export default function BackdropEditor() {
 
   return (
     <div className="flex-1 flex h-full w-full bg-[#f0f0f0] overflow-hidden min-h-0 min-w-0">
-      {/* Container principal */}
-      <div className="flex-1 flex overflow-hidden border-t border-r border-[#ccc] rounded-tr-[16px] bg-white shadow-[inset_-3px_0_0_0_black]">
-        {/* Sidebar esquerda: 150px */}
-        <div className="flex flex-col bg-[#f9f9f9] border-r border-[#ddd] flex-shrink-0 relative overflow-visible" style={{ width: '150px' }}>
+      {/* Container principal - sem bordas pesadas para visual limpo */}
+      <div className="flex-1 flex overflow-hidden rounded-tr-[16px] bg-[#fafafa]">
+        {/* Sidebar esquerda: 150px como no scratch-gui - borda sutil */}
+        <div className="flex flex-col bg-[#f8fafc] shrink-0 relative overflow-visible" style={{ width: '150px', borderRight: '1px solid #ccc' }}>
           {/* Lista de cenários */}
           <div className="flex-1 overflow-y-auto flex flex-col items-center pt-[10px] px-[10px] custom-scrollbar" style={{ paddingBottom: '80px' }}>
             {activeSprite.costumes?.map((costume, index) => {
@@ -119,7 +116,7 @@ export default function BackdropEditor() {
                                         ${
                                           isActive
                                             ? 'border-[#4483ff] shadow-[0_0_0_3px_rgba(68,131,255,0.25)] bg-white'
-                                            : 'border-[rgba(0,0,0,0.12)] hover:border-[#4483ff] bg-white'
+                                            : 'border-[#ddd] hover:border-[#4483ff] bg-white'
                                         }
                                     `}
                 >
@@ -174,14 +171,13 @@ export default function BackdropEditor() {
                     <div className={`text-[9px] text-center leading-tight mt-[1px] ${isActive ? 'text-white/80' : 'text-[#aaa]'}`}>480 × 360</div>
                   </div>
 
-                  {/* Botão excluir */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       removeCostumeFromSprite('stage', costume.id);
                     }}
                     className={`
-                                            absolute top-[-7px] right-[-7px] w-[18px] h-[18px] rounded-full
+                                            absolute top-[-7px] right-[-7px] w-[18px] h-[18px]
                                             flex items-center justify-center z-[10] transition-all border-0
                                             ${
                                               isActive
@@ -190,6 +186,7 @@ export default function BackdropEditor() {
                                             }
                                         `}
                     style={{
+                      borderRadius: '50%',
                       backgroundColor: 'white',
                       color: '#575e75',
                       boxShadow: '0 0 0 1px rgba(0,0,0,0.15),0 1px 3px rgba(0,0,0,0.15)',
@@ -217,46 +214,42 @@ export default function BackdropEditor() {
           </div>
 
           {/* Menu de adição */}
-          <div className="add-sprite-container container-center">
-            <div className="add-sprite-label label-right shadow-sm">Escolha um Cenário</div>
-            <div className="add-sprite-menu shadow">
-              <button className="add-sprite-item" onClick={handleUploadClick} title="Carregar Cenário">
-                <i className="bi bi-upload"></i>
-              </button>
-              <button className="add-sprite-item" onClick={() => {}} title="Surpresa">
-                <i className="bi bi-stars"></i>
-              </button>
-              <button
-                className="add-sprite-item"
-                onClick={async () => {
-                  await addCostumeToSprite('stage');
-                }}
-                title="Pintar"
-              >
-                <i className="bi bi-brush"></i>
-              </button>
-              <button className="add-sprite-item" onClick={() => {}} title="Procurar">
-                <i className="bi bi-search"></i>
-              </button>
+          <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '80px', pointerEvents: 'none' }}>
+            <div style={{ pointerEvents: 'auto' }}>
+              <ScratchAddButton
+                mainLabel="Escolha um Cenário"
+                mainTitle="Escolher um Cenário"
+                mainIcon="bi-image-fill"
+                onMainClick={() => {}}
+                center={true}
+                alignLabel="right"
+                items={[
+                  { icon: 'bi-upload', title: 'Carregar Cenário', onClick: handleUploadClick },
+                  { icon: 'bi-stars', title: 'Surpresa', onClick: () => {} },
+                  { icon: 'bi-brush', title: 'Pintar', onClick: async () => { await addCostumeToSprite('stage'); } },
+                  { icon: 'bi-search', title: 'Procurar', onClick: () => {} },
+                ]}
+              />
+              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
             </div>
-            <button className="btn btn-primary btn-add-sprite-main shadow" title="Escolher um Cenário" onClick={() => {}}>
-              <i className="bi bi-image-fill"></i>
-            </button>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
           </div>
         </div>
 
         {/* PaintEditor — key="stage" estável, recarrega via costumeId prop */}
         {activeCostumeId ? (
           <div className="flex-1 flex flex-col h-full overflow-hidden min-h-0">
-            <PaintEditor
-              key="stage"
-              spriteId="stage"
-              costumeId={activeCostumeId}
-              costumeName={currentCostume?.name || 'Cenário'}
-              initialUrl={currentCostume?.stageUrl || currentCostume?.url || activeSprite.costume || ''}
-              isBackdrop={true}
-            />
+            {mounted ? (
+              <PaintEditor
+                key="stage"
+                spriteId="stage"
+                costumeId={activeCostumeId}
+                costumeName={currentCostume?.name || 'Cenário'}
+                initialUrl={currentCostume?.stageUrl || currentCostume?.url || activeSprite.costume || ''}
+                isBackdrop={true}
+              />
+            ) : (
+              <LoadingEditor />
+            )}
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center bg-[#e9eef2] text-gray-500">Nenhum cenário selecionado.</div>
@@ -277,6 +270,17 @@ export default function BackdropEditor() {
           >
             <i className="bi bi-download"></i>
             Exportar
+          </button>
+          <button
+            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-slate-700 flex items-center gap-2 border-0 bg-transparent transition-colors"
+            onClick={() => {
+              duplicateCostume('stage', contextMenu.costumeId);
+              setContextMenu(null);
+            }}
+            style={{ fontSize: '14px', fontWeight: '500' }}
+          >
+            <i className="bi bi-files"></i>
+            Duplicar
           </button>
           <button
             className="w-full text-left px-4 py-2 hover:bg-blue-50 text-slate-700 flex items-center gap-2 border-0 bg-transparent transition-colors"
