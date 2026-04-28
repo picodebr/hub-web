@@ -15,6 +15,7 @@ import { MenuItemType } from './interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { IHubUserSchool } from '@/_base/interfaces/school';
 import { PiExamLight } from 'react-icons/pi';
+import { TbCircuitResistor } from 'react-icons/tb';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   selectedPage,
@@ -33,7 +34,9 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   const { colorMode } = useColorMode();
   const router = useRouter();
 
-  const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
+  const menuItems = (user?.role === 'student' ? studentMenuItems : teacherMenuItems).filter(
+    (e) => user?.role === `master` || e.page !== `vision_lab`,
+  );
 
   return (
     <Flex
@@ -104,7 +107,9 @@ const studentMenuItems: Array<MenuItemType> = [
   // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },
   { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
-  { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
+  { name: 'Code Lab', page: 'code', icon: BsMotherboard },
+  { name: 'Vision Lab', page: 'vision_lab', icon: TbCircuitResistor },
+
   { name: 'Meus Grupos', page: 'groups', icon: FiUsers },
   // { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle },
 ];
@@ -114,7 +119,9 @@ const teacherMenuItems: Array<MenuItemType> = [
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
   // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Turmas', page: 'classes', icon: FiUsers },
-  { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
+  { name: 'Code Lab', page: 'code', icon: BsMotherboard },
+  { name: 'Vision Lab', page: 'vision_lab', icon: TbCircuitResistor },
+
   { name: 'Estoque Maker', page: 'stock', icon: FiInbox },
   // { name: 'Loja', page: 'store', icon: FiShoppingBag },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },

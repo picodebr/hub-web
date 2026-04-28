@@ -3,8 +3,6 @@ import type { AppProps } from 'next/app';
 //@ts-ignore
 import 'moment/locale/pt-br';
 //@ts-ignore
-import '../styles/globals.css';
-//@ts-ignore
 import '../styles/code-globals.css';
 //@ts-ignore
 import '../styles/blockly.css';
@@ -20,6 +18,8 @@ import '../styles/layout.css';
 import '../styles/panels.css';
 //@ts-ignore
 import '../styles/theme.css';
+//@ts-ignore
+import '../styles/globals.css';
 
 import { api } from '@/_base/classes/api';
 import { CustomRouterProvider } from '@/_base/hooks/CustomRouter';

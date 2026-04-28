@@ -18,8 +18,8 @@ import {
   Divider,
   useToast,
 } from '@chakra-ui/react';
-import { FaGraduationCap, FaUsers, FaStar } from 'react-icons/fa';
-import { FiCalendar, FiCheckCircle, FiClock, FiStar, FiUserCheck, FiCheck } from 'react-icons/fi';
+import { FaGraduationCap, FaUsers } from 'react-icons/fa';
+import { FiCalendar, FiCheckCircle, FiClock, FiUserCheck, FiCheck } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import moment from 'moment';
 
@@ -29,7 +29,7 @@ import { IHubClass } from '@/_base/interfaces/class';
 import { createHubFormClassUser, finishHubFormClass, updateHubFormClassUser } from '@/_base/services/form';
 import { IHubFormClass } from '@/_base/interfaces/form';
 
-type RatingQuestion = { id: string; label: string; value: number };
+type RatingQuestion = { id: string; label: string; description?: string; value: number };
 type FinishedForms = { student_id: string; questions: RatingQuestion[]; hub_form_class_user_id?: string | null };
 
 interface IProps {
@@ -55,11 +55,12 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
   const formClassId = currentFormLink?.id;
 
   // Mapeia as questions do formulário para o formato esperado
-  const formQuestions = useMemo(() => {
+  const formQuestions: Omit<RatingQuestion, `value`>[] = useMemo(() => {
     if (!currentFormLink?.form.questions) return [];
     return currentFormLink.form.questions.map((q) => ({
       id: q.id,
       label: q.title,
+      description: q.description,
     }));
   }, [currentFormLink?.form.questions]);
 
@@ -237,7 +238,7 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
   const subTextColor = colorMode === 'light' ? 'gray500' : 'gray400';
 
   return (
-    <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflowY="auto" pb="2rem">
+    <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflowY="auto">
       {/* 1. HERO BANNER: Ciclo de Avaliação (DESIGN CLEAN) */}
       <Flex
         bg={bgCard}
@@ -378,7 +379,7 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
           )}
         </Flex>
 
-        <Flex direction="column" overflowY="auto" maxH="60vh" p="0.5rem">
+        <Flex direction="column" overflowY="auto" maxH="calc(100% - 3rem)" p="0.5rem">
           <motion.div variants={listVariants} initial="hidden" animate="show">
             {students.map((student) => {
               const isFinished = !!finishedForms.find((f) => f.student_id === student.id);
@@ -495,7 +496,7 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
               onSave={handleSaveEvaluation}
               existingData={finishedForms.find((f) => f.student_id === targetStudent?.id)?.questions}
               isLoading={isLoading}
-              formQuestions={formQuestions}
+              formQuestions={formQuestions || []}
               formTitle={currentFormLink?.form.title}
               formDescription={currentFormLink?.form.description}
             />
@@ -543,7 +544,7 @@ function EvaluationForm({
   onSave: (q: RatingQuestion[], onSuccess: () => void) => Promise<void>;
   existingData?: RatingQuestion[];
   isLoading?: boolean;
-  formQuestions?: Array<{ id: string; label: string }>;
+  formQuestions?: Array<{ id: string; label: string; description?: string }>;
   formTitle?: string;
   formDescription?: string | null;
 }) {
@@ -622,18 +623,13 @@ function EvaluationForm({
         </Text>
 
         {questions.map((q) => (
-          <Flex key={q.id} direction="column" gap="0.5rem" p="1rem" borderRadius="xl" border="1px solid" borderColor={borderColor} bg={modalBg}>
-            <Text fontWeight="600" fontSize="15px" color={textColor}>
-              {q.label}
-            </Text>
-            <Flex gap="0.5rem">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Box key={star} cursor="pointer" onClick={() => handleRate(q.id, star)} transition="all 0.15s" _hover={{ transform: 'scale(1.2)' }}>
-                  <Icon as={star <= q.value ? FaStar : FiStar} fontSize="28px" color={star <= q.value ? 'warning500' : 'gray300'} />
-                </Box>
-              ))}
-            </Flex>
-          </Flex>
+          <RatingQuestion
+            id={q.id}
+            question={q.description || ``}
+            title={q.label}
+            rating={q.value}
+            onRatingChange={(id, star) => handleRate(id, star)}
+          />
         ))}
       </Flex>
 
@@ -666,4 +662,83 @@ const listVariants = {
 const itemVariants = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0 },
+};
+
+interface RatingQuestionProps {
+  id: string;
+  title: string;
+  question: string;
+  rating: number | null;
+  onRatingChange: (id: string, rating: number) => void;
+}
+
+export const RatingQuestion: React.FC<RatingQuestionProps> = ({ id, title, question, rating, onRatingChange }) => {
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+
+  const handleMouseEnter = (index: number) => {
+    setHoverRating(index);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverRating(null);
+  };
+
+  return (
+    <motion.div className="question-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Flex direction="column" gap="1rem">
+        <Text fontWeight="600" fontSize="16px">
+          {title}
+        </Text>
+
+        <p className="text-gray-600 mb-6">{question}</p>
+
+        <div className="flex flex-col items-center">
+          <div className="flex space-x-2 mb-4">
+            {[1, 2, 3, 4, 5].map((star) => {
+              const isActive = hoverRating !== null ? star <= hoverRating : rating !== null && star <= rating;
+
+              return (
+                <motion.button
+                  key={star}
+                  className="focus:outline-none"
+                  onClick={() => onRatingChange(id, star)}
+                  onMouseEnter={() => handleMouseEnter(star)}
+                  onMouseLeave={handleMouseLeave}
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <motion.svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill={isActive ? '#ffd166' : 'none'}
+                    stroke={isActive ? '#ffd166' : '#cbd5e1'}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-10 h-10"
+                    animate={{
+                      scale: isActive ? [1, 1.2, 1] : 1,
+                    }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </motion.svg>
+                </motion.button>
+              );
+            })}
+          </div>
+
+          <motion.p className="text-sm text-gray-500 mt-2" animate={{ opacity: rating ? 1 : 0.5 }}>
+            {rating
+              ? rating === 5
+                ? 'Excelente! Você atribuiu a nota máxima.'
+                : rating === 1
+                  ? 'Muito baixo. Agradecemos seu feedback.'
+                  : `Você selecionou ${rating} ${rating === 1 ? 'estrela' : 'estrelas'}.`
+              : 'Selecione uma classificação acima'}
+          </motion.p>
+        </div>
+      </Flex>
+    </motion.div>
+  );
 };
