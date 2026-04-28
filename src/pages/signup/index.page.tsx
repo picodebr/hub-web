@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { Flex } from '@chakra-ui/react';
+import { ReactNode, useEffect, useMemo, useState, useCallback } from 'react';
 import { GetServerSideProps } from 'next';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { useAsyncCallback, useInputHandler } from '@/_base/hooks';
 import { IReCAPTCHAData } from '@/_base/interfaces/auth/IReCaptchaData';
@@ -19,17 +19,12 @@ import { FinishStep } from './components/Finish';
 import { SignUpPageStepsType } from './interfaces';
 import { InputValueType } from '@/_base/interfaces/shared';
 import { usernameChecker } from '@/_base/utils/usernameUtils';
+import { AuthBackground } from '@/components/AuthBackground';
 
-const SizeMapper: Record<SignUpPageStepsType, string> = {
-  USER_TYPE: '28.5rem',
-  PRIMARY_CODE: '35.25rem',
-  SCHOOL_CODE: '28.5rem',
-  FORM: 'fit-content',
-  FINISH: '23.5rem',
-};
+type Step = SignUpPageStepsType;
 
 const SignUp: React.FC = () => {
-  const [step, setStep] = useState<SignUpPageStepsType>('USER_TYPE');
+  const [step, setStep] = useState<Step>('USER_TYPE');
   const [userType, setUserType] = useState<HubUserType>();
   const [captcha, setCaptcha] = useState<IReCAPTCHAData>({ token: null });
   const [primaryCode, setPrimaryCode] = useState<InputValueType<string>>({ value: '' });
@@ -43,13 +38,16 @@ const SignUp: React.FC = () => {
     schema: registerUserSchema,
   });
 
+  const goToLogin = useCallback(() => {
+    window.location.href = '/login';
+  }, []);
+
   useEffect(() => {
     const data = cookieManager.getCookie<IGoogleUserData>('google_data', true);
 
     if (data) {
       setIsGoogleSignin(true);
       setData((e) => ({ ...e, email: data.email, name: data.name }));
-      //TODO: save the picture from google
     }
   }, []);
 
@@ -70,7 +68,6 @@ const SignUp: React.FC = () => {
       if (!userType) return;
 
       try {
-        // TODO: send request to backend
         const { is_valid } = await checkPrimaryCode(userType, code);
 
         if (!is_valid) {
@@ -141,7 +138,7 @@ const SignUp: React.FC = () => {
     setStep('PRIMARY_CODE');
   };
 
-  const PageStepElement: Record<SignUpPageStepsType, ReactNode> = {
+  const PageStepElement: Record<Step, ReactNode> = {
     USER_TYPE: <UserTypeStep onUserTypeChange={handleUserTypeChange} />,
     PRIMARY_CODE: <PrimaryCodeStep primaryCode={primaryCode} userType={userType} setPrimaryCode={setPrimaryCode} setStep={setStep} />,
     SCHOOL_CODE: <SchoolCodeStep availableSchools={availableSchools} onInputChange={onInputChange} primaryCode={primaryCode} setStep={setStep} />,
@@ -163,25 +160,33 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <Flex
-      direction="column"
-      bgColor="white"
-      height="fit-content"
-      maxW="420px"
-      margin="auto"
-      borderRadius="12px"
-      
-      align="center"
-      padding="24px"
-      transition="all 0.2s"
-      overflow="hidden"
-      mx={{ base: '1rem', md: 'auto' }}
-      h={SizeMapper[step]}
-    >
-      <Logo />
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden">
+      {/* Background com Blobs */}
+      <AuthBackground />
 
-      {PageStepElement[step]}
-    </Flex>
+      {/* Container Glassmorphism Central */}
+      <div className="glass-card w-full max-w-[420px] md:max-w-[400px] p-8 relative z-10">
+        <div className="flex flex-col gap-6">
+          {/* Logo */}
+          <div className="flex justify-center">
+            <Logo size="sm" />
+          </div>
+
+          {/* Animated Step Content */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {PageStepElement[step]}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
   );
 };
 

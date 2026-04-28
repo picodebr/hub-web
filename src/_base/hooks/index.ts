@@ -13,3 +13,4 @@ export * from './ScrollThreshold';
 export * from './Throttle';
 export * from './UndoRedu';
 export * from './UpdateEffect';
+export * from './useDarkMode';

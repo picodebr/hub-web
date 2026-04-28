@@ -9,7 +9,6 @@ import { FiTrendingUp, FiSearch, FiDownload } from 'react-icons/fi';
 import {
   Avatar,
   Flex,
-  useColorMode,
   Spinner,
   Input,
   InputGroup,
@@ -36,6 +35,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/Tailwind/A
 import { Calendar } from '@/components/Tailwind/AttendanceList/calendar';
 import { cn } from '@/_base/utils/cn';
 import { formatShortName } from '@/_base/utils';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { ICreateHubClassRollCall, IHubClass } from '@/_base/interfaces/class';
 import { addRollCall } from '@/_base/services/class';
 
@@ -45,7 +45,7 @@ interface IProps {
 
 export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
   const today = startOfDay(new Date());
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const toast = useToast();
 
   const [selectedDate, setSelectedDate] = useState<Date>(today);

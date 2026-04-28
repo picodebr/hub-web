@@ -1,4 +1,4 @@
-import { Flex, Icon, Image, Spinner, Text, Tooltip, useColorMode, Box, Avatar, Divider } from '@chakra-ui/react';
+import { Flex, Icon, Image, Spinner, Text, Tooltip, Box, Divider } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import { FiEdit2, FiChevronLeft, FiChevronRight, FiCamera } from 'react-icons/fi';
 import { Uploader } from 'rsuite';
@@ -66,9 +66,8 @@ export const useNavbar = create<NavbarHookType>((set) => ({
 
 const MotionFlex = motion(Flex);
 
-export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, stockItems, school, defaultOpened = true }) => {
+export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, stockItems, defaultOpened = true }) => {
   const router = useRouter();
-  const { colorMode } = useColorMode();
   const { avatar, setAvatar } = useAvatar();
   const { user, setUser } = useProfile();
   const { customActions } = useSelectedSchool();
@@ -93,7 +92,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
           ),
         );
     } catch (err) {
-      console.error(`Individual kanban parse error`, err);
+      // Ignore kanban parse errors
     }
   }, [_user]);
 
@@ -131,7 +130,18 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
   const toggleColor = 'gray500';
 
   return (
-    <Box position="relative" zIndex={100} display={{ base: `none`, lg: `block` }} pl={isSidebarOpen ? '0' : '1.5rem'} mb="3rem">
+    <Box 
+      position={{ base: 'fixed', lg: 'relative' }} 
+      zIndex={isSidebarOpen ? 200 : 100} 
+      display={{ base: isSidebarOpen ? `block` : `none`, lg: `block` }} 
+      pl={{ base: '0', lg: isSidebarOpen ? '0' : '1.5rem' }} 
+      mb={{ base: '0', lg: '3rem' }}
+      inset={{ base: isSidebarOpen ? '0' : 'auto', lg: 'auto' }}
+      w={{ base: isSidebarOpen ? '100vw' : 'auto', lg: 'auto' }}
+      h={{ base: isSidebarOpen ? '100vh' : 'auto', lg: 'auto' }}
+      bg={{ base: isSidebarOpen ? 'rgba(0,0,0,0.5)' : 'transparent', lg: 'transparent' }}
+      transition={{ base: 'all 0.3s ease', lg: 'none' }}
+    >
       <motion.nav
         initial={defaultOpened ? 'expanded' : 'collapsed'}
         animate={isSidebarOpen ? 'expanded' : 'collapsed'}
@@ -160,14 +170,14 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
             h="100%"
           >
             {/* 1. SEÇÃO DE PERFIL */}
-            <Flex direction="column" p="1.25rem" position="relative" gap="1rem" flexShrink={0}>
+            <Flex direction="column" p="0.75rem" position="relative" gap="0.5rem" flexShrink={0}>
               {/* Botão de Fechar Menu */}
               <Tooltip label="Recolher menu" placement="right" hasArrow>
                 <Flex
                   as={motion.div}
                   position="absolute"
-                  top="1.25rem"
-                  right="1.25rem"
+                  top="0.75rem"
+                  right="0.75rem"
                   zIndex={101}
                   onClick={() => setIsSidebarOpen(false)}
                   whileHover={{ scale: 1.1 }}
@@ -177,18 +187,18 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                   _hover={{ color: 'primary500' }}
                   transition="all 0.2s"
                 >
-                  <Icon as={FiChevronLeft} fontSize="20px" />
+                  <Icon as={FiChevronLeft} fontSize="18px" />
                 </Flex>
               </Tooltip>
 
-              <Flex align="center" gap="1rem" w="100%" pr="1.5rem">
+              <Flex align="center" gap="0.75rem" w="100%" pr="1rem">
                 {/* Avatar & Uploader */}
-                <Flex position="relative">
+                <Flex position="relative" flexShrink={0}>
                   <NextImage
                     loader={() => avatar}
                     src={avatar}
-                    width={80}
-                    height={80}
+                    width={48}
+                    height={48}
                     alt=""
                     style={{ opacity: isUpdating ? `0.4` : `1`, borderRadius: `50%` }}
                     priority
@@ -210,7 +220,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                         border="1px solid"
                         borderColor="gray200"
                         borderRadius="50%"
-                        p="0.3rem"
+                        p="0.2rem"
                         bg="white"
                         position="absolute"
                         bottom="-2px"
@@ -222,16 +232,16 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                         color="gray500"
                         onClick={() => e.onClick(e)}
                       >
-                        <FiCamera size="0.75rem" />
+                        <FiCamera size="0.65rem" />
                       </Flex>
                     )}
                   />
                 </Flex>
 
                 {/* Info do Usuário */}
-                <Flex direction="column" flex="1" overflow="hidden" gap="2px">
-                  <Flex align="center" gap="0.5rem">
-                    <Text fontSize="16px" fontWeight="700" color="primary900" isTruncated>
+                <Flex direction="column" flex="1" overflow="hidden" gap="1px">
+                  <Flex align="center" gap="0.35rem">
+                    <Text fontSize="13px" fontWeight="700" color="primary900" isTruncated>
                       {formatShortName(user?.name || '', true)}
                     </Text>
                     <Tooltip label="Editar Perfil" placement="top">
@@ -240,19 +250,20 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                         transition="all 0.2s"
                         color="gray400"
                         _hover={{ color: 'primary500' }}
+                        flexShrink={0}
                         onClick={() => router.push('/profile?opened=true')}
                       >
-                        <FiEdit2 size="0.85rem" />
+                        <FiEdit2 size="0.75rem" />
                       </Flex>
                     </Tooltip>
                   </Flex>
 
-                  <Text fontSize="12px" color="gray500" fontWeight="500" isTruncated>
+                  <Text fontSize="11px" color="gray500" fontWeight="400" isTruncated>
                     {user?.role === `student` ? `${user.hub_class?.hub_school?.display_name}` : user?.email}
                   </Text>
 
                   {user?.role === `student` && (
-                    <Text fontSize="11px" color="gray400" fontWeight="400" isTruncated>
+                    <Text fontSize="10px" color="gray400" fontWeight="400" isTruncated>
                       Turma: {user.hub_class?.display_name} - {formatClassGrade(user.hub_class?.grade)}
                     </Text>
                   )}
@@ -261,18 +272,18 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                   {user?.role === 'student' && (
                     <Flex
                       align="center"
-                      gap="0.3rem"
-                      mt="4px"
+                      gap="0.2rem"
+                      mt="2px"
                       bg="warning50"
                       w="fit-content"
-                      px="0.5rem"
-                      py="0.1rem"
+                      px="0.35rem"
+                      py="0.05rem"
                       borderRadius="full"
                       border="1px solid"
                       borderColor="warning200"
                     >
-                      <Image src="/icons/coin.svg" alt="Moedas" w="12px" h="12px" />
-                      <Text fontSize="11px" fontWeight="700" color="warning700">
+                      <Image src="/icons/coin.svg" alt="Moedas" w="10px" h="10px" />
+                      <Text fontSize="9px" fontWeight="700" color="warning700">
                         {formatCoin(user.metadata.coins || 0)}
                       </Text>
                     </Flex>
@@ -287,8 +298,8 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
             <MotionFlex
               direction="column"
               flex="1"
-              p="1rem 0.75rem"
-              gap="0.25rem"
+              p="0.5rem 0.5rem"
+              gap="0.1rem"
               overflowY="auto"
               overflowX="hidden"
               animate={isOpen ? 'open' : 'closed'}
@@ -350,23 +361,23 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
 
                     <Flex
                       align="center"
-                      padding="10px 14px"
-                      borderRadius="10px"
+                      padding="8px 10px"
+                      borderRadius="8px"
                       cursor="pointer"
                       whiteSpace="nowrap"
                       transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-                      fontSize="14px"
-                      fontWeight={isActive ? '700' : '500'}
+                      fontSize="13px"
+                      fontWeight={isActive ? '600' : '500'}
                       bg={isActive ? 'primary700' : 'transparent'}
                       color={isActive ? 'primary25' : 'gray600'}
                       _hover={{
                         bg: isActive ? 'primary700' : 'primary50',
-                        transform: isActive ? 'none' : 'translateX(4px)',
+                        transform: isActive ? 'none' : 'translateX(2px)',
                         color: isActive ? 'primary25' : 'primary700',
                       }}
                       onClick={() => router.push(`/${item.page}`)}
                     >
-                      <Icon mr="3" fontSize="18px" as={item.icon} opacity={isActive ? 1 : 0.7} />
+                      <Icon mr="2.5" fontSize="16px" as={item.icon} opacity={isActive ? 1 : 0.7} />
                       {item.name}
                     </Flex>
                   </motion.div>

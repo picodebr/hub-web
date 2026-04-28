@@ -6,7 +6,6 @@ import {
   Flex,
   Grid,
   Text,
-  useColorMode,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -28,6 +27,7 @@ import { formatShortName } from '@/_base/utils';
 import { IHubClass } from '@/_base/interfaces/class';
 import { createHubFormClassUser, finishHubFormClass, updateHubFormClassUser } from '@/_base/services/form';
 import { IHubFormClass } from '@/_base/interfaces/form';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 
 type RatingQuestion = { id: string; label: string; value: number };
 type FinishedForms = { student_id: string; questions: RatingQuestion[]; hub_form_class_user_id?: string | null };
@@ -37,7 +37,7 @@ interface IProps {
 }
 
 export const Exam: React.FC<IProps> = ({ hub_class }) => {
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const toast = useToast();
   const [targetStudent, setTargetStudent] = useState<IHubUser | null>(null);
   const [lastExam, setLastExam] = useState<IHubFormClass | null>(null);
@@ -547,7 +547,7 @@ function EvaluationForm({
   formTitle?: string;
   formDescription?: string | null;
 }) {
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const [questions, setQuestions] = useState<RatingQuestion[]>(existingData || formQuestions.map((q) => ({ ...q, value: 0 })));
   const [isSuccess, setIsSuccess] = useState(false);
 

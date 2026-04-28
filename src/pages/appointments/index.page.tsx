@@ -12,7 +12,6 @@ import {
   InputGroup,
   InputLeftElement,
   Text,
-  useColorMode,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useState } from 'react';
@@ -20,6 +19,7 @@ import { FaSearch } from 'react-icons/fa';
 import { FiChevronLeft, FiHelpCircle } from 'react-icons/fi';
 import { GenericButton } from '@/components/Buttons/Generic';
 import { useCustomRouter } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { BiSupport } from 'react-icons/bi';
 import { VscRequestChanges } from 'react-icons/vsc';
 import { MdOutlineSchool } from 'react-icons/md';
@@ -34,7 +34,7 @@ const stepsOrder: PageStepsType[] = ['HELP', 'DOUBT', 'TECH_CALENDAR', 'PEDAGO_C
 const Appointment: React.FC = () => {
   const [step, setStep] = useState<PageStepsType>('HELP');
   const router = useCustomRouter();
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const guides: GuideType[] = [
     {
       label: 'Como navegar pela plataforma?',

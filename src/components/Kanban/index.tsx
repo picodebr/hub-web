@@ -17,7 +17,6 @@ import {
   MenuList,
   MenuOptionGroup,
   Text,
-  useColorMode,
   VStack,
   HStack,
   Box,
@@ -37,6 +36,7 @@ import { TextInput } from '@/components/Inputs/Text';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
 import { ColorPicker } from '@/components/ColorPicker';
 import { useInputHandler } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { DateInput } from '@/components/Inputs/Date';
 import { KanbanColumn } from './components/Column';
 import { EMPTY_KANBAN_ITEM, KanbanColumnData, KanbanItemType, kanbanItemSchema } from './interfaces';
@@ -54,7 +54,7 @@ interface IProps {
 export const Kanban: React.FC<IProps> = ({ initialData, onChange, group, canEdit = true, selectedItemId }) => {
   const [kanbanList, setKanbanList] = useState<KanbanColumnData[]>(initialData);
   const [itemToRemove, setItemToRemove] = useState<KanbanItemType | null>(null);
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
 
   const { errors, onInputChange, data, setData, setErrors, submit } = useInputHandler<KanbanItemType>({
     data: EMPTY_KANBAN_ITEM,

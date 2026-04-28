@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { Flex, Grid, Progress, Skeleton, Text, Box, Icon, useColorMode, Badge } from '@chakra-ui/react';
+import { Flex, Grid, Progress, Skeleton, Text, Box, Icon, Badge } from '@chakra-ui/react';
 import { FiPlayCircle, FiCheckCircle, FiClock } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
@@ -8,6 +8,7 @@ import { useCustomRouter } from '@/_base/hooks/CustomRouter';
 import { IHubCourse, IHubCourseActivity } from '@/_base/interfaces/course';
 import { listCourses } from '@/_base/services/course';
 import { useCustomToast } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 
 // --- Variáveis de Animação (Framer Motion) ---
 const containerVariants = {
@@ -25,7 +26,7 @@ const Courses: React.FC = () => {
   const [coursesActivity, setCoursesActivity] = useState<IHubCourseActivity[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const router = useCustomRouter();
   const toast = useCustomToast();
 

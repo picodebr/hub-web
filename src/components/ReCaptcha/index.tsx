@@ -1,12 +1,13 @@
 /* eslint-disable no-console */
-import { Flex, Text, useColorMode } from '@chakra-ui/react';
+import { Flex, Text } from '@chakra-ui/react';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 // import ReCAPTCHA from 'react-google-recaptcha';
 import { PiWarningCircleBold } from 'react-icons/pi';
 
 import { IAppReCaptchaProps } from './interfaces';
 
 export const AppReCaptcha: React.FC<IAppReCaptchaProps> = ({ error }) => {
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
 
   return (
     <Flex direction="column">

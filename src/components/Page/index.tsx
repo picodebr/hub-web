@@ -1,28 +1,27 @@
 import { PropsWithChildren, useState } from 'react';
-import { FiChevronLeft } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import { FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
 import { BsMotherboard } from 'react-icons/bs';
+import { motion } from 'framer-motion';
 
 import { IPageProps } from '@/_base/hooks/Page/interfaces';
-import { Flex, Text, useColorMode } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 import { RedefinePass } from './components/RedefinePass';
 import { MenuItemType } from './interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { IHubUserSchool } from '@/_base/interfaces/school';
-import { PiExamLight } from 'react-icons/pi';
+import { useNavbar } from './components/Navbar';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   selectedPage,
   user,
   children,
   headerLabel,
-  showBackButton = true,
-  backButtonPath,
   hideHeaderOnMobile,
   fullScreenOnMobile,
   setUser,
@@ -30,8 +29,8 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
   const [school, setSchool] = useState<IHubUserSchool | null>(null);
 
-  const { colorMode } = useColorMode();
-  const router = useRouter();
+  const { colorMode } = useDarkMode();
+  const { isSidebarOpen } = useNavbar();
 
   const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
 
@@ -65,14 +64,32 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
           <Flex flex="1" overflow="hidden">
             <Navbar page={selectedPage} user={user} menuItems={menuItems} stockItems={stockItems} school={school} />
             <RedefinePass user={user} />
-            <Flex
-              flex="1"
-              height="100%"
-              overflow="hidden"
-              direction="column"
-              position="relative"
-              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem 1rem 1rem 0', xl: '1.5rem 1.5rem 1.5rem 0' }}
+            <motion.div
+              style={{
+                flex: 1,
+                height: '100%',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                width: '100%',
+              }}
+              transition={{
+                duration: 0.4,
+                ease: 'easeInOut',
+              }}
             >
+              <Flex
+                flex="1"
+                height="100%"
+                overflow="hidden"
+                direction="column"
+                position="relative"
+                p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem 3rem 1rem 2rem', xl: '1.5rem 4rem 1.5rem 2.5rem' }}
+                justifyContent="center"
+                alignItems={!isSidebarOpen ? 'center' : 'stretch'}
+                w="100%"
+              >
               {/* {showBackButton && (
                 <Flex
                   userSelect="none"
@@ -89,6 +106,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               )} */}
               {children}
             </Flex>
+            </motion.div>
           </Flex>
         </>
       )}

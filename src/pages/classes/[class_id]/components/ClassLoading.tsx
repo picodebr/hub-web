@@ -1,5 +1,6 @@
 import React from 'react';
-import { Flex, Text, useColorMode, Icon, Box } from '@chakra-ui/react';
+import { Flex, Text, Icon, Box } from '@chakra-ui/react';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { motion } from 'framer-motion';
 import { FaGraduationCap } from 'react-icons/fa';
 
@@ -8,7 +9,7 @@ interface IClassLoadingProps {
 }
 
 export const ClassLoading: React.FC<IClassLoadingProps> = ({ className = 'selecionada' }) => {
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
 
   // Cores seguindo o padrão do seu tema
   const bgCard = colorMode === 'light' ? 'white' : 'gray800';

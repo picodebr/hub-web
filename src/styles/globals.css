@@ -4,15 +4,23 @@
 @tailwind components;
 @tailwind utilities;
 
-
 p {
-  margin: 0
+  margin: 0;
 }
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      sans-serif;
   }
 
   :root {
@@ -56,17 +64,17 @@ p {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-      /* Palette derived from Rocket Icon */
-  --rocket-red: #FF6B6B;
-  /* Flame / Tip */
-  --rocket-yellow: #FFD93D;
-  /* Body / Window Ring */
-  --rocket-blue: #4D96FF;
-  /* Wing / Window */
-  --rocket-green: #6BCB77;
-  /* Wing / Accent */
-  --rocket-bg: #F0F4F8;
-  /* Light Cloud Background */
+    /* Palette derived from Rocket Icon */
+    --rocket-red: #ff6b6b;
+    /* Flame / Tip */
+    --rocket-yellow: #ffd93d;
+    /* Body / Window Ring */
+    --rocket-blue: #4d96ff;
+    /* Wing / Window */
+    --rocket-green: #6bcb77;
+    /* Wing / Accent */
+    --rocket-bg: #f0f4f8;
+    /* Light Cloud Background */
   }
 
   .dark {
@@ -97,7 +105,7 @@ p {
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    
+
     /* Sidebar variables */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -108,8 +116,6 @@ p {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-
-  
 }
 
 @layer base {
@@ -120,19 +126,24 @@ p {
   body {
     @apply bg-background text-foreground font-sans;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading;
   }
-  
+
   .question-card {
     @apply bg-white rounded-xl p-6 shadow-md mb-6 border border-gray-100 transition-all hover:shadow-lg;
   }
-  
+
   .btn-primary {
     @apply bg-education-primary text-white px-6 py-3 rounded-lg font-medium transition-all hover:bg-opacity-90 active:scale-[0.98];
   }
-  
+
   .btn-secondary {
     @apply bg-education-secondary text-white px-6 py-3 rounded-lg font-medium transition-all hover:bg-opacity-90 active:scale-[0.98];
   }
@@ -142,7 +153,7 @@ p {
   .btn-primary {
     @apply bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-200 px-4 py-2;
   }
-  
+
   .card {
     @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6;
   }
@@ -150,7 +161,6 @@ p {
   .input-field {
     @apply w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none px-4 py-2;
   }
-
 }
 
 #root {
@@ -196,7 +206,6 @@ p {
   color: #888;
 }
 
-
 /* ===============================
    Blockly Overrides
    =============================== */
@@ -205,7 +214,7 @@ p {
 .blocklyText,
 .blocklyToolboxCategoryLabel,
 .blocklyFlyoutLabelText,
-div[role="treeitem"] {
+div[role='treeitem'] {
   font-family: var(--font-outfit), sans-serif !important;
 }
 
@@ -222,7 +231,6 @@ div[role="treeitem"] {
   color: black !important;
   font-family: var(--font-outfit), sans-serif !important;
 }
-
 
 body {
   display: flex;
@@ -323,7 +331,6 @@ body {
    LAYOUT CUSTOMIZADO: STAGE MODE (RESPONSIVE)
    =============================== */
 @media (min-width: 768px) {
-
   /* Default Desktop/Tablet Behavior */
   body:not(.upload-mode) #right-panel {
     flex: 0 0 40%;
@@ -343,7 +350,6 @@ body {
 }
 
 @media (min-width: 1200px) {
-
   /* Large Screens: Revert to ~30% or fixed width */
   body:not(.upload-mode) #right-panel {
     flex: 0 0 33.33333%;
@@ -414,7 +420,7 @@ body.upload-mode .categoryBubble {
 body.stage-mode .blocklyToolboxCategoryLabel,
 body.upload-mode .blocklyToolboxCategoryLabel,
 body.stage-mode .blocklyToolboxCategory .blocklyToolboxCategoryLabel,
-body.stage-mode .blocklyToolboxCategory div[id$=".label"] {
+body.stage-mode .blocklyToolboxCategory div[id$='.label'] {
   font-size: 13px !important;
   line-height: normal !important;
   margin-top: 0 !important;
@@ -446,14 +452,12 @@ body.upload-mode .blocklyToolboxCategory {
 body .myCategoryLabel {
   text-align: center !important;
   font-size: 0.2em !important;
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
-
 
 /* ===============================
    Coluna Direita: Stage (Palco)
    =============================== */
-
 
 #right-panel {
   height: 100% !important;
@@ -515,7 +519,7 @@ body .myCategoryLabel {
 
 .stage-card-image-container {
   height: 60px;
-  transition: height 0.30s ease;
+  transition: height 0.3s ease;
 }
 
 /* Cabeçalho do Palco */
@@ -649,7 +653,7 @@ body .myCategoryLabel {
 }
 
 .sprite-thumbnail.active {
-  border-color: #4C97FF;
+  border-color: #4c97ff;
   background-color: #e6f0ff;
   box-shadow: 0 0 0 2px rgba(76, 151, 255, 0.2);
 }
@@ -790,14 +794,13 @@ body .myCategoryLabel {
   background: white;
 }
 
-.btn-check:checked+.btn-mode {
+.btn-check:checked + .btn-mode {
   background-color: #0d6efd;
   color: white;
 }
 
 /* Responsividade (Mobile) */
 @media (max-width: 767.98px) {
-
   html,
   body {
     overflow: auto;
@@ -841,11 +844,11 @@ body .myCategoryLabel {
 
 .backdrop-select-item:hover {
   transform: scale(1.05);
-  border-color: #4C97FF;
+  border-color: #4c97ff;
 }
 
 .backdrop-select-item.selected {
-  border-color: #4C97FF;
+  border-color: #4c97ff;
   box-shadow: 0 0 0 3px rgba(76, 151, 255, 0.3);
 }
 
@@ -903,7 +906,7 @@ body .myCategoryLabel {
   border: 2px solid #333;
   border-radius: 12px;
   padding: 10px 14px;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14px;
   color: #333;
   white-space: normal;
@@ -978,7 +981,6 @@ body .myCategoryLabel {
   justify-content: center;
 }
 
-
 /* --- ROCKET --- */
 .rocket-container {
   position: relative;
@@ -1011,7 +1013,9 @@ body .myCategoryLabel {
   transform: translateY(-120vh) scale(0.5);
   /* Fly UP and away */
   opacity: 0;
-  transition: transform 1s ease-in, opacity 1s ease-in;
+  transition:
+    transform 1s ease-in,
+    opacity 1s ease-in;
   animation: vibration 0.1s infinite;
   /* Keep shaking while flying away */
 }
@@ -1199,7 +1203,9 @@ body .myCategoryLabel {
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  transition: transform 0.2s, background-color 0.2s;
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
 }
 
 .btn-toggle-code:hover {
@@ -1300,7 +1306,9 @@ body .myCategoryLabel {
   /* TRANSITION LOGIC */
   opacity: 0;
   pointer-events: none;
-  transition: opacity 1s ease-in-out, background 1s ease;
+  transition:
+    opacity 1s ease-in-out,
+    background 1s ease;
 }
 
 #loader-rocket.visible {
@@ -1322,7 +1330,9 @@ body .myCategoryLabel {
 .rocket-container {
   position: relative;
   z-index: 10;
-  transition: transform 1.5s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.5s ease;
+  transition:
+    transform 1.5s cubic-bezier(0.645, 0.045, 0.355, 1),
+    opacity 0.5s ease;
   will-change: transform;
 }
 
@@ -1339,14 +1349,12 @@ body .myCategoryLabel {
   filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
 }
 
-
 /** STATES **/
 
 /* 1. READY (Centered) */
 #loader-rocket.phase-ready .rocket-container {
   transform: translateY(20px);
 }
-
 
 /* 2. FLYING (Vibration) */
 #loader-rocket.phase-flying .rocket-container,
@@ -1355,16 +1363,16 @@ body .myCategoryLabel {
   animation: vibration 0.2s infinite;
 }
 
-
 /* 3. SUCCESS (Flys UP) */
 #loader-rocket.phase-success .rocket-container {
   transform: translateY(-150vh) scale(0.8);
   opacity: 0;
   /* Ensures it fades out while flying away */
-  transition: transform 1.2s cubic-bezier(0.55, 0.055, 0.675, 0.19), opacity 1.2s ease-in;
+  transition:
+    transform 1.2s cubic-bezier(0.55, 0.055, 0.675, 0.19),
+    opacity 1.2s ease-in;
   animation: vibration 0.2s infinite;
 }
-
 
 /* 4. FAILURE */
 #loader-rocket.phase-failure {
@@ -1379,7 +1387,6 @@ body .myCategoryLabel {
   animation: vibration 0.1s infinite;
   /* Mantém vibrando enquanto some */
 }
-
 
 /* --- FUMES --- */
 .rocket-fumes {
@@ -1416,7 +1423,6 @@ body .myCategoryLabel {
   animation-delay: 0.1s;
   height: 20px;
 }
-
 
 /* --- UI TEXT --- */
 .loader-ui {
@@ -1549,16 +1555,16 @@ body .myCategoryLabel {
    CORREÇÃO DE BUG: SCROLLBAR FLUTUANTE
    ========================================= */
 /* Garante que a barra de rolagem do flyout desapareça visualmente se o flyout estiver oculto */
-.blocklyFlyout[style*="display: none"] .blocklyFlyoutScrollbar,
-.blocklyFlyout[style*="visibility: hidden"] .blocklyFlyoutScrollbar {
+.blocklyFlyout[style*='display: none'] .blocklyFlyoutScrollbar,
+.blocklyFlyout[style*='visibility: hidden'] .blocklyFlyoutScrollbar {
   display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
 }
 
 /* Reforço para garantir que o scrollbar suma se o SVG pai estiver oculto */
-svg[style*="display: none"] .blocklyFlyoutScrollbar,
-div[style*="display: none"] .blocklyFlyoutScrollbar {
+svg[style*='display: none'] .blocklyFlyoutScrollbar,
+div[style*='display: none'] .blocklyFlyoutScrollbar {
   display: none !important;
 }
 
@@ -1668,7 +1674,9 @@ div.blocklyHtmlInput {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, transform 0.2s;
+  transition:
+    background-color 0.2s,
+    transform 0.2s;
   cursor: pointer;
 }
 
@@ -1783,7 +1791,7 @@ div.blocklyHtmlInput {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  background-color: #4C97FF;
+  background-color: #4c97ff;
   /* Blue */
   border-radius: 12px 12px 0 0;
   padding: 6px 3px 25px 3px;
@@ -1834,7 +1842,7 @@ div.blocklyHtmlInput {
 }
 
 .vision-lab-modal .modal-header {
-  background-color: #4C97FF !important;
+  background-color: #4c97ff !important;
   color: white !important;
   border: none !important;
   padding: 20px 24px !important;
@@ -1873,12 +1881,16 @@ div.blocklyHtmlInput {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
   border: 1px solid #f1f5f9 !important;
   height: 100% !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
 }
 
 .tool-card:hover {
   transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
   z-index: 2;
 }
 
@@ -1934,4 +1946,265 @@ div.blocklyHtmlInput {
 
 .card-percent:hover {
   box-shadow: 0 15px 30px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* ===============================
+   APPLE DESIGN SYSTEM VARIABLES & COMPONENTS
+   =============================== */
+
+@layer base {
+  :root {
+    /* Glassmorphism */
+    --glass-bg: 0 0% 100% / 0.72;
+    --glass-border: 0 0% 100% / 0.5;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
+
+    /* Apple blobs */
+    --blob-1: 211 100% 65%;
+    --blob-2: 280 80% 70%;
+    --blob-3: 160 60% 65%;
+    --blob-4: 32 90% 70%;
+
+    /* Input & Button Variables */
+    --input-hover: 240 5% 93%;
+  }
+
+  .dark {
+    --glass-bg: 220 20% 11% / 0.8;
+    --glass-border: 220 16% 20% / 0.5;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+
+    --blob-1: 211 100% 35%;
+    --blob-2: 280 60% 40%;
+    --blob-3: 160 40% 35%;
+    --blob-4: 32 70% 40%;
+  }
+
+  body {
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'SF Pro Display',
+      'Segoe UI',
+      Roboto,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* Glassmorphism Card */
+  .glass-card {
+    background: hsla(var(--glass-bg));
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid hsla(var(--glass-border));
+    box-shadow: var(--glass-shadow);
+    border-radius: 20px;
+  }
+
+  /* Apple Input Style */
+  .apple-input {
+    @apply h-12 w-full rounded-xl bg-input px-4 text-foreground placeholder:text-muted-foreground transition-all duration-200 outline-none;
+    border: 1px solid transparent;
+  }
+
+  .apple-input:hover {
+    background: hsl(var(--input-hover));
+  }
+
+  .apple-input:focus {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.25);
+    background: hsl(var(--card));
+  }
+
+  .apple-input.input-error {
+    box-shadow: 0 0 0 2px hsl(var(--destructive) / 0.5);
+  }
+
+  /* Apple Primary Button */
+  .apple-btn {
+    @apply h-12 w-full rounded-xl font-semibold text-primary-foreground transition-all duration-200;
+    background: hsl(var(--primary));
+    border: none;
+    cursor: pointer;
+  }
+
+  .apple-btn:hover {
+    filter: brightness(1.08);
+  }
+
+  .apple-btn:active {
+    transform: scale(0.97);
+  }
+
+  .apple-btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    transform: none;
+    filter: none;
+  }
+
+  /* Apple Secondary Button */
+  .apple-btn-secondary {
+    @apply h-12 w-full rounded-xl font-semibold transition-all duration-200;
+    background: hsl(var(--secondary));
+    color: hsl(var(--primary));
+    border: none;
+    cursor: pointer;
+  }
+
+  .apple-btn-secondary:hover {
+    filter: brightness(0.97);
+  }
+
+  .apple-btn-secondary:active {
+    transform: scale(0.97);
+  }
+
+  .apple-btn-secondary:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    transform: none;
+    filter: none;
+  }
+
+  /* Link with animated underline */
+  .link-animated {
+    @apply relative text-muted-foreground transition-colors duration-200;
+  }
+
+  .link-animated::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-px bg-primary origin-bottom-right transition-transform duration-300 scale-x-0;
+  }
+
+  .link-animated:hover {
+    color: hsl(var(--primary));
+  }
+
+  .link-animated:hover::after {
+    @apply origin-bottom-left scale-x-100;
+  }
+
+  /* Blob Styles */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    will-change: transform;
+  }
+
+  .blob-1 {
+    background: hsl(var(--blob-1));
+  }
+
+  .blob-2 {
+    background: hsl(var(--blob-2));
+  }
+
+  .blob-3 {
+    background: hsl(var(--blob-3));
+  }
+
+  .blob-4 {
+    background: hsl(var(--blob-4));
+  }
+
+  /* Scrollbar Hide */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Keyframe Animations */
+@keyframes float1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 15px) scale(0.95);
+  }
+}
+
+@keyframes float2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-25px, 25px) scale(1.03);
+  }
+  66% {
+    transform: translate(15px, -30px) scale(0.97);
+  }
+}
+
+@keyframes float3 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, 20px) scale(1.04);
+  }
+}
+
+@keyframes checkDraw {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Float Animation Classes */
+.animate-float1 {
+  animation: float1 12s ease-in-out infinite;
+}
+.animate-float2 {
+  animation: float2 15s ease-in-out infinite;
+}
+.animate-float3 {
+  animation: float3 10s ease-in-out infinite;
+}
+
+.animate-check-draw {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: checkDraw 0.5s ease-out 0.3s forwards;
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
 }

@@ -19,7 +19,6 @@ import {
   Button,
   Grid,
   Badge,
-  useColorMode,
   Icon,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
@@ -37,6 +36,7 @@ import { TabSwitch } from '@/components/TabSwitch';
 import { ClassPageView, classPageViews } from './interfaces';
 import { HubTable } from '@/components/Table';
 import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { IHubClass } from '@/_base/interfaces/class';
 import { IHubUser } from '@/_base/interfaces/user';
 import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
@@ -76,7 +76,7 @@ const itemVariants = {
 };
 
 const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const [pageView, setPageView] = useState<ClassPageView>('Projetos');
   const [newProject, setNewProject] = useState<IProject | null>(null);
   const [modalStep, setModalStep] = useState<ModalStep>('creation_type');

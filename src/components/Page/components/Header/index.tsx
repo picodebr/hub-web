@@ -1,8 +1,9 @@
-import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, Divider, Box, Icon } from '@chakra-ui/react';
+import { Flex, Image, ScaleFade, Text, Tooltip, Divider, Box, Icon } from '@chakra-ui/react';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { SelectPicker } from 'rsuite';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { create } from 'zustand';
-import { FiLogOut } from 'react-icons/fi';
+import { FiLogOut, FiMenu } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 
 import { IHubUser } from '@/_base/interfaces/user';
@@ -22,6 +23,7 @@ import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { listSchoolGroups } from '@/_base/services/school';
 import { OptionType } from '@/components/Inputs/interfaces';
 import { updateChosenSchool } from '@/_base/services/user';
+import { useNavbar } from '../Navbar';
 
 interface IProps {
   user?: IHubUser;
@@ -69,8 +71,9 @@ export const Header: React.FC<IProps> = ({
   const [selectedSchoolGroup, setSelectedSchoolGroup] = useState<OptionType | null>(null);
 
   const router = useRouter();
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const { setSchool, school, setCustomActions } = useSelectedSchool();
+  const { isSidebarOpen, setIsSidebarOpen } = useNavbar();
 
   const schoolList = useMemo(() => schools.map((item) => ({ label: item.display_name, value: item.hub_school_id })) || [], [schools]);
   const schoolGroupList = useMemo(() => schoolGroups.map((item) => ({ label: item.display_name, value: item.id })), [schoolGroups]);
@@ -237,6 +240,23 @@ export const Header: React.FC<IProps> = ({
       zIndex={10}
     >
       <Flex align="center" gap="1rem">
+        <Tooltip label={isSidebarOpen ? 'Recolher menu' : 'Expandir menu'} placement="bottom">
+          <Flex
+            cursor="pointer"
+            w="36px"
+            h="36px"
+            align="center"
+            justify="center"
+            borderRadius="lg"
+            transition="all 0.2s"
+            color="gray600"
+            _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.800', color: 'primary.500', transform: 'scale(1.05)' }}
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="only-desktop"
+          >
+            <Icon as={FiMenu} fontSize="20px" />
+          </Flex>
+        </Tooltip>
         <Logo size="md" className="only-desktop" />
         <MobileMenu menuItems={menuItems} page={page} />
       </Flex>

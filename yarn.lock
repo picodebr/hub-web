@@ -3687,6 +3687,11 @@ lru-cache@^10.2.0, lru-cache@^10.4.3:
   resolved "https://registry.npmjs.org/lru-cache/-/lru-cache-10.4.3.tgz"
   integrity sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==
 
+lucide-react@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-1.3.0.tgz#5a2ca68bab21b60bd46d9f11910ff68e75e179f8"
+  integrity sha512-aKUU4jKpXe26Y3xmF3DGg+NXHteRCVT96r/+Jp7wziqvmFr0/x8ReRsES0wHgTvW7OLxiHvFLN+YeyDnK6h0dQ==
+
 math-intrinsics@^1.1.0:
   version "1.1.0"
   resolved "https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz"
