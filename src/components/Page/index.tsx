@@ -34,7 +34,9 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   const { colorMode } = useColorMode();
   const router = useRouter();
 
-  const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
+  const menuItems = (user?.role === 'student' ? studentMenuItems : teacherMenuItems).filter(
+    (e) => user?.role === `master` || e.page !== `vision_lab`,
+  );
 
   return (
     <Flex

@@ -173,7 +173,7 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" gap="1.5rem" h="100%">
+    <Flex direction="column" gap="1.5rem" h="100%" overflow="hidden" pb="0.5rem">
       {/* Dashboard Stats */}
       <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap="1rem">
         <StatCard icon={FaGraduationCap} label="Turma" value={hub_class?.display_name || '...'} bg={bgCard} border={borderColor} />
@@ -272,7 +272,7 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
           <Text textAlign="center">Status</Text>
         </Grid>
 
-        <Flex direction="column" overflowY="auto" maxH="60vh">
+        <Flex direction="column" overflowY="auto" maxH="calc(100% - 3rem)">
           <AnimatePresence mode="popLayout">
             {filteredStudents.map((student, i) => (
               <motion.div
