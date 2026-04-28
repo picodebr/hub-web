@@ -2,6 +2,7 @@ import { Math3D } from './Math3D';
 import { VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE, ShaderManager } from './Shaders';
 import { TextureManager } from './TextureManager';
 import { SpriteData } from '@/_base/domain/entities';
+import { CollisionEngine } from './CollisionEngine';
 
 interface SpriteRenderData extends SpriteData {
   // Extensões de cache
@@ -10,16 +11,17 @@ interface SpriteRenderData extends SpriteData {
 }
 
 export class WebGLRenderer {
-  private gl: WebGL2RenderingContext;
+  private gl: WebGL2RenderingContext | null = null;
   private canvas: HTMLCanvasElement;
-  public textureManager: TextureManager;
+  public textureManager: TextureManager | null = null;
   private isReady: boolean = false;
+  private collisionEngine: CollisionEngine | null = null;
 
-  private program: WebGLProgram;
+  private program!: WebGLProgram;
   private vao: WebGLVertexArrayObject | null = null;
 
   // Matrizes
-  private projMatrix: Float32Array;
+  private projMatrix!: Float32Array;
 
   // Buffer da Geometria (Quad)
   private vertexBuffer: WebGLBuffer | null = null;
@@ -74,13 +76,13 @@ export class WebGLRenderer {
   }
 
   private initUniforms() {
-    this.u_projMatrix = this.gl.getUniformLocation(this.program, 'u_projectionMatrix');
-    this.u_modelMatrix = this.gl.getUniformLocation(this.program, 'u_modelMatrix');
-    this.u_ghost = this.gl.getUniformLocation(this.program, 'u_ghost');
-    this.u_brightness = this.gl.getUniformLocation(this.program, 'u_brightness');
-    this.u_color = this.gl.getUniformLocation(this.program, 'u_color');
-    this.u_image = this.gl.getUniformLocation(this.program, 'u_image');
-    this.u_silhouetteColor = this.gl.getUniformLocation(this.program, 'u_silhouetteColor');
+    this.u_projMatrix = this.gl!.getUniformLocation(this.program, 'u_projectionMatrix');
+    this.u_modelMatrix = this.gl!.getUniformLocation(this.program, 'u_modelMatrix');
+    this.u_ghost = this.gl!.getUniformLocation(this.program, 'u_ghost');
+    this.u_brightness = this.gl!.getUniformLocation(this.program, 'u_brightness');
+    this.u_color = this.gl!.getUniformLocation(this.program, 'u_color');
+    this.u_image = this.gl!.getUniformLocation(this.program, 'u_image');
+    this.u_silhouetteColor = this.gl!.getUniformLocation(this.program, 'u_silhouetteColor');
   }
 
   /**
@@ -125,6 +127,10 @@ export class WebGLRenderer {
     // Re-habilita Blend no novo contexto
     newGl.enable(newGl.BLEND);
     newGl.blendFunc(newGl.ONE, newGl.ONE_MINUS_SRC_ALPHA);
+  }
+
+  public setCollisionEngine(engine: CollisionEngine) {
+    this.collisionEngine = engine;
   }
 
   private initBuffers() {
@@ -231,6 +237,12 @@ export class WebGLRenderer {
         // Sincroniza dimensões reais com o objeto SpriteData padrão para uso na simulação (clamping, etc)
         spr.width = tk.width;
         spr.height = tk.height;
+
+        // Captura os limites reais do conteúdo (sem transparência) para a UI
+        if (spr.costume) {
+          (spr as any)._contentBounds = this.collisionEngine?.getContentBounds(spr.costume);
+        }
+
         this.drawSprite(spr, tk.width, tk.height, tk.tex, spr.id === activeSpriteId);
       }
     }
@@ -289,8 +301,8 @@ export class WebGLRenderer {
     rotRad: number,
     effects: { ghost: number; brightness: number; color: number },
   ) {
-    this.gl.activeTexture(this.gl.TEXTURE0);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
+    this.gl!.activeTexture(this.gl!.TEXTURE0);
+    this.gl!.bindTexture(this.gl!.TEXTURE_2D, tex);
 
     // Gera a ModelMatrix:  M = Translate * Rotate * Scale
     let m = Math3D.identity();
@@ -298,15 +310,15 @@ export class WebGLRenderer {
     if (rotRad !== 0) m = Math3D.rotateZ(m, rotRad);
     m = Math3D.scale(m, [w, h, 1]);
 
-    this.gl.uniformMatrix4fv(this.u_modelMatrix, false, m);
+    this.gl!.uniformMatrix4fv(this.u_modelMatrix, false, m);
 
     // Aplica efeitos (Convertendo sistema Scratch(1 a 100) pra GPU(0.0 a 1.0))
-    this.gl.uniform1f(this.u_ghost, effects.ghost / 100.0);
-    this.gl.uniform1f(this.u_brightness, effects.brightness / 100.0);
-    this.gl.uniform1f(this.u_color, effects.color * (360.0 / 200.0)); // Scratch 200 = 360deg
+    this.gl!.uniform1f(this.u_ghost, effects.ghost / 100.0);
+    this.gl!.uniform1f(this.u_brightness, effects.brightness / 100.0);
+    this.gl!.uniform1f(this.u_color, effects.color * (360.0 / 200.0)); // Scratch 200 = 360deg
 
     // Desenha geometry Triangle Strip (4 vertices = 1 quadrado)
-    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+    this.gl!.drawArrays(this.gl!.TRIANGLE_STRIP, 0, 4);
   }
 
   public getGL() {

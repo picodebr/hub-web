@@ -8,6 +8,10 @@ interface AlphaMask {
   data: Uint8Array; // canal alpha da imagem original (1 byte por pixel)
   w: number; // largura original da imagem
   h: number; // altura original da imagem
+  contentX: number; // x inicial do conteúdo real
+  contentY: number; // y inicial do conteúdo real
+  contentW: number; // largura do conteúdo real
+  contentH: number; // altura do conteúdo real
 }
 
 export class CollisionEngine {
@@ -57,10 +61,37 @@ export class CollisionEngine {
       this.buildCtx.clearRect(0, 0, w, h);
       this.buildCtx.drawImage(img, 0, 0);
       const raw = this.buildCtx.getImageData(0, 0, w, h).data;
-      // Extrai só o canal alpha para economizar memória
+      // Extrai só o canal alpha para economizar memória e calcula bounds reais
       const alpha = new Uint8Array(w * h);
-      for (let i = 0; i < w * h; i++) alpha[i] = raw[i * 4 + 3];
-      this.maskCache.set(url, { data: alpha, w, h });
+      let minX = w, minY = h, maxX = 0, maxY = 0;
+      let hasPixels = false;
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const a = raw[(y * w + x) * 4 + 3];
+          alpha[y * w + x] = a;
+          if (a > 10) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+            hasPixels = true;
+          }
+        }
+      }
+
+      if (!hasPixels) {
+        minX = 0; minY = 0; maxX = w; maxY = h;
+      }
+
+      this.maskCache.set(url, { 
+        data: alpha, 
+        w, h,
+        contentX: minX,
+        contentY: minY,
+        contentW: maxX - minX + 1,
+        contentH: maxY - minY + 1
+      });
     };
     img.onerror = () => this.maskCache.delete(url);
     img.src = url;
@@ -209,6 +240,21 @@ export class CollisionEngine {
     return this.sampleAlpha(sprite, m, stageX, stageY, rot.cos, rot.sin) > 10;
   }
 
+  public getContentBounds(url: string | null) {
+    if (!url) return null;
+    this.ensureMask(url);
+    const m = this.maskCache.get(url);
+    if (!m || m === 'loading') return null;
+    return {
+      x: m.contentX,
+      y: m.contentY,
+      w: m.contentW,
+      h: m.contentH,
+      fullW: m.w,
+      fullH: m.h
+    };
+  }
+
   // ─── WebGL: isTouchingColor ───────────────────────────────────────────────
 
   private colorMatch(r1: number, g1: number, b1: number, hexTarget: string, tolerance = 20): boolean {
@@ -232,6 +278,7 @@ export class CollisionEngine {
 
   public async isTouchingColor(targetSpriteId: string, hexColor: string, backdropUrl: string | null, sprites: SpriteData[]): Promise<boolean> {
     const gl = this.renderer.getGL();
+    if (!gl) return false;
     const W = gl.canvas.width;
     const H = gl.canvas.height;
 
@@ -270,6 +317,7 @@ export class CollisionEngine {
     sprites: SpriteData[],
   ): Promise<boolean> {
     const gl = this.renderer.getGL();
+    if (!gl) return false;
     const W = gl.canvas.width;
     const H = gl.canvas.height;
 

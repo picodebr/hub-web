@@ -138,7 +138,7 @@ export default function StageArea() {
       if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
       flashTimeoutRef.current = setTimeout(() => {
         setFlashSpriteId(null);
-      }, 2000); 
+      }, 3000); 
     };
 
     window.addEventListener('flash-sprite', handleFlash);
@@ -178,7 +178,7 @@ export default function StageArea() {
 
           renderer.preloadNonBlocking(currentBackdropUrl, currentSprites as any);
           getCollisionEngine()?.tickFrame();
-          renderer.drawSceneSync(currentBackdropUrl, currentSprites as any, [1.0, 1.0, 1.0, 1.0], currentActiveId);
+          renderer.drawSceneSync(currentBackdropUrl, currentSprites as any, [1.0, 1.0, 1.0, 1.0], flashSpriteId);
         }
       }
       frameId = requestAnimationFrame(renderLoop);
@@ -390,11 +390,23 @@ export default function StageArea() {
           >
             {spritesWithBubble.map((spr) => {
               if (!spr.bubbleText) return null;
-              const realH = (spr as any)._realHeight || 50;
-              const sizeH = realH * (spr.size / 100);
-              const targetX = spr.x;
-              const targetY = spr.y + sizeH / 2;
-              const isFlippedY = spr.y > 60;
+              const cb = (spr as any)._contentBounds;
+              const size = spr.size / 100;
+              let targetX = spr.x;
+              let targetY = spr.y;
+
+              if (cb) {
+                // Posiciona no topo do CONTEÚDO real (ignora áreas transparentes)
+                const dy = (cb.y + cb.h / 2) - cb.fullH / 2;
+                const dx = (cb.x + cb.w / 2) - cb.fullW / 2;
+                targetY = spr.y - (dy * size) + (cb.h / 2) * size;
+                targetX = spr.x + (dx * size);
+              } else {
+                const realH = (spr as any)._realHeight || 50;
+                targetY = spr.y + (realH * size) / 2;
+              }
+
+              const isFlippedY = targetY > 100;
 
               return (
                 <div
@@ -414,21 +426,34 @@ export default function StageArea() {
             {(() => {
               const flashSprite = sprites.find((s) => s.id === flashSpriteId);
               if (!flashSprite || flashSprite.id === 'stage' || !flashSprite.visible) return null;
+              
+              const cb = (flashSprite as any)._contentBounds;
+              if (!cb) return null;
+
+              // Cálculo para centralizar o retângulo no conteúdo real, não no canva inteiro
+              const size = flashSprite.size / 100;
+              const dx = (cb.x + cb.w / 2) - cb.fullW / 2;
+              const dy = (cb.y + cb.h / 2) - cb.fullH / 2;
+              
+              const xBox = flashSprite.x + (dx * size);
+              const yBox = flashSprite.y - (dy * size);
+              
               return (
                 <div
                   className="flash-bounding-box"
                   style={{
                     position: 'absolute',
-                    left: `calc(50% + ${flashSprite.x}px)`,
-                    top: `calc(50% - ${flashSprite.y}px)`,
-                    width: `${((flashSprite as any)._realWidth || 50) * (flashSprite.size / 100)}px`,
-                    height: `${((flashSprite as any)._realHeight || 50) * (flashSprite.size / 100)}px`,
+                    left: `calc(50% + ${xBox}px)`,
+                    top: `calc(50% - ${yBox}px)`,
+                    width: `${cb.w * size}px`,
+                    height: `${cb.h * size}px`,
                     transform: `translate(-50%, -50%) rotate(${flashSprite.rotationStyle === 'left-right' ? 0 : 90 - flashSprite.angle}deg) scaleX(${flashSprite.rotationStyle === 'left-right' && flashSprite.angle < 0 ? -1 : 1})`,
                     border: '2px dashed #3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.05)',
                     borderRadius: '4px',
                     pointerEvents: 'none',
                     boxSizing: 'border-box',
+                    zIndex: 1000
                   }}
                 />
               );
