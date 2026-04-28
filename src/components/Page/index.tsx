@@ -43,13 +43,14 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
       h="100vh"
       w="100vw"
       flexDirection="column"
-      bg="primary50"
       position="relative"
       overflow="hidden"
       zIndex="0"
+      bg="primary50"
       bgImg={`/patterns/background-${colorMode}.svg`}
       bgRepeat="no-repeat"
       bgSize="cover"
+      // bg="#f6f6f6"
     >
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
@@ -74,7 +75,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               overflow="hidden"
               direction="column"
               position="relative"
-              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem 1rem 1rem 0', xl: '1.5rem 1.5rem 1.5rem 0' }}
+              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem', xl: '1.5rem' }}
             >
               {/* {showBackButton && (
                 <Flex

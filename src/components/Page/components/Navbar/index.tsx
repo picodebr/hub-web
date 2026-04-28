@@ -1,6 +1,6 @@
-import { Flex, Icon, Image, Spinner, Text, Tooltip, useColorMode, Box, Avatar, Divider } from '@chakra-ui/react';
+import { Flex, Icon, Image, Spinner, Text, Tooltip, Box, Divider } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
-import { FiEdit2, FiChevronLeft, FiChevronRight, FiCamera } from 'react-icons/fi';
+import { FiEdit2, FiChevronLeft, FiCamera } from 'react-icons/fi';
 import { Uploader } from 'rsuite';
 import { motion, Variants } from 'framer-motion';
 import NextImage from 'next/image';
@@ -68,7 +68,6 @@ const MotionFlex = motion(Flex);
 
 export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, stockItems, school, defaultOpened = true }) => {
   const router = useRouter();
-  const { colorMode } = useColorMode();
   const { avatar, setAvatar } = useAvatar();
   const { user, setUser } = useProfile();
   const { customActions } = useSelectedSchool();
@@ -126,12 +125,8 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
     }, 250);
   }, []);
 
-  const toggleBg = 'white';
-  const toggleBorder = 'gray200';
-  const toggleColor = 'gray500';
-
   return (
-    <Box position="relative" zIndex={100} display={{ base: `none`, lg: `block` }} pl={isSidebarOpen ? '0' : '1.5rem'} mb="3rem">
+    <Box position="relative" zIndex={100} display={{ base: `none`, lg: `block` }}>
       <motion.nav
         initial={defaultOpened ? 'expanded' : 'collapsed'}
         animate={isSidebarOpen ? 'expanded' : 'collapsed'}
@@ -142,7 +137,6 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
           willChange: 'width, opacity',
           display: 'flex',
           flexDirection: 'column',
-          margin: isSidebarOpen ? (typeof window !== 'undefined' && window.innerWidth > 1280 ? '1.5rem' : '1rem') : '1rem 0rem',
         }}
       >
         {isSidebarOpen ? (
@@ -151,8 +145,9 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
             minW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
             maxW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
             bg="white" // Fundo único para unificar a barra lateral
-            borderRadius="16px"
+            borderRadius="0 16px 16px 0"
             border="1px solid"
+            borderTop="0"
             borderColor="gray200"
             boxShadow="0px 4px 12px rgba(0,0,0,0.03)" // Sombra leve para destacar do fundo da página
             overflow="hidden"
@@ -416,36 +411,6 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
           </Flex>
         ) : null}
       </motion.nav>
-
-      {/* Botão de Expandir Lateral (Quando Colapsado) */}
-      <Tooltip label={'Expandir menu'} placement="right" hasArrow>
-        <Flex
-          display={isSidebarOpen ? 'none' : 'flex'}
-          as={motion.div}
-          position="absolute"
-          right={'12px'}
-          top="2.5rem"
-          zIndex={101}
-          onClick={() => setIsSidebarOpen(true)}
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          cursor="pointer"
-          bg={toggleBg}
-          border="1px solid"
-          borderColor={toggleBorder}
-          borderRadius="full"
-          width="36px"
-          height={'36px'}
-          align="center"
-          justify="center"
-          boxShadow="md"
-          transition="all 0.2s"
-        >
-          <Icon as={FiChevronRight} color={toggleColor} fontSize="20px" />
-        </Flex>
-      </Tooltip>
     </Box>
   );
 };

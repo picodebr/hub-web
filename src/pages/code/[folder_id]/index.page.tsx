@@ -1,14 +1,14 @@
 import { GetServerSideProps } from 'next';
 import { FaPlus, FaRegShareSquare } from 'react-icons/fa';
 import { FiMoreVertical, FiTrash } from 'react-icons/fi';
-import moment from 'moment';
+import { motion } from 'framer-motion';
 
 import { capitalizeString, cookieManager, formatShortName } from '@/_base/utils';
 import { Avatar, Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Skeleton, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { PlusButton } from '@/components/Buttons/Plus';
 import { BsMotherboard } from 'react-icons/bs';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
 import { getCodeProjectFolder } from '@/_base/services/codeProjectFolder';
 import { createCodeProject, removeCodeProject, shareCodeProject } from '@/_base/services/codeProject';
@@ -21,6 +21,9 @@ import { IoChevronDownCircleOutline } from 'react-icons/io5';
 import { AvatarList } from '@/components/AvatarList';
 import { BiCode } from 'react-icons/bi';
 import { TextInput } from '@/components/Inputs/Text';
+import DropdownMenu from 'rsuite/esm/Dropdown/DropdownMenu';
+import { ArrowLeft, Code2, Globe, Lock, Plus } from 'lucide-react';
+import moment from 'moment';
 
 interface IProps {
   folderId: string;
@@ -113,9 +116,20 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
 
   return (
     <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
-      <Flex align="center" justify="flex-end" h="fit-content">
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Code2 className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <Text fontSize="28px">{targetFolder?.name}</Text>
+            <p className="text-sm text-muted-foreground mt-0.5 whitespace-normal">
+              {targetFolder?.projects.length} {targetFolder?.projects.length === 1 ? 'projeto' : 'projetos'}
+            </p>
+          </div>
+        </div>
         <PlusButton label="Novo projeto" leftIcon={<FaPlus />} onClick={() => setNewProjectName(``)} />
-      </Flex>
+      </div>
       <Skeleton
         display="grid"
         overflow="hidden auto"
@@ -126,105 +140,108 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
         borderRadius="md"
         flex="1"
       >
-        {targetFolder?.projects?.map((project) => (
-          <Flex
+        {targetFolder?.projects?.map((project, i) => (
+          <motion.div
             key={project.id}
-            direction="column"
-            bgColor="white"
-            borderRadius="10px"
-            padding="0.75rem 1rem 1rem"
-            color="primary700"
-            border="1px"
-            h="fit-content"
-            gap="1rem"
-            borderColor="gray200"
-            fontSize="18px"
-            cursor="pointer"
-            transition="all 0.1s"
-            _hover={{ boxShadow: `md` }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.06 }}
+            whileHover={{ y: -4 }}
+            className="group glass-card rounded-3xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer border border-border/50"
             onClick={() =>
               Object.keys(project.metadata || {}).length
                 ? router.push(`/code/${folderId}/${project.id}?_p=${project.name}&allow-new-code=true`)
                 : router.push(`/code/${folderId}/${project.id}?_p=${project.name}`)
             }
           >
-            <Flex w="100%" justify="space-between">
-              <Flex gap="16px" align="center">
-                {project.source_code.mode === `block` ? <BsMotherboard fontSize="24px" /> : <LuSquareDashedBottomCode fontSize="29px" />}
-                <Text fontWeight="700">{project.name}</Text>
-              </Flex>
-              <Menu>
-                <MenuButton
-                  onClick={(e) => e.stopPropagation()}
-                  alignSelf="flex-end"
-                  color="gray300"
-                  p="0.45rem"
-                  borderRadius="50%"
-                  transition="0.1s"
-                  mr="-0.5rem"
-                  mb="-0.5rem"
-                  _hover={{ bg: 'gray300', color: 'white' }}
-                >
-                  <FiMoreVertical cursor="pointer" />
-                </MenuButton>
-                <MenuList borderColor="gray300" color="gray600">
-                  <MenuItem
-                    gap="0.5rem"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTargetProjectToRemove(project);
-                    }}
+            {/* Code thumbnail */}
+            <div className="p-3 pb-2 h-40" style={{ overflow: `hidden` }}>
+              <CodeThumbnail lines={[project.metadata?.uploadMode.code || project.source_code?.code || '']} />
+            </div>
+
+            {/* Info */}
+            <div className="px-4 pb-4 pt-1">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <p className="font-semibold text-lg text-foreground  truncate group-hover:text-primary transition-colors">{project.name}</p>
+                </div>
+                <Menu>
+                  <MenuButton
+                    onClick={(e) => e.stopPropagation()}
+                    alignSelf="flex-end"
+                    color="gray300"
+                    p="0.45rem"
+                    borderRadius="50%"
+                    transition="0.1s"
+                    mr="-0.5rem"
+                    mb="-0.5rem"
+                    _hover={{ bg: 'gray300', color: 'white' }}
                   >
-                    <Flex color="red.400">
-                      <FiTrash />
-                    </Flex>
-                    <Text fontSize="15px">Remover</Text>
-                  </MenuItem>
-                  <MenuItem
-                    gap="0.5rem"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTargetProjectToShare(project);
-                    }}
-                  >
-                    <Flex color="green.400">
-                      <FaRegShareSquare />
-                    </Flex>
-                    <Text fontSize="15px">Compartilhar</Text>
-                  </MenuItem>
-                  {user.role === `master` && (
+                    <FiMoreVertical cursor="pointer" />
+                  </MenuButton>
+                  <MenuList borderColor="gray300" color="gray600">
                     <MenuItem
                       gap="0.5rem"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/code/${folderId}/${project.id}?_p=${project.name}&allow-new-code=true`);
+                        setTargetProjectToRemove(project);
                       }}
                     >
-                      <Flex color="blue.400">
-                        <BiCode />
+                      <Flex color="red.400">
+                        <FiTrash />
                       </Flex>
-                      <Text fontSize="15px">Abrir novo code</Text>
+                      <Text fontSize="15px">Remover</Text>
                     </MenuItem>
-                  )}
-                </MenuList>
-              </Menu>
-            </Flex>
-            <Flex
-              border="1px"
-              borderColor="gray200"
-              borderRadius="md"
-              h="8rem"
-              w="100%"
-              bgImage={project.source_code.mode === `block` ? project.snapshot || `` : `/icons/source-code.svg`}
-              bgRepeat="no-repeat"
-              bgSize={project.source_code.mode === `block` ? 'cover' : 'contain'}
-              bgPosition={project.source_code.mode === `block` ? undefined : `center`}
-              bgColor="gray50"
-            />
-            <Text fontSize="14px" fontWeight="400" color="gray500" gap="16px">
-              {moment(project.updated_at).fromNow()}
-            </Text>
-          </Flex>
+                    <MenuItem
+                      gap="0.5rem"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTargetProjectToShare(project);
+                      }}
+                    >
+                      <Flex color="green.400">
+                        <FaRegShareSquare />
+                      </Flex>
+                      <Text fontSize="15px">Compartilhar</Text>
+                    </MenuItem>
+                    {user.role === `master` && (
+                      <MenuItem
+                        gap="0.5rem"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/code/${folderId}/${project.id}?_p=${project.name}&allow-new-code=true`);
+                        }}
+                      >
+                        <Flex color="blue.400">
+                          <BiCode />
+                        </Flex>
+                        <Text fontSize="15px">Abrir novo code</Text>
+                      </MenuItem>
+                    )}
+                  </MenuList>
+                </Menu>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] text-muted-foreground/70 truncate">{moment(project.updated_at).fromNow()}</p>
+                {(() => {
+                  const isPrivate = !!project.private;
+                  return (
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                        isPrivate
+                          ? 'bg-foreground/10 text-foreground border-foreground/20'
+                          : 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400'
+                      }`}
+                      title={isPrivate ? 'Projeto publicado — visível apenas para você' : 'Projeto público — visível para todos'}
+                    >
+                      {isPrivate ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+                      {isPrivate ? 'PRIVADO' : 'PÚBLICO'}
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+          </motion.div>
         ))}
       </Skeleton>
 
@@ -335,4 +352,100 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
   const pageTitle = query._p || 'Meus projetos';
 
   return { props: { selectedPage, pageTitle, folderId } };
+};
+
+interface CodeThumbnailProps {
+  lines: string[];
+  variant?: 'card' | 'large';
+}
+
+const KEYWORDS = ['void', 'int', 'float', 'char', 'bool', 'if', 'else', 'for', 'while', 'return', 'true', 'false', '#include'];
+const FUNCTIONS = [
+  'setup',
+  'loop',
+  'pinMode',
+  'digitalWrite',
+  'digitalRead',
+  'analogRead',
+  'analogWrite',
+  'Serial',
+  'begin',
+  'print',
+  'println',
+  'delay',
+  'attach',
+  'write',
+];
+
+const tokenize = (line: string) => {
+  // Comments first
+  if (line.trim().startsWith('//')) {
+    return [{ text: line, color: 'text-emerald-500/70 dark:text-emerald-400/70' }];
+  }
+  if (line.trim().startsWith('#')) {
+    return [{ text: line, color: 'text-pink-500 dark:text-pink-400' }];
+  }
+
+  const tokens: { text: string; color: string }[] = [];
+  // Split on word boundaries while keeping delimiters
+  const parts = line.split(/(\s+|[(){};,.])/);
+  for (const p of parts) {
+    if (!p) continue;
+    if (KEYWORDS.includes(p)) {
+      tokens.push({ text: p, color: 'text-violet-500 dark:text-violet-400 font-semibold' });
+    } else if (FUNCTIONS.includes(p)) {
+      tokens.push({ text: p, color: 'text-sky-500 dark:text-sky-400' });
+    } else if (/^\d+$/.test(p)) {
+      tokens.push({ text: p, color: 'text-amber-500 dark:text-amber-400' });
+    } else if (/^[A-Z_][A-Z0-9_]+$/.test(p)) {
+      tokens.push({ text: p, color: 'text-rose-500 dark:text-rose-400' });
+    } else if (/^\".*\"$/.test(p) || /^'.*'$/.test(p)) {
+      tokens.push({ text: p, color: 'text-emerald-500 dark:text-emerald-400' });
+    } else {
+      tokens.push({ text: p, color: 'text-foreground/70' });
+    }
+  }
+  return tokens;
+};
+
+const CodeThumbnail = ({ lines, variant = 'card' }: CodeThumbnailProps) => {
+  const visibleLines = useMemo(() => lines.slice(0, variant === 'large' ? 10 : 7), [lines, variant]);
+
+  return (
+    <div className="relative w-full h-full overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+      {/* Editor top bar */}
+      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border/40 bg-background/50 backdrop-blur-sm">
+        <span className="w-2 h-2 rounded-full bg-red-400/80" />
+        <span className="w-2 h-2 rounded-full bg-amber-400/80" />
+        <span className="w-2 h-2 rounded-full bg-emerald-400/80" />
+        <span className="ml-2 text-[9px] font-mono text-muted-foreground/70 truncate">main.ino</span>
+      </div>
+
+      {/* Code body */}
+      <div className="px-2.5 py-2.5 space-y-0.5">
+        {visibleLines.map((line, idx) => {
+          const tokens = tokenize(line);
+          return (
+            <div key={idx} className="flex items-start gap-2 leading-tight">
+              <span className="text-[9px] font-mono text-muted-foreground/40 w-3 text-right select-none flex-shrink-0">{idx + 1}</span>
+              <div className="text-[10px] font-mono whitespace-pre overflow-hidden truncate flex-1">
+                {tokens.length === 0 ? (
+                  <span>&nbsp;</span>
+                ) : (
+                  tokens.map((t, i) => (
+                    <span key={i} className={t.color}>
+                      {t.text}
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Bottom fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background/80 via-background/20 to-transparent pointer-events-none" />
+    </div>
+  );
 };
