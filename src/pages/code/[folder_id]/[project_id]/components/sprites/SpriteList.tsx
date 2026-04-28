@@ -67,6 +67,15 @@ export default function SpriteList() {
   const costumeInputRef = React.useRef<HTMLInputElement>(null);
   const spriteInputRef = React.useRef<HTMLInputElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const [stageWidth, setStageWidth] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    const handleWidthChange = (e: any) => {
+      setStageWidth(e.detail);
+    };
+    window.addEventListener('stage-width-changed', handleWidthChange);
+    return () => window.removeEventListener('stage-width-changed', handleWidthChange);
+  }, []);
 
   const activeSprite = getSpriteById(activeSpriteId);
 
@@ -88,7 +97,11 @@ export default function SpriteList() {
 
   return (
     <React.Fragment>
-      <div className="sprite-management-area h-100 d-flex" ref={containerRef}>
+      <div
+        className="sprite-management-area h-100 d-flex w-100"
+        ref={containerRef}
+        style={{ maxWidth: stageWidth ? `${stageWidth + 3}px` : '485px' }}
+      >
         {/* COLUNA ESQUERDA: Propriedades + Lista de Atores */}
         <div
           className="d-flex flex-column flex-grow-1 bg-white border overflow-hidden position-relative"

@@ -87,12 +87,13 @@ export class PicoVM extends EventEmitter<any> {
 
   /** Restaura o brilho (glow) de todos os blocos ativos no ator selecionado */
   private _refreshActiveHighlights(): void {
-    if (!this.config?.onHighlight) return;
-    const activeId = this.config.getActiveSpriteId();
+    const config = this.config;
+    if (!config || !config.onHighlight) return;
+    const activeId = config.getActiveSpriteId();
 
     for (const thread of this.threads.values()) {
       if (thread.spriteId === activeId && thread.currentBlockId) {
-        this.config.onHighlight(thread.currentBlockId, true);
+        config.onHighlight(thread.currentBlockId, true);
       }
     }
   }
@@ -445,8 +446,9 @@ export class PicoVM extends EventEmitter<any> {
 
     // Proxy de highlight que respeita o estado ativo da interface
     thread.highlight = (id, on) => {
-      if (spriteId === this.config?.getActiveSpriteId()) {
-        this.config.onHighlight?.(id, on);
+      const config = this.config;
+      if (config && spriteId === config.getActiveSpriteId()) {
+        config.onHighlight?.(id, on);
       }
     };
 
@@ -536,6 +538,16 @@ export class PicoVM extends EventEmitter<any> {
     const registry = getSpriteBlockRegistry();
     const ws = optWs || registry.getWorkspace(spriteId);
     if (!ws) return;
+
+    // Inicializa variáveis e listas se o estado runtime estiver vazio.
+    // Isso permite que "Testar Bloco" funcione com os dados atuais do projeto
+    // mesmo sem ter clicado na bandeira verde.
+    if (this.targetVariables.size === 0) {
+      const sprites = this.config.runner.getSprites();
+      sprites.forEach((s) => this._initializeTargetVariables(s));
+      this._initializeFromWorkspace(ws);
+    }
+
     const block = ws.getBlockById(blockId);
     if (!block) return;
 
@@ -634,11 +646,14 @@ export class PicoVM extends EventEmitter<any> {
 
   /** Define valor de variável no escopo correto */
   setVariableValue(targetId: string, varId: string, value: unknown): void {
+    if (!this.config) return;
+
     // Se a variável existe localmente, atualiza localmente
     const localVars = this.targetVariables.get(targetId);
     if (localVars && localVars.has(varId)) {
       localVars.set(varId, value);
       this._updateMonitorIfExisting(targetId, varId, value);
+      this.config.runner.updateVariableValueById?.(varId, value);
       return;
     }
 
@@ -647,15 +662,19 @@ export class PicoVM extends EventEmitter<any> {
     if (globalVars && globalVars.has(varId)) {
       globalVars.set(varId, value);
       this._updateMonitorIfExisting('stage', varId, value);
+      this.config.runner.updateVariableValueById?.(varId, value);
       return;
     }
 
     // Se não existir em lugar nenhum, cria no escopo local por segurança (comportamento Scratch)
-    if (!localVars) {
-      this.targetVariables.set(targetId, new Map());
+    let finalLocalVars = localVars;
+    if (!finalLocalVars) {
+      finalLocalVars = new Map<string, unknown>();
+      this.targetVariables.set(targetId, finalLocalVars);
     }
-    this.targetVariables.get(targetId)!.set(varId, value);
+    finalLocalVars.set(varId, value);
     this._updateMonitorIfExisting(targetId, varId, value);
+    this.config.runner.updateVariableValueById?.(varId, value);
   }
 
   /**
@@ -733,10 +752,13 @@ export class PicoVM extends EventEmitter<any> {
 
   /** Define valor de lista no escopo correto */
   setListValue(targetId: string, listId: string, items: unknown[]): void {
+    if (!this.config) return;
+
     const localLists = this.targetLists.get(targetId);
     if (localLists && localLists.has(listId)) {
       localLists.set(listId, items);
       this._notifyListMonitor(listId, items);
+      this.config.runner.updateListItemsById?.(listId, items);
       return;
     }
 
@@ -744,12 +766,18 @@ export class PicoVM extends EventEmitter<any> {
     if (globalLists && globalLists.has(listId)) {
       globalLists.set(listId, items);
       this._notifyListMonitor(listId, items);
+      this.config.runner.updateListItemsById?.(listId, items);
       return;
     }
 
-    if (!localLists) this.targetLists.set(targetId, new Map());
-    this.targetLists.get(targetId)!.set(listId, items);
+    let finalLocalLists = localLists;
+    if (!finalLocalLists) {
+      finalLocalLists = new Map<string, unknown[]>();
+      this.targetLists.set(targetId, finalLocalLists);
+    }
+    finalLocalLists.set(listId, items);
     this._notifyListMonitor(listId, items);
+    this.config.runner.updateListItemsById?.(listId, items);
   }
 
   /** Retorna os itens de uma lista (para polling externo, se necessário) */

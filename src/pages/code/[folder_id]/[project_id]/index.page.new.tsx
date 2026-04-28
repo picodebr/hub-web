@@ -206,7 +206,7 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                     <StageArea />
                   </div>
 
-                  <div className="management-section flex-grow-1 d-flex flex-column align-items-center">
+                  <div className="management-section flex-grow-1 d-flex flex-column align-items-center w-100">
                     <SpriteList />
                   </div>
                 </>

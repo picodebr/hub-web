@@ -688,6 +688,15 @@ export function useStageRunner() {
     },
     [projectService, checkExecution],
   );
+  
+  const setDraggable = useCallback(
+    (draggable: boolean, targetId?: string) => {
+      if (!checkExecution()) return;
+      const id = targetId || projectService.getActiveSpriteId();
+      projectService.updateSprite(id, { draggable });
+    },
+    [projectService, checkExecution],
+  );
 
   // --- Ações de Mouse & Teclado ---
 
@@ -1402,6 +1411,8 @@ export function useStageRunner() {
       changeVolume,
       getVolume,
       updateMonitorValue,
+      setDraggable,
+
     }),
     [
       isRunning,
@@ -1461,6 +1472,8 @@ export function useStageRunner() {
       changeVolume,
       getVolume,
       updateMonitorValue,
+      setDraggable,
+
     ],
   );
 }

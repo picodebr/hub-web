@@ -31,7 +31,7 @@ export function ScratchAddButton({
     <div
       style={{
         position: 'absolute',
-        ...(center ? { right: '50%', transform: `translateX(50%)`, bottom: '10px' } : { right: '15px', bottom: '15px' }),
+        ...(center ? { right: '50%', transform: `translateX(50%)`, bottom: '15px' } : { right: '15px', bottom: '15px' }),
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',

@@ -90,5 +90,19 @@ export function useTools(
         }
     }, [activeToolId]);
 
-    return { activeToolId, activateTool, commitText, notifyProjectChange };
+    /**
+     * Limpa o estado visual de seleção da ferramenta activa antes de trocar de costume.
+     * Chama deactivate() + activate() na ferramenta actual para que highlight clones
+     * e bounding box sejam destruídos/recriados limpos no novo contexto de desenho.
+     */
+    const clearSelectionForCostumeSwitch = useCallback(() => {
+        if (!toolsRef.current) return;
+        const tool = toolsRef.current[activeToolId];
+        if (tool) {
+            tool.deactivate();
+            tool.activate();
+        }
+    }, [activeToolId]);
+
+    return { activeToolId, activateTool, commitText, notifyProjectChange, clearSelectionForCostumeSwitch };
 }

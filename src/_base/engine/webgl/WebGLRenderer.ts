@@ -13,6 +13,7 @@ export class WebGLRenderer {
   private gl: WebGL2RenderingContext;
   private canvas: HTMLCanvasElement;
   public textureManager: TextureManager;
+  private isReady: boolean = false;
 
   private program: WebGLProgram;
   private vao: WebGLVertexArrayObject | null = null;
@@ -33,6 +34,10 @@ export class WebGLRenderer {
   private u_image: WebGLUniformLocation | null = null;
   private u_silhouetteColor: WebGLUniformLocation | null = null;
 
+  // Persistência para evitar piscadas (Flicker Prevention)
+  private lastValidTextures = new Map<string, { tex: WebGLTexture; width: number; height: number }>();
+  private lastValidBackdrop: { tex: WebGLTexture; width: number; height: number } | null = null;
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     const gl = canvas.getContext('webgl2', {
@@ -42,11 +47,15 @@ export class WebGLRenderer {
     });
 
     if (!gl) {
-      throw new Error('WebGL2 não suportado pelo navegador.');
+      const msg = 'WebGL2 não suportado ou limite de contextos atingido. Tente fechar outras abas do navegador ou reiniciar a aplicação.';
+      console.error('[WebGLRenderer]', msg);
+      this.isReady = false;
+      return;
     }
 
     this.gl = gl;
     this.textureManager = new TextureManager(gl);
+    this.isReady = true;
 
     // Geometria e Shaders
     this.program = ShaderManager.createProgram(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE);
@@ -82,6 +91,13 @@ export class WebGLRenderer {
     if (this.canvas === newCanvas) return;
 
     console.log('[WebGLRenderer] Atualizando canvas de renderização.');
+    // Tenta liberar o contexto anterior para evitar exaustão (WebGL Context Exhaustion)
+    const oldGl = this.gl;
+    if (oldGl) {
+      const loseContext = oldGl.getExtension('WEBGL_lose_context');
+      if (loseContext) loseContext.loseContext();
+    }
+
     this.canvas = newCanvas;
     const newGl = newCanvas.getContext('webgl2', {
       alpha: true,
@@ -91,13 +107,13 @@ export class WebGLRenderer {
 
     if (!newGl) {
       console.error('[WebGLRenderer] Falha ao obter novo contexto WebGL2.');
+      this.isReady = false;
+      this.gl = null;
       return;
     }
 
     this.gl = newGl;
-    // Precisamos atualizar o gl no textureManager também!
-    // Como o TextureManager é privado no original, vamos expor ou atualizar.
-    // No nosso caso o WebGLRenderer recria o textureManager ou o atualiza.
+    this.isReady = true;
     this.textureManager = new TextureManager(newGl);
 
     // Re-inicializa shaders e buffers no novo contexto
@@ -113,6 +129,7 @@ export class WebGLRenderer {
 
   private initBuffers() {
     const gl = this.gl;
+    if (!gl) return;
     this.vao = gl.createVertexArray();
     gl.bindVertexArray(this.vao);
 
@@ -137,6 +154,7 @@ export class WebGLRenderer {
    * Pre-carrega texturas (async - use apenas fora do render loop)
    */
   public async preload(backdropUrl: string | null, sprites: SpriteRenderData[]) {
+    if (!this.isReady || !this.textureManager) return;
     if (backdropUrl) await this.textureManager.loadTexture(backdropUrl);
     for (const spr of sprites) {
       if (spr.visible && spr.costume) {
@@ -151,6 +169,7 @@ export class WebGLRenderer {
    * Texturas ausentes aparecerão nos próximos frames automaticamente.
    */
   public preloadNonBlocking(backdropUrl: string | null, sprites: SpriteRenderData[]): void {
+    if (!this.isReady || !this.textureManager) return;
     this.textureManager.startLoading(backdropUrl);
     for (let i = 0; i < sprites.length; i++) {
       const spr = sprites[i];
@@ -170,6 +189,7 @@ export class WebGLRenderer {
     clearColor: [number, number, number, number] = [1.0, 1.0, 1.0, 1.0],
     activeSpriteId: string | null = null,
   ) {
+    if (!this.isReady || !this.gl || !this.textureManager) return;
     const gl = this.gl;
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -184,8 +204,11 @@ export class WebGLRenderer {
 
     if (backdropUrl) {
       // Textura deve já estar no cache! Pega synchronously:
-      const tk = this.textureManager.getTextureSync(backdropUrl);
+      let tk = this.textureManager.getTextureSync(backdropUrl);
+      if (!tk) tk = this.lastValidBackdrop; // Fallback para evitar piscar o fundo
+
       if (tk) {
+        this.lastValidBackdrop = tk;
         this.drawQuad(tk.tex, 0, 0, 480, 360, 0, { ghost: 0, brightness: 0, color: 0 });
       }
     }
@@ -194,8 +217,15 @@ export class WebGLRenderer {
       const spr = sprites[i];
       if (!spr.visible) continue;
 
-      const tk = this.textureManager.getTextureSync(spr.costume || null);
+      let tk = this.textureManager.getTextureSync(spr.costume || null);
+
+      // Se a textura atual não está pronta, tentamos usar a última que deu certo para este sprite
+      if (!tk && spr.id) {
+        tk = this.lastValidTextures.get(spr.id) || null;
+      }
+
       if (tk) {
+        if (spr.id) this.lastValidTextures.set(spr.id, tk);
         spr._realWidth = tk.width;
         spr._realHeight = tk.height;
         // Sincroniza dimensões reais com o objeto SpriteData padrão para uso na simulação (clamping, etc)
@@ -281,5 +311,9 @@ export class WebGLRenderer {
 
   public getGL() {
     return this.gl;
+  }
+
+  public checkIsReady() {
+    return this.isReady;
   }
 }

@@ -203,7 +203,7 @@ export class CollisionEngine {
     if (!sprite.costume) return true;
     this.ensureMask(sprite.costume);
     const m = this.maskCache.get(sprite.costume);
-    if (!m || m === 'loading') return true; // ainda carregando → permite interação
+    if (!m || m === 'loading') return false; // enquanto carrega ou se falhar, ignora (evita drag no palco inteiro)
 
     const rot = this.getInverseRot(sprite);
     return this.sampleAlpha(sprite, m, stageX, stageY, rot.cos, rot.sin) > 10;

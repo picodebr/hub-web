@@ -112,7 +112,7 @@ export const BackdropGalleryModal: React.FC<BackdropGalleryModalProps> = ({ isOp
               {filteredBackdrops.map((backdrop, index) => (
                 <div key={index} className="col-6 col-sm-4 col-md-3">
                   <div
-                    className="backdrop-library-card h-100 p-3 rounded-4 bg-white border border-2 shadow-sm d-flex flex-column align-items-center justify-content-center transition-all cursor-pointer hover-scale"
+                    className="backdrop-library-card h-100 p-3 rounded-4 bg-white border border-2 shadow-sm d-flex flex-column align-items-center justify-content-center transition-all cursor-pointer hover-scale overflow-hidden"
                     onClick={() => handleSelectBackdrop(backdrop)}
                     style={{ transition: 'transform 0.2s, border-color 0.2s, box-shadow 0.2s' }}
                     onMouseEnter={(e) => {
@@ -126,13 +126,14 @@ export const BackdropGalleryModal: React.FC<BackdropGalleryModalProps> = ({ isOp
                       e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
-                    <div className="w-100 flex-grow-1 d-flex align-items-center justify-content-center mb-2" style={{ height: '100px' }}>
+                    <div className="w-100 flex-grow-1 d-flex align-items-center justify-content-center mb-2" style={{ height: '100px', overflow: 'hidden' }}>
                       <Image
                         src={backdrop.url}
                         alt={backdrop.name}
-                        width={60}
-                        height={45}
-                        className="w-full h-full object-contain filter drop-shadow-sm group-hover:scale-110 transition-transform duration-500"
+                        width={100}
+                        height={100}
+                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                        className="filter drop-shadow-sm group-hover:scale-110 transition-transform duration-500"
                         unoptimized
                       />
                     </div>

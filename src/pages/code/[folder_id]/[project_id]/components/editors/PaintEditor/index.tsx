@@ -18,11 +18,11 @@
  * 3. Update no ProjectContext propaga o base64 para o StageRunner.
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import * as paper from 'paper';
 import { DRAWING_CONFIG } from './constants';
 import { SvgService } from './core/SvgService';
-import { fixupSvgString, decodeSvgUrl } from './services/svgRenderer';
+import { normalizeSvgString, decodeSvgUrl, detectFormat } from './services/svgRenderer';
 
 // UI
 import { Header } from './ui/Header';
@@ -56,6 +56,7 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
     strokeWidth: 1,
     brushSize: 20,
     fillTransparent: false,
+    strokeTransparent: false,
     fontFamily: 'Arial',
     fontSize: 24,
   });
@@ -70,10 +71,7 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
 
   // Paper.js setup
   const scope = usePaperProject(canvasRef);
-  const svgServiceRef = useRef<SvgService | null>(null);
-  useEffect(() => {
-    svgServiceRef.current = scope ? new SvgService(scope) : null;
-  }, [scope]);
+  const svgService = useMemo(() => (scope ? new SvgService(scope) : null), [scope]);
 
   // Stable refs for context sync (prevents re-render cascades)
   const spriteIdRef = useRef(spriteId);
@@ -108,8 +106,8 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
   // - thumbnailSvg: Cortado para os limites do desenho (gera o ícone da galeria).
   // - stageSvg: Mantém o artboard 480x360 (garante posição correta no palco).
   const syncToContext = useCallback(() => {
-    if (!svgServiceRef.current || !scope) return;
-    const { thumbnailSvg, stageSvg } = svgServiceRef.current.exportDrawingSVG({ isBackdrop: isBackdropRef.current });
+    if (!svgService || !scope) return;
+    const { thumbnailSvg, stageSvg } = svgService.exportDrawingSVG({ isBackdrop: isBackdropRef.current });
     if (!thumbnailSvg || !stageSvg) return;
 
     const encode = (s: string) => btoa(new TextEncoder().encode(s).reduce((a, b) => a + String.fromCharCode(b), ''));
@@ -138,7 +136,7 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
   );
 
   // Tools
-  const { activeToolId, activateTool, commitText, notifyProjectChange } = useTools(
+  const { activeToolId, activateTool, commitText, notifyProjectChange, clearSelectionForCostumeSwitch } = useTools(
     scope,
     state,
     saveHistory,
@@ -151,13 +149,27 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
   // Helper: import SVG string into the project
   const importSvgString = useCallback(
     (svgString: string, isInitial: boolean = false) => {
-      if (!scope || !svgServiceRef.current) return;
-      // Sanitize quirks (Inkscape namespaces, Photoshop mime types, inline scripts)
-      // before handing the string to Paper.js — mirrors scratch-svg-renderer/fixup-svg-string.js
-      const sanitized = fixupSvgString(svgString);
-      scope.project.importSVG(sanitized, {
+      // Segurança: Verifica se o motor gráfico (scope) e o projeto estão ativos
+      if (!scope || !scope.project || !svgService) return;
+
+      // Sanitize and normalize (Inkscape namespaces, version 1.1, viewBox fixing, units stripping)
+      const normalized = normalizeSvgString(svgString);
+      
+      console.log(`[PaintEditor] Iniciando importação SVG (${normalized.length} bytes). isInitial:`, isInitial);
+
+      // Garante que este escopo e projeto estão ativos para a importação
+      scope.activate();
+      
+      scope.project.importSVG(normalized, {
         insert: true,
-        onLoad: (importedItem: paper.Item) => {
+        onLoad: (importedItem: paper.Item | null) => {
+          console.log('[PaintEditor] SVG importado com sucesso:', importedItem?.name || 'sem nome', importedItem);
+          
+          // Verifica se o projeto ainda existe no momento do callback
+          if (!importedItem || !scope.project) {
+            console.warn('[PaintEditor] Importação abortada ou falhou: Item nulo ou projeto destruído.');
+            return;
+          }
           // Tenta encontrar nosso marcador de limites do artboard
           const bbox = importedItem.getItem({ name: 'PBT_BOUNDS_BOX', recursive: true });
 
@@ -195,10 +207,14 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
             }
           }
 
-          svgServiceRef.current!.releaseSVG(importedItem);
+          svgService.releaseSVG(importedItem);
 
           if (isInitial) {
             setInitialState();
+            // SINCRONIZAÇÃO INICIAL:
+            // Forçamos um sync imediato após carregar um SVG externo/original para garantir
+            // que o context receba a versão normalizada e com PBT_BOUNDS_BOX.
+            requestAnimationFrame(() => syncToContext());
           } else {
             saveHistory();
             notifyProjectChange();
@@ -213,7 +229,7 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
         },
       });
     },
-    [scope, isBackdrop, saveHistory, setInitialState, zoomToFit, notifyProjectChange],
+    [scope, isBackdrop, svgService, saveHistory, setInitialState, zoomToFit, notifyProjectChange, syncToContext],
   );
 
   // Initial Load - handles both base64 and URL
@@ -222,16 +238,15 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
   const loadedCostumeIdRef = useRef<string | null>(null);
   const loadedUrlRef = useRef<string | null>(null);
   const lastSyncedUrlRef = useRef<string | null>(null);
+  // Monotonic counter — each new load increments it; stale async callbacks compare before acting
+  const currentLoadIdRef = useRef(0);
 
   useEffect(() => {
     if (!scope || !initialUrl) return;
 
-    // Se já carregamos este costume E a URL não mudou, ignoramos.
-    // Também ignoramos se a URL que recebemos é a que acabamos de sincronizar (evita loops).
-    // Ou se a URL contém o marcador de sincronização interna
     const isRecentlySynced = lastSyncedUrlRef.current === initialUrl;
     const isSameUrl = loadedUrlRef.current === initialUrl;
-    
+
     if (loadedCostumeIdRef.current === costumeId && (isSameUrl || isRecentlySynced)) {
       return;
     }
@@ -239,7 +254,12 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
     loadedCostumeIdRef.current = costumeId;
     loadedUrlRef.current = initialUrl;
 
-    // Clear drawing layer (keep PBT_BOUNDS_BOX artboard marker for correct alignment on export)
+    // Invalidate any in-flight load from a previous costume switch
+    const loadId = ++currentLoadIdRef.current;
+
+    // Clear drawing layer BEFORE resetting the SelectTool so that when activate()
+    // calls updateBoundingBox() → getSelectedItems(), the layer is already empty
+    // and no highlight clones are recreated for the old sprite.
     const dl = scope.project.layers.find((l) => l.name === 'drawing');
     if (dl) {
       [...dl.children].forEach((child) => {
@@ -247,90 +267,147 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
       });
     }
 
+    clearSelectionForCostumeSwitch();
+
+    const format = detectFormat(initialUrl);
+    console.log(`[PaintEditor] Efeito de carga disparado. URL: ${initialUrl}, Format: ${format}, CostumeId: ${costumeId}`);
+
     const handleRasterLoad = (raster: paper.Raster, isInitialLoad: boolean = false) => {
       if (!scope || !scope.project) return;
-      const stageCenter = new scope.Point(DRAWING_CONFIG.canvas.w / 2, DRAWING_CONFIG.canvas.h / 2);
 
-      // Garante que o raster está na camada de desenho
       const dl = scope.project.layers.find((l) => l.name === 'drawing');
       if (dl && raster.layer !== dl) {
         dl.addChild(raster);
       }
 
-      // Safety: If image is still huge (over 2000px), downsample it locally using canvas
-      // Note: This will fail if canvas is tainted, so we try-catch it.
-      try {
-        if (raster.width > 2000 || raster.height > 2000) {
-          const maxSafetyDim = 1200;
-          const ratio = Math.min(maxSafetyDim / raster.width, maxSafetyDim / raster.height);
-          const newW = Math.floor(raster.width * ratio);
-          const newH = Math.floor(raster.height * ratio);
-
-          const canvas = document.createElement('canvas');
-          canvas.width = newW;
-          canvas.height = newH;
-          const ctx = canvas.getContext('2d');
-          if (ctx && raster.canvas) {
-            ctx.drawImage(raster.canvas, 0, 0, newW, newH);
-            raster.image = canvas;
-          }
+      const finalizeRaster = () => {
+        // Guard: if another costume was loaded after this one started, discard
+        if (loadId !== currentLoadIdRef.current) {
+          raster.remove();
+          return;
         }
-      } catch (e) {
-        console.warn('[PaintEditor] Could not downsample tainted raster, keeping original.');
-      }
+        if (!scope || !scope.project) return;
+        const stageCenter = new scope.Point(DRAWING_CONFIG.canvas.w / 2, DRAWING_CONFIG.canvas.h / 2);
+        raster.position = stageCenter;
 
-      raster.position = stageCenter;
-      const rb = raster.bounds;
+        const rb = raster.bounds;
+        const scaleFactor = isBackdrop ? 1.0 : 0.8;
+        const maxW = DRAWING_CONFIG.artboard.w * scaleFactor;
+        const maxH = DRAWING_CONFIG.artboard.h * scaleFactor;
 
-      const scaleFactor = isBackdrop ? 1.0 : 0.8;
-      const maxW = DRAWING_CONFIG.artboard.w * scaleFactor;
-      const maxH = DRAWING_CONFIG.artboard.h * scaleFactor;
+        if (rb.width > maxW || rb.height > maxH || isBackdrop) {
+          const scale = Math.min(maxW / rb.width, maxH / rb.height);
+          raster.applyMatrix = true;
+          raster.scale(scale);
+        }
 
-      // REDIMENSIONAMENTO: Garante que a imagem caiba no artboard
-      if (rb.width > maxW || rb.height > maxH || isBackdrop) {
-        const scale = Math.min(maxW / rb.width, maxH / rb.height);
-        raster.applyMatrix = true; // Garante que a escala seja "assada" na geometria antes da exportação
-        raster.scale(scale);
-      }
+        if (isInitialLoad) {
+          setInitialState();
+        } else {
+          saveHistory();
+        }
 
-      if (isInitialLoad) {
-        setInitialState();
-      } else {
-        saveHistory();
-      }
-      
-      // Sincronização imediata e de alta prioridade para o palco
-      // Isso evita o 'flash' de imagem gigante ao importar PNGs grandes
-      if (isInitialLoad) {
         requestAnimationFrame(() => syncToContext());
+        setTimeout(() => zoomToFit(), 50);
+      };
+
+      const needsDownsample = raster.width > 2000 || raster.height > 2000;
+      if (needsDownsample && typeof createImageBitmap === 'function') {
+        const maxSafetyDim = 1200;
+        const ratio = Math.min(maxSafetyDim / raster.width, maxSafetyDim / raster.height);
+        const newW = Math.max(1, Math.floor(raster.width * ratio));
+        const newH = Math.max(1, Math.floor(raster.height * ratio));
+
+        const sourceImage = raster.image as HTMLImageElement | HTMLCanvasElement | ImageBitmap;
+        createImageBitmap(sourceImage, { resizeWidth: newW, resizeHeight: newH, resizeQuality: 'high' })
+          .then((bitmap) => {
+            if (loadId !== currentLoadIdRef.current) {
+              bitmap.close();
+              raster.remove();
+              return;
+            }
+            const offscreen = document.createElement('canvas');
+            offscreen.width = newW;
+            offscreen.height = newH;
+            const ctx = offscreen.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(bitmap, 0, 0);
+              bitmap.close();
+              raster.image = offscreen;
+            }
+            requestAnimationFrame(finalizeRaster);
+          })
+          .catch(() => {
+            if (loadId !== currentLoadIdRef.current) {
+              raster.remove();
+              return;
+            }
+            console.warn('[PaintEditor] createImageBitmap falhou no downsample, usando imagem original.');
+            requestAnimationFrame(finalizeRaster);
+          });
       } else {
-        syncToContext();
+        requestAnimationFrame(finalizeRaster);
       }
-      
-      setTimeout(() => zoomToFit(), 50);
     };
 
-    if (initialUrl.startsWith('data:image/svg+xml') || initialUrl.includes('<svg') || initialUrl.endsWith('.svg') || initialUrl.includes('.svg')) {
+    if (format === 'svg') {
+      console.log('[PaintEditor] Buscando SVG...', initialUrl);
       decodeSvgUrl(initialUrl)
-        .then((svgString) => importSvgString(svgString, true))
+        .then((svgString) => {
+          if (loadId !== currentLoadIdRef.current) {
+            console.log('[PaintEditor] Carga SVG descartada (stale loadId)');
+            return;
+          }
+          console.log('[PaintEditor] SVG decodificado, enviando para importSvgString');
+          importSvgString(svgString, true);
+        })
         .catch((err: any) => {
-          console.error('Erro ao decodificar ou carregar SVG:', err);
-          // Fallback para raster se falhar como SVG
+          if (loadId !== currentLoadIdRef.current) return;
+          console.error('[PaintEditor] Erro ao carregar/decodificar SVG:', err);
+          console.warn('[PaintEditor] Fallback para Raster devido a erro no SVG');
           const raster = new scope.Raster(initialUrl);
-          raster.crossOrigin = 'anonymous'; // FIX: Evita Tainted Canvas em exportações S3
-          raster.onLoad = () => handleRasterLoad(raster, true);
+          if (initialUrl.startsWith('http') || initialUrl.startsWith('/')) {
+            raster.crossOrigin = 'anonymous';
+          }
+          raster.onLoad = () => {
+            if (loadId !== currentLoadIdRef.current) {
+              raster.remove();
+              return;
+            }
+            handleRasterLoad(raster, true);
+          };
+          raster.onError = () => {
+            console.error('[PaintEditor] Erro fatal ao carregar imagem raster:', initialUrl);
+          };
         });
     } else {
-      // Para PNG/JPG e data URLs
       const raster = new scope.Raster(initialUrl);
-      // Só aplica anonymous se for URL externa (S3). Data URLs não precisam e podem dar erro em alguns browsers se setado.
-      if (initialUrl.startsWith('http')) {
+      if (initialUrl.startsWith('http') || initialUrl.startsWith('/')) {
         raster.crossOrigin = 'anonymous';
       }
-      raster.onLoad = () => handleRasterLoad(raster, true);
-      raster.onError = (err: any) => console.error('[PaintEditor] Erro ao carregar Raster:', err);
+      raster.onLoad = () => {
+        if (loadId !== currentLoadIdRef.current) {
+          raster.remove();
+          return;
+        }
+        handleRasterLoad(raster, true);
+      };
+      raster.onError = () => {
+        console.error('[PaintEditor] Erro fatal ao carregar imagem raster:', initialUrl);
+      };
     }
-  }, [scope, initialUrl, costumeId, importSvgString, saveHistory, setInitialState, zoomToFit, isBackdrop, notifyProjectChange]);
+  }, [
+    scope,
+    initialUrl,
+    costumeId,
+    importSvgString,
+    isBackdrop,
+    clearSelectionForCostumeSwitch,
+    syncToContext,
+    saveHistory,
+    setInitialState,
+    zoomToFit,
+  ]);
 
   const handleFlip = useCallback(
     (axis: 'x' | 'y') => {
@@ -513,6 +590,7 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
         strokeWidth={state.strokeWidth}
         brushSize={state.brushSize}
         fillTransparent={state.fillTransparent}
+        strokeTransparent={state.strokeTransparent}
         fontFamily={state.fontFamily}
         fontSize={state.fontSize}
         activeToolId={activeToolId}

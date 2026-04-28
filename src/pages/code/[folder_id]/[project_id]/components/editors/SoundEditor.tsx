@@ -44,10 +44,10 @@ const RibbonBtn: React.FC<{
             ${isShort ? 'p-1 min-w-[32px]' : 'p-2 min-w-[44px]'}
             ${
               disabled
-                ? 'opacity-30 cursor-default'
+                ? 'opacity-20 grayscale pointer-events-none'
                 : isActive
-                  ? 'bg-[#4c97ff] text-white shadow-sm'
-                  : 'text-slate-500 hover:bg-white hover:shadow-md hover:scale-105 active:scale-95'
+                  ? 'bg-[#4483ff] text-white shadow-sm'
+                  : 'text-[#4483ff] hover:bg-white hover:shadow-md hover:scale-105 active:scale-95'
             }`}
   >
     <div className={`flex items-center justify-center ${isShort ? 'h-4' : 'h-5'}`}>{children}</div>
@@ -426,10 +426,10 @@ export default function SoundEditor() {
   // ── Render ──────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex h-full w-full bg-[#f0f0f0] overflow-hidden min-h-0 min-w-0">
-      {/* Unified Container - Clean look without heavy borders */}
-      <div className="flex-1 flex overflow-hidden rounded-tr-[16px] bg-[#fafafa]">
+      {/* Unified Container with border matching Blockly Workspace */}
+      <div className="flex-1 flex overflow-hidden border-t-[1px] border-r-[1px] border-[#ccc] rounded-tr-[16px] bg-[#fafafa] shadow-[inset_-3px_0_0_0_black]">
         {/* ── Sidebar ── */}
-        <div className="flex flex-col bg-[#f8fafc] shrink-0 relative z-[200] overflow-visible" style={{ width: '90px', borderRight: '1px solid #ccc' }}>
+        <div className="w-[90px] flex flex-col bg-[#f8fafc] border-r border-[#ccc] flex-shrink-0 relative z-[200] overflow-visible">
           <div className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-2 items-center custom-scrollbar relative">
             {(activeSprite.sounds ?? []).map((sound, index) => {
               const isActive = activeSprite.currentSoundId === sound.id && viewMode === 'editor';
@@ -450,7 +450,7 @@ export default function SoundEditor() {
                                         ${
                                           isActive
                                             ? 'bg-[#4483ff] text-white border-2 border-[#4483ff] shadow-[0_0_0_2px_rgba(68,131,255,0.3)]'
-                                            : 'bg-white text-[#575e75] border-2 border-[#ddd] hover:border-[#4483ff]'
+                                            : 'bg-white text-[#575e75] border-2 border-[#c3cddb] hover:border-[#4483ff]'
                                         }`}
                   style={{
                     paddingTop: S ? '12px' : '20px',
@@ -543,7 +543,7 @@ export default function SoundEditor() {
         </div>
 
         {/* ── Main Area ───────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-[#f0f0f0]">
+        <div className="flex-1 flex flex-col overflow-hidden bg-[#e9eef2]">
           {/* Ribbon Style Header */}
           <div
             className="flex bg-[#fafafa] border-b border-[#ccc] shrink-0 select-none overflow-x-auto overflow-y-hidden custom-scrollbar items-center px-2"
@@ -659,7 +659,7 @@ export default function SoundEditor() {
                           buffer={audioBuffer}
                           height={S ? 80 : 200}
                           playhead={playhead}
-                          color="#4c97ff"
+                          color="#4483ff"
                           selection={selection}
                           onSelectionChange={setSelection}
                         />
@@ -673,16 +673,14 @@ export default function SoundEditor() {
                       onClick={handlePlay}
                       disabled={loading || !audioBuffer || applyingEffect}
                       className={`shadow-xl flex items-center justify-center transition-all duration-200 border-white
-                                                ${
-                                                  isPlaying
-                                                    ? 'bg-gradient-to-br from-[#ff6680] to-[#ff4466] scale-110'
-                                                    : 'bg-gradient-to-br from-[#4c97ff] to-[#3373cc] hover:scale-110 active:scale-95 shadow-[#4c97ff]/20'
-                                                } ${!audioBuffer || loading || applyingEffect ? 'opacity-40 grayscale pointer-events-none' : ''}`}
+                                                ${isPlaying ? 'scale-110' : 'hover:scale-110 active:scale-95 shadow-lg'} 
+                                                ${!audioBuffer || loading || applyingEffect ? 'opacity-80 grayscale-[0.3] cursor-not-allowed' : 'cursor-pointer'}`}
                       style={{
                         width: playSize,
                         height: playSize,
                         borderRadius: '50%',
                         borderWidth: playBorder,
+                        backgroundColor: isPlaying ? '#ff4d4d' : '#4483ff',
                       }}
                     >
                       <i
@@ -742,8 +740,15 @@ export default function SoundEditor() {
 
                         <button
                           onClick={recordingStatus === 'idle' ? handleStartRecording : handleStopRecording}
-                          className={`border-white shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${recordingStatus === 'recording' ? 'bg-slate-800' : 'bg-red-500'}`}
-                          style={{ width: playSize, height: playSize, borderRadius: '50%', borderWidth: playBorder - 1 }}
+                          className={`border-white shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95`}
+                          style={{ 
+                            width: playSize, 
+                            height: playSize, 
+                            borderRadius: '50%', 
+                            borderWidth: playBorder - 1, 
+                            cursor: 'pointer',
+                            backgroundColor: recordingStatus === 'recording' ? '#333333' : '#ff4d4d'
+                          }}
                         >
                           {recordingStatus === 'recording' ? (
                             <div className="w-5 h-5 bg-white rounded-sm" />
@@ -771,14 +776,20 @@ export default function SoundEditor() {
                         </div>
 
                         <div className={`bg-sky-50 rounded-2xl ${S ? 'p-2' : 'p-3'} border border-sky-100`}>
-                          <WaveformViewer buffer={recordedBuffer} height={S ? 60 : 100} color="#0ea5e9" playhead={recordedPlayhead} />
+                          <WaveformViewer buffer={recordedBuffer} height={S ? 60 : 100} color="#4483ff" playhead={recordedPlayhead} />
                         </div>
 
                         <div className="flex items-center justify-center">
                           <button
                             onClick={handlePlayRecorded}
-                            className={`shadow-lg flex items-center justify-center transition-all border-white ${isPlayingRecorded ? 'bg-red-500' : 'bg-sky-400'}`}
-                            style={{ width: S ? 40 : 64, height: S ? 40 : 64, borderRadius: '50%', borderWidth: S ? 3 : 4 }}
+                            className={`shadow-lg flex items-center justify-center transition-all border-white ${isPlayingRecorded ? 'bg-red-500' : ''}`}
+                            style={{ 
+                              width: S ? 40 : 64, 
+                              height: S ? 40 : 64, 
+                              borderRadius: '50%', 
+                              borderWidth: S ? 3 : 4,
+                              backgroundColor: isPlayingRecorded ? '#ff4d4d' : '#4483ff'
+                            }}
                           >
                             <i
                               className={`bi ${isPlayingRecorded ? 'bi-stop-fill' : 'bi-play-fill'} text-white ${!isPlayingRecorded && 'pl-1'}`}
@@ -801,8 +812,8 @@ export default function SoundEditor() {
                         </button>
                         <button
                           onClick={handleSaveRecording}
-                          className={`flex-[2] bg-gradient-to-r from-sky-400 to-sky-600 ${S ? 'py-2' : 'py-3'} rounded-[32px] font-bold text-sm text-white shadow-lg shadow-sky-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all`}
-                          style={{ borderRadius: '32px' }}
+                          className={`flex-[2] ${S ? 'py-2' : 'py-3'} font-bold text-sm text-white shadow-lg shadow-sky-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all`}
+                          style={{ borderRadius: '32px', backgroundColor: '#4483ff' }}
                         >
                           Salvar som
                         </button>

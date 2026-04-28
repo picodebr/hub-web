@@ -114,6 +114,8 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
       resetTimer: () => runner.resetTimer(),
       askAndWait: (q, id) => runner.askAndWait(q, id),
       getSpriteProperty: (t, p) => runner.getSpriteProperty(t, p),
+      setDraggable: (d, id) => runner.setDraggable(d, id),
+
 
       // State readers — leem diretamente do ProjectService (fonte de verdade)
       // IMPORTANTE: NÃO usar spritesRef.current aqui. O React state é sincronizado
@@ -187,6 +189,17 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
 
       // Debugging
       debugMode: vm.debugMode,
+
+      // State writers — sincronizam runtime da VM com o ProjectService persistente
+      isUploadMode: isUploadModeRef.current,
+      updateVariableValueById: (id, val) => {
+        const mode = isUploadModeRef.current ? 'upload' : 'stage';
+        getProjectService().updateVariableValueById(mode, id, val);
+      },
+      updateListItemsById: (id, items) => {
+        const mode = isUploadModeRef.current ? 'upload' : 'stage';
+        getProjectService().updateListItemsById(mode, id, items);
+      },
 
       // Hardware board
       board: board ?? null,

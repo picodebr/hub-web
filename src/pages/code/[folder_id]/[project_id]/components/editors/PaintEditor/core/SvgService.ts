@@ -74,8 +74,10 @@ export class SvgService {
     const exportOptions: IPaintExportOptions = {
       asString: true,
       match: (item: paper.Item) => {
-        // Inclui itens visíveis OU nossos marcadores especiais (mesmo que ocultos)
-        return item.visible || item.name === 'PBT_BOUNDS_BOX' || (item as any).guide || item.name === 'SCRATCH_BBOX_HACK';
+        // Para o palco e miniatura, exportamos APENAS o que é visível para o usuário.
+        // Isso evita que retângulos invisíveis de suporte (HACKs/GUIAs) interfiram 
+        // no teste de colisão (hit-test) do palco.
+        return item.visible && !item.locked && !(item as any).guide && item.name !== 'SCRATCH_BBOX_HACK' && item.name !== 'PBT_BOUNDS_BOX';
       }
     };
 
@@ -128,9 +130,12 @@ export class SvgService {
   releaseSVG(importedNode: paper.Item) {
     const project = this.scope.project;
     if (!importedNode || !project) return;
+    
+    console.log('[SvgService] Iniciando releaseSVG para o nó:', importedNode.name || 'Group', importedNode);
 
     // Encontra a camada de desenho
     const dl = project.layers.find((l) => l.name === 'drawing') || project.activeLayer;
+    console.log('[SvgService] Camada de destino (drawing):', dl.name, dl);
 
     const processNode = (node: paper.Item) => {
       // Remove máscaras de recorte que o Scratch às vezes gera e que atrapalham a edição

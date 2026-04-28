@@ -269,6 +269,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         volume: 100,
         bubbleText: '',
         bubbleType: null,
+        draggable: false,
       } as SpriteData;
     }
     return sprites.find((s) => s.id === activeSpriteId) || sprites[0];

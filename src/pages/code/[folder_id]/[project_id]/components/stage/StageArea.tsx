@@ -235,14 +235,17 @@ export default function StageArea() {
         }
 
         potentialClickIdRef.current = spr.id;
-
-        if (!isStageFullScreen) {
+        
+        const isDraggable = !isStageFullScreen || !!spr.draggable;
+        
+        if (isDraggable) {
           setDraggingId(spr.id);
           dragState.draggingId = spr.id;
 
           dragStartRef.current.spriteX = spr.x;
           dragStartRef.current.spriteY = spr.y;
         }
+
         return;
       }
     }
@@ -254,17 +257,17 @@ export default function StageArea() {
     const updateScale = () => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      const availableWidth = Math.max(10, rect.width - 2);
-      const availableHeight = Math.max(10, rect.height - 2);
+      const availableWidth = Math.max(10, rect.width - 32);
+      // Fora do modo tela cheia, a altura não deve restringir a escala para evitar loops de redimensionamento,
+      // já que o contêiner do palco tem altura automática.
+      const availableHeight = isStageFullScreen ? Math.max(10, rect.height - 32) : 9999;
 
-      const scaleW = availableWidth / 480;
-      const scaleH = availableHeight / 360;
+      const scaleW = (availableWidth - 2) / 480;
+      const scaleH = (availableHeight - 2) / 360;
 
       let newScale = Math.min(scaleW, scaleH, 2.0);
-      if (!isStageFullScreen && newScale > 1) {
-        newScale = 1.0;
-      }
       setScale(newScale);
+      window.dispatchEvent(new CustomEvent('stage-width-changed', { detail: 480 * newScale + 2 }));
     };
 
     const observer = new ResizeObserver(() => updateScale());
@@ -334,9 +337,13 @@ export default function StageArea() {
     >
       <div
         style={{
-          width: `${480 * scale}px`,
-          height: `${360 * scale}px`,
+          width: `${480 * scale + 2}px`,
+          height: `${360 * scale + 2}px`,
           position: 'relative',
+          border: '1px solid #ccc',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          boxSizing: 'border-box',
         }}
       >
         <div
@@ -348,14 +355,12 @@ export default function StageArea() {
             width: '480px',
             height: '360px',
             transform: `scale(${scale})`,
-            border: '1px solid #ccc',
-            borderRadius: '16px',
-            boxSizing: 'content-box',
             transformOrigin: `top left`,
             position: `absolute`,
             top: 0,
             left: 0,
             margin: 0,
+            border: 'none',
           }}
           onMouseDown={handleStageMouseDown}
         >

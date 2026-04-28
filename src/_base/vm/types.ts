@@ -72,6 +72,8 @@ export interface VMRunnerMethods {
     resetTimer(): void;
     askAndWait(question: string, spriteId?: string): Promise<string>;
     getSpriteProperty(target: string, prop: string): string | number;
+    setDraggable(draggable: boolean, spriteId?: string): void;
+
 
     // State readers (needed by reporter blocks)
     getSprites(): SpriteData[];
@@ -98,6 +100,11 @@ export interface VMRunnerMethods {
 
     // Hardware board (null quando não conectado)
     board: IHardwareBoard | null;
+
+    // State writers (sincroniza runtime VM de volta para o ProjectService)
+    isUploadMode?: boolean;
+    updateVariableValueById?(id: string, value: any): void;
+    updateListItemsById?(id: string, items: any[]): void;
 }
 
 // ─────────────────────────────────────────────────────────────

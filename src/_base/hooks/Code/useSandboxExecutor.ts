@@ -127,6 +127,7 @@ export function useSandboxExecutor() {
       else if (data.action === 'broadcastAndWait') await getPicoVM().triggerBroadcast(data.args[0]);
       else if (data.action === 'createClone') await createClone(data.args[0], spriteId);
       else if (data.action === 'deleteClone') await deleteClone(spriteId);
+      else if (data.action === 'setDraggable') stageContext.setDraggable(data.args[0], spriteId);
       // Sensores (StageRunner)
       else if (data.action === 'isTouching') result = isTouching(spriteId, data.args[0]);
       else if (data.action === 'isTouchingColor') result = await touchingColor(data.args[0], spriteId);

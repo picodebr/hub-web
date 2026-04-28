@@ -323,6 +323,12 @@ export class BlockInterpreter {
         r.resetTimer();
         break;
       }
+      case 'sensing_setdragmode': {
+        const mode = block.getFieldValue('DRAG_MODE');
+        r.setDraggable(mode === 'draggable', id);
+        break;
+      }
+
 
       // ══════════════════════════════════════════════
       // EVENTOS (transmissão)

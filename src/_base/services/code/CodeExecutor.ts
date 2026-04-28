@@ -61,6 +61,7 @@ export class CodeExecutor {
             function switchBackdropAndWait(id) { return callParent('switchBackdropAndWait', [id]); }
             function createClone(targetId) { return callParent('createClone', [targetId]); }
             function deleteClone() { return callParent('deleteClone', []); }
+            function setDraggable(draggable) { return callParent('setDraggable', [draggable]); }
 
             
             // Visibility & Size
@@ -241,6 +242,7 @@ export class CodeExecutor {
                 setEffect, changeEffect, clearEffects, goToLayer, goForwardLayers,
                 broadcast, broadcastAndWait,
                 createClone, deleteClone,
+                setDraggable,
                 get x() { return window.__sprite_x || 0; },
                 get y() { return window.__sprite_y || 0; },
                 get angle() { return window.__sprite_angle || 90; },
@@ -361,7 +363,7 @@ export class CodeExecutor {
                             };
                         };
 
-                        ['move', 'turn', 'glide', 'setRotationStyle', 'sayFor', 'thinkFor', 'wait', 'yieldFrame', 'setX', 'setY', 'addX', 'addY', 'bounceOnEdge', 'setSize', 'changeSize', 'show', 'hide', 'switchCostume', 'goTo', 'goToMouse', 'pointToMouse', 'broadcast', 'broadcastAndWait', 'askAndWait', 'switchBackdropAndWait', 'setEffect', 'changeEffect', 'clearEffects', 'goToLayer', 'goForwardLayers', 'getSpriteProperty', 'isTouchingColor', 'isColorTouchingColor', 'createClone', 'deleteClone', 'playSound', 'playSoundUntilDone', 'stopAllSounds', 'stopAll', 'setSoundEffect', 'changeSoundEffect', 'clearSoundEffects', 'setVolume', 'changeVolume'].forEach(name => {
+                        ['move', 'turn', 'glide', 'setRotationStyle', 'sayFor', 'thinkFor', 'wait', 'yieldFrame', 'setX', 'setY', 'addX', 'addY', 'bounceOnEdge', 'setSize', 'changeSize', 'show', 'hide', 'switchCostume', 'goTo', 'goToMouse', 'pointToMouse', 'broadcast', 'broadcastAndWait', 'askAndWait', 'switchBackdropAndWait', 'setEffect', 'changeEffect', 'clearEffects', 'goToLayer', 'goForwardLayers', 'getSpriteProperty', 'isTouchingColor', 'isColorTouchingColor', 'createClone', 'deleteClone', 'playSound', 'playSoundUntilDone', 'stopAllSounds', 'stopAll', 'setSoundEffect', 'changeSoundEffect', 'clearSoundEffects', 'setVolume', 'changeVolume', 'setDraggable'].forEach(name => {
                             if (window.sprite[name]) wrapAction(localSprite, name);
                             if (window.stage[name]) wrapAction(localStage, name);
                         });

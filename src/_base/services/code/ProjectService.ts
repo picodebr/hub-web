@@ -425,6 +425,14 @@ export class ProjectService extends EventEmitter<ProjectEvents> {
     this.spriteService.bumpRevision();
   }
 
+  public updateVariableValueById(mode: 'stage' | 'upload', id: string, value: string | number | boolean): void {
+    this.variableService.updateVariableValueById(mode, id, value);
+  }
+
+  public updateListItemsById(mode: 'stage' | 'upload', id: string, items: any[]): void {
+    this.variableService.updateListItemsById(mode, id, items);
+  }
+
   public forceSyncLists(): void {
     this.variableService.forceSyncLists();
   }
