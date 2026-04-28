@@ -238,7 +238,7 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
   const subTextColor = colorMode === 'light' ? 'gray500' : 'gray400';
 
   return (
-    <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflowY="auto" pb="0.5rem">
+    <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflowY="auto">
       {/* 1. HERO BANNER: Ciclo de Avaliação (DESIGN CLEAN) */}
       <Flex
         bg={bgCard}
