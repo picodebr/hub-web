@@ -54,7 +54,7 @@ export default function SpriteList() {
 
   // switchCostume removed
 
-  const backdropImage = (activeBackdrop as BackdropData)?.url ?? '/img/fundo.png';
+  const backdropImage = (activeBackdrop as BackdropData)?.url ?? '/svg/Backdrops/vazio.svg';
 
   // Estados para modais
   const [isBackdropModalOpen, setIsBackdropModalOpen] = React.useState(false);
@@ -132,6 +132,7 @@ export default function SpriteList() {
         <StageColumn
           activeSpriteId={activeSpriteId}
           backdropImage={backdropImage}
+          activeBackdropName={(activeBackdrop as BackdropData)?.name}
           backdrops={backdrops}
           selectSprite={selectSprite}
           addSurpriseBackdrop={addSurpriseBackdrop}

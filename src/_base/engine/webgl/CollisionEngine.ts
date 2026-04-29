@@ -54,12 +54,23 @@ export class CollisionEngine {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
-      const w = img.naturalWidth || img.width;
-      const h = img.naturalHeight || img.height;
+      let w = img.naturalWidth || img.width;
+      let h = img.naturalHeight || img.height;
+
+      // Robustez para SVGs: Se o navegador usar o tamanho padrão (ex: 300x150) por falta de width/height,
+      // tentamos inferir o tamanho real se for um SVG que exportamos ou conhecemos.
+      // No PiCode, o artboard padrão é 480x360.
+      if ((url.includes('.svg') || url.startsWith('data:image/svg+xml')) && (w === 300 || w === 0)) {
+         // Fallback conservador: se detectamos o comportamento de "tamanho padrão" do navegador,
+         // e é um SVG, assumimos o 480x360 do palco para evitar o "shrink" do hit-test.
+         w = 480;
+         h = 360;
+      }
+
       this.buildCanvas.width = w;
       this.buildCanvas.height = h;
       this.buildCtx.clearRect(0, 0, w, h);
-      this.buildCtx.drawImage(img, 0, 0);
+      this.buildCtx.drawImage(img, 0, 0, w, h);
       const raw = this.buildCtx.getImageData(0, 0, w, h).data;
       // Extrai só o canal alpha para economizar memória e calcula bounds reais
       const alpha = new Uint8Array(w * h);

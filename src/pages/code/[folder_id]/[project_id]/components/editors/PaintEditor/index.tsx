@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import * as paper from 'paper';
+import type * as paper from 'paper';
 import { DRAWING_CONFIG } from './constants';
 import { SvgService } from './core/SvgService';
 import { normalizeSvgString, decodeSvgUrl, detectFormat } from './services/svgRenderer';
@@ -98,10 +98,7 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
   // Track last synced offset to avoid infinite delta loops
   const lastOffsetRef = useRef({ x: 0, y: 0 });
 
-  // Reseta o rastreamento de offset ao trocar de sprite/fantasia
-  useEffect(() => {
-    lastOffsetRef.current = { x: 0, y: 0 };
-  }, [spriteId, costumeId]);
+
 
   // Stable syncToContext that never changes identity
   // SINCRONIZAÇÃO COM O PALCO (LIVE SYNC):
@@ -112,6 +109,13 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
     if (!svgService || !scope) return;
     const { thumbnailSvg, stageSvg } = svgService.exportDrawingSVG({ isBackdrop: isBackdropRef.current });
     if (!thumbnailSvg || !stageSvg) return;
+
+    // DEBUG: Log das coordenadas na hora de salvar
+    const dl = scope.project.layers.find((l) => l.name === 'drawing') || scope.project.activeLayer;
+    console.log('%c[DEBUG] Sincronizando com o Contexto', 'color: white; background: #f59e0b; padding: 2px 5px; border-radius: 3px;', {
+      totalItens: dl.children.length,
+      itemBounds: dl.children.map(c => ({ name: c.name || 'item', bounds: c.bounds.toString(), position: c.position.toString() }))
+    });
 
     const encode = (s: string) => btoa(new TextEncoder().encode(s).reduce((a, b) => a + String.fromCharCode(b), ''));
     const thumbUrl = `data:image/svg+xml;base64,${encode(thumbnailSvg)}`;
@@ -149,31 +153,52 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
   // Zoom & Scroll
   const { zoom, setZoom, scrollPos, updateScroll, zoomToFit } = useZoom(scope);
 
+  // Reseta o rastreamento de offset e a visualização ao trocar de sprite/fantasia
+  useEffect(() => {
+    lastOffsetRef.current = { x: 0, y: 0 };
+    // Reset imediato da câmera para evitar que o zoom do cenário anterior afete o novo
+    if (scope && scope.view) {
+      zoomToFit();
+    }
+  }, [spriteId, costumeId, scope, zoomToFit]);
+
   // Helper: import SVG string into the project
   const importSvgString = useCallback(
-    (svgString: string, isInitial: boolean = false, skipNormalization: boolean = false) => {
+    (svgString: string, isInitial: boolean = false, hasPicoMarker: boolean = false, loadId?: number) => {
       // Segurança: Verifica se o motor gráfico (scope) e o projeto estão ativos
       if (!scope || !scope.project || !svgService) return;
 
-      // Sanitize and normalize (Inkscape namespaces, version 1.1, viewBox fixing, units stripping)
-      // Se skipNormalization for true, mantemos o viewBox original (crucial para Stage SVGs 480x360)
-      const normalized = normalizeSvgString(svgString, skipNormalization);
+      // LIMPEZA PREVENTIVA: Antes de importar qualquer coisa, limpamos a camada de desenho
+      // para evitar duplicidade de itens (Race Condition ao clicar rápido no bloco)
+      const dl = scope.project.layers.find((l) => l.name === 'drawing') || scope.project.activeLayer;
+      dl.removeChildren();
 
-      console.log(`[PaintEditor] Iniciando importação SVG (${normalized.length} bytes). isInitial:`, isInitial);
+      const normalized = normalizeSvgString(svgString, hasPicoMarker);
+      console.log(`[PaintEditor] Iniciando importação SVG (${normalized.length} bytes). isInitial: ${isInitial}, loadId: ${loadId}`);
 
-      // Garante que este escopo e projeto estão ativos para a importação
       scope.activate();
-
       scope.project.importSVG(normalized, {
         insert: true,
         onLoad: (importedItem: paper.Item | null) => {
-          console.log('[PaintEditor] SVG importado com sucesso:', importedItem?.name || 'sem nome', importedItem);
+          // TRAVA DE SEGURANÇA: Se este carregamento não for mais o atual, descartamos os itens importados
+          if (loadId !== undefined && loadId !== currentLoadIdRef.current) {
+            console.warn('[PaintEditor] Importação SVG descartada (stale loadId no callback):', loadId);
+            importedItem?.remove();
+            return;
+          }
 
           // Verifica se o projeto ainda existe no momento do callback
           if (!importedItem || !scope.project) {
-            console.warn('[PaintEditor] Importação abortada ou falhou: Item nulo ou projeto destruído.');
+            console.warn('[PaintEditor] Importação abortada: Item nulo ou projeto destruído.');
             return;
           }
+
+          console.log('%c[DEBUG] SVG Importado com Sucesso', 'color: white; background: #22c55e; padding: 2px 5px; border-radius: 3px;', {
+            nome: importedItem.name || 'Item Raiz',
+            posicao: importedItem.position.toString(),
+            bounds: importedItem.bounds.toString(),
+            hasPicoMarker
+          });
           // Tenta encontrar nosso marcador de limites do artboard
           const bbox = importedItem.getItem({ name: 'PBT_BOUNDS_BOX', recursive: true });
 
@@ -182,17 +207,24 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
           const stageCenter = new scope.Point(DRAWING_CONFIG.canvas.w / 2, DRAWING_CONFIG.canvas.h / 2);
 
           if (!bbox) {
-            // Para cenários ou itens sem marcador, forçamos a centralização absoluta no artboard.
-            // Isso garante que o fundo sempre cubra a área branca corretamente.
-            importedItem.position = stageCenter;
+            console.log(`[DEBUG] Tratando cenário sem PBT. hasPicoMarker: ${hasPicoMarker}, isInitial: ${isInitial}`);
+            
+            // Se detectamos o marcador do PicoCode (ViewBox 480x360), forçamos a volta para (272, 120)
+            if (hasPicoMarker) {
+              const artboardTopLeft = new scope.Point(DRAWING_CONFIG.abX, DRAWING_CONFIG.abY);
+              importedItem.bounds.topLeft = artboardTopLeft;
+              console.log('[DEBUG] Restaurada posição absoluta do cenário (PicoMarker):', importedItem.bounds.topLeft.toString());
+            } else {
+              // Se NÃO detectamos, é um arquivo externo "solto" -> forçamos a centralização no palco.
+              importedItem.position = stageCenter;
+              console.log('[DEBUG] Centralizada imagem externa solta:', stageCenter.toString());
 
-            const ib = importedItem.bounds;
-            const maxW = DRAWING_CONFIG.artboard.w * scaleFactor;
-            const maxH = DRAWING_CONFIG.artboard.h * scaleFactor;
+              const ib = importedItem.bounds;
+              const scaleFactor = isBackdropEffective ? 1.0 : 0.8;
+              const maxW = DRAWING_CONFIG.artboard.w * scaleFactor;
+              const maxH = DRAWING_CONFIG.artboard.h * scaleFactor;
 
-            // Só escalamos se o item for maior que o permitido ou se for um cenário novo
-            if (ib.width > maxW || ib.height > maxH) {
-              if (!isInitial) {
+              if (ib.width > maxW || ib.height > maxH || (isInitial && isBackdropEffective)) {
                 const scale = Math.min(maxW / ib.width, maxH / ib.height);
                 importedItem.scale(scale);
               }
@@ -208,6 +240,13 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
             (bbox as IPaintItem).guide = true;
             bbox.visible = false;
           }
+
+          // Log após o processamento de posição
+          console.log('%c[DEBUG] Posição Final após Tratamento', 'color: white; background: #3b82f6; padding: 2px 5px; border-radius: 3px;', {
+            posicaoFinal: importedItem.position.toString(),
+            centroArtboard: stageCenter.toString(),
+            artboardTopLeft: new scope.Point(DRAWING_CONFIG.abX, DRAWING_CONFIG.abY).toString()
+          });
 
           svgService.releaseSVG(importedItem);
 
@@ -293,13 +332,14 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
         raster.position = stageCenter;
 
         const rb = raster.bounds;
-        const scaleFactor = 0.8;
+        const scaleFactor = isBackdropRef.current ? 1.0 : 0.8;
         const maxW = DRAWING_CONFIG.artboard.w * scaleFactor;
         const maxH = DRAWING_CONFIG.artboard.h * scaleFactor;
 
-        if (rb.width > maxW || rb.height > maxH) {
+        // Se for cenário (isBackdrop), sempre forçamos o ajuste ao canva (480x360)
+        // Isso resolve o problema de "perder a referência" com imagens de tamanhos diferentes
+        if (rb.width > maxW || rb.height > maxH || isBackdropEffective) {
           const scale = Math.min(maxW / rb.width, maxH / rb.height);
-          raster.applyMatrix = true;
           raster.scale(scale);
         }
 
@@ -311,6 +351,23 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
 
         requestAnimationFrame(() => syncToContext());
         setTimeout(() => zoomToFit(), 50);
+      };
+
+      // IMPORTANTE: Para que o PNG/JPG apareça no palco (Stage), ele não pode ser 
+      // apenas um link para um arquivo local. Precisamos "desenhar" ele em um canvas
+      // interno para que, na exportação do SVG, o Paper.js embuta a imagem como Base64.
+      const forceInternalCanvas = () => {
+        if (!raster.canvas || raster.image instanceof HTMLImageElement) {
+          const canvas = document.createElement('canvas');
+          canvas.width = raster.width;
+          canvas.height = raster.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx && raster.image) {
+            ctx.drawImage(raster.image as HTMLImageElement, 0, 0);
+            raster.image = canvas;
+          }
+        }
+        requestAnimationFrame(finalizeRaster);
       };
 
       const needsDownsample = raster.width > 2000 || raster.height > 2000;
@@ -345,10 +402,10 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
               return;
             }
             console.warn('[PaintEditor] createImageBitmap falhou no downsample, usando imagem original.');
-            requestAnimationFrame(finalizeRaster);
+            forceInternalCanvas();
           });
       } else {
-        requestAnimationFrame(finalizeRaster);
+        forceInternalCanvas();
       }
     };
 
@@ -363,9 +420,13 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
           // Se a URL é um data URI gerado por nós, ou se o SVG possui o marcador de artboard interno,
           // pulamos a normalização de dimensões para preservar o posicionamento absoluto.
           const isInternal = initialUrl.startsWith('data:');
-          const hasPicoMarker = svgString.includes('PBT_BOUNDS_BOX') || svgString.includes('viewBox="272.00 120.00 480.00 360.00"');
           
-          importSvgString(svgString, true, isInternal || hasPicoMarker);
+          // Regex robusto para detectar o viewBox oficial do palco (272 120 480 360) 
+          // aceitando variações de decimais (.00) e espaços.
+          const picoViewBoxRegex = /viewBox\s*=\s*["']272(\.0+)?\s+120(\.0+)?\s+480(\.0+)?\s+360(\.0+)?["']/;
+          const hasPicoMarker = svgString.includes('PBT_BOUNDS_BOX') || picoViewBoxRegex.test(svgString);
+          
+          importSvgString(svgString, true, isInternal || hasPicoMarker, loadId);
         })
         .catch((err: any) => {
           if (loadId !== currentLoadIdRef.current) return;

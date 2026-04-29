@@ -14,6 +14,7 @@ import { ScratchAddButton } from '../shared/ScratchAddButton';
 interface StageColumnProps {
   activeSpriteId: string;
   backdropImage: string;
+  activeBackdropName?: string;
   backdrops: BackdropData[];
   selectSprite: (id: string) => void;
   addSurpriseBackdrop: () => void;
@@ -25,6 +26,7 @@ interface StageColumnProps {
 export function StageColumn({
   activeSpriteId,
   backdropImage,
+  activeBackdropName,
   backdrops,
   selectSprite,
   addSurpriseBackdrop,
@@ -56,8 +58,10 @@ export function StageColumn({
       </div>
 
       {/* Label e contagem de cenários */}
-      <div className="stage-selector-panel__label">Cenários</div>
-      <div className="stage-selector-panel__count">{backdrops.length}</div>
+      <div className="stage-selector-panel__label" title={activeBackdropName || 'Cenários'}>
+        {activeBackdropName || 'Cenários'}
+      </div>
+      <div className="stage-selector-panel__count">480 x 360</div>
 
       {/* Botão flutuante estilo Scratch para adicionar cenários */}
       <div onClick={(e) => e.stopPropagation()}>
