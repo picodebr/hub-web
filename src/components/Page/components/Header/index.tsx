@@ -1,8 +1,8 @@
-import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, Divider, Box, Icon } from '@chakra-ui/react';
+import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, Divider, Box, Icon, Button } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { create } from 'zustand';
-import { FiLogOut } from 'react-icons/fi';
+import { FiLogOut, FiMenu } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 
 import { IHubUser } from '@/_base/interfaces/user';
@@ -22,6 +22,8 @@ import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { listSchoolGroups } from '@/_base/services/school';
 import { OptionType } from '@/components/Inputs/interfaces';
 import { updateChosenSchool } from '@/_base/services/user';
+import { useNavbar } from '../Navbar';
+import { HiMenu } from 'react-icons/hi';
 
 interface IProps {
   user?: IHubUser;
@@ -71,6 +73,7 @@ export const Header: React.FC<IProps> = ({
   const router = useRouter();
   const { colorMode } = useColorMode();
   const { setSchool, school, setCustomActions } = useSelectedSchool();
+  const { setIsSidebarOpen, isSidebarOpen } = useNavbar();
 
   const schoolList = useMemo(() => schools.map((item) => ({ label: item.display_name, value: item.hub_school_id })) || [], [schools]);
   const schoolGroupList = useMemo(() => schoolGroups.map((item) => ({ label: item.display_name, value: item.id })), [schoolGroups]);
@@ -226,7 +229,7 @@ export const Header: React.FC<IProps> = ({
       w="100%"
       alignItems="center"
       justifyContent="space-between"
-      padding={{ base: '0 1rem', lg: '0 2rem' }}
+      padding={{ base: '0 1rem', lg: '0 1rem' }}
       bg={colorMode === 'light' ? 'white' : 'gray.900'}
       borderBottom="1px solid"
       borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}
@@ -237,7 +240,20 @@ export const Header: React.FC<IProps> = ({
       zIndex={10}
     >
       <Flex align="center" gap="1rem">
+        <Button
+          className="only-desktop"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          variant="ghost"
+          p="0"
+          w="30px"
+          h="30px"
+          borderRadius="lg"
+          _hover={{ bg: colorMode === 'light' ? 'gray100' : 'gray800' }}
+        >
+          <Icon as={HiMenu} fontSize="1.35rem" color={colorMode === 'light' ? 'gray700' : 'gray200'} />
+        </Button>
         <Logo size="md" className="only-desktop" />
+
         <MobileMenu menuItems={menuItems} page={page} />
       </Flex>
 
@@ -369,7 +385,7 @@ export const Header: React.FC<IProps> = ({
           <Flex direction="column" gap="1rem" align="center">
             <Image src="/loading/rocket-loading.gif" h="12rem" borderRadius="1rem" />
             <Text fontSize="20px" fontWeight="600" color="primary.700" mt="-3rem">
-              Entrando em {selectedSchool?.label}...
+              Saindo de {selectedSchool?.label}...
             </Text>
           </Flex>
         </Flex>

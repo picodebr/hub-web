@@ -9,7 +9,6 @@ import { FiTrendingUp, FiSearch, FiDownload } from 'react-icons/fi';
 import {
   Avatar,
   Flex,
-  useColorMode,
   Spinner,
   Input,
   InputGroup,
@@ -36,6 +35,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/Tailwind/A
 import { Calendar } from '@/components/Tailwind/AttendanceList/calendar';
 import { cn } from '@/_base/utils/cn';
 import { formatShortName } from '@/_base/utils';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { ICreateHubClassRollCall, IHubClass } from '@/_base/interfaces/class';
 import { addRollCall } from '@/_base/services/class';
 
@@ -45,7 +45,7 @@ interface IProps {
 
 export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
   const today = startOfDay(new Date());
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const toast = useToast();
 
   const [selectedDate, setSelectedDate] = useState<Date>(today);
@@ -173,7 +173,7 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" gap="1.5rem" h="100%" overflow="hidden">
+    <Flex direction="column" gap="1.5rem" h="100%" overflow="hidden" pb="0.5rem">
       {/* Dashboard Stats */}
       <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap="1rem">
         <StatCard icon={FaGraduationCap} label="Turma" value={hub_class?.display_name || '...'} bg={bgCard} border={borderColor} />

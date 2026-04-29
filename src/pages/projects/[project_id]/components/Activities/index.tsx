@@ -15,7 +15,6 @@ import {
   NumberInputStepper,
   Text,
   Tooltip,
-  useColorMode,
   useDisclosure,
   useUpdateEffect,
 } from '@chakra-ui/react';
@@ -28,6 +27,7 @@ import { FaMinus, FaPlus } from 'react-icons/fa';
 import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
 import { MdOutlineCheckBox, MdOutlineFactCheck, MdPendingActions } from 'react-icons/md';
 import { useAsyncCallback, useCustomRouter } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { customEvents } from '@/_base/classes/events';
 import { eventsConfig } from '@/_base/config/events';
 import { IHubUser } from '@/_base/interfaces/user';
@@ -50,7 +50,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
 
   const { isOpen, onClose } = useDisclosure();
   const router = useCustomRouter();
-  const {  colorMode  } = useColorMode()
+  const {  colorMode  } = useDarkMode()
 
   const onCloseModal = () => {
     setMissingStudents([]);

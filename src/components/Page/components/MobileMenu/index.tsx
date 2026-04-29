@@ -16,7 +16,6 @@ import {
   Avatar,
   Box,
   Divider,
-  useColorMode,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Uploader } from 'rsuite';
@@ -24,6 +23,7 @@ import { motion } from 'framer-motion';
 import NextImage from 'next/image';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { formatClassGrade, formatCoin, formatShortName } from '@/_base/utils';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { updateProfile } from '@/_base/services/user';
@@ -46,7 +46,7 @@ export const MobileMenu: React.FC<INavbarProps> = ({ page, user: _user, menuItem
   const btnRef = useRef<any>();
 
   const { customActions } = useSelectedSchool();
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useCustomRouter();
   const { avatar, setAvatar } = useAvatar();

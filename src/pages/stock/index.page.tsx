@@ -37,7 +37,7 @@ const Stock: React.FC = () => {
     if (!schoolId) return;
     setIsLoading(true);
     try {
-      const [results, teacherGroups] = await Promise.all([getStockMaker(schoolId), listTeacherGroups(schoolId)]);
+      const [results, teacherGroups] = await Promise.all([getStockMaker(), listTeacherGroups(schoolId)]);
       setGroups(teacherGroups);
       setStock(results);
       setUnsavedStock(results);
@@ -116,7 +116,7 @@ const Stock: React.FC = () => {
   };
 
   return (
-    <Flex direction="column" flex="1" overflow="hidden" gap="1rem" userSelect="none">
+    <Flex direction="column" overflow="hidden" mb="-1rem">
       <Flex w="100%" justify="space-between" gap="1rem">
         <TabSwitch
           tabs={stockPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}

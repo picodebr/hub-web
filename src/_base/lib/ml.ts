@@ -1,5 +1,5 @@
-import * as tf from "@tensorflow/tfjs";
-import * as mobilenet from "@tensorflow-models/mobilenet";
+import * as tf from '@tensorflow/tfjs';
+import * as mobilenet from '@tensorflow-models/mobilenet';
 
 let cachedModel: mobilenet.MobileNet | null = null;
 let loadPromise: Promise<mobilenet.MobileNet> | null = null;
@@ -16,18 +16,15 @@ export async function getModel() {
   return cachedModel;
 }
 
-export async function extractFeatures(
-  imageElement: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
-  isMirrored = false,
-) {
+export async function extractFeatures(imageElement: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement, isMirrored = false) {
   const model = await getModel();
 
-  const canvasItem = document.createElement("canvas");
+  const canvasItem = document.createElement('canvas');
   canvasItem.width = 224;
   canvasItem.height = 224;
-  const ctx = canvasItem.getContext("2d");
+  const ctx = canvasItem.getContext('2d');
 
-  if (!ctx) throw new Error("Could not get 2d context");
+  if (!ctx) throw new Error('Could not get 2d context');
 
   if (isMirrored) {
     ctx.translate(224, 0);
@@ -35,7 +32,7 @@ export async function extractFeatures(
   }
   ctx.drawImage(imageElement, 0, 0, 224, 224);
 
-  const thumbnail = canvasItem.toDataURL("image/jpeg", 0.8);
+  const thumbnail = canvasItem.toDataURL('image/jpeg', 0.8);
 
   const activation = tf.tidy(() => {
     const imgTensor = tf.browser.fromPixels(canvasItem);
@@ -67,23 +64,19 @@ export async function trainModel(
     });
   });
 
-  if (allFeatures.length === 0) throw new Error("No data");
+  if (allFeatures.length === 0) throw new Error('No data');
 
   const xs = tf.stack(allFeatures);
-  const ys = tf.oneHot(tf.tensor1d(allLabels, "int32"), classesData.length);
+  const ys = tf.oneHot(tf.tensor1d(allLabels, 'int32'), classesData.length);
 
   trainedModel = tf.sequential();
-  trainedModel.add(
-    tf.layers.dense({ inputShape: [1024], units: 100, activation: "relu" }),
-  );
-  trainedModel.add(
-    tf.layers.dense({ units: classesData.length, activation: "softmax" }),
-  );
+  trainedModel.add(tf.layers.dense({ inputShape: [1024], units: 100, activation: 'relu' }));
+  trainedModel.add(tf.layers.dense({ units: classesData.length, activation: 'softmax' }));
 
   trainedModel.compile({
     optimizer: tf.train.adam(0.001),
-    loss: "categoricalCrossentropy",
-    metrics: ["accuracy"],
+    loss: 'categoricalCrossentropy',
+    metrics: ['accuracy'],
   });
 
   await trainedModel.fit(xs, ys, {
@@ -101,18 +94,15 @@ export async function trainModel(
   ys.dispose();
 }
 
-export async function predictImage(
-  imageElement: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
-  isMirrored = false,
-) {
+export async function predictImage(imageElement: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement, isMirrored = false) {
   const model = await getModel();
-  if (!trainedModel) throw new Error("Model not trained");
+  if (!trainedModel) throw new Error('Model not trained');
 
   return tf.tidy(() => {
-    const canvasItem = document.createElement("canvas");
+    const canvasItem = document.createElement('canvas');
     canvasItem.width = 224;
     canvasItem.height = 224;
-    const ctx = canvasItem.getContext("2d");
+    const ctx = canvasItem.getContext('2d');
 
     if (!ctx) return [];
     if (isMirrored) {
@@ -128,5 +118,48 @@ export async function predictImage(
     const scores = prediction.dataSync();
 
     return Array.from(scores);
+  });
+}
+
+export async function getModelArtifacts(): Promise<{ modelJson: any; weightData: ArrayBuffer | undefined }> {
+  if (!trainedModel) throw new Error('Nenhum modelo treinado disponível para extrair os artefatos.');
+
+  return new Promise((resolve, reject) => {
+    const saveHandler = tf.io.withSaveHandler(async (artifacts) => {
+      try {
+        const modelJson = {
+          modelTopology: artifacts.modelTopology,
+          format: artifacts.format,
+          generatedBy: artifacts.generatedBy,
+          convertedBy: artifacts.convertedBy,
+          weightsManifest: [
+            {
+              paths: ['weights.bin'],
+              weights: artifacts.weightSpecs,
+            },
+          ],
+        };
+
+        // CORREÇÃO AQUI: Forçamos a tipagem (cast) para ArrayBuffer
+        const weightData = artifacts.weightData as ArrayBuffer | undefined;
+
+        resolve({ modelJson, weightData });
+
+        return {
+          modelArtifactsInfo: {
+            dateSaved: new Date(),
+            modelTopologyType: 'JSON',
+            modelTopologyBytes: JSON.stringify(modelJson).length,
+            weightSpecsBytes: JSON.stringify(artifacts.weightSpecs).length,
+            weightDataBytes: weightData ? weightData.byteLength : 0,
+          },
+        };
+      } catch (error) {
+        reject(error);
+        throw error;
+      }
+    });
+
+    trainedModel!.save(saveHandler).catch(reject);
   });
 }

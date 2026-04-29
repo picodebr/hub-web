@@ -14,4 +14,5 @@ export * from './TensorFlow';
 export * from './Throttle';
 export * from './UndoRedu';
 export * from './UpdateEffect';
+export * from './useDarkMode';
 export * from './VisionLab';

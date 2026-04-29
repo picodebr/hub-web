@@ -1,8 +1,9 @@
-import { Image, useColorMode } from '@chakra-ui/react';
+import { Image } from '@chakra-ui/react';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { ILogoProps } from './interfaces';
 
 export const Logo: React.FC<ILogoProps> = ({ size = 'md', variant = `full`, forceTheme, ...rest }) => {
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
 
   const sizeMapper = {
     xs: '1.3rem',

@@ -1,5 +1,6 @@
 import { PropsWithChildren, useContext, useEffect, useState, createContext } from 'react';
-import { Flex, Image, Slide, Text, useColorMode } from '@chakra-ui/react';
+import { Flex, Image, Slide, Text } from '@chakra-ui/react';
+import { useDarkMode } from '../useDarkMode';
 
 import { ILoadingConfig, ILoadingContext, ILoadingProviderProps } from './interfaces';
 import { useAuth } from '../Auth';
@@ -17,7 +18,7 @@ const LoadingContext = createContext<ILoadingContext>({
 export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>> = ({ children, changeSignal }) => {
   const [loadingConfig, setLoadingConfig] = useState({ ...defaultConfig });
   const [randomMsg, setRandomMsg] = useState('');
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
 
   const { user } = useAuth();
 

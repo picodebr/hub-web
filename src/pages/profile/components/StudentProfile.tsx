@@ -1,47 +1,29 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IoIosArrowDown } from 'react-icons/io';
-import {
-  Flex,
-  Img,
-  Text,
-  useUpdateEffect,
-  Button,
-  Grid,
-  GridItem,
-  Image,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Switch,
-  Icon,
-  Box,
-  useColorMode,
-} from '@chakra-ui/react';
-import { Result, ResultConvertOptions, createAvatar } from '@dicebear/core';
-import { adventurer } from '@dicebear/collection';
-import { FiEdit3, FiTrendingUp, FiTrendingDown, FiList } from 'react-icons/fi';
-import moment from 'moment';
+import { FiCamera } from 'react-icons/fi';
+import { Uploader } from 'rsuite';
+import { Flex, Text, Badge, Button, Spinner } from '@chakra-ui/react';
+import NextImage from 'next/image';
 
-import { cookieManager, formatCoin } from '@/_base/utils';
+import { cookieManager } from '@/_base/utils';
 import { IAvatarOptions, IProfileComponentProps } from './interfaces';
-import { customAvatarOptions, defaultAvatarOptions } from './utils';
 import { useAsyncCallback, useAuth } from '@/_base/hooks';
 import { getStudentExtract, IStudentExtract, updateProfile } from '@/_base/services/user';
-import { SmallModal } from '@/components/Modal/Small';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { useAvatar } from '@/components/Page/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
+import { Result, ResultConvertOptions, createAvatar } from '@dicebear/core';
+import { adventurer } from '@dicebear/collection';
 
-export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
-  const { colorMode } = useColorMode();
+
+export const StudentProfile: React.FC<IProfileComponentProps & { certificates?: any[] }> = ({ user }) => {
   const [avatarOptions, setAvatarOptions] = useState<IAvatarOptions>({ skinColor: `ccc` });
   const [rawAvatar, setRawAvatar] = useState<(Result & ResultConvertOptions) | null>(null);
   const [avatarURI, setAvatarURI] = useState(``);
-  const [userExtract, setUserExtract] = useState<IStudentExtract[]>([]);
-  const [avatarEditorIsOpen, setAvatarEditorIsOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const { setUser } = useAuth();
   const { setAvatar } = useAvatar();
+  const { colorMode } = useDarkMode();
 
   const generateAvatar = (options: any) =>
     createAvatar(adventurer, {
@@ -63,253 +45,171 @@ export const StudentProfile: React.FC<IProfileComponentProps> = ({ user }) => {
     return raw.toDataUriSync();
   }, [avatarOptions]);
 
-  useUpdateEffect(() => {
-    setAvatarURI(generateAvatar(avatarOptions).toDataUriSync());
-  }, [avatarOptions]);
   useEffect(() => {
     setAvatarURI(generateAvatar(avatarOptions).toDataUriSync());
   }, [avatarOptions]);
 
-  useUpdateEffect(() => {
+  useEffect(() => {
     if (user.role === `student`) setUser({ ...user, avatar });
-  }, [avatar]);
+  }, [avatar, user, setUser]);
 
   useEffect(() => {
     const avatarTemp = cookieManager.getCookie(`${user.id}:avatar`, true) as IAvatarOptions;
     if (avatarTemp?.skinColor) setAvatarOptions(avatarTemp);
-    getExtract();
-  }, []);
+  }, [user.id]);
 
-  const getExtract = useAsyncCallback(async () => {
-    const extract = await getStudentExtract();
-    setUserExtract(extract);
-  }, []);
-
-  const downloadAvatar = useCallback(async () => {
-    if (!rawAvatar) return;
-    const arrayBuffer = await rawAvatar?.png().toArrayBuffer();
-    const { link, path } = await getPresignedUrl(`image/png`, `avatars`);
-    const blob = new Blob([arrayBuffer as any], { type: 'application/octet-stream' });
-    const file = new File([blob], 'avatar.png', { type: 'application/octet-stream', lastModified: Date.now() });
-    await uploadFile(link, file);
-    const updatedUser = await updateProfile({ avatar: path });
-    setAvatar(updatedUser.avatar || ``);
-  }, [rawAvatar]);
-
-  const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
-  const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
+  // Coletar disciplinas únicas do usuário
+  const disciplines = user?.metadata?.disciplines || (user?.hub_class ? ['Robótica', 'Programação'] : []);
 
   return (
-    <Flex w="100%" gap="1.5rem" direction="column">
-      <Grid templateColumns={{ base: '1fr', lg: '1fr 1.5fr' }} gap="1.5rem">
-        {/* Painel do Avatar */}
+    <Flex
+      direction="column"
+      align="center"
+      gap="1.5rem"
+      bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+      borderRadius="2xl"
+      border="1px solid"
+      borderColor={colorMode === 'dark' ? 'gray.700' : 'gray.200'}
+      boxShadow="sm"
+      p="2rem 1.5rem"
+      mx="1.5rem"
+    >
+      {/* Avatar com Upload */}
+      <Flex position="relative">
         <Flex
-          bg={bgCard}
-          direction="column"
-          borderRadius="2xl"
-          border="1px solid"
-          borderColor={borderColor}
-          boxShadow="sm"
-          p="1.5rem"
-          h={{ base: 'auto', lg: '380px' }}
+          w="120px"
+          h="120px"
+          borderRadius="full"
+          border="4px solid"
+          borderColor={colorMode === 'dark' ? 'gray.700' : 'white'}
+          boxShadow="lg"
+          overflow="hidden"
+          bg={colorMode === 'dark' ? 'gray.700' : 'gray.100'}
+          align="center"
+          justify="center"
         >
-          <Flex align="center" gap="0.5rem" mb="1.5rem">
-            <Icon as={FiEdit3} color="primary.500" fontSize="20px" />
-            <Text fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
-              Seu Avatar
-            </Text>
-          </Flex>
-
-          <Flex direction="column" align="center" justify="center" flex="1" gap="1.5rem">
-            <Flex
-              bgGradient={colorMode === 'light' ? 'linear(to-br, primary.50, purple.50)' : 'linear(to-br, primary.900, purple.900)'}
-              w="180px"
-              h="180px"
-              borderRadius="full"
-              align="center"
-              justify="center"
-              border="4px solid"
-              borderColor="white"
-              boxShadow="lg"
-            >
-              <Img src={avatarURI} w="100%" h="100%" alt="Avatar" objectFit="contain" />
+          {user.avatar ? (
+            <NextImage
+              loader={() => user.avatar}
+              src={user.avatar}
+              width={120}
+              height={120}
+              alt="Avatar"
+              style={{ opacity: isUpdating ? 0.4 : 1, borderRadius: '50%', objectFit: 'cover' }}
+              priority
+            />
+          ) : (
+            <img src={avatarURI} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          )}
+          {isUpdating && (
+            <Flex borderRadius="50%" position="absolute" inset="0" align="center" justify="center" bg="rgba(0,0,0,0.3)">
+              <Spinner size="sm" color="primary500" />
             </Flex>
-            <Button colorScheme="blue" variant="outline" borderRadius="full" size="sm" onClick={() => setAvatarEditorIsOpen(true)}>
-              Customizar Avatar
+          )}
+        </Flex>
+
+        {/* Botão de câmera para upload */}
+        <Uploader
+          autoUpload={true}
+          accept={`image/*`}
+          draggable={false}
+          action=""
+          fileListVisible={false}
+          onChange={(e) => {
+            const file = e[0]?.blobFile as File;
+            if (file) {
+              const handleUploadAvatar = async () => {
+                setIsUpdating(true);
+                const response = await getPresignedUrl(file.type, 'avatars');
+                await uploadFile(response.link, file);
+                setTimeout(async () => {
+                  const updatedUser = await updateProfile({ avatar: response.path });
+                  setAvatar(updatedUser.avatar || ``);
+                  setIsUpdating(false);
+                }, 1000);
+              };
+              handleUploadAvatar();
+            }
+          }}
+          toggleAs={(e) => (
+            <Flex
+              border="2px solid"
+              borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
+              borderRadius="full"
+              p="0.5rem"
+              bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+              position="absolute"
+              bottom="-2px"
+              right="-2px"
+              cursor="pointer"
+              boxShadow="md"
+              transition="all 0.2s"
+              _hover={{ transform: 'scale(1.1)', borderColor: 'primary500' }}
+              color="gray500"
+              onClick={() => e.onClick(e)}
+            >
+              <FiCamera size="1rem" />
+            </Flex>
+          )}
+        />
+      </Flex>
+
+      {/* Nome */}
+      <Flex direction="column" align="center" gap="0.5rem" textAlign="center">
+        <Text fontSize="22px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.900'}>
+          {user?.name || 'Usuário'}
+        </Text>
+
+        {/* E-mail */}
+        <Text fontSize="13px" color="gray.500" fontWeight="500">
+          {user?.email || 'email@picode.com.br'}
+        </Text>
+
+        {/* Biografia */}
+        {user?.bio && (
+          <Text fontSize="13px" color="gray.600" fontWeight="400" maxW="400px" mt="0.5rem">
+            {user.bio}
+          </Text>
+        )}
+      </Flex>
+
+      {/* Disciplinas */}
+      {Array.isArray(disciplines) && disciplines.length > 0 && (
+        <Flex direction="column" w="100%" gap="0.75rem">
+          <Text fontSize="12px" fontWeight="600" color="gray.500" textTransform="uppercase">
+            Disciplinas
+          </Text>
+          <Flex gap="0.5rem" wrap="wrap" justify="center">
+            {disciplines.map((discipline, idx) => (
+              <Badge
+                key={idx}
+                bg="primary.50"
+                color="primary.700"
+                borderRadius="full"
+                px="0.75rem"
+                py="0.25rem"
+                fontSize="12px"
+                fontWeight="600"
+                border="1px solid"
+                borderColor="primary.200"
+              >
+                {typeof discipline === 'string' ? discipline : 'Disciplina'}
+              </Badge>
+            ))}
+            <Button
+              size="sm"
+              variant="ghost"
+              fontSize="12px"
+              fontWeight="600"
+              color="primary.500"
+              _hover={{ bg: 'primary.50' }}
+              px="0.75rem"
+            >
+              + Adicionar
             </Button>
           </Flex>
         </Flex>
-
-        {/* Painel de Extrato */}
-        <Flex
-          bg={bgCard}
-          direction="column"
-          borderRadius="2xl"
-          border="1px solid"
-          borderColor={borderColor}
-          boxShadow="sm"
-          p="1.5rem"
-          h={{ base: '400px', lg: '380px' }}
-        >
-          <Flex align="center" gap="0.5rem" mb="1rem">
-            <Icon as={FiList} color="orange.500" fontSize="20px" />
-            <Text fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
-              Meu Extrato
-            </Text>
-          </Flex>
-
-          <Flex direction="column" overflowY="auto" pr="0.5rem" flex="1">
-            {userExtract.length > 0 ? (
-              userExtract.map((extract, i) => (
-                <Flex
-                  key={extract.label + i}
-                  align="center"
-                  justify="space-between"
-                  py="0.75rem"
-                  borderBottom="1px solid"
-                  borderColor={borderColor}
-                  _last={{ borderBottom: 'none' }}
-                >
-                  <Flex align="center" gap="1rem">
-                    <Flex
-                      bg={extract.type === 'plus' ? 'green.50' : 'red.50'}
-                      color={extract.type === 'plus' ? 'green.500' : 'red.500'}
-                      p="0.5rem"
-                      borderRadius="full"
-                    >
-                      <Icon as={extract.type === 'plus' ? FiTrendingUp : FiTrendingDown} />
-                    </Flex>
-                    <Box>
-                      <Text fontWeight="600" color={colorMode === 'dark' ? 'white' : 'gray.800'} fontSize="14px" noOfLines={1} maxW="200px">
-                        {extract.label}
-                      </Text>
-                      <Text fontSize="12px" color="gray.500">
-                        {moment(extract.date).format(`DD/MM/YYYY`)}
-                      </Text>
-                    </Box>
-                  </Flex>
-                  <Flex
-                    align="center"
-                    gap="0.25rem"
-                    bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
-                    px="0.75rem"
-                    py="0.25rem"
-                    borderRadius="full"
-                  >
-                    <Text fontWeight="700" fontSize="14px" color={extract.type === `plus` ? 'green.500' : 'red.500'}>
-                      {extract.type === `plus` ? `+` : `-`} {formatCoin(extract.value)}
-                    </Text>
-                    <Image src="/icons/coin.svg" w="14px" h="14px" />
-                  </Flex>
-                </Flex>
-              ))
-            ) : (
-              <Flex align="center" justify="center" h="100%" color="gray.400">
-                <Text>Você ainda não possui transações.</Text>
-              </Flex>
-            )}
-          </Flex>
-        </Flex>
-      </Grid>
-
-      {/* Os modais (SmallModal) de edição de avatar permanecem inalterados mas herdam o tema base */}
-      <SmallModal
-        show={avatarEditorIsOpen}
-        onConfirm={() => {
-          if (rawAvatar) downloadAvatar();
-          setAvatarEditorIsOpen(false);
-        }}
-        onCancel={() => setAvatarEditorIsOpen(false)}
-        topIcon="ray"
-        size={{ base: `full`, sm: 'xl' }}
-      >
-        <Flex justify="space-between" direction={{ base: 'column', sm: 'row' }}>
-          <Flex direction="column" justify="center" align="center" mb={{ base: '1rem', sm: '0' }}>
-            <Img src={avatarURI} w={{ base: '170px', sm: '200px' }} h={{ base: '170px', sm: '200px' }} alt="Avatar" />
-          </Flex>
-          <Flex gap="8px" align="center" justify="center" flex="1">
-            <Grid templateColumns={{ base: 'repeat(auto-fill, minmax(9rem, 1fr))', sm: 'repeat(2, 1fr)' }} gap={3} w="100%">
-              {customAvatarOptions.map((opt) => (
-                <Flex w="100%" key={opt.key} align="center" justify="center">
-                  <Menu>
-                    <MenuButton
-                      as={Button}
-                      rightIcon={<IoIosArrowDown />}
-                      w="100%"
-                      h="2.5rem"
-                      fontSize="14px"
-                      fontWeight="500"
-                      bg={colorMode === 'light' ? 'gray.100' : 'whiteAlpha.200'}
-                    >
-                      {opt.title}
-                    </MenuButton>
-                    <MenuList borderColor={borderColor} zIndex={10}>
-                      <Grid gridTemplateColumns="repeat(auto-fill, minmax(3rem, 1fr))" maxH="13rem" overflow="auto" p="2">
-                        {defaultAvatarOptions[opt.key].map((param: string) => {
-                          const newParam: Record<string, string[]> = {};
-                          newParam[opt.key] = [param];
-                          return (
-                            <MenuItem
-                              key={param}
-                              p="1"
-                              borderRadius="md"
-                              bg={(avatarOptions as any)[opt.key] === param ? 'primary.100' : 'transparent'}
-                              onClick={() => {
-                                const newOpt: Record<string, string[]> = {};
-                                newOpt[opt.key] = [param];
-                                setAvatarOptions((state) => ({ ...state, ...newOpt }));
-                              }}
-                            >
-                              <Image
-                                boxSize="2.5rem"
-                                borderRadius="full"
-                                src={createAvatar(adventurer, {
-                                  size: 200,
-                                  skinColor: [avatarOptions.skinColor] as any,
-                                  earrings: [avatarOptions.earrings] as any,
-                                  eyebrows: [avatarOptions.eyebrows] as any,
-                                  eyes: [avatarOptions.eyes] as any,
-                                  glassesProbability: avatarOptions.glassesProbability,
-                                  glasses: [avatarOptions.glasses] as any,
-                                  hair: [avatarOptions.hair] as any,
-                                  hairColor: [avatarOptions.hairColor] as any,
-                                  mouth: [avatarOptions.mouth] as any,
-                                  ...newParam,
-                                }).toDataUriSync()}
-                              />
-                            </MenuItem>
-                          );
-                        })}
-                      </Grid>
-                    </MenuList>
-                  </Menu>
-                </Flex>
-              ))}
-              <GridItem w="100%" colSpan={{ base: 1, sm: 2 }}>
-                <Flex
-                  gap="1rem"
-                  align="center"
-                  justify="center"
-                  bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
-                  p="0.5rem"
-                  borderRadius="lg"
-                  border="1px solid"
-                  borderColor={borderColor}
-                >
-                  <Text fontSize="14px" fontWeight="600">
-                    Usar óculos?
-                  </Text>
-                  <Switch
-                    colorScheme="blue"
-                    isChecked={(avatarOptions.glassesProbability || 0) > 0}
-                    onChange={(e) => setAvatarOptions((state) => ({ ...state, glassesProbability: Number(e.target.checked) * 100 }))}
-                  />
-                </Flex>
-              </GridItem>
-            </Grid>
-          </Flex>
-        </Flex>
-      </SmallModal>
+      )}
     </Flex>
   );
 };

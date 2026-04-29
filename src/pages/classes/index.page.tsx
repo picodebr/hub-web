@@ -11,7 +11,6 @@ import {
   Flex,
   Text,
   Icon,
-  useColorMode,
   Menu,
   MenuButton,
   MenuList,
@@ -22,7 +21,7 @@ import {
   Button,
 } from '@chakra-ui/react';
 
-import { useAsyncCallback, useAuth, useCustomToast, useCustomRouter } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomToast, useCustomRouter, useDarkMode } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
 import { IHubClass } from '@/_base/interfaces/class';
 import { addClasses, listAllClasses, listMyClasses, removeClass } from '@/_base/services/class';
@@ -55,7 +54,7 @@ const Classes: React.FC = () => {
   const { user } = useAuth();
   const toast = useCustomToast();
   const router = useCustomRouter();
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
 
   const sortedClasses = useMemo(() => sortGradesByClass([...classes.data]), [classes.data]);
 
