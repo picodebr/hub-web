@@ -3,8 +3,9 @@ import { Image as ImageIcon, X, Download } from 'lucide-react';
 import { Box, Flex, Text, Heading, Button, IconButton, Image, Input } from '@chakra-ui/react';
 import { keyframes as emotionKeyframes } from '@emotion/react';
 import { useVisionLabStore } from '@/_base/hooks';
-import { getTrainedModel, predictImage } from '@/_base/lib/ml';
+import { getModelArtifacts, getTrainedModel, predictImage } from '@/_base/lib/ml';
 import { getGlobalWebcam, getGlobalWebcamStream } from '@/_base/lib/webcam';
+import { getPresignedUrl } from '@/_base/services/upload';
 
 // ==========================================
 // ANIMAÇÕES
@@ -98,9 +99,10 @@ export function PreviewPanel() {
   };
 
   const handleExport = async () => {
+    const { link, full_path } = await getPresignedUrl(`application/octet-stream`, `vision-lab`, `public-read`);
     const model = getTrainedModel();
     if (model) {
-      await model.save('downloads://picode-modelo');
+      await model.save(link);
 
       const metadata = {
         labels: classes.map((c) => c.name),
@@ -115,6 +117,39 @@ export function PreviewPanel() {
       URL.revokeObjectURL(url);
     }
   };
+
+  // const handleExport = async () => {
+  //   try {
+  //     const model = getTrainedModel();
+  //     if (model) {
+  //       // 1. Pega os arquivos brutos do modelo
+  //       const { modelJson, weightData } = await getModelArtifacts();
+
+  //       // 2. Pega suas Presigned URLs (garanta que estão na mesma "pasta")
+  //       const { link: jsonLink, full_path: jsonFullPath } = await getPresignedUrl(`application/json`, `vision-lab`, `public-read`);
+  //       const { link: binLink, full_path: binFullPath } = await getPresignedUrl(`application/octet-stream`, `vision-lab`, `public-read`);
+  //       console.log('binFullPath: ', binFullPath);
+  //       console.log('jsonFullPath: ', jsonFullPath);
+
+  //       // 3. Faz os uploads com o `fetch` ou `axios` diretamente
+  //       await fetch(binLink, {
+  //         method: 'PUT',
+  //         body: weightData,
+  //         headers: { 'Content-Type': 'application/octet-stream' },
+  //       });
+
+  //       await fetch(jsonLink, {
+  //         method: 'PUT',
+  //         body: JSON.stringify(modelJson),
+  //         headers: { 'Content-Type': 'application/json' },
+  //       });
+
+  //       console.log('Upload concluído com sucesso!');
+  //     }
+  //   } catch (error) {
+  //     console.error('Erro ao subir modelo:', error);
+  //   }
+  // };
 
   return (
     <Flex

@@ -20,6 +20,7 @@ export const bucketFolders = <const>[
   `community_posts`,
   `certificates`,
   `code-assets`,
+  `vision-lab`,
 ];
 export type BucketFolders = (typeof bucketFolders)[number];
 

@@ -1,150 +1,220 @@
-'use client';
-
-import { Bot } from 'lucide-react';
-import { Box, Flex, Heading, Text } from '@chakra-ui/react';
-import { keyframes as emotionKeyframes } from '@emotion/react';
-import { useTensorFlow } from '@/_base/hooks';
-import { ClassManager } from './components/features/ClassManager';
-import { TrainingPanel } from './components/features/TrainingPanel';
-import { PreviewPanel } from './components/features/PreviewPanel';
-import { VisionLabWebcamModal } from './components/modals/WebcamModal';
-import { VisionLabConfirmModal } from './components/modals/ConfirmModal';
 import { GetServerSideProps } from 'next';
-import { cookieManager } from '@/_base/utils';
+import { FaPlus, FaRegFolder } from 'react-icons/fa';
+import { FiEdit3, FiMoreVertical, FiTrash } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
-// ==========================================
-// ANIMAÇÕES
-// ==========================================
-const pulse = emotionKeyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: .5; }
-`;
+import { Flex, Menu, MenuButton, MenuItem, MenuList, Skeleton, Text } from '@chakra-ui/react';
+import { useAsyncCallback, useCustomRouter, useCustomToast, useInputHandler } from '@/_base/hooks';
+import { PlusButton } from '@/components/Buttons/Plus';
+import moment from 'moment';
+import { useEffect, useState } from 'react';
+import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
+import {
+  createCodeProjectFolder,
+  listCodeProjectFolders,
+  removeCodeProjectFolder,
+  updateCodeProjectFolder,
+} from '@/_base/services/codeProjectFolder';
+import { createCodeProjectFolderSchema } from '@/_base/interfaces/codeFolder/ICreateProjectFolderParams';
+import { SmallModal } from '@/components/Modal/Small';
+import { TextInput } from '@/components/Inputs/Text';
+import { RiFolderSharedFill } from 'react-icons/ri';
+import { Code2, FolderOpen, Layers, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { InternalPageHeader } from '@/components/InternalPageHeader';
+import { InternalCard } from '@/components/InternalCard';
 
-const bounce = emotionKeyframes`
-  0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
-  50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
-`;
+const VisionLabFolders: React.FC = () => {
+  const [folders, setFolders] = useState<IProjectFolder[]>([]);
+  const [targetFolderToUpdate, setTargetFolderToUpdate] = useState<IProjectFolder | null>(null);
+  const [targetFolderToRemove, setTargetFolderToRemove] = useState<IProjectFolder | null>(null);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-// ==========================================
-// PALETA DE CORES E ESTILOS
-// ==========================================
-const piBlue = '#0052CC';
+  const toast = useCustomToast();
+  const router = useCustomRouter();
+  const { data, errors, onInputChange, setData, submit } = useInputHandler({ schema: createCodeProjectFolderSchema, data: { name: `` } });
 
-const customScrollbar = {
-  '&::-webkit-scrollbar': { width: '6px', height: '6px' },
-  '&::-webkit-scrollbar-track': { background: 'rgba(0, 0, 0, 0.05)', borderRadius: '4px' },
-  '&::-webkit-scrollbar-thumb': { background: '#cbd5e1', borderRadius: '4px' },
-  '&::-webkit-scrollbar-thumb:hover': { background: '#94a3b8' },
-};
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const [{ results }] = await Promise.all([listCodeProjectFolders()]);
+        setFolders(results);
+      } catch {
+        toast({ status: `error`, description: `Não foi possível listar as pastas disponíveis no momento` });
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
-// ==========================================
-// PÁGINA: Home
-// ==========================================
-export default function VisionLab() {
-  const { isLoaded, error } = useTensorFlow();
+  const onCloseModal = () => {
+    setOpenCreateModal(false);
+    setTargetFolderToRemove(null);
+    setTargetFolderToUpdate(null);
+    setData({ name: `` });
+  };
 
-  // Tela de Erro Crítico
-  if (error) {
-    return (
-      <Flex flex={1} align="center" justify="center" p={4} fontFamily='"Nunito", "Poppins", sans-serif'>
-        <Box bg="red.50" color="red.500" p={6} borderRadius="2xl" boxShadow="sm">
-          <Heading size="md" fontWeight="bold">
-            {error}
-          </Heading>
-        </Box>
-      </Flex>
-    );
-  }
+  const handleAddFolder = useAsyncCallback(
+    async () => {
+      setIsLoading(true);
+      const newFolder = await createCodeProjectFolder(data);
+      setFolders((f) => [newFolder, ...f]);
+      onCloseModal();
+    },
+    [data],
+    true,
+    () => setIsLoading(false),
+  );
+
+  const handleUpdateFolder = useAsyncCallback(
+    async () => {
+      if (!targetFolderToUpdate) return;
+      setIsLoading(true);
+      const updatedFolder = await updateCodeProjectFolder({ id: targetFolderToUpdate.id, name: targetFolderToUpdate.name });
+      setFolders((f) => f.map((folder) => (folder.id === updatedFolder.id ? { ...folder, ...updatedFolder } : folder)));
+      onCloseModal();
+    },
+    [targetFolderToUpdate],
+    true,
+    () => setIsLoading(false),
+  );
+
+  const handleRemoveFolder = useAsyncCallback(
+    async () => {
+      if (!targetFolderToRemove) return;
+      setIsLoading(true);
+      await removeCodeProjectFolder(targetFolderToRemove.id);
+      setFolders((f) => f.filter((folder) => folder.id !== targetFolderToRemove.id));
+      onCloseModal();
+    },
+    [targetFolderToRemove],
+    true,
+    () => setIsLoading(false),
+  );
+
+  const getLastActivityFromFolder = (folder: IProjectFolder): string => {
+    if (!folder.projects?.length) return folder.created_at;
+
+    const lastActivity = folder.projects.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
+
+    return lastActivity.updated_at;
+  };
 
   return (
-    <>
-      {/* Loading Overlay */}
-      <Flex
-        position="fixed"
-        inset={0}
-        zIndex={100}
-        bg="gray.50"
-        direction="column"
-        align="center"
-        justify="center"
-        opacity={isLoaded ? 0 : 1}
-        pointerEvents={isLoaded ? 'none' : 'auto'}
-        transition="opacity 0.5s ease-in-out"
-        fontFamily='"Nunito", "Poppins", sans-serif'
+    <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
+      <InternalPageHeader
+        title="Meus Códigos"
+        description="Organize seus projetos em pastas"
+        icon={<Code2 className="w-6 h-6 text-primary" />}
+        buttons={[{ label: `Nova Pasta`, leftIcon: <FaPlus />, onClick: () => setOpenCreateModal(true) }]}
+      />
+
+      {/* Grid de Pastas */}
+      <Skeleton isLoaded={!isLoading} className="flex-1 rounded-md overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 overflow-y-auto pb-8 px-2 content-start h-full pt-2">
+          {folders.length ? (
+            folders.map((folder, index) => {
+              return (
+                <InternalCard
+                  key={folder.id}
+                  index={index}
+                  onClick={() => router.push(`/vision_lab/${folder.id}?_p=${folder.name}`)}
+                  title={folder.name}
+                  Icon={FolderOpen}
+                  actions={[
+                    { label: `Editar`, onClick: () => setTargetFolderToUpdate(folder), Icon: Pencil },
+                    { label: `Remover`, onClick: () => setTargetFolderToRemove(folder), Icon: Trash2, important: true },
+                  ]}
+                  footer={
+                    <>
+                      <p className="text-[11px] text-muted-foreground truncate flex-1 flex items-center gap-1.5">
+                        <Layers className="w-3 h-3" />
+                        {folder.projects?.length || `0`} {folder.projects?.length === 1 ? 'projeto' : 'projetos'}
+                      </p>
+                      <span className="text-[10px] text-muted-foreground/60 shrink-0">{moment(getLastActivityFromFolder(folder)).fromNow()}</span>
+                    </>
+                  }
+                  showFooterIcon
+                />
+              );
+            })
+          ) : (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground mt-10">
+              <FolderOpen className="w-16 h-16 mb-4 opacity-20" />
+              <p className="text-lg font-medium text-foreground/70">Lista vazia</p>
+              <p className="text-sm">Crie uma nova pasta para organizar seus códigos.</p>
+            </div>
+          )}
+        </div>
+      </Skeleton>
+
+      {/* only modals from here down */}
+
+      {/* Create folder modal */}
+      <SmallModal
+        topIcon="checked"
+        show={openCreateModal}
+        onCancel={onCloseModal}
+        onConfirm={() => submit(handleAddFolder)}
+        title="Nova Pasta"
+        okText="Adicionar"
+        isLoading={isLoading}
       >
-        <Flex direction="column" align="center" gap={6} animation={`${pulse} 2s cubic-bezier(0.4, 0, 0.6, 1) infinite`}>
-          <Box animation={`${bounce} 1s infinite`}>
-            <Bot size={64} color={piBlue} />
-          </Box>
-          <Heading as="h2" fontSize="2xl" fontWeight="black" color="gray.700" letterSpacing="tight">
-            Acordando a máquina...
-          </Heading>
+        <Flex direction="column" gap="1rem" mt="1rem">
+          <Text fontSize="1rem" fontWeight="500" color="gray600">
+            Dê um nome para a sua pasta de projetos do CODE
+          </Text>
+          <TextInput placeholder="Nome da pasta" value={data.name} onInputChange={(value) => onInputChange('name', value)} error={errors.name} />
         </Flex>
-      </Flex>
+      </SmallModal>
 
-      {/* Main Container */}
-      <Flex
-        as="main"
-        flex={1}
-        direction={{ base: 'column', lg: 'row' }}
-        position="relative"
-        p={{ base: 2, lg: 4 }}
-        gap={{ base: 3, lg: 4 }}
-        overflowY={{ base: 'auto', lg: 'hidden' }}
-        fontFamily='"Nunito", "Poppins", sans-serif'
+      {/* Update folder modal */}
+      <SmallModal
+        topIcon="ray"
+        show={!!targetFolderToUpdate}
+        onCancel={onCloseModal}
+        onConfirm={handleUpdateFolder}
+        title="Editar pasta"
+        okText="Salvar"
+        isLoading={isLoading}
       >
-        {/* Coluna 1: Classes */}
-        <Flex
-          w={{ base: 'full', lg: '33.333%' }}
-          direction="column"
-          zIndex={10}
-          gap={4}
-          order={1}
-          overflowY={{ lg: 'auto' }}
-          pb={2}
-          sx={customScrollbar}
-        >
-          <ClassManager />
+        <Flex direction="column" gap="1rem" mt="1rem">
+          <TextInput
+            label="Nome da pasta"
+            value={targetFolderToUpdate?.name}
+            onInputChange={(name) => setTargetFolderToUpdate((e) => ({ ...(e || ({} as any)), name }))}
+          />
         </Flex>
+      </SmallModal>
 
-        {/* Coluna 2: Treinamento */}
-        <Flex
-          w={{ base: 'full', lg: '33.333%' }}
-          direction="column"
-          zIndex={10}
-          align="center"
-          justify="center"
-          order={2}
-          py={{ base: 4, lg: 0 }}
-          overflowY={{ lg: 'auto' }}
-          sx={customScrollbar}
-        >
-          <TrainingPanel />
+      {/* Remove folder modal */}
+      <SmallModal
+        show={!!targetFolderToRemove}
+        topIcon="warning"
+        onCancel={onCloseModal}
+        onConfirm={handleRemoveFolder}
+        title="Atenção"
+        okText="Confirmar"
+        isLoading={isLoading}
+      >
+        <Flex direction="column" gap="1rem" mt="1rem">
+          <Text fontSize="1rem" fontWeight="500" color="gray600">
+            Tem certeza que deseja excluir a pasta <b>{targetFolderToRemove?.name}</b> ?
+          </Text>
+          <Text fontSize="1rem" fontWeight="500" color="gray600">
+            Essa ação é <b>irreversível</b> e você perderá todos projetos dessa pasta.
+          </Text>
         </Flex>
-
-        {/* Coluna 3: Preview/Predição */}
-        <Flex w={{ base: 'full', lg: '33.333%' }} direction="column" zIndex={10} order={3} overflowY={{ lg: 'auto' }} pb={2} sx={customScrollbar}>
-          <PreviewPanel />
-        </Flex>
-      </Flex>
-
-      {/* Modais (Renderizados no mesmo nível da página) */}
-      <VisionLabWebcamModal />
-      <VisionLabConfirmModal />
-    </>
+      </SmallModal>
+    </Flex>
   );
-}
+};
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
+export default VisionLabFolders;
+
+export const getServerSideProps: GetServerSideProps = async () => {
   const selectedPage = 'vision_lab';
 
-  try {
-    cookieManager.updateToken(req);
-
-    return { props: { selectedPage, pageTitle: `Vision Lab` } };
-  } catch (err: any) {
-    cookieManager.forceTokenExpires(res);
-
-    return { redirect: { destination: '/login', permanent: false } };
-  }
+  return { props: { selectedPage, pageTitle: 'Vision Lab', showBackButton: false } };
 };

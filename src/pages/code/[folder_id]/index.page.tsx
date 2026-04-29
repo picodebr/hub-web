@@ -22,8 +22,10 @@ import { AvatarList } from '@/components/AvatarList';
 import { BiCode } from 'react-icons/bi';
 import { TextInput } from '@/components/Inputs/Text';
 import DropdownMenu from 'rsuite/esm/Dropdown/DropdownMenu';
-import { ArrowLeft, Code2, Globe, Lock, Plus } from 'lucide-react';
+import { ArrowLeft, Code2, Globe, Lock, Plus, Trash2 } from 'lucide-react';
 import moment from 'moment';
+import { InternalPageHeader } from '@/components/InternalPageHeader';
+import { InternalCard } from '@/components/InternalCard';
 
 interface IProps {
   folderId: string;
@@ -116,20 +118,12 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
 
   return (
     <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
-      <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Code2 className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <Text fontSize="28px">{targetFolder?.name}</Text>
-            <p className="text-sm text-muted-foreground mt-0.5 whitespace-normal">
-              {targetFolder?.projects.length} {targetFolder?.projects.length === 1 ? 'projeto' : 'projetos'}
-            </p>
-          </div>
-        </div>
-        <PlusButton label="Novo projeto" leftIcon={<FaPlus />} onClick={() => setNewProjectName(``)} />
-      </div>
+      <InternalPageHeader
+        title={targetFolder?.name || `Projetos`}
+        description={`${targetFolder?.projects.length || `0`} ${targetFolder?.projects.length === 1 ? 'projeto' : 'projetos'}`}
+        buttons={[{ label: `Novo projeto`, leftIcon: <FaPlus />, onClick: () => setNewProjectName(``) }]}
+      />
+
       <Skeleton
         display="grid"
         overflow="hidden auto"
@@ -139,89 +133,29 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
         gridTemplateRows="minmax(min-content, max-content)"
         borderRadius="md"
         flex="1"
+        pt="1rem "
       >
-        {targetFolder?.projects?.map((project, i) => (
-          <motion.div
+        {targetFolder?.projects?.map((project, index) => (
+          <InternalCard
             key={project.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
-            whileHover={{ y: -4 }}
-            className="group glass-card rounded-3xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer border border-border/50"
+            index={index}
             onClick={() =>
               Object.keys(project.metadata || {}).length
                 ? router.push(`/code/${folderId}/${project.id}?_p=${project.name}&allow-new-code=true`)
                 : router.push(`/code/${folderId}/${project.id}?_p=${project.name}`)
             }
-          >
-            {/* Code thumbnail */}
-            <div className="p-3 pb-2 h-40" style={{ overflow: `hidden` }}>
-              <CodeThumbnail lines={[project.metadata?.uploadMode.code || project.source_code?.code || '']} />
-            </div>
-
-            {/* Info */}
-            <div className="px-4 pb-4 pt-1">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <p className="font-semibold text-lg text-foreground  truncate group-hover:text-primary transition-colors">{project.name}</p>
-                </div>
-                <Menu>
-                  <MenuButton
-                    onClick={(e) => e.stopPropagation()}
-                    alignSelf="flex-end"
-                    color="gray300"
-                    p="0.45rem"
-                    borderRadius="50%"
-                    transition="0.1s"
-                    mr="-0.5rem"
-                    mb="-0.5rem"
-                    _hover={{ bg: 'gray300', color: 'white' }}
-                  >
-                    <FiMoreVertical cursor="pointer" />
-                  </MenuButton>
-                  <MenuList borderColor="gray300" color="gray600">
-                    <MenuItem
-                      gap="0.5rem"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTargetProjectToRemove(project);
-                      }}
-                    >
-                      <Flex color="red.400">
-                        <FiTrash />
-                      </Flex>
-                      <Text fontSize="15px">Remover</Text>
-                    </MenuItem>
-                    <MenuItem
-                      gap="0.5rem"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTargetProjectToShare(project);
-                      }}
-                    >
-                      <Flex color="green.400">
-                        <FaRegShareSquare />
-                      </Flex>
-                      <Text fontSize="15px">Compartilhar</Text>
-                    </MenuItem>
-                    {user.role === `master` && (
-                      <MenuItem
-                        gap="0.5rem"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/code/${folderId}/${project.id}?_p=${project.name}&allow-new-code=true`);
-                        }}
-                      >
-                        <Flex color="blue.400">
-                          <BiCode />
-                        </Flex>
-                        <Text fontSize="15px">Abrir novo code</Text>
-                      </MenuItem>
-                    )}
-                  </MenuList>
-                </Menu>
+            title={project.name}
+            actions={[
+              { label: `Compartilhar`, onClick: () => setTargetProjectToShare(project), Icon: FaRegShareSquare },
+              { label: `Remover`, onClick: () => setTargetProjectToRemove(project), Icon: Trash2, important: true },
+            ]}
+            content={
+              <div className="p-3 pb-2 h-40" style={{ overflow: `hidden` }}>
+                <CodeThumbnail lines={[project.metadata?.uploadMode.code || project.source_code?.code || '']} />
               </div>
-              <div className="flex items-center justify-between gap-2">
+            }
+            footer={
+              <div className="flex items-center justify-between gap-2 flex-1">
                 <p className="text-[11px] text-muted-foreground/70 truncate">{moment(project.updated_at).fromNow()}</p>
                 {(() => {
                   const isPrivate = !!project.private;
@@ -240,8 +174,8 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
                   );
                 })()}
               </div>
-            </div>
-          </motion.div>
+            }
+          />
         ))}
       </Skeleton>
 
