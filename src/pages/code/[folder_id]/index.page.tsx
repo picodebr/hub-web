@@ -137,6 +137,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
       >
         {targetFolder?.projects?.map((project, index) => (
           <InternalCard
+            maxH="240px"
             key={project.id}
             index={index}
             onClick={() =>

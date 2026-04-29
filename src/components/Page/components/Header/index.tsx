@@ -385,7 +385,7 @@ export const Header: React.FC<IProps> = ({
           <Flex direction="column" gap="1rem" align="center">
             <Image src="/loading/rocket-loading.gif" h="12rem" borderRadius="1rem" />
             <Text fontSize="20px" fontWeight="600" color="primary.700" mt="-3rem">
-              Entrando em {selectedSchool?.label}...
+              Saindo de {selectedSchool?.label}...
             </Text>
           </Flex>
         </Flex>
