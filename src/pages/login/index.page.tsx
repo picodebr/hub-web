@@ -134,10 +134,7 @@ const LoginPage: React.FC = () => {
               </div>
 
               {/* Help Link */}
-              <a
-                href="/help"
-                className="text-xs text-destructive cursor-pointer hover:underline transition-colors"
-              >
+              <a href="/help" className="text-xs text-destructive cursor-pointer hover:underline transition-colors">
                 Não estou conseguindo acessar
               </a>
             </div>
@@ -157,11 +154,7 @@ const LoginPage: React.FC = () => {
             </div>
 
             {/* Login Button */}
-            <button
-              className="apple-btn mt-2"
-              onClick={() => submit(handleLogin)}
-              disabled={submitLoading}
-            >
+            <button className="apple-btn mt-2" onClick={() => submit(handleLogin)} disabled={submitLoading}>
               {submitLoading ? 'Entrando...' : 'Entrar'}
             </button>
           </motion.div>

@@ -8,8 +8,8 @@
 
 'use client';
 
-import { useSerialLine } from '@/_base/hooks/useSerialLine';
-import { useEffect, useState } from 'react';
+import { useSerialLine } from '@/_base/hooks/Code/useSerialLine';
+import { useEffect, useMemo } from 'react';
 
 interface HumidityModalProps {
   isOpen: boolean;
@@ -20,16 +20,11 @@ interface HumidityModalProps {
 export default function HumidityModal({ isOpen, onClose, onBack }: HumidityModalProps) {
   // Hook customizado para ler uma linha da porta serial (baudRate 9600)
   const { lastLine, isConnected, connect, disconnect } = useSerialLine(9600);
-  const [value, setValue] = useState(0);
-
-  // Processa o processamento dos dados recebidos via Serial
-  useEffect(() => {
-    if (!lastLine) return;
+  // Converte o valor analógico recebido em número puro (memoizado)
+  const value = useMemo(() => {
+    if (!lastLine) return 0;
     const parsed = parseInt(lastLine, 10);
-    if (!isNaN(parsed)) {
-      // Garante que o valor esteja no intervalo analógico padrão (0-1023)
-      setValue(Math.max(0, Math.min(1023, parsed)));
-    }
+    return isNaN(parsed) ? 0 : Math.max(0, Math.min(1023, parsed));
   }, [lastLine]);
 
   // Cleanup
@@ -44,39 +39,63 @@ export default function HumidityModal({ isOpen, onClose, onBack }: HumidityModal
   if (!isOpen) return null;
 
   return (
-    <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)' }} tabIndex={-1}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style={{ border: `3px solid ${borderColor}` }}>
-          {/* HEADER */}
-          <div className="modal-header border-0 bg-white pb-0">
+    <div
+      className="modal fade show"
+      style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)' }}
+      tabIndex={-1}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '16px', overflow: 'hidden', border: `3px solid ${borderColor}` }}>
+          {/* CABEÇALHO (Unificado com Serial/IA) */}
+          <div className="modal-header border-0 bg-white pb-2 flex-wrap gap-2">
             <div className="d-flex align-items-center gap-2">
               <div
-                className="rounded-circle d-flex align-items-center justify-content-center"
-                style={{ width: 40, height: 40, backgroundColor: '#cff4fc', color: '#0dcaf0' }}
+                className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                style={{ width: 40, height: 40, backgroundColor: '#cff4fc', color: borderColor }}
               >
                 <i className="bi bi-droplet-fill fs-5"></i>
               </div>
-              <h5 className="modal-title fw-bold text-dark">Monitor de Umidade</h5>
+              <div>
+                <h5 className="modal-title fw-bold text-dark lh-1">Monitor de Umidade</h5>
+                <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                  Nível de água e umidade do solo
+                </small>
+              </div>
             </div>
-            <button
-              type="button"
-              className="btn p-0 border-0"
-              onClick={() => {
-                disconnect();
-                onBack();
-              }}
-            >
-              <i className="bi bi-x-lg text-dark"></i>
-            </button>
+
+            <div className="ms-auto d-flex align-items-center gap-2">
+              <button
+                className="btn btn-sm px-2 py-1"
+                onClick={() => {
+                  disconnect();
+                  onBack();
+                }}
+                style={{
+                  backgroundColor: '#f1f5f9',
+                  border: '1px solid #e2e8f0',
+                  color: '#64748b',
+                  borderRadius: '6px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
           </div>
 
-          <div className="modal-body text-center py-5">
+          <div
+            className="modal-body text-center py-4 py-sm-5 d-flex flex-column align-items-center justify-content-center overflow-auto"
+            style={{ maxHeight: '70vh' }}
+          >
             {/* WATER TANK */}
             <div
               className="water-tank-container mx-auto mb-4 position-relative"
               style={{
-                width: '220px',
-                height: '220px',
+                width: 'min(220px, 55vw)',
+                height: 'min(220px, 55vw)',
                 background: '#f8f9fa',
                 borderRadius: '50%',
                 overflow: 'hidden',
@@ -108,7 +127,7 @@ export default function HumidityModal({ isOpen, onClose, onBack }: HumidityModal
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
                   zIndex: 10,
-                  fontSize: '3.5rem',
+                  fontSize: 'min(3.5rem, 12vw)',
                   fontWeight: 'bold',
                   color: percent > 50 ? 'white' : '#495057',
                   textShadow: percent > 50 ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
@@ -121,7 +140,7 @@ export default function HumidityModal({ isOpen, onClose, onBack }: HumidityModal
             </div>
 
             {/* RAW VALUE */}
-            <div className="text-muted small fw-bold">Entrada Analógica: {value}</div>
+            <div className="text-muted small fw-bold bg-light d-inline-block px-3 py-1 rounded-pill">Entrada Analógica: {value}</div>
           </div>
 
           {/* FOOTER */}

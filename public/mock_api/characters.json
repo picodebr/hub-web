@@ -1,0 +1,51 @@
+[
+    {
+        "id": "gato",
+        "name": "Gato",
+        "url": "/svg/spriteLibrary/Gato/costume1.svg",
+        "tags": [
+            "animal",
+            "mascote"
+        ],
+        "costumes": [
+            {
+                "name": "costume1",
+                "url": "/svg/spriteLibrary/Gato/costume1.svg"
+            },
+            {
+                "name": "costume2",
+                "url": "/svg/spriteLibrary/Gato/costume2.svg"
+            }
+        ],
+        "sounds": [
+            {
+                "name": "Meow",
+                "url": "/song/Meow.wav",
+                "format": "wav"
+            }
+        ]
+    },
+    {
+        "id": "dinossauro",
+        "name": "Dinossauro",
+        "url": "/svg/spriteLibrary/Dinossauro/dinosaur2-a.svg",
+        "tags": [
+            "animal",
+            "extinto"
+        ],
+        "costumes": [
+            {
+                "name": "costume1",
+                "url": "/svg/spriteLibrary/Dinossauro/dinosaur2-a.svg"
+            },
+            {
+                "name": "costume2",
+                "url": "/svg/spriteLibrary/Dinossauro/dinosaur2-b.svg"
+            },
+            {
+                "name": "costume3",
+                "url": "/svg/spriteLibrary/Dinossauro/dinosaur2-c.svg"
+            }
+        ]
+    }
+]

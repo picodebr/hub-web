@@ -3,6 +3,22 @@ import type { AppProps } from 'next/app';
 //@ts-ignore
 import 'moment/locale/pt-br';
 //@ts-ignore
+import '../styles/code-globals.css';
+//@ts-ignore
+import '../styles/blockly.css';
+//@ts-ignore
+import '../styles/components.css';
+//@ts-ignore
+import '../styles/dropdown.css';
+//@ts-ignore
+import '../styles/features.css';
+//@ts-ignore
+import '../styles/layout.css';
+//@ts-ignore
+import '../styles/panels.css';
+//@ts-ignore
+import '../styles/theme.css';
+//@ts-ignore
 import '../styles/globals.css';
 
 import { api } from '@/_base/classes/api';
@@ -30,14 +46,14 @@ export default function App({ Component, pageProps }: AppProps) {
           <StyledGlobal />
           <LoadingProvider changeSignal={{}}>
             <CustomRouterProvider>
-              <CombinedProviders>
-                <BlocklyProvider>
-                  <Page {...pageProps} setLoadingConfig={setLoadingConfig}>
+              <Page {...pageProps} setLoadingConfig={setLoadingConfig}>
+                <CombinedProviders>
+                  <BlocklyProvider>
                     <Component {...pageProps} />
                     <CSSReset />
-                  </Page>
-                </BlocklyProvider>
-              </CombinedProviders>
+                  </BlocklyProvider>
+                </CombinedProviders>
+              </Page>
             </CustomRouterProvider>
           </LoadingProvider>
         </PlatformProvider>

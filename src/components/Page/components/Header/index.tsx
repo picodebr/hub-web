@@ -1,5 +1,4 @@
-import { Flex, Image, ScaleFade, Text, Tooltip, Divider, Box, Icon } from '@chakra-ui/react';
-import { useDarkMode } from '@/_base/hooks/useDarkMode';
+import { Flex, Image, ScaleFade, Text, Tooltip, useColorMode, Divider, Box, Icon, Button } from '@chakra-ui/react';
 import { SelectPicker } from 'rsuite';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { create } from 'zustand';
@@ -24,6 +23,7 @@ import { listSchoolGroups } from '@/_base/services/school';
 import { OptionType } from '@/components/Inputs/interfaces';
 import { updateChosenSchool } from '@/_base/services/user';
 import { useNavbar } from '../Navbar';
+import { HiMenu } from 'react-icons/hi';
 
 interface IProps {
   user?: IHubUser;
@@ -71,9 +71,9 @@ export const Header: React.FC<IProps> = ({
   const [selectedSchoolGroup, setSelectedSchoolGroup] = useState<OptionType | null>(null);
 
   const router = useRouter();
-  const { colorMode } = useDarkMode();
+  const { colorMode } = useColorMode();
   const { setSchool, school, setCustomActions } = useSelectedSchool();
-  const { isSidebarOpen, setIsSidebarOpen } = useNavbar();
+  const { setIsSidebarOpen, isSidebarOpen } = useNavbar();
 
   const schoolList = useMemo(() => schools.map((item) => ({ label: item.display_name, value: item.hub_school_id })) || [], [schools]);
   const schoolGroupList = useMemo(() => schoolGroups.map((item) => ({ label: item.display_name, value: item.id })), [schoolGroups]);
@@ -229,7 +229,7 @@ export const Header: React.FC<IProps> = ({
       w="100%"
       alignItems="center"
       justifyContent="space-between"
-      padding={{ base: '0 1rem', lg: '0 2rem' }}
+      padding={{ base: '0 1rem', lg: '0 1rem' }}
       bg={colorMode === 'light' ? 'white' : 'gray.900'}
       borderBottom="1px solid"
       borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}
@@ -240,24 +240,20 @@ export const Header: React.FC<IProps> = ({
       zIndex={10}
     >
       <Flex align="center" gap="1rem">
-        <Tooltip label={isSidebarOpen ? 'Recolher menu' : 'Expandir menu'} placement="bottom">
-          <Flex
-            cursor="pointer"
-            w="36px"
-            h="36px"
-            align="center"
-            justify="center"
-            borderRadius="lg"
-            transition="all 0.2s"
-            color="gray600"
-            _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.800', color: 'primary.500', transform: 'scale(1.05)' }}
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="only-desktop"
-          >
-            <Icon as={FiMenu} fontSize="20px" />
-          </Flex>
-        </Tooltip>
+        <Button
+          className="only-desktop"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          variant="ghost"
+          p="0"
+          w="30px"
+          h="30px"
+          borderRadius="lg"
+          _hover={{ bg: colorMode === 'light' ? 'gray100' : 'gray800' }}
+        >
+          <Icon as={HiMenu} fontSize="1.35rem" color={colorMode === 'light' ? 'gray700' : 'gray200'} />
+        </Button>
         <Logo size="md" className="only-desktop" />
+
         <MobileMenu menuItems={menuItems} page={page} />
       </Flex>
 

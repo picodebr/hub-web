@@ -1,9 +1,24 @@
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
-import { Box, Img, Switch, Flex, Text, Grid, Icon, Button, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Badge } from '@chakra-ui/react';
-import { FiExternalLink, FiSettings, FiAward, FiMoon, FiHelpCircle, FiRocket, FiFolder } from 'react-icons/fi';
+import {
+  Box,
+  Img,
+  Switch,
+  Flex,
+  Text,
+  Grid,
+  Icon,
+  Button,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Badge,
+  Spinner,
+} from '@chakra-ui/react';
+import { FiExternalLink, FiSettings, FiAward, FiMoon, FiHelpCircle, FiFolder } from 'react-icons/fi';
 import { Uploader } from 'rsuite';
-import { Spinner } from 'rsuite';
 import NextImage from 'next/image';
 
 import { validateSession } from '@/_base/services/auth';
@@ -20,6 +35,7 @@ import { listUserCertificates } from '@/_base/services/certificates';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { useAvatar } from '@/components/Page/hooks';
 import moment from 'moment';
+import { FaRocket } from 'react-icons/fa6';
 
 interface IProps {
   user: IHubUser;
@@ -80,7 +96,8 @@ const Profile: React.FC<IProps> = ({ user }) => {
   const [projects, setProjects] = useState<IProject[]>([]);
   const [profile, setProfile] = useState<IHubUser>(user);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>(
-    Array.isArray(user?.metadata?.disciplines) ? user.metadata.disciplines : ['Robótica', 'Programação']
+    //@ts-ignore
+    Array.isArray(user?.metadata?.disciplines) ? user.metadata.disciplines : ['Robótica', 'Programação'],
   );
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -136,9 +153,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
   };
 
   const toggleDiscipline = (discipline: string) => {
-    setSelectedDisciplines((prev) =>
-      prev.includes(discipline) ? prev.filter((d) => d !== discipline) : [...prev, discipline]
-    );
+    setSelectedDisciplines((prev) => (prev.includes(discipline) ? prev.filter((d) => d !== discipline) : [...prev, discipline]));
   };
 
   return (
@@ -158,7 +173,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
           overflow="hidden"
         >
           <Flex align="center" gap="0.5rem" mb="1rem">
-            <Icon as={FiRocket} color="primary.500" fontSize="20px" />
+            <Icon as={FaRocket} color="primary.500" fontSize="20px" />
             <Text fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
               Boas-vindas à PiCode
             </Text>
@@ -232,7 +247,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
                       </Text>
                     </Flex>
                   </Flex>
-                  
+
                   <Flex align="center" gap="0.75rem">
                     <Button
                       as="a"
@@ -264,13 +279,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
                 </Flex>
               ))
             ) : (
-              <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                flex="1"
-                color="gray.400"
-              >
+              <Flex direction="column" align="center" justify="center" flex="1" color="gray.400">
                 <Icon as={FiAward} fontSize="28px" mb="2" opacity={0.5} />
                 <Text fontSize="14px" fontWeight="500">
                   Você ainda não possui certificados
@@ -283,7 +292,15 @@ const Profile: React.FC<IProps> = ({ user }) => {
 
       {/* SEÇÃO PROJETOS - Meus Projetos Recentes */}
       {projects.length > 0 && (
-        <Flex direction="column" bg={colorMode === 'dark' ? 'gray.800' : 'white'} borderRadius="2xl" border="1px solid" borderColor={colorMode === 'dark' ? 'gray.700' : 'gray.200'} boxShadow="sm" p="1.5rem">
+        <Flex
+          direction="column"
+          bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+          borderRadius="2xl"
+          border="1px solid"
+          borderColor={colorMode === 'dark' ? 'gray.700' : 'gray.200'}
+          boxShadow="sm"
+          p="1.5rem"
+        >
           <Flex align="center" justify="space-between" mb="1.5rem">
             <Flex align="center" gap="0.5rem">
               <Icon as={FiFolder} color="primary.500" fontSize="18px" />
@@ -300,7 +317,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
             {projects.slice(0, 6).map((project, index) => {
               const colors = ['cyan', 'purple', 'orange', 'green', 'red', 'blue'];
               const colorScheme = colors[index % colors.length];
-              
+
               return (
                 <Flex
                   key={project.id}
@@ -320,18 +337,10 @@ const Profile: React.FC<IProps> = ({ user }) => {
                   }}
                   onClick={() => router.push(`/projects/${project.id}`)}
                 >
-                  <Flex
-                    w="36px"
-                    h="36px"
-                    borderRadius="md"
-                    bg={`${colorScheme}.500`}
-                    align="center"
-                    justify="center"
-                    flexShrink={0}
-                  >
+                  <Flex w="36px" h="36px" borderRadius="md" bg={`${colorScheme}.500`} align="center" justify="center" flexShrink={0}>
                     <Icon as={FiFolder} color="white" fontSize="16px" />
                   </Flex>
-                  
+
                   <Flex direction="column" gap="0.125rem" flex="1">
                     <Text fontWeight="600" fontSize="13px" color={colorMode === 'dark' ? 'white' : 'gray.900'} noOfLines={1}>
                       {project.title}
@@ -340,7 +349,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
                       {moment(project.updated_at).format('DD/MM/YYYY')}
                     </Text>
                   </Flex>
-                  
+
                   <Icon as={FiExternalLink} color={`${colorScheme}.500`} fontSize="14px" />
                 </Flex>
               );
@@ -449,7 +458,6 @@ const Profile: React.FC<IProps> = ({ user }) => {
                   justify="center"
                 >
                   <NextImage
-                    loader={() => profile?.avatar}
                     src={profile?.avatar || ''}
                     width={80}
                     height={80}
@@ -508,11 +516,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
             <Text fontSize="12px" fontWeight="600" color="gray.500" mb="0.5rem" textTransform="uppercase">
               E-mail
             </Text>
-            <EditableTextInput
-              value={profile.email || ''}
-              onInputChange={() => {}}
-              isDisabled
-            />
+            <EditableTextInput value={profile.email || ''} onInputChange={() => {}} isDisabled />
           </Box>
 
           {/* Biografia */}
@@ -535,14 +539,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
               <Text fontSize="12px" fontWeight="600" color="gray.500" textTransform="uppercase">
                 Disciplinas que leciono
               </Text>
-              <Button
-                size="xs"
-                variant="ghost"
-                fontSize="12px"
-                color="primary.500"
-                fontWeight="600"
-                _hover={{ bg: 'primary.50' }}
-              >
+              <Button size="xs" variant="ghost" fontSize="12px" color="primary.500" fontWeight="600" _hover={{ bg: 'primary.50' }}>
                 + Adicionar
               </Button>
             </Flex>

@@ -1,5 +1,7 @@
 import { extendTheme } from '@chakra-ui/react';
+//@ts-ignore
 import 'rsuite/dist/rsuite-no-reset.min.css';
+//@ts-ignore
 import '../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
 import { dark, light } from './colors';

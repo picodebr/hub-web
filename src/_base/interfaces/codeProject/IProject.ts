@@ -1,5 +1,6 @@
 import { ILearnBotElementLayout } from '@/components/LearnBotSimulator/interfaces';
 import { IProjectFolder } from '../codeFolder/IProjectFolder';
+import { ProjectFile } from '@/_base/services/code';
 
 export const sourceCodeModes = <const>['block', 'text'];
 
@@ -17,6 +18,7 @@ export interface ICodeProject {
   folder_id: string;
   name: string;
   source_code: IProjectSourceCode;
+  metadata?: ProjectFile | null;
   user_id: string;
   snapshot: string | null;
   private: boolean;
@@ -32,3 +34,6 @@ export interface ICodeProjectShareLink {
   accepted_at: Date | null;
   created_at: Date;
 }
+
+export const privacyModes = <const>['private', 'public-r', 'public-w', 'link-r', 'link-w', 'invite-r', 'invite-w'];
+export type PrivacyModeType = (typeof privacyModes)[number];

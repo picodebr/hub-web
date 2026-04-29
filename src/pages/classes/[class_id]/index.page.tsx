@@ -352,7 +352,7 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
   const PageView: Record<ClassPageView, ReactNode> = {
     'Lista de Presença': <AttendanceList hub_class={hubClass} />,
     Alunos: (
-      <Box bg={bgCard} borderRadius="xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflowY="auto" overflowX="hidden" flex="1">
+      <Box bg={bgCard} borderRadius="xl" boxShadow="sm" overflowY="auto" overflowX="hidden" flex="1" mb="0.5rem">
         <StudentTable
           rows={students}
           onRowClick={(e) => router.push(`/students/${e.id}`)}
@@ -379,7 +379,7 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
       </Box>
     ),
     Projetos: (
-      <Box flex="1" overflowY="auto" pb="2rem" px="2px">
+      <Box flex="1" overflowY="auto" pb="2rem" px="2px" mb="0.5rem">
         <motion.div variants={containerVariants} initial="hidden" animate="show">
           <Grid gap="1.5rem" gridTemplateColumns="repeat(auto-fill, minmax(260px, 1fr))">
             {dataProjects.map((project) => (

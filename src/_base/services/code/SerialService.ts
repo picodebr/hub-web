@@ -1,31 +1,32 @@
+/* eslint-disable no-console */
 /**
- * SerialService - Gerenciador da Conexão Serial (Web Serial API).
- *
- * Este serviço controla o ciclo de vida da conexão física com a placa Arduino.
- * Ele encapsula a complexidade da Web Serial API, gerencia o estado da conexão
- * (Conectado, Desconectado, Erro) e fornece acesso à instância do StageBoard
- * para interação em tempo real via Firmata.
+ * Gerencia a conexão física com a placa via Web Serial API.
+ * Controla o estado da porta serial e provê acesso às funções de hardware em tempo real.
  */
 
-import { SerialStatus, SerialConfig, DEFAULT_SERIAL_CONFIG, ISerialPort, SerialEvents } from '../../interfaces/code';
-import StageBoard from '../../lib/StageBoard';
+import { SerialStatus, DEFAULT_SERIAL_CONFIG, ISerialPort, SerialEvents } from '@/_base/domain/entities';
 import { EventEmitter } from '../../lib/EventEmitter';
+import StageBoard from './StageBoard';
+import { IHardwareBoard } from '../../domain/ports/IHardwareBoard';
+import { ISerialPortAdapter } from '../../domain/ports/ISerialPortAdapter';
+import { WebSerialAdapter } from '../../adapters/WebSerialAdapter';
+import { ConnectSerialUseCase } from '../../use-cases/ConnectSerialUseCase';
 
 export class SerialService extends EventEmitter<SerialEvents> {
   private static instance: SerialService | null = null;
-  private port: ISerialPort | null = null;
   private status: SerialStatus = SerialStatus.DISCONNECTED;
-  private board: StageBoard;
+  private board: IHardwareBoard;
+  private adapter: ISerialPortAdapter;
+  private connectUseCase: ConnectSerialUseCase;
 
   private constructor() {
     super();
     this.board = new StageBoard();
+    this.adapter = new WebSerialAdapter();
+    this.connectUseCase = new ConnectSerialUseCase(this.adapter);
     this.initializeEventListeners();
   }
 
-  /**
-   * Get the singleton instance of SerialService
-   */
   public static getInstance(): SerialService {
     if (!SerialService.instance) {
       SerialService.instance = new SerialService();
@@ -33,190 +34,84 @@ export class SerialService extends EventEmitter<SerialEvents> {
     return SerialService.instance;
   }
 
-  /**
-   * Initialize event listeners for global serial events
-   */
   private initializeEventListeners(): void {
-    // In server environments `navigator` is not defined at all, so we must
-    // guard against that before attempting any property access. The previous
-    // check (`'serial' in navigator`) would throw a ReferenceError during
-    // SSR, which is exactly what caused error ID 281 when the context
-    // provider instantiated the service on the server. Using `typeof`
-    // prevents the exception and simply makes this a no-op outside of a
-    // browser.
-    if (typeof navigator === 'undefined' || !('serial' in navigator)) {
-      return;
-    }
-
-    // Monitor hardware disconnects
-    (navigator as any).serial.addEventListener('disconnect', (e: Event) => {
-      if (e.target === this.port) {
-        // console.log('[SerialService] Hardware disconnected');
-        this.status = SerialStatus.DISCONNECTED;
+    this.adapter.onStatusChange((status) => {
+      if (this.status === status) return;
+      this.status = status;
+      this.emit('statusChange', this.status);
+      if (status === SerialStatus.DISCONNECTED) {
         this.emit('disconnect', undefined);
-        this.emit('statusChange', this.status);
       }
+    });
+
+    this.adapter.onError((err) => {
+      this.emit('error', err);
     });
   }
 
-  /**
-   * Connect to a serial port
-   * @param forceNew - Force selection of a new port
-   * @param explicitPort - Optional: Use a specific port instance (skips requestPort UI)
-   */
-  public async connect(forceNew: boolean = false, explicitPort?: ISerialPort): Promise<void> {
-    // Guard the same way as above; attempting to access `navigator` on the
-    // server would blow up. Callers should never invoke `connect` during SSR
-    // anyway, but the defensive programming keeps the error contained.
-    if (typeof navigator === 'undefined' || !('serial' in navigator)) {
-      throw new Error('Web Serial API not supported in this browser. Use Chrome or Edge.');
-    }
-
-    // 0. Use Explicit Port if provided (Reconnection scenario)
-    if (explicitPort) {
-      // Ensure we are not duplicating if it's the same port and already connected
-      if (this.port === explicitPort && this.status === SerialStatus.CONNECTED) {
-        return;
-      }
-
-      this.status = SerialStatus.CONNECTING;
-      this.emit('statusChange', this.status);
-
-      try {
-        // Initialize with specific port
-        await this.board.connect(explicitPort);
-        this.port = explicitPort;
-        this.status = SerialStatus.CONNECTED;
-        this.emit('statusChange', this.status);
-      } catch (e) {
-        console.warn('[SerialService] Explicit connection failed:', e);
-        this.status = SerialStatus.DISCONNECTED; // Or ERROR
-        this.emit('statusChange', this.status);
-        // Propagate error if needed, or just return
-      }
-      return;
-    }
-
-    this.status = SerialStatus.CONNECTING;
-    this.emit('statusChange', this.status);
-
+  public async connect(explicitPort?: ISerialPort): Promise<void> {
     try {
-      // 1. Try to reuse existing port (if not forcing new)
-      if (!forceNew && this.port) {
-        try {
-          await this.port.open({ baudRate: DEFAULT_SERIAL_CONFIG.baudRate });
-          await this.initializeBoard();
-          this.status = SerialStatus.CONNECTED;
-          this.emit('statusChange', this.status);
-          return;
-        } catch (e: unknown) {
-          const err = e as Error;
-          if (err.name === 'InvalidStateError' || (err.message && err.message.includes('open'))) {
-            // Port already open
-            this.status = SerialStatus.CONNECTED;
-            this.emit('statusChange', this.status);
-            return;
-          }
-          // If reuse failed, clear the port
-          this.port = null;
-        }
-      }
+      // No modelo Clean, o adapter cuida da seleção da porta se necessário.
+      // O Use Case ConnectSerialUseCase gerencia a conexão do adapter.
+      await this.connectUseCase.execute(DEFAULT_SERIAL_CONFIG, explicitPort);
 
-      // 2. Request new port
-      // Force disconnect ensuring clean state before UI selection
-      // FIX: Check this.port because isConnected() returns false during CONNECTING state
-      if (this.port) {
-        try {
-          await this.disconnect();
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
-      const port = (await (navigator as any).serial.requestPort()) as ISerialPort;
-
-      // 3. Initialize StageBoard with the port
-      await this.board.connect(port);
-
-      this.port = port;
-      this.status = SerialStatus.CONNECTED;
-      this.emit('statusChange', this.status);
-
-      // console.log('[SerialService] Serial port connected successfully:', port);
+      // Após conectar o adapter, conectamos o StageBoard (Firmata)
+      await this.board.connect(this.adapter);
     } catch (e: unknown) {
-      this.status = SerialStatus.ERROR;
-      this.emit('error', e);
-      this.emit('statusChange', this.status);
+      console.error('[SerialService] Erro ao conectar:', e);
       throw e;
     }
   }
 
   /**
-   * Initialize the board after connection
-   */
-  private async initializeBoard(): Promise<void> {
-    if (this.port && this.board) {
-      await this.board.connect(this.port);
-    }
-  }
-
-  /**
-   * Disconnect from the serial port
+   * Desconecta da porta serial e do StageBoard.
    */
   public async disconnect(): Promise<void> {
     try {
-      // Race condition protection: If board.disconnect hangs (driver issue),
-      // force proceed after 500ms so UI doesn't freeze.
-      const disconnectPromise = this.board.disconnect();
-      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 500));
-
-      await Promise.race([disconnectPromise, timeoutPromise]);
-
-      this.status = SerialStatus.DISCONNECTED;
-      this.emit('statusChange', this.status);
-      // console.log('[SerialService] Serial port disconnected');
+      await this.board.disconnect();
+      await this.adapter.disconnect();
     } catch (e) {
-      console.error('[SerialService] Error during disconnect:', e);
+      console.error('[SerialService] Erro ao desconectar:', e);
       this.status = SerialStatus.DISCONNECTED;
       this.emit('statusChange', this.status);
     }
   }
 
   /**
-   * Get the current serial port
+   * Retorna a porta serial atualmente conectada (ou null se desconectado).
    */
   public getPort(): ISerialPort | null {
-    return this.port;
+    return this.adapter.port;
   }
 
   /**
-   * Get the StageBoard instance
+   * Retorna a instância do StageBoard (placa de hardware virtual).
    */
-  public getBoard(): StageBoard {
+  public getBoard(): IHardwareBoard {
     return this.board;
   }
 
   /**
-   * Check if currently connected
+   * Verifica se o serviço está atualmente conectado a uma porta serial.
    */
   public isConnected(): boolean {
     return this.status === SerialStatus.CONNECTED;
   }
 
   /**
-   * Get current connection status
+   * Retorna o status atual da conexão serial.
    */
   public getStatus(): SerialStatus {
     return this.status;
   }
 
   /**
-   * Reset the singleton instance (for testing purposes)
+   * Reseta a instância singleton (utilizado para testes).
    */
   public static resetInstance(): void {
     SerialService.instance = null;
   }
 }
 
-// Export singleton instance getter
+// Exporta getter da instância singleton do SerialService
 export const getSerialService = () => SerialService.getInstance();

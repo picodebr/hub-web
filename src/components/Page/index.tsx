@@ -10,12 +10,13 @@ import { IPageProps } from '@/_base/hooks/Page/interfaces';
 import { Flex } from '@chakra-ui/react';
 import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { Header } from './components/Header';
-import { Navbar } from './components/Navbar';
+import { Navbar, useNavbar } from './components/Navbar';
 import { RedefinePass } from './components/RedefinePass';
 import { MenuItemType } from './interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { IHubUserSchool } from '@/_base/interfaces/school';
-import { useNavbar } from './components/Navbar';
+import { PiExamLight } from 'react-icons/pi';
+import { TbCircuitResistor } from 'react-icons/tb';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   selectedPage,
@@ -32,20 +33,23 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   const { colorMode } = useDarkMode();
   const { isSidebarOpen } = useNavbar();
 
-  const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
+  const menuItems = (user?.role === 'student' ? studentMenuItems : teacherMenuItems).filter(
+    (e) => user?.role === `master` || e.page !== `vision_lab`,
+  );
 
   return (
     <Flex
       h="100vh"
       w="100vw"
       flexDirection="column"
-      bg="primary50"
       position="relative"
       overflow="hidden"
       zIndex="0"
+      bg="primary50"
       bgImg={`/patterns/background-${colorMode}.svg`}
       bgRepeat="no-repeat"
       bgSize="cover"
+      // bg="#f6f6f6"
     >
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
@@ -64,20 +68,13 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
           <Flex flex="1" overflow="hidden">
             <Navbar page={selectedPage} user={user} menuItems={menuItems} stockItems={stockItems} school={school} />
             <RedefinePass user={user} />
-            <motion.div
-              style={{
-                flex: 1,
-                height: '100%',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                position: 'relative',
-                width: '100%',
-              }}
-              transition={{
-                duration: 0.4,
-                ease: 'easeInOut',
-              }}
+            <Flex
+              flex="1"
+              height="100%"
+              overflow="hidden"
+              direction="column"
+              position="relative"
+              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem', xl: '1.5rem' }}
             >
               <Flex
                 flex="1"
@@ -90,7 +87,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
                 alignItems={!isSidebarOpen ? 'center' : 'stretch'}
                 w="100%"
               >
-              {/* {showBackButton && (
+                {/* {showBackButton && (
                 <Flex
                   userSelect="none"
                   cursor="pointer"
@@ -104,9 +101,9 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
                   <Text textAlign="left">Voltar</Text>
                 </Flex>
               )} */}
-              {children}
+                {children}
+              </Flex>
             </Flex>
-            </motion.div>
           </Flex>
         </>
       )}
@@ -122,7 +119,9 @@ const studentMenuItems: Array<MenuItemType> = [
   // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },
   { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
-  { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
+  { name: 'Code Lab', page: 'code', icon: BsMotherboard },
+  { name: 'Vision Lab', page: 'vision_lab', icon: TbCircuitResistor },
+
   { name: 'Meus Grupos', page: 'groups', icon: FiUsers },
   // { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle },
 ];
@@ -132,7 +131,9 @@ const teacherMenuItems: Array<MenuItemType> = [
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
   // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Turmas', page: 'classes', icon: FiUsers },
-  { name: 'Meus Códigos', page: 'code', icon: BsMotherboard },
+  { name: 'Code Lab', page: 'code', icon: BsMotherboard },
+  { name: 'Vision Lab', page: 'vision_lab', icon: TbCircuitResistor },
+
   { name: 'Estoque Maker', page: 'stock', icon: FiInbox },
   // { name: 'Loja', page: 'store', icon: FiShoppingBag },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },

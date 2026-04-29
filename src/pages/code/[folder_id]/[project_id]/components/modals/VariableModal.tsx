@@ -24,14 +24,16 @@ export default function VariableModal({ isOpen, onClose, workspace, isUploadMode
   const [name, setName] = useState('');
   const [type, setType] = useState('Number'); // Pode ser 'Number' ou 'String'
   const [scope, setScope] = useState('global'); // 'global' ou 'local'
-  const { stageVariables, uploadVariables, addVariable, forceSyncVariables, getUserVariables, activeSpriteId } = useProject();
+  const { addVariable, forceSyncVariables, getUserVariables } = useProject();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Sincroniza o estado inicial ao abrir o modal
   useEffect(() => {
     if (isOpen) {
       setName('');
+
       setType('Number');
+
       setScope('global');
       // Foca automaticamente no campo de nome
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -59,25 +61,27 @@ export default function VariableModal({ isOpen, onClose, workspace, isUploadMode
       return;
     }
 
-    const ownerId = scope === 'local' ? activeSpriteId : undefined;
-    addVariable(mode, varName, type, scope as 'global' | 'local', ownerId);
+    addVariable(mode, varName, type, scope as 'global' | 'local');
     forceSyncVariables(); // Force UI update
 
-    // Also create in workspace primarily so it shows up immediately
-    // (though forceSync might handle it via listener in Workspace component)
+    // Também cria no workspace para feedback visual imediato
+    // (embora forceSync possa lidar via listener no componente Workspace)
 
-    // Note: For local variables, we rely on the ProjectService emitting a change
-    // which triggers the BlocklyWorkspace to re-inject variables.
-    // Direct creation here might be redundant or miss the scope metadata if Blockly doesn't support it directly.
-    // But standard delete/rename events in Blockly are name-based.
+    // Nota: Para variáveis locais, dependemos do ProjectService emitir um evento de mudança
+    // que dispara o BlocklyWorkspace a re-injetar variáveis.
+    // Criação direta aqui pode ser redundante ou perder metadados de escopo se o Blockly não suportar diretamente.
+    // Mas eventos padrão de delete/rename no Blockly são baseados em nome.
 
-    // We'll create it here as a visual feedback, ProjectService is the "Truth".
+    // Criamos aqui como feedback visual, ProjectService é a "Fonte de Verdade".
     if (!workspace.getVariableMap().getVariable(varName)) {
-      workspace.createVariable(varName, type);
+      workspace.getVariableMap().createVariable(varName, type);
     }
 
     // Force toolbox refresh
-    workspace.refreshToolboxSelection();
+    const toolbox = workspace.getToolbox();
+    if (toolbox) {
+      toolbox.refreshSelection();
+    }
 
     onClose();
   };
@@ -90,10 +94,22 @@ export default function VariableModal({ isOpen, onClose, workspace, isUploadMode
 
   return (
     <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)' }} tabIndex={-1}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '25px', overflow: 'hidden', border: '5px solid #FF8C1A' }}>
+      <div className="modal-dialog modal-dialog-centered mx-2 mx-sm-auto">
+        <div
+          className="modal-content border-0"
+          style={{
+            borderRadius: '25px',
+            overflow: 'hidden',
+            isolation: 'isolate',
+            backgroundColor: '#f8f9fa',
+            boxShadow: '0 0 0 5px #FF8C1A, 0 10px 30px rgba(0,0,0,0.3)',
+          }}
+        >
           {/* Header Playful */}
-          <div className="modal-header border-0 text-white" style={{ backgroundColor: '#FF8C1A', padding: '20px' }}>
+          <div
+            className="modal-header border-0 text-white"
+            style={{ backgroundColor: '#FF8C1A', padding: '20px', borderTopLeftRadius: '25px', borderTopRightRadius: '25px' }}
+          >
             <h4 className="modal-title fw-bold" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.1)' }}>
               <i className="bi bi-box-seam me-2"></i>
               Nova Variável
@@ -195,7 +211,10 @@ export default function VariableModal({ isOpen, onClose, workspace, isUploadMode
               </div>
             )}
           </div>
-          <div className="modal-footer border-0 bg-light p-3 justify-content-center gap-3">
+          <div
+            className="modal-footer border-0 bg-light p-3 justify-content-center gap-3"
+            style={{ borderBottomLeftRadius: '25px', borderBottomRightRadius: '25px' }}
+          >
             <button type="button" className="btn btn-secondary px-4 fw-bold" onClick={onClose} style={{ borderRadius: '25px', minWidth: '120px' }}>
               Cancelar
             </button>

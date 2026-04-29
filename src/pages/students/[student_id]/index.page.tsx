@@ -17,11 +17,8 @@ import {
   Grid,
   Icon,
   IconButton,
-  Badge,
-  Divider,
 } from '@chakra-ui/react';
 import { FiUsers, FiKey, FiMinus, FiPlus, FiTarget, FiAlertCircle } from 'react-icons/fi';
-import { TbMathSymbols, TbCode } from 'react-icons/tb';
 
 import { logError, cookieManager, formatShortName, formatCoin, showErrorToClient, removeDuplicateItems } from '@/_base/utils';
 import { getStudent, redefineStudentPassword } from '@/_base/services/user';
@@ -32,7 +29,6 @@ import { NumberScaleInput } from '@/components/Inputs/NumberScale';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
 import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { updateStudentData } from '@/_base/services/student/updateStudentData';
-import { GenericButton } from '@/components/Buttons/Generic';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { InputValueType } from '@/_base/interfaces/shared';
 

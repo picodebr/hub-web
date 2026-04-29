@@ -3,7 +3,7 @@
 export interface IPreSignedUploadResponse {
   path: string;
   link: string;
-  host: string;
+  full_path: string;
 }
 
 export const bucketFolders = <const>[
@@ -19,6 +19,8 @@ export const bucketFolders = <const>[
   `store-maker`,
   `community_posts`,
   `certificates`,
+  `code-assets`,
+  `vision-lab`,
 ];
 export type BucketFolders = (typeof bucketFolders)[number];
 

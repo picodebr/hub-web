@@ -1,15 +1,20 @@
 /**
- * BlockService - Serviço centralizado para gerenciamento de blocos Blockly e toolboxes.
+ * BlockService - Registro central e gestão de blocos no core do Blockly.
  *
- * Este serviço é responsável por:
- * 1. Registrar as definições dos blocos no core do Blockly.
- * 2. Fornecer a configuração da interface (toolbox) dependendo do modo de uso (Palco vs Placa).
+ * Responsabilidade: Garantir que todas as definições de blocos (Stage e Board)
+ * sejam registradas corretamente no motor do Blockly, além de fornecer as
+ * configurações de toolbox adequadas para cada modo de operação.
+ *
+ * Operações Principais:
+ * - registerAllBlocks: Inicialização única das definições JSON no Blockly.Blocks.
+ * - getToolbox: Seleção dinâmica da toolbox (Stage vs Board) baseada no estado da UI.
  */
 
 import * as Blockly from 'blockly/core';
 import { BlockStageDefinitions } from '../config/stage_blocks';
-import { BlockBoardDefinitions } from '../config/board';
-import { ToolboxDefinition } from '../config/toolbox';
+import { IBlockDefinition, IToolboxDefinition } from '../domain/entities/IBlockly';
+import { ToolboxDefinition, ToolboxUploadDefinition } from '../config/toolbox';
+import { BlockBoardDefinitions } from '../config/custom_definitions';
 
 export class BlockService {
   // Controla se os blocos já foram registrados para evitar duplicidade
@@ -27,10 +32,10 @@ export class BlockService {
     try {
       // 1. Registra os blocos do modo "Stage" (Palco/Visual)
       // Estes blocos são usados para a lógica de animação e interação visual.
-      BlockStageDefinitions.forEach((blockDef: any) => {
+      (BlockStageDefinitions as IBlockDefinition[]).forEach((blockDef: IBlockDefinition) => {
         if (!Blockly.Blocks[blockDef.type]) {
           Blockly.Blocks[blockDef.type] = {
-            init: function () {
+            init: function (this: Blockly.Block) {
               this.jsonInit(blockDef);
             },
           };
@@ -39,10 +44,10 @@ export class BlockService {
 
       // 2. Registra os blocos do modo "Board" (Placa/Arduino)
       // Estes blocos são usados para gerar código C++ para o hardware.
-      BlockBoardDefinitions.forEach((blockDef: any) => {
+      (BlockBoardDefinitions as IBlockDefinition[]).forEach((blockDef: IBlockDefinition) => {
         if (!Blockly.Blocks[blockDef.type]) {
           Blockly.Blocks[blockDef.type] = {
-            init: function () {
+            init: function (this: Blockly.Block) {
               this.jsonInit(blockDef);
             },
           };
@@ -60,25 +65,23 @@ export class BlockService {
    * Obtém a configuração da toolbox para o modo Stage.
    * Retorna a definição completa das categorias e blocos disponíveis no "Palco".
    */
-  public static getStageToolbox(): any {
-    // Importa a configuração do arquivo de toolbox centralizado
-    return ToolboxDefinition;
+  public static getStageToolbox(): IToolboxDefinition {
+    return ToolboxDefinition as IToolboxDefinition;
   }
 
   /**
    * Obtém a configuração da toolbox para o modo Board (Placa).
    * Retorna os blocos específicos para programação de hardware/microcontrolador.
    */
-  public static getBoardToolbox(): any {
-    // return BoardToolboxDefinition;
-    return undefined;
+  public static getBoardToolbox(): IToolboxDefinition {
+    return ToolboxUploadDefinition as IToolboxDefinition;
   }
 
   /**
    * Obtém a toolbox correta baseada no modo atual.
    * @param isUploadMode - True para modo Placa (Board), false para modo Palco (Stage).
    */
-  public static getToolbox(isUploadMode: boolean): any {
+  public static getToolbox(isUploadMode: boolean): IToolboxDefinition {
     return isUploadMode ? this.getBoardToolbox() : this.getStageToolbox();
   }
 
