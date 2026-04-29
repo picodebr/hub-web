@@ -271,6 +271,7 @@ export class CodeExecutor {
                 getTimer, resetTimer,
 
                 openMLWindow, closeMLWindow, setVideoOnStage, setVideoTransparency,
+                getIdentifiedClass,
                 get identifiedClass() { return window.__ml_topClass || ""; },
                 isIdentifiedClass, getConfidence,
                 getSpriteProperty,
