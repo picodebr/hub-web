@@ -388,30 +388,6 @@ export function PreviewPanel() {
             })
           )}
         </Box>
-
-        {/* Botão de Salvar/Exportar Modelo */}
-        {isTrained && (
-          <Box mt={4} w="full" alignSelf="flex-start">
-            <Button
-              bg="blue.50"
-              color={piBlue}
-              border="1px dashed"
-              borderColor="blue.200"
-              fontWeight="bold"
-              px={4}
-              py={2}
-              borderRadius="xl"
-              fontSize="xs"
-              transition="colors 0.2s"
-              gap={1.5}
-              _hover={{ bg: 'blue.100', borderColor: piBlue }}
-              onClick={handleExport}
-            >
-              <Download size={14} />
-              Salvar Modelo
-            </Button>
-          </Box>
-        )}
       </Flex>
 
       {/* Input de arquivo invisível */}

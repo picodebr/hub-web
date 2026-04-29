@@ -19,9 +19,10 @@ interface IProps {
   showFooterIcon?: boolean;
   footer?: React.ReactElement;
   actions?: IActionProps[];
+  maxH?: string;
 }
 
-export const InternalCard: React.FC<IProps> = ({ index, onClick, content, Icon, title, showFooterIcon, footer, actions }) => {
+export const InternalCard: React.FC<IProps> = ({ index, onClick, content, Icon, title, showFooterIcon, footer, actions, maxH }) => {
   const gradient = FOLDER_GRADIENTS[index % FOLDER_GRADIENTS.length];
 
   return (
@@ -32,6 +33,7 @@ export const InternalCard: React.FC<IProps> = ({ index, onClick, content, Icon, 
       transition={{ delay: index * 0.05 }}
       whileHover={{ y: -4 }}
       onClick={onClick}
+      style={{ maxHeight: maxH }}
       className="group relative rounded-3xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer border border-border/50 bg-card flex flex-col h-fit"
     >
       {/* Área do Gradiente Superior */}

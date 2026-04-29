@@ -14,7 +14,9 @@ import { cookieManager } from '@/_base/utils';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
 import { getModelArtifacts, getTrainedModel } from '@/_base/lib/ml';
 import { getPresignedUrl } from '@/_base/services/upload';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { IVisionLabProject } from '@/_base/interfaces/visionLab/IVisionLabProject';
+import { getVisionLabProject, updateVisionLabProject } from '@/_base/services/visionLab';
 
 // ==========================================
 // ANIMAÇÕES
@@ -44,12 +46,28 @@ const customScrollbar = {
 // ==========================================
 // PÁGINA: Home
 // ==========================================
-export default function VisionLab() {
+export default function VisionLab({ projectId }: { projectId: string }) {
+  const [targetProject, setTargetProject] = useState<IVisionLabProject | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const { isLoaded, error } = useTensorFlow();
   const { classes, isTrained } = useVisionLabStore();
   const toast = useCustomToast();
+
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const project = await getVisionLabProject(projectId);
+        console.log('project: ', project);
+        setTargetProject(project);
+      } catch {
+        toast({ status: `error`, description: `Não foi possível obter o projeto no momento` });
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
   const handleSave = useAsyncCallback(
     async () => {
@@ -76,14 +94,9 @@ export default function VisionLab() {
           headers: { 'Content-Type': 'application/json' },
         });
 
-        toast({ title: 'Upload concluído com sucesso!', position: `top-right`, status: `success` });
+        await updateVisionLabProject({ id: projectId, labels: classes.map((c) => c.name), bin_path: binFullPath, model_path: jsonFullPath });
 
-        const dto = {
-          labels: classes.map((c) => c.name),
-          bin_path: binFullPath,
-          model_path: jsonFullPath,
-        };
-        console.log('dto: ', dto);
+        toast({ title: 'Upload concluído com sucesso!', position: `top-right`, status: `success` });
       }
     },
     [classes],
@@ -107,7 +120,7 @@ export default function VisionLab() {
   return (
     <Flex h="100%" direction="column">
       <InternalPageHeader
-        title={'Nome do projeto'}
+        title={targetProject?.name || `Projeto`}
         buttons={isTrained ? [{ label: `Salvar Modelo`, leftIcon: <Download size={14} />, onClick: handleSave, isLoading }] : undefined}
       />
       {/* Main Container */}
@@ -193,8 +206,10 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
 
   try {
     cookieManager.updateToken(req);
+    const pageTitle = query._p || 'Vision Lab';
+    const projectId = query.project_id || ``;
 
-    return { props: { selectedPage, pageTitle: `Vision Lab` } };
+    return { props: { selectedPage, pageTitle, projectId } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
 
