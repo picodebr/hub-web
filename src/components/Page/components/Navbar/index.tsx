@@ -182,8 +182,8 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                   <NextImage
                     loader={() => avatar}
                     src={avatar}
-                    width={48}
-                    height={48}
+                    width={54}
+                    height={54}
                     alt=""
                     style={{ opacity: isUpdating ? `0.4` : `1`, borderRadius: `50%` }}
                     priority
@@ -226,7 +226,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                 {/* Info do Usuário */}
                 <Flex direction="column" flex="1" overflow="hidden" gap="1px">
                   <Flex align="center" gap="0.35rem">
-                    <Text fontSize="13px" fontWeight="700" color="primary900" isTruncated>
+                    <Text fontSize="14px" fontWeight="700" color="primary900" isTruncated>
                       {formatShortName(user?.name || '', true)}
                     </Text>
                     <Tooltip label="Editar Perfil" placement="top">
@@ -243,7 +243,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                     </Tooltip>
                   </Flex>
 
-                  <Text fontSize="11px" color="gray500" fontWeight="400" isTruncated>
+                  <Text fontSize="12px" color="gray500" fontWeight="400" isTruncated>
                     {user?.role === `student` ? `${user.hub_class?.hub_school?.display_name}` : user?.email}
                   </Text>
 

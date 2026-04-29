@@ -97,7 +97,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
   const scorePercentage = (((customResult?.lessonData?.correctAnswersCount || 0) / (lesson?.challenges?.length || 1)) * 100).toFixed();
 
   return (
-    <>
+    <Flex h="100%">
       {lesson?.lesson_type === `quiz` ? (
         <LessonPage
           challenge={currentChallenge}
@@ -211,7 +211,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
           )}
         </Flex>
       </SmallModal>
-    </>
+    </Flex>
   );
 };
 

@@ -1723,3 +1723,45 @@ div.blocklyHtmlInput {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
     border-radius: 20px;
   }
+
+.apple-input {
+  @apply h-12 w-full rounded-xl bg-input px-4 text-foreground placeholder:text-muted-foreground transition-all duration-200 outline-none;
+}
+.apple-input:hover {
+  background: hsl(var(--input-hover));
+}
+.apple-input:focus {
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.25);
+  background: hsl(var(--card));
+}
+.apple-input.input-error {
+  box-shadow: 0 0 0 2px hsl(var(--destructive) / 0.5);
+}
+
+.apple-btn {
+  @apply h-12 w-full rounded-xl font-semibold text-primary-foreground transition-all duration-200;
+  background: hsl(var(--primary));
+}
+.apple-btn:hover {
+  filter: brightness(1.08);
+}
+.apple-btn:active {
+  transform: scale(0.97);
+}
+.apple-btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.apple-btn-secondary {
+  @apply h-12 w-full rounded-xl font-semibold transition-all duration-200;
+  background: hsl(var(--secondary));
+  color: hsl(var(--primary));
+}
+.apple-btn-secondary:hover {
+  filter: brightness(0.97);
+}
+.apple-btn-secondary:active {
+  transform: scale(0.97);
+}

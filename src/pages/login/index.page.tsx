@@ -101,7 +101,8 @@ const LoginPage: React.FC = () => {
                   <FiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
                   <input
                     type="text"
-                    className={`apple-input pl-10 ${errors.identifier ? 'input-error' : ''}`}
+                    className={`apple-input ml-10 ${errors.identifier ? 'input-error' : ''}`}
+                    style={{ paddingLeft: `3rem` }}
                     placeholder="Nome de Usuário"
                     value={data?.identifier}
                     onChange={(e) => onInputChange('identifier', e.target.value.trim().toLowerCase())}
@@ -118,6 +119,7 @@ const LoginPage: React.FC = () => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     className={`apple-input pl-10 pr-12 ${errors.password ? 'input-error' : ''}`}
+                    style={{ paddingLeft: `3rem` }}
                     placeholder="Sua senha"
                     value={data?.password}
                     onChange={(e) => onInputChange('password', e.target.value)}

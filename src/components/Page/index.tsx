@@ -1,4 +1,4 @@
-import { PropsWithChildren, useState } from 'react';
+import { cloneElement, PropsWithChildren, useState } from 'react';
 import { useRouter } from 'next/router';
 import { FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
@@ -74,20 +74,15 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               overflow="hidden"
               direction="column"
               position="relative"
-              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem', xl: '1.5rem' }}
+              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '0 0.5rem 0 1rem' }}
+              sx={{
+                '& > :last-child': {
+                  padding: '1rem 0.5rem 1rem 0',
+                  // Se a sua página tiver scroll próprio, você pode precisar garantir a altura dela aqui
+                },
+              }}
             >
-              <Flex
-                flex="1"
-                height="100%"
-                overflow="hidden"
-                direction="column"
-                position="relative"
-                p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem 3rem 1rem 2rem', xl: '1.5rem 4rem 1.5rem 2.5rem' }}
-                justifyContent="center"
-                alignItems={!isSidebarOpen ? 'center' : 'stretch'}
-                w="100%"
-              >
-                {/* {showBackButton && (
+              {/* {showBackButton && (
                 <Flex
                   userSelect="none"
                   cursor="pointer"
@@ -101,8 +96,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
                   <Text textAlign="left">Voltar</Text>
                 </Flex>
               )} */}
-                {children}
-              </Flex>
+              {children}
             </Flex>
           </Flex>
         </>

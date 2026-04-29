@@ -237,7 +237,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
                             isDisabled={isLocked}
                             colorScheme={isFinished ? 'gray' : 'blue'}
                             variant={isFinished ? 'outline' : 'solid'}
-                            bg={!isFinished && !isLocked ? 'primary.600' : undefined}
+                            bg={!isFinished && !isLocked ? 'primary600' : undefined}
                             color={!isFinished && !isLocked ? 'white' : undefined}
                             leftIcon={
                               isLocked ? (

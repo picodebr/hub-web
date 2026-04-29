@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { Flex, Grid, Progress, Skeleton, Text, Box, Icon, Badge } from '@chakra-ui/react';
+import { Flex, Grid, Progress, Skeleton, Text, Box, Icon, Badge, useColorMode } from '@chakra-ui/react';
 import { FiPlayCircle, FiCheckCircle, FiClock } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
@@ -9,6 +9,8 @@ import { IHubCourse, IHubCourseActivity } from '@/_base/interfaces/course';
 import { listCourses } from '@/_base/services/course';
 import { useCustomToast } from '@/_base/hooks';
 import { useDarkMode } from '@/_base/hooks/useDarkMode';
+import { InternalCard } from '@/components/InternalCard';
+import { InternalPageHeader } from '@/components/InternalPageHeader';
 
 // --- Variáveis de Animação (Framer Motion) ---
 const containerVariants = {
@@ -26,7 +28,7 @@ const Courses: React.FC = () => {
   const [coursesActivity, setCoursesActivity] = useState<IHubCourseActivity[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { colorMode } = useDarkMode();
+  const { colorMode } = useColorMode();
   const router = useCustomRouter();
   const toast = useCustomToast();
 
@@ -67,17 +69,13 @@ const Courses: React.FC = () => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex flex="1" direction="column" gap="1.5rem" h="100%" overflowY="auto" overflowX="hidden" pb="2rem" pr="0.5rem">
+    <Flex flex="1" direction="column" h="100%" overflowY="auto" overflowX="hidden" pb="2rem" pr="0.5rem">
       {/* Cabeçalho da Página */}
-      <Flex align="center" gap="0.75rem" mb="0.5rem">
-        <Flex bg="primary.100" color="primary.600" p="0.5rem" borderRadius="lg">
-          <Icon as={FiPlayCircle} boxSize="1.5rem" />
-        </Flex>
-        <Text fontSize={{ base: '20px', md: '24px' }} fontWeight="800" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
-          Meus Cursos e Trilhas
-        </Text>
-      </Flex>
-
+      <InternalPageHeader
+        title="Meus Cursos e Trilhas"
+        description="Seu aprendizado começa aqui"
+        icon={<FiPlayCircle className="w-6 h-6 text-primary" />}
+      />
       {/* Conteúdo Principal */}
       {isLoading ? (
         <Grid gap="1.5rem" gridTemplateColumns="repeat(auto-fill, minmax(260px, 1fr))">
@@ -91,97 +89,78 @@ const Courses: React.FC = () => {
             </Flex>
           ))}
         </Grid>
-      ) : courses.length === 0 ? (
-        <Flex
-          direction="column"
-          align="center"
-          justify="center"
-          h="200px"
-          border="2px dashed"
-          borderColor={borderColor}
-          borderRadius="2xl"
-          color="gray.400"
-        >
-          <Icon as={FiPlayCircle} boxSize="3rem" mb="0.5rem" opacity={0.5} />
-          <Text fontWeight="500">Nenhum curso disponível no momento.</Text>
-        </Flex>
       ) : (
-        <motion.div variants={containerVariants} initial="hidden" animate="show">
-          <Grid gap="1.5rem" gridTemplateColumns="repeat(auto-fill, minmax(260px, 1fr))">
-            {courses.map((course) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 overflow-y-auto pb-8 px-2 content-start h-full pt-2">
+          {courses.length ? (
+            courses.map((course, index) => {
               const progress = getProgress(course);
               const isFinished = progress === 100;
               const isStarted = progress > 0;
 
               return (
-                <motion.div key={course.id} variants={itemVariants}>
-                  <Flex
-                    direction="column"
-                    h="100%"
-                    w="100%"
-                    bg={bgCard}
-                    border="1px solid"
-                    borderColor={borderColor}
-                    borderRadius="2xl"
-                    overflow="hidden"
-                    cursor="pointer"
-                    transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-                    _hover={{ transform: 'translateY(-6px)', boxShadow: 'xl', borderColor: 'primary.300' }}
-                    onClick={() => handleCourseClick(course)}
-                  >
-                    {/* Imagem de Capa */}
-                    <Box
-                      backgroundImage={`url(${course.thumbnail || '/logo/pi-logo-dark.svg'})`}
-                      backgroundSize="cover"
-                      backgroundPosition="center"
-                      backgroundRepeat="no-repeat"
-                      h="200px"
-                      w="100%"
-                      borderBottom="1px solid"
-                      borderColor={borderColor}
-                    />
-
-                    {/* Informações do Curso */}
-                    <Flex direction="column" p="1.25rem" flex="1" justify="space-between" gap="1.25rem">
-                      <Text fontSize="16px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={2} lineHeight="1.3">
-                        {course.title}
-                      </Text>
-
-                      {/* Barra de Progresso Inteligente */}
-                      <Flex direction="column" gap="0.5rem">
-                        <Flex justify="space-between" align="center">
-                          {isFinished ? (
-                            <Badge colorScheme="green" variant="subtle" borderRadius="full" px="2" display="flex" alignItems="center" gap="1">
-                              <Icon as={FiCheckCircle} /> Concluído
-                            </Badge>
-                          ) : isStarted ? (
-                            <Text fontSize="12px" fontWeight="600" color="primary.600">
-                              {progress}% Concluído
-                            </Text>
-                          ) : (
-                            <Badge colorScheme="gray" variant="subtle" borderRadius="full" px="2" display="flex" alignItems="center" gap="1">
-                              <Icon as={FiClock} /> Não iniciado
-                            </Badge>
-                          )}
-                        </Flex>
-
-                        <Progress
-                          value={progress}
-                          min={0}
-                          max={100}
-                          size="sm"
-                          borderRadius="full"
-                          colorScheme={isFinished ? 'green' : 'blue'}
-                          bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                <InternalCard
+                  key={course.id}
+                  index={index}
+                  onClick={() => handleCourseClick(course)}
+                  title={course.title}
+                  Icon={FiPlayCircle}
+                  content={
+                    course.thumbnail ? (
+                      <Flex height="160px" p="1rem" marginBottom="-1rem" zIndex="999">
+                        <Box
+                          backgroundImage={`url(${course.thumbnail || '/logo/pi-logo-dark.svg'})`}
+                          backgroundSize="contain"
+                          backgroundPosition="center"
+                          backgroundRepeat="no-repeat"
+                          h="100%"
+                          w="100%"
+                          border="1px solid"
+                          borderRadius="1rem"
+                          borderColor={borderColor}
                         />
                       </Flex>
+                    ) : undefined
+                  }
+                  footer={
+                    <Flex direction="column" gap="0.5rem" w="100%">
+                      <Flex justify="space-between" align="center">
+                        {isFinished ? (
+                          <Badge colorScheme="green" variant="subtle" borderRadius="full" px="2" display="flex" alignItems="center" gap="1">
+                            <Icon as={FiCheckCircle} /> Concluído
+                          </Badge>
+                        ) : isStarted ? (
+                          <Text fontSize="12px" fontWeight="600" color="primary.600">
+                            {progress}% Concluído
+                          </Text>
+                        ) : (
+                          <Badge colorScheme="gray" variant="subtle" borderRadius="full" px="2" display="flex" alignItems="center" gap="1">
+                            <Icon as={FiClock} /> Não iniciado
+                          </Badge>
+                        )}
+                      </Flex>
+
+                      <Progress
+                        value={progress}
+                        min={0}
+                        max={100}
+                        size="sm"
+                        borderRadius="full"
+                        colorScheme={isFinished ? 'green' : 'blue'}
+                        bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                      />
                     </Flex>
-                  </Flex>
-                </motion.div>
+                  }
+                  showFooterIcon
+                />
               );
-            })}
-          </Grid>
-        </motion.div>
+            })
+          ) : (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground mt-10">
+              <FiPlayCircle className="w-16 h-16 mb-4 opacity-20" />
+              <p className="text-lg font-medium text-foreground/70">Lista vazia</p>
+            </div>
+          )}
+        </div>
       )}
     </Flex>
   );

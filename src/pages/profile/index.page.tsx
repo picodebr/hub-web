@@ -157,7 +157,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
   };
 
   return (
-    <Flex direction="column" flex="1" gap="1.5rem" overflowY="auto" overflowX="hidden" pb="2rem" px="1.5rem" py="1.5rem">
+    <Flex direction="column" flex="1" gap="1.5rem" overflowY="auto" overflowX="hidden">
       {/* SEÇÃO TOP - Boas-vindas + Certificados */}
       <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap="1.5rem" w="100%">
         {/* Boas-vindas à PiCode */}
