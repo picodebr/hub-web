@@ -8,7 +8,6 @@ import { useAsyncCallback, useCustomRouter, useCustomToast, useInputHandler } fr
 import { PlusButton } from '@/components/Buttons/Plus';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
 import {
   createCodeProjectFolder,
   listCodeProjectFolders,
@@ -19,26 +18,35 @@ import { createCodeProjectFolderSchema } from '@/_base/interfaces/codeFolder/ICr
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { RiFolderSharedFill } from 'react-icons/ri';
-import { Code2, FolderOpen, Layers, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { BrainCircuit, Code2, FolderOpen, Layers, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
 import { InternalCard } from '@/components/InternalCard';
+import { createVisionLabFolder, getVisionLabFolders, removeVisionLabFolder, updateVisionLabFolder } from '@/_base/services/visionLab';
+import { IVisionLabFolder } from '@/_base/interfaces/visionLab/IVisionLabFolder';
+import { z } from 'zod';
+import { zodSchemaErrors } from '@/_base/errors/zodSchemaErrors';
 
 const VisionLabFolders: React.FC = () => {
-  const [folders, setFolders] = useState<IProjectFolder[]>([]);
-  const [targetFolderToUpdate, setTargetFolderToUpdate] = useState<IProjectFolder | null>(null);
-  const [targetFolderToRemove, setTargetFolderToRemove] = useState<IProjectFolder | null>(null);
+  const [folders, setFolders] = useState<IVisionLabFolder[]>([]);
+  const [targetFolderToUpdate, setTargetFolderToUpdate] = useState<IVisionLabFolder | null>(null);
+  const [targetFolderToRemove, setTargetFolderToRemove] = useState<IVisionLabFolder | null>(null);
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const toast = useCustomToast();
   const router = useCustomRouter();
-  const { data, errors, onInputChange, setData, submit } = useInputHandler({ schema: createCodeProjectFolderSchema, data: { name: `` } });
+  const { data, errors, onInputChange, setData, submit } = useInputHandler({
+    schema: z.object({
+      name: z.string({ required_error: zodSchemaErrors.REQUIRED_FIELD }).trim(),
+    }),
+    data: { name: `` },
+  });
 
   useEffect(() => {
     (async () => {
       setIsLoading(true);
       try {
-        const [{ results }] = await Promise.all([listCodeProjectFolders()]);
+        const [{ results }] = await Promise.all([getVisionLabFolders()]);
         setFolders(results);
       } catch {
         toast({ status: `error`, description: `Não foi possível listar as pastas disponíveis no momento` });
@@ -58,7 +66,7 @@ const VisionLabFolders: React.FC = () => {
   const handleAddFolder = useAsyncCallback(
     async () => {
       setIsLoading(true);
-      const newFolder = await createCodeProjectFolder(data);
+      const newFolder = await createVisionLabFolder(data.name);
       setFolders((f) => [newFolder, ...f]);
       onCloseModal();
     },
@@ -71,7 +79,7 @@ const VisionLabFolders: React.FC = () => {
     async () => {
       if (!targetFolderToUpdate) return;
       setIsLoading(true);
-      const updatedFolder = await updateCodeProjectFolder({ id: targetFolderToUpdate.id, name: targetFolderToUpdate.name });
+      const updatedFolder = await updateVisionLabFolder({ id: targetFolderToUpdate.id, name: targetFolderToUpdate.name });
       setFolders((f) => f.map((folder) => (folder.id === updatedFolder.id ? { ...folder, ...updatedFolder } : folder)));
       onCloseModal();
     },
@@ -84,7 +92,7 @@ const VisionLabFolders: React.FC = () => {
     async () => {
       if (!targetFolderToRemove) return;
       setIsLoading(true);
-      await removeCodeProjectFolder(targetFolderToRemove.id);
+      await removeVisionLabFolder(targetFolderToRemove.id);
       setFolders((f) => f.filter((folder) => folder.id !== targetFolderToRemove.id));
       onCloseModal();
     },
@@ -93,7 +101,7 @@ const VisionLabFolders: React.FC = () => {
     () => setIsLoading(false),
   );
 
-  const getLastActivityFromFolder = (folder: IProjectFolder): string => {
+  const getLastActivityFromFolder = (folder: IVisionLabFolder): string => {
     if (!folder.projects?.length) return folder.created_at;
 
     const lastActivity = folder.projects.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
@@ -104,9 +112,9 @@ const VisionLabFolders: React.FC = () => {
   return (
     <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
       <InternalPageHeader
-        title="Meus Códigos"
+        title="Meus Projetos"
         description="Organize seus projetos em pastas"
-        icon={<Code2 className="w-6 h-6 text-primary" />}
+        icon={<BrainCircuit className="w-6 h-6 text-primary" />}
         buttons={[{ label: `Nova Pasta`, leftIcon: <FaPlus />, onClick: () => setOpenCreateModal(true) }]}
       />
 
@@ -143,7 +151,7 @@ const VisionLabFolders: React.FC = () => {
             <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground mt-10">
               <FolderOpen className="w-16 h-16 mb-4 opacity-20" />
               <p className="text-lg font-medium text-foreground/70">Lista vazia</p>
-              <p className="text-sm">Crie uma nova pasta para organizar seus códigos.</p>
+              <p className="text-sm">Crie uma nova pasta para organizar seus projetos.</p>
             </div>
           )}
         </div>
