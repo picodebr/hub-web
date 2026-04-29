@@ -214,7 +214,7 @@ export function parseSvgString(svgString: string): SVGSVGElement {
  * Full pipeline (Sync): fixup → parse → quirks → normalize dimensions → serialize.
  * Replaces any existing width/height/viewBox with true content measurements.
  */
-export function normalizeSvgString(svgString: string): string {
+export function normalizeSvgString(svgString: string, skipNormalization: boolean = false): string {
   const fixed = fixupSvgString(svgString);
   const svgElement = parseSvgString(fixed);
   
@@ -222,7 +222,9 @@ export function normalizeSvgString(svgString: string): string {
   transformQuirks(svgElement);
   
   // Apply measurements (getBBox)
-  normalizeSvgDimensions(svgElement);
+  if (!skipNormalization) {
+    normalizeSvgDimensions(svgElement);
+  }
   
   return serializeSvg(svgElement);
 }

@@ -10,7 +10,7 @@ import { IPaintExportOptions, IPaintItem } from '@/_base/domain/entities/IPaintE
 import { DRAWING_CONFIG, SVG_ID_WHITELIST } from '../constants';
 
 export class SvgService {
-  constructor(private scope: paper.PaperScope) {}
+  constructor(private scope: paper.PaperScope) { }
 
   /**
    * Exporta o desenho como SVG para miniatura e para o palco.
@@ -28,6 +28,7 @@ export class SvgService {
 
     // 🛡️ Oculta retângulos de suporte e limpa elementos indesejados
     const hiddenItems: paper.Item[] = [];
+    const forcedVisible: paper.Item[] = [];
     const artboardCenter = new this.scope.Point(
       DRAWING_CONFIG.abX + DRAWING_CONFIG.artboard.w / 2,
       DRAWING_CONFIG.abY + DRAWING_CONFIG.artboard.h / 2,
@@ -35,7 +36,13 @@ export class SvgService {
 
     [...dl.children].forEach((item) => {
       // Remove/Oculta marcadores internos e retângulos que cobrem o fundo
-      if (item.name === 'PBT_BOUNDS_BOX' || (item as any).guide) {
+      // MANTEMOS o PBT_BOUNDS_BOX visível para que ele seja exportado e usado na restauração de posição.
+      if (item.name === 'PBT_BOUNDS_BOX') {
+        if (!item.visible) {
+          item.visible = true;
+          forcedVisible.push(item);
+        }
+      } else if ((item as any).guide) {
         item.visible = false;
         hiddenItems.push(item);
       }
@@ -62,7 +69,7 @@ export class SvgService {
       const h = bounds.height.toFixed(2);
       const x = bounds.x.toFixed(2);
       const y = bounds.y.toFixed(2);
-      return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="${x} ${y} ${w} ${h}" width="${w}" height="${h}">${content}</svg>`;
+      return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="${x} ${y} ${w} ${h}">${content}</svg>`;
     };
 
     // 1. Thumbnail Bounds: Sempre rente ao conteúdo
@@ -111,6 +118,7 @@ export class SvgService {
 
     // Restaura tudo
     hiddenItems.forEach((i) => (i.visible = true));
+    forcedVisible.forEach((i) => (i.visible = false));
 
     if (wasClipped && clipMask) {
       dl.insertChild(0, clipMask);
@@ -130,7 +138,7 @@ export class SvgService {
   releaseSVG(importedNode: paper.Item) {
     const project = this.scope.project;
     if (!importedNode || !project) return;
-    
+
     console.log('[SvgService] Iniciando releaseSVG para o nó:', importedNode.name || 'Group', importedNode);
 
     // Encontra a camada de desenho
@@ -156,7 +164,7 @@ export class SvgService {
         if (Math.abs(b.width - DRAWING_CONFIG.artboard.w) < 2 && Math.abs(b.height - DRAWING_CONFIG.artboard.h) < 2) {
           const hasVisibleFill = node.fillColor && node.fillColor.alpha > 0.01;
           const hasVisibleStroke = node.strokeColor && node.strokeColor.alpha > 0.01;
-          
+
           if (!hasVisibleFill && !hasVisibleStroke) {
             node.locked = true;
             (node as any).guide = true; // Força a ser ignorado pelo HitTest completamente

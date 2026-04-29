@@ -245,7 +245,6 @@ export default function BackdropEditor() {
                 costumeId={activeCostumeId}
                 costumeName={currentCostume?.name || 'Cenário'}
                 initialUrl={currentCostume?.stageUrl || currentCostume?.url || activeSprite.costume || ''}
-                isBackdrop={true}
               />
             ) : (
               <LoadingEditor />

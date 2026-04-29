@@ -76,11 +76,14 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
   // Stable refs for context sync (prevents re-render cascades)
   const spriteIdRef = useRef(spriteId);
   const costumeIdRef = useRef(costumeId);
-  const isBackdropRef = useRef(isBackdrop);
   
+  // Se não for passado explicitamente, inferimos que é um cenário se spriteId for 'stage'
+  const isBackdropEffective = isBackdrop ?? (spriteId === 'stage');
+  const isBackdropRef = useRef(isBackdropEffective);
+
   spriteIdRef.current = spriteId;
   costumeIdRef.current = costumeId;
-  isBackdropRef.current = isBackdrop;
+  isBackdropRef.current = isBackdropEffective;
 
   const updateCostumeRef = useRef(updateCostume);
   useEffect(() => {
@@ -113,10 +116,10 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
     const encode = (s: string) => btoa(new TextEncoder().encode(s).reduce((a, b) => a + String.fromCharCode(b), ''));
     const thumbUrl = `data:image/svg+xml;base64,${encode(thumbnailSvg)}`;
     const stageUrl = `data:image/svg+xml;base64,${encode(stageSvg)}`;
-    
+
     // Armazenamos a URL sincronizada para que o useEffect de carga inicial a ignore
     lastSyncedUrlRef.current = stageUrl;
-    
+
     updateCostumeRef.current(spriteIdRef.current, costumeIdRef.current, thumbUrl, stageUrl);
   }, [scope]);
 
@@ -148,23 +151,24 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
 
   // Helper: import SVG string into the project
   const importSvgString = useCallback(
-    (svgString: string, isInitial: boolean = false) => {
+    (svgString: string, isInitial: boolean = false, skipNormalization: boolean = false) => {
       // Segurança: Verifica se o motor gráfico (scope) e o projeto estão ativos
       if (!scope || !scope.project || !svgService) return;
 
       // Sanitize and normalize (Inkscape namespaces, version 1.1, viewBox fixing, units stripping)
-      const normalized = normalizeSvgString(svgString);
-      
+      // Se skipNormalization for true, mantemos o viewBox original (crucial para Stage SVGs 480x360)
+      const normalized = normalizeSvgString(svgString, skipNormalization);
+
       console.log(`[PaintEditor] Iniciando importação SVG (${normalized.length} bytes). isInitial:`, isInitial);
 
       // Garante que este escopo e projeto estão ativos para a importação
       scope.activate();
-      
+
       scope.project.importSVG(normalized, {
         insert: true,
         onLoad: (importedItem: paper.Item | null) => {
           console.log('[PaintEditor] SVG importado com sucesso:', importedItem?.name || 'sem nome', importedItem);
-          
+
           // Verifica se o projeto ainda existe no momento do callback
           if (!importedItem || !scope.project) {
             console.warn('[PaintEditor] Importação abortada ou falhou: Item nulo ou projeto destruído.');
@@ -173,38 +177,36 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
           // Tenta encontrar nosso marcador de limites do artboard
           const bbox = importedItem.getItem({ name: 'PBT_BOUNDS_BOX', recursive: true });
 
-          if (bbox) {
-            // RESTAURAÇÃO DE POSIÇÃO ROBUSTA:
-            // Se o SVG contém nosso marcador 'PBT_BOUNDS_BOX', sabemos exatamente
-            // onde o artboard original estava em relação aos itens.
-            // Aplicamos um delta de translação para alinhar o desenho importado
-            // precisamente ao centro (0,0 lógico) do novo projeto.
-            const expectedTopLeft = new scope.Point(DRAWING_CONFIG.abX, DRAWING_CONFIG.abY);
-            const currentTopLeft = bbox.bounds.topLeft;
-            const delta = expectedTopLeft.subtract(currentTopLeft);
+          // Determina o fator de escala ideal (Cenários preenchem 100% do palco, Fantasias 80%)
+          const scaleFactor = isBackdropEffective ? 1.0 : 0.8;
+          const stageCenter = new scope.Point(DRAWING_CONFIG.canvas.w / 2, DRAWING_CONFIG.canvas.h / 2);
 
-            importedItem.translate(delta);
-            // bbox.remove(); // NOVO: Não removemos mais o marcador para que o recarregamento futuro saiba que o item já está alinhado e não force escala redundante.
-            (bbox as IPaintItem).guide = true;
-            bbox.visible = false;
-          } else {
-            const stageCenter = new scope.Point(DRAWING_CONFIG.canvas.w / 2, DRAWING_CONFIG.canvas.h / 2);
+          if (!bbox) {
+            // Para cenários ou itens sem marcador, forçamos a centralização absoluta no artboard.
+            // Isso garante que o fundo sempre cubra a área branca corretamente.
             importedItem.position = stageCenter;
 
             const ib = importedItem.bounds;
-            const scaleFactor = isBackdrop ? 1.0 : 0.8;
             const maxW = DRAWING_CONFIG.artboard.w * scaleFactor;
             const maxH = DRAWING_CONFIG.artboard.h * scaleFactor;
 
-            if (ib.width > maxW || ib.height > maxH || isBackdrop) {
-              // AUTO-SCALE COMPORTAMENTAL:
-              // Só aplicamos a escala se NÃO for o carregamento inicial do projeto (preserva zoom salvo)
-              // OU se for um item novo que precisa caber no palco.
+            // Só escalamos se o item for maior que o permitido ou se for um cenário novo
+            if (ib.width > maxW || ib.height > maxH) {
               if (!isInitial) {
                 const scale = Math.min(maxW / ib.width, maxH / ib.height);
                 importedItem.scale(scale);
               }
             }
+          } else {
+            // RESTAURAÇÃO DE POSIÇÃO PARA ATORES:
+            // Fantasias podem ter posicionamento relativo preservado via marcador.
+            const expectedTopLeft = new scope.Point(DRAWING_CONFIG.abX, DRAWING_CONFIG.abY);
+            const currentTopLeft = bbox.bounds.topLeft;
+            const delta = expectedTopLeft.subtract(currentTopLeft);
+
+            importedItem.translate(delta);
+            (bbox as IPaintItem).guide = true;
+            bbox.visible = false;
           }
 
           svgService.releaseSVG(importedItem);
@@ -291,11 +293,11 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
         raster.position = stageCenter;
 
         const rb = raster.bounds;
-        const scaleFactor = isBackdrop ? 1.0 : 0.8;
+        const scaleFactor = 0.8;
         const maxW = DRAWING_CONFIG.artboard.w * scaleFactor;
         const maxH = DRAWING_CONFIG.artboard.h * scaleFactor;
 
-        if (rb.width > maxW || rb.height > maxH || isBackdrop) {
+        if (rb.width > maxW || rb.height > maxH) {
           const scale = Math.min(maxW / rb.width, maxH / rb.height);
           raster.applyMatrix = true;
           raster.scale(scale);
@@ -358,8 +360,12 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
             console.log('[PaintEditor] Carga SVG descartada (stale loadId)');
             return;
           }
-          console.log('[PaintEditor] SVG decodificado, enviando para importSvgString');
-          importSvgString(svgString, true);
+          // Se a URL é um data URI gerado por nós, ou se o SVG possui o marcador de artboard interno,
+          // pulamos a normalização de dimensões para preservar o posicionamento absoluto.
+          const isInternal = initialUrl.startsWith('data:');
+          const hasPicoMarker = svgString.includes('PBT_BOUNDS_BOX') || svgString.includes('viewBox="272.00 120.00 480.00 360.00"');
+          
+          importSvgString(svgString, true, isInternal || hasPicoMarker);
         })
         .catch((err: any) => {
           if (loadId !== currentLoadIdRef.current) return;

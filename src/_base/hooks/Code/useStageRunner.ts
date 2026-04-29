@@ -131,14 +131,12 @@ export function useStageRunner() {
   const MARGEM_SEGURANCA = 20;
 
   const clampX = (x: number, sprite?: SpriteData) => {
-    const spriteW = ((sprite?.width || 0) * (sprite?.size || 100)) / 100;
-    const lim = STAGE_LIMIT_X + spriteW / 2 - MARGEM_SEGURANCA;
+    const lim = STAGE_LIMIT_X;
     return Math.max(-lim, Math.min(lim, x));
   };
 
   const clampY = (y: number, sprite?: SpriteData) => {
-    const spriteH = ((sprite?.height || 0) * (sprite?.size || 100)) / 100;
-    const lim = STAGE_LIMIT_Y + spriteH / 2 - MARGEM_SEGURANCA;
+    const lim = STAGE_LIMIT_Y;
     return Math.max(-lim, Math.min(lim, y));
   };
   const normalizeAngle = (angle: number) => {
@@ -415,8 +413,8 @@ export function useStageRunner() {
 
         const spriteW = ((sprite.width || 0) * (sprite.size || 100)) / 100;
         const spriteH = ((sprite.height || 0) * (sprite.size || 100)) / 100;
-        const limitX = STAGE_LIMIT_X + spriteW / 2 - MARGEM_SEGURANCA;
-        const limitY = STAGE_LIMIT_Y + spriteH / 2 - MARGEM_SEGURANCA;
+        const limitX = STAGE_LIMIT_X;
+        const limitY = STAGE_LIMIT_Y;
 
         if (newX <= -limitX && vx < 0) {
           newAngle = -sprite.angle;
@@ -971,12 +969,13 @@ export function useStageRunner() {
     if (timerStartRef.current === 0) timerStartRef.current = Date.now();
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isRunningRef.current) return;
       const matchedKey = normalizeKey(e.key);
 
       // Marca como ativa para blocos "tecla pressionada?"
       keysActiveRef.current[matchedKey] = true;
       keysActiveRef.current['any'] = true; // Scratch: 'any' key is true if any key is down
+
+      if (!isRunningRef.current) return;
 
       const listeners = keyListenersRef.current[matchedKey];
       if (listeners) {

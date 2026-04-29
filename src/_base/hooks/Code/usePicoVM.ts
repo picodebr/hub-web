@@ -229,7 +229,6 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
   // ─────────────────────────────────────────────────────────
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (!getExecutionEngine().isProjectRunning()) return;
       vm.triggerKeyPress(e.key);
     };
     window.addEventListener('keydown', onKeyDown);

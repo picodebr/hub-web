@@ -23,6 +23,7 @@ import { ExecutionTask } from '../../domain/entities';
 import { getExecutionEngine } from '@/_base/services/code/ExecutionEngine';
 import { getProjectService } from '@/_base/services/code';
 import { getPicoVM } from '../../vm/PicoVM';
+import { useKeyboardInput } from './useKeyboardInput';
 
 export function useCodeExecution(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null>) {
   // Inicializa a VM para depuração global
@@ -80,6 +81,9 @@ export function useCodeExecution(blocklyRef: React.RefObject<BlocklyWorkspaceRef
   );
 
   // --- HANDLERS (TRATADORES DE EVENTOS) ---
+  // Registra os listeners globais de teclado para o motor de execução (Sandbox path)
+  useKeyboardInput(blocklyRef, executeSpriteCode);
+
   const handleRun = useCallback(async () => {
     const engine = getExecutionEngine();
 

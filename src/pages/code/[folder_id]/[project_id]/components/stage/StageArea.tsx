@@ -159,34 +159,46 @@ export default function StageArea() {
 
     const renderLoop = () => {
       const renderer = getWebGLRenderer();
-      if (renderer && canvasRef.current) {
+      if (renderer && canvasRef.current && containerRef.current) {
         const dpr = window.devicePixelRatio || 1;
-        const targetW = Math.floor(480 * scale * dpr);
-        const targetH = Math.floor(360 * scale * dpr);
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const containerW = containerRect.width;
+        const containerH = containerRect.height;
+        
+        const stageRatio = 480 / 360;
+        let finalW = containerW;
+        let finalH = containerH;
 
-        if (targetW > 0 && targetH > 0) {
-          if (canvasRef.current.width !== targetW || canvasRef.current.height !== targetH) {
-            canvasRef.current.width = targetW;
-            canvasRef.current.height = targetH;
-          }
-
-          const ps = getProjectService();
-          const currentSprites = ps.getSprites();
-          const currentActiveId = ps.getActiveSpriteId();
-          const currentActiveBackdropInfo = ps.backdrops.find((b: any) => b.id === ps.activeBackdropId);
-          const currentBackdropUrl = currentActiveBackdropInfo?.url || '';
-
-          renderer.preloadNonBlocking(currentBackdropUrl, currentSprites as any);
-          getCollisionEngine()?.tickFrame();
-          renderer.drawSceneSync(currentBackdropUrl, currentSprites as any, [1.0, 1.0, 1.0, 1.0], flashSpriteId);
+        if (containerW / containerH > stageRatio) {
+          finalW = containerH * stageRatio;
+        } else {
+          finalH = containerW / stageRatio;
         }
+
+        const targetW = Math.round(finalW * dpr);
+        const targetH = Math.round(finalH * dpr);
+
+        if (canvasRef.current.width !== targetW || canvasRef.current.height !== targetH) {
+          canvasRef.current.width = targetW;
+          canvasRef.current.height = targetH;
+          if (renderer.updateCanvas) renderer.updateCanvas(canvasRef.current);
+        }
+
+        const ps = getProjectService();
+        const currentSprites = ps.getSprites();
+        const currentActiveBackdropInfo = ps.backdrops.find((b: any) => b.id === ps.activeBackdropId);
+        const currentBackdropUrl = currentActiveBackdropInfo?.url || '';
+
+        renderer.preloadNonBlocking(currentBackdropUrl, currentSprites as any);
+        getCollisionEngine()?.tickFrame();
+        renderer.drawSceneSync(currentBackdropUrl, currentSprites as any, [1.0, 1.0, 1.0, 1.0], flashSpriteId);
       }
       frameId = requestAnimationFrame(renderLoop);
     };
 
     frameId = requestAnimationFrame(renderLoop);
     return () => cancelAnimationFrame(frameId);
-  }, [scale]);
+  }, [flashSpriteId]);
 
   const handleStageMouseDown = (e: React.MouseEvent) => {
     if (!stageRef.current) return;
@@ -258,14 +270,16 @@ export default function StageArea() {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const availableWidth = Math.max(10, rect.width - 32);
-      // Fora do modo tela cheia, a altura não deve restringir a escala para evitar loops de redimensionamento,
-      // já que o contêiner do palco tem altura automática.
-      const availableHeight = isStageFullScreen ? Math.max(10, rect.height - 32) : 9999;
+      const availableHeight = isStageFullScreen ? Math.max(10, rect.height - 120) : 9999;
 
       const scaleW = (availableWidth - 2) / 480;
       const scaleH = (availableHeight - 2) / 360;
 
       let newScale = Math.min(scaleW, scaleH, 2.0);
+      
+      // Snap para 1.0 para evitar blur de sub-pixel se estiver muito próximo do tamanho real
+      if (newScale > 0.98 && newScale < 1.05) newScale = 1.0;
+
       setScale(newScale);
       window.dispatchEvent(new CustomEvent('stage-width-changed', { detail: 480 * newScale + 2 }));
     };
@@ -329,10 +343,11 @@ export default function StageArea() {
   return (
     <div
       ref={containerRef}
-      className={`w-100 d-flex align-items-center ${isStageFullScreen ? 'justify-content-center fullscreen' : 'justify-content-center'} stage-area-container`}
+      className={`w-100 h-100 d-flex align-items-center justify-content-center stage-area-container ${isStageFullScreen ? 'fullscreen' : ''}`}
       style={{
         minHeight: 0,
         overflow: 'hidden',
+        flex: isStageFullScreen ? '1' : undefined,
       }}
     >
       <div
@@ -370,9 +385,15 @@ export default function StageArea() {
               position: 'absolute',
               top: 0,
               left: 0,
-              zIndex: 0,
-              width: '480px',
-              height: '360px',
+              width: '100%',
+              height: '100%',
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
+              display: 'block',
+              margin: '0 auto',
+              imageRendering: 'auto',
+              cursor: draggingId ? 'grabbing' : 'default',
               borderRadius: '16px',
             }}
           />

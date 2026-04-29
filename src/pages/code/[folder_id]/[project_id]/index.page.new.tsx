@@ -146,7 +146,7 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                   >
                     <div
                       className="stage-header w-100 d-flex align-items-center px-3"
-                      style={{ backgroundColor: '#e9eef2', minHeight: '52px', position: 'relative' }}
+                      style={{ backgroundColor: '#e9eef2', minHeight: '52px', position: isStageFullScreen ? 'absolute' : 'relative' }}
                     >
                       <div className="d-flex align-items-center justify-content-start" style={{ flex: 1 }}>
                         <div className="stage-controls d-flex align-items-center mb-0 gap-3">
@@ -154,7 +154,13 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                             id="btnGo"
                             className={`btn btn-link p-0 btn-go d-flex align-items-center ${runnerContext.isAnyCodeRunning ? 'inactive' : 'active'}`}
                             title="Play"
-                            onClick={handleRun}
+                            onClick={(e) => {
+                              handleRun();
+                              e.currentTarget.blur();
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ') e.preventDefault();
+                            }}
                           >
                             <i className="bi bi-play-fill" style={{ fontSize: '1.8rem' }}></i>
                           </button>
@@ -162,7 +168,13 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                             id="btnStop"
                             className={`btn btn-link p-0 btn-stop d-flex align-items-center ${runnerContext.isAnyCodeRunning ? 'active' : 'inactive'}`}
                             title="Parar"
-                            onClick={handleStop}
+                            onClick={(e) => {
+                              handleStop();
+                              e.currentTarget.blur();
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === ' ') e.preventDefault();
+                            }}
                           >
                             <i className="bi bi-octagon-fill" style={{ fontSize: '1.4rem' }}></i>
                           </button>
@@ -175,7 +187,13 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                           className="btn btn-link p-0 d-flex align-items-center text-secondary"
                           title={isStageFullScreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
                           style={{ transition: 'color 0.2s' }}
-                          onClick={() => setIsStageFullScreen(!isStageFullScreen)}
+                          onClick={(e) => {
+                            setIsStageFullScreen(!isStageFullScreen);
+                            e.currentTarget.blur();
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === ' ') e.preventDefault();
+                          }}
                         >
                           <i className={`bi ${isStageFullScreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'}`} style={{ fontSize: '1.1rem' }}></i>
                         </button>
