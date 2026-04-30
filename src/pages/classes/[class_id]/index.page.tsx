@@ -19,7 +19,6 @@ import {
   Button,
   Grid,
   Badge,
-  useColorMode,
   Icon,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
@@ -37,6 +36,7 @@ import { TabSwitch } from '@/components/TabSwitch';
 import { ClassPageView, classPageViews } from './interfaces';
 import { HubTable } from '@/components/Table';
 import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { IHubClass } from '@/_base/interfaces/class';
 import { IHubUser } from '@/_base/interfaces/user';
 import { EMPTY_PROJECT_DATA, IHubProjectStep, IProject } from '@/_base/interfaces/project';
@@ -76,7 +76,7 @@ const itemVariants = {
 };
 
 const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const [pageView, setPageView] = useState<ClassPageView>('Projetos');
   const [newProject, setNewProject] = useState<IProject | null>(null);
   const [modalStep, setModalStep] = useState<ModalStep>('creation_type');
@@ -352,7 +352,7 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
   const PageView: Record<ClassPageView, ReactNode> = {
     'Lista de Presença': <AttendanceList hub_class={hubClass} />,
     Alunos: (
-      <Box bg={bgCard} borderRadius="xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflowY="auto" overflowX="hidden" flex="1">
+      <Box bg={bgCard} borderRadius="xl" boxShadow="sm" overflowY="auto" overflowX="hidden" flex="1" mb="0.5rem">
         <StudentTable
           rows={students}
           onRowClick={(e) => router.push(`/students/${e.id}`)}
@@ -379,7 +379,7 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
       </Box>
     ),
     Projetos: (
-      <Box flex="1" overflowY="auto" pb="2rem" px="2px">
+      <Box flex="1" overflowY="auto" pb="2rem" px="2px" mb="0.5rem">
         <motion.div variants={containerVariants} initial="hidden" animate="show">
           <Grid gap="1.5rem" gridTemplateColumns="repeat(auto-fill, minmax(260px, 1fr))">
             {dataProjects.map((project) => (

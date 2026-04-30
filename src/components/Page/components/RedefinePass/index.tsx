@@ -1,4 +1,5 @@
-import { Flex, Image, Modal, ModalContent, ModalHeader, ModalOverlay, Text, useColorMode, useToast } from '@chakra-ui/react';
+import { Flex, Image, Modal, ModalContent, ModalHeader, ModalOverlay, Text, useToast } from '@chakra-ui/react';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { IRedefinePassProps } from './interfaces';
 import { useCallback, useMemo, useState } from 'react';
 import { InputValueType } from '@/_base/interfaces/shared';
@@ -18,7 +19,7 @@ export const RedefinePass: React.FC<IRedefinePassProps> = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const toast = useToast();
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
 
   const handleUpdatePassword = useCallback(async () => {
     if (!redefineData.password.value) return;

@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next';
 import { FaPlus, FaRegFolder } from 'react-icons/fa';
 import { FiEdit3, FiMoreVertical, FiTrash } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 import { Flex, Menu, MenuButton, MenuItem, MenuList, Skeleton, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useCustomRouter, useCustomToast, useInputHandler } from '@/_base/hooks';
@@ -18,6 +19,9 @@ import { createCodeProjectFolderSchema } from '@/_base/interfaces/codeFolder/ICr
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { RiFolderSharedFill } from 'react-icons/ri';
+import { Code2, FolderOpen, Layers, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { InternalPageHeader } from '@/components/InternalPageHeader';
+import { InternalCard } from '@/components/InternalCard';
 
 const CodeFolders: React.FC = () => {
   const [folders, setFolders] = useState<IProjectFolder[]>([]);
@@ -99,101 +103,53 @@ const CodeFolders: React.FC = () => {
 
   return (
     <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
-      <Flex align="center" justify="flex-end" h="fit-content" gap="1rem">
-        <PlusButton label="Compartilhados Comigo" leftIcon={<RiFolderSharedFill />} onClick={() => router.push(`/code/shared`)} />
-        <PlusButton label="Nova Pasta" leftIcon={<FaPlus />} onClick={() => setOpenCreateModal(true)} />
-      </Flex>
-      <Skeleton
-        display="grid"
-        overflow="hidden auto"
-        isLoaded={!isLoading}
-        gap="1rem"
-        gridTemplateColumns="repeat(auto-fill, minmax(240px, 1fr))"
-        gridTemplateRows="minmax(min-content, max-content)"
-        borderRadius="md"
-        flex="1"
-      >
-        {folders.length ? (
-          folders.map((folder) => (
-            <Flex
-              key={folder.id}
-              direction="column"
-              bgColor="white"
-              borderRadius="10px"
-              padding="0.75rem 1rem 1rem"
-              color="primary700"
-              border="1px"
-              h="12rem"
-              justify="space-between"
-              gap="0.5rem"
-              borderColor="gray200"
-              fontSize="18px"
-              cursor="pointer"
-              transition="all 0.1s"
-              _hover={{ boxShadow: `md` }}
-              onClick={() => router.push(`/code/${folder.id}?_p=${folder.name}`)}
-            >
-              <Flex gap="0.5rem" align="center">
-                <FaRegFolder fontSize="29px" />
-                <Text fontWeight="700" w="100%">
-                  {folder.name}
-                </Text>
-                <Menu>
-                  <MenuButton
-                    onClick={(e) => e.stopPropagation()}
-                    color="gray300"
-                    p="0.45rem"
-                    borderRadius="50%"
-                    transition="0.1s"
-                    _hover={{ bg: 'gray300', color: 'white' }}
-                  >
-                    <FiMoreVertical cursor="pointer" />
-                  </MenuButton>
-                  <MenuList borderColor="gray300" color="gray600">
-                    <MenuItem
-                      gap="0.5rem"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTargetFolderToUpdate(folder);
-                      }}
-                    >
-                      <Flex color="gray400">
-                        <FiEdit3 />
-                      </Flex>
-                      <Text fontSize="15px">Editar</Text>
-                    </MenuItem>
-                    <MenuItem
-                      gap="0.5rem"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTargetFolderToRemove(folder);
-                      }}
-                    >
-                      <Flex color="gray400">
-                        <FiTrash />
-                      </Flex>
-                      <Text fontSize="15px">Remover</Text>
-                    </MenuItem>
-                  </MenuList>
-                </Menu>
-              </Flex>
-              <Flex justify="space-between">
-                <Text fontSize="14px" fontWeight="400" color="gray500" gap="16px">
-                  {moment(getLastActivityFromFolder(folder)).fromNow()}
-                </Text>
-                <Text fontSize="14px" fontWeight="400" color="gray500" gap="16px">
-                  {`${folder.projects?.length || 0} ${folder.projects?.length === 1 ? 'projeto' : 'projetos'}`}
-                </Text>
-              </Flex>
-            </Flex>
-          ))
-        ) : (
-          <Flex flex="1" justify="center" pt="1rem">
-            <Text fontSize="1rem" fontWeight="500" color="gray600">
-              Lista vazia
-            </Text>
-          </Flex>
-        )}
+      <InternalPageHeader
+        title="Meus Códigos"
+        description="Organize seus projetos em pastas"
+        icon={<Code2 className="w-6 h-6 text-primary" />}
+        buttons={[
+          { label: `Compartilhados Comigo`, leftIcon: <RiFolderSharedFill />, onClick: () => router.push(`/code/shared`) },
+          { label: `Nova Pasta`, leftIcon: <FaPlus />, onClick: () => setOpenCreateModal(true) },
+        ]}
+      />
+
+      {/* Grid de Pastas */}
+      <Skeleton isLoaded={!isLoading} className="flex-1 rounded-md overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 overflow-y-auto pb-8 px-2 content-start h-full pt-2">
+          {folders.length ? (
+            folders.map((folder, index) => {
+              return (
+                <InternalCard
+                  key={folder.id}
+                  index={index}
+                  onClick={() => router.push(`/code/${folder.id}?_p=${folder.name}`)}
+                  title={folder.name}
+                  Icon={FolderOpen}
+                  actions={[
+                    { label: `Editar`, onClick: () => setTargetFolderToUpdate(folder), Icon: Pencil },
+                    { label: `Remover`, onClick: () => setTargetFolderToRemove(folder), Icon: Trash2, important: true },
+                  ]}
+                  footer={
+                    <>
+                      <p className="text-[11px] text-muted-foreground truncate flex-1 flex items-center gap-1.5">
+                        <Layers className="w-3 h-3" />
+                        {folder.projects?.length || `0`} {folder.projects?.length === 1 ? 'projeto' : 'projetos'}
+                      </p>
+                      <span className="text-[10px] text-muted-foreground/60 shrink-0">{moment(getLastActivityFromFolder(folder)).fromNow()}</span>
+                    </>
+                  }
+                  showFooterIcon
+                />
+              );
+            })
+          ) : (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground mt-10">
+              <FolderOpen className="w-16 h-16 mb-4 opacity-20" />
+              <p className="text-lg font-medium text-foreground/70">Lista vazia</p>
+              <p className="text-sm">Crie uma nova pasta para organizar seus códigos.</p>
+            </div>
+          )}
+        </div>
       </Skeleton>
 
       {/* only modals from here down */}

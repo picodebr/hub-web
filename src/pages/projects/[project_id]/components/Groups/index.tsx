@@ -9,7 +9,6 @@ import {
   MenuList,
   MenuOptionGroup,
   Text,
-  useColorMode,
   VStack,
   HStack,
   Select,
@@ -27,6 +26,7 @@ import { GenericButton } from '@/components/Buttons/Generic';
 import { AvatarList } from '@/components/AvatarList';
 import { SmallModal } from '@/components/Modal/Small';
 import { useCustomRouter, useInputHandler } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { TextInput } from '@/components/Inputs/Text';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 
@@ -49,7 +49,7 @@ const ROLES = Object.keys(ROLE_LIMITS);
 export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup }) => {
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
   const [memberRoles, setMemberRoles] = useState<Record<string, string>>({}); // Novo estado para os cargos
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const router = useCustomRouter();
 
   const { errors, onInputChange, data, submit, setData } = useInputHandler<ICreateHubGroupParams>({

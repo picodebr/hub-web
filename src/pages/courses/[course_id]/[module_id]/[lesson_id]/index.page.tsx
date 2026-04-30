@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import moment from 'moment';
-import { Flex, Image, Text, Box, Icon, Grid, useColorMode } from '@chakra-ui/react';
+import { Flex, Image, ListItem, Text, UnorderedList, Box, Icon, Grid, Button } from '@chakra-ui/react';
 import { FiClock, FiTarget, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 
 import { useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { IHubModuleLesson } from '@/_base/interfaces/module';
 import { getCourseActivity, getModuleLesson, ILessonResult, sendModuleLesson } from '@/_base/services/course';
 import { VideoLesson } from './components/video'; // Asumindo o caminho original
@@ -32,7 +33,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
   const [startTimestamp, setStartTimestamp] = useState(0);
   const [currentChallenge, setCurrentChallenge] = useState<(IHubChallenge & { index: number }) | null>(null);
 
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const toast = useCustomToast();
   const router = useCustomRouter();
 
@@ -96,7 +97,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
   const scorePercentage = (((customResult?.lessonData?.correctAnswersCount || 0) / (lesson?.challenges?.length || 1)) * 100).toFixed();
 
   return (
-    <>
+    <Flex h="100%">
       {lesson?.lesson_type === `quiz` ? (
         <LessonPage
           challenge={currentChallenge}
@@ -210,7 +211,7 @@ const Lesson: React.FC<IProps> = ({ courseId, moduleId, lessonId }) => {
           )}
         </Flex>
       </SmallModal>
-    </>
+    </Flex>
   );
 };
 

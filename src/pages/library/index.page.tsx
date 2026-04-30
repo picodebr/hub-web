@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { BiLeftArrowAlt } from 'react-icons/bi';
-import { Flex, Text, Grid, Modal, ModalContent, ModalOverlay, Image, Button, Spinner, Box, Divider, Icon, useColorMode } from '@chakra-ui/react';
+import { Flex, Text, Grid, Modal, ModalContent, ModalOverlay, Image, Button, Spinner, Box, Divider, Icon } from '@chakra-ui/react';
 import { FiDownload, FiPlay, FiBook, FiVideo } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
@@ -9,7 +9,7 @@ import { formatClassGrade, sortGrades } from '@/_base/utils';
 import { TabSwitch } from '@/components/TabSwitch';
 import { listBookCategories } from '@/_base/services/book';
 import { IHubBook, IHubBookCategory } from '@/_base/interfaces/book';
-import { useAsyncCallback, useAuth } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useDarkMode } from '@/_base/hooks';
 import { IHubVideo, IHubVideoCategory } from '@/_base/interfaces/video';
 import { listVideoCategories } from '@/_base/services/video';
 
@@ -23,7 +23,7 @@ interface IProps {
 }
 
 const Books: React.FC<IProps> = ({ selectedItemId }) => {
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const { user } = useAuth();
 
   const [bookCategories, setBookCategories] = useState<IHubBookCategory[]>([]);

@@ -10,7 +10,6 @@ import {
   ModalOverlay,
   Text,
   Tooltip,
-  useColorMode,
   useDisclosure,
   Avatar,
   Box,
@@ -28,6 +27,7 @@ import { CoinIcon } from '@/components/Logo';
 import { SmallModal } from '@/components/Modal/Small';
 import { NumberScaleInput } from '@/components/Inputs/NumberScale';
 import { useAsyncCallback, useCustomToast } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { updateStudentData } from '@/_base/services/student/updateStudentData';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { InputValueType } from '@/_base/interfaces/shared';
@@ -42,7 +42,7 @@ interface IProps {
 }
 
 const StudentPage: React.FC<IProps> = ({ student: _student }) => {
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
   const [addCoinValue, setAddCoinValue] = useState<string | null>(null);
   const [removeCoinValue, setRemoveCoinValue] = useState<string | null>(null);
   const [student, setStudent] = useState<IHubUser>(_student);

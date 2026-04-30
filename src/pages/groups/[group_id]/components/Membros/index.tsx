@@ -18,7 +18,6 @@ import {
   Select,
   CloseButton,
   Badge,
-  useColorMode,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus } from 'react-icons/fa6';
@@ -26,6 +25,7 @@ import { GoGear } from 'react-icons/go';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 
 import { useInputHandler } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { HUB_GROUP_ROLES, HubGroupRole, IHubGroup, IUpdateHubGroupParams, updateHubGroupSchema } from '@/_base/interfaces/group';
 import { IHubUser } from '@/_base/interfaces/user';
 import { formatCoin, formatShortName } from '@/_base/utils';
@@ -62,7 +62,7 @@ export const Members: React.FC<IProps> = ({ group, onDonation, user, availableSt
   const [studentDonationData, setStudentDonationData] = useState<IStudentDonation>(EMPTY_DONATION);
   const [openModal, setOpenModal] = useState(false);
   const [memberRoles, setMemberRoles] = useState<Record<string, HubGroupRole>>({});
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
 
   const { errors, onInputChange, data, submit, setData } = useInputHandler<IUpdateHubGroupParams>({
     schema: updateHubGroupSchema,

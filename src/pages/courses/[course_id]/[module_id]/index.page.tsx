@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { Flex, Skeleton, Text, CircularProgress, CircularProgressLabel, Badge, Icon, useColorMode, Button } from '@chakra-ui/react';
+import { Flex, Skeleton, Text, Box, CircularProgress, CircularProgressLabel, Badge, Icon, Button } from '@chakra-ui/react';
 import { PiSealCheckFill } from 'react-icons/pi';
 import { FiLock, FiPlayCircle, FiRotateCcw } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
 import { lessonTypeInfoMapper } from '@/_base/utils';
 import { useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { IHubModule, IHubModuleLesson } from '@/_base/interfaces/module';
 import { getCourseActivity, listModuleLessons } from '@/_base/services/course';
 import { getHubModule } from '@/_base/services/module';
@@ -36,7 +37,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
 
   const toast = useCustomToast();
   const router = useCustomRouter();
-  const { colorMode } = useColorMode();
+  const { colorMode } = useDarkMode();
 
   useEffect(() => {
     (async () => {
@@ -236,7 +237,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
                             isDisabled={isLocked}
                             colorScheme={isFinished ? 'gray' : 'blue'}
                             variant={isFinished ? 'outline' : 'solid'}
-                            bg={!isFinished && !isLocked ? 'primary.600' : undefined}
+                            bg={!isFinished && !isLocked ? 'primary600' : undefined}
                             color={!isFinished && !isLocked ? 'white' : undefined}
                             leftIcon={
                               isLocked ? (

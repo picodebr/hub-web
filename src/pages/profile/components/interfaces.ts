@@ -1,9 +1,11 @@
 import { IProject } from '@/_base/interfaces/project';
 import { IHubUser } from '@/_base/interfaces/user';
+import { IHubCertificate } from '@/_base/interfaces/certificate';
 
 export interface IProfileComponentProps {
   projects: IProject[];
   user: IHubUser;
+  certificates?: IHubCertificate[];
 }
 
 export interface IAvatarOptions {

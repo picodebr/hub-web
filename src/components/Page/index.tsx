@@ -1,15 +1,16 @@
-import { PropsWithChildren, useState } from 'react';
-import { FiChevronLeft } from 'react-icons/fi';
+import { cloneElement, PropsWithChildren, useState } from 'react';
 import { useRouter } from 'next/router';
 import { FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
 import { BsMotherboard } from 'react-icons/bs';
+import { motion } from 'framer-motion';
 
 import { IPageProps } from '@/_base/hooks/Page/interfaces';
-import { Flex, Text, useColorMode } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { Header } from './components/Header';
-import { Navbar } from './components/Navbar';
+import { Navbar, useNavbar } from './components/Navbar';
 import { RedefinePass } from './components/RedefinePass';
 import { MenuItemType } from './interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
@@ -22,8 +23,6 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   user,
   children,
   headerLabel,
-  showBackButton = true,
-  backButtonPath,
   hideHeaderOnMobile,
   fullScreenOnMobile,
   setUser,
@@ -31,23 +30,26 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
   const [school, setSchool] = useState<IHubUserSchool | null>(null);
 
-  const { colorMode } = useColorMode();
-  const router = useRouter();
+  const { colorMode } = useDarkMode();
+  const { isSidebarOpen } = useNavbar();
 
-  const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
+  const menuItems = (user?.role === 'student' ? studentMenuItems : teacherMenuItems).filter(
+    (e) => user?.role === `master` || e.page !== `vision_lab`,
+  );
 
   return (
     <Flex
       h="100vh"
       w="100vw"
       flexDirection="column"
-      bg="primary50"
       position="relative"
       overflow="hidden"
       zIndex="0"
+      bg="primary50"
       bgImg={`/patterns/background-${colorMode}.svg`}
       bgRepeat="no-repeat"
       bgSize="cover"
+      // bg="#f6f6f6"
     >
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
@@ -72,7 +74,13 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               overflow="hidden"
               direction="column"
               position="relative"
-              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '1rem 1rem 1rem 0', xl: '1.5rem 1.5rem 1.5rem 0' }}
+              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '0 0.5rem 0 1rem' }}
+              sx={{
+                '& > :last-child': {
+                  padding: '1rem 0.5rem 1rem 0',
+                  // Se a sua página tiver scroll próprio, você pode precisar garantir a altura dela aqui
+                },
+              }}
             >
               {/* {showBackButton && (
                 <Flex

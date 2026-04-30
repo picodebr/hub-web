@@ -5,4 +5,5 @@ export interface IHubCertificate {
   title: string;
   link: string;
   thumbnail: string;
+  created_at: string;
 }
