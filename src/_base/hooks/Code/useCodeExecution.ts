@@ -10,6 +10,8 @@
  * - executeSpriteCode: Orquestração do isolamento de execução por ator.
  */
 import { useCallback, useEffect, useRef, useMemo } from 'react';
+import { javascriptGenerator } from 'blockly/javascript';
+import * as Blockly from 'blockly/core';
 import { useExecutionRunner } from '../../context/RuntimeContext';
 import { useProject } from '../../context/ProjectContext';
 import { useSandboxExecutor } from './useSandboxExecutor';
@@ -20,8 +22,13 @@ import { useUI } from '../../context/UIContext';
 import { ExecutionTask } from '../../domain/entities';
 import { getExecutionEngine } from '@/_base/services/code/ExecutionEngine';
 import { getProjectService } from '@/_base/services/code';
+import { getPicoVM } from '../../vm/PicoVM';
+import { useKeyboardInput } from './useKeyboardInput';
 
 export function useCodeExecution(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null>) {
+  // Inicializa a VM para depuração global
+  getPicoVM();
+
   const stageContext = useExecutionRunner();
   const { sprites, activeSpriteId } = useProject();
   const { executeInSandbox, stopExecutors } = useSandboxExecutor();
@@ -42,6 +49,8 @@ export function useCodeExecution(blocklyRef: React.RefObject<BlocklyWorkspaceRef
 
       if (setForceExecution) setForceExecution(true);
       if (incrementActiveCode) incrementActiveCode();
+
+      console.log(`[Executing] Sprite: ${spriteId}, Origin: ${origin}, Code:\n${code}`);
 
       const blockId = hatId?.split('_').pop();
       if (blockId && blocklyRef.current?.setBlockHighlight) {
@@ -72,6 +81,9 @@ export function useCodeExecution(blocklyRef: React.RefObject<BlocklyWorkspaceRef
   );
 
   // --- HANDLERS (TRATADORES DE EVENTOS) ---
+  // Registra os listeners globais de teclado para o motor de execução (Sandbox path)
+  useKeyboardInput(blocklyRef, executeSpriteCode);
+
   const handleRun = useCallback(async () => {
     const engine = getExecutionEngine();
 
@@ -165,10 +177,32 @@ export function useCodeExecution(blocklyRef: React.RefObject<BlocklyWorkspaceRef
   );
 
   const handleRunCode = useCallback(
-    async (code: string) => {
-      await executeSpriteCode(activeSpriteId, code);
+    async (blockId: string, workspaceId: string) => {
+      const ws = blocklyRef.current?.getWorkspace();
+      if (!ws) return;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const flyout = (ws as any).getFlyout?.() || (ws as any).getToolbox?.()?.getFlyout?.();
+      const flyoutWs = flyout?.getWorkspace?.() as Blockly.Workspace | null;
+      if (!flyoutWs || flyoutWs.id !== workspaceId) return;
+
+      const block = flyoutWs.getBlockById(blockId);
+      if (!block || !block.isEnabled()) return;
+
+      try {
+        const gen = javascriptGenerator as unknown as { init: (w: Blockly.Workspace) => void };
+        if (gen.init) gen.init(flyoutWs);
+        const codeOrTuple = javascriptGenerator.blockToCode(block);
+        // Reporter blocks return [code, order] — wrap in console.log to make it a statement
+        const code = Array.isArray(codeOrTuple) ? `console.log(${codeOrTuple[0]});` : String(codeOrTuple);
+        if (code.trim()) {
+          await executeSpriteCode(activeSpriteId, code);
+        }
+      } catch (e) {
+        console.warn('[handleRunCode] Erro ao gerar/executar código do flyout:', e);
+      }
     },
-    [activeSpriteId, executeSpriteCode],
+    [activeSpriteId, blocklyRef, executeSpriteCode],
   );
 
   // --- ML WHEN PREDICTED: Listener contínuo ---

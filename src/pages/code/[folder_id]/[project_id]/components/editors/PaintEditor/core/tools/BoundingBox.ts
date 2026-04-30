@@ -26,14 +26,14 @@ export class BoundingBox {
       throw new Error('[BoundingBox] scope.project is null — canvas não está pronto.');
     }
 
-    let camadaGuias = this.scope.project.layers.find((l) => (l as IPaintItem).name === 'guides');
-    if (!camadaGuias) {
-      camadaGuias = new this.scope.Layer();
-      (camadaGuias as IPaintItem).name = 'guides';
+    let camadaUI = this.scope.project.layers.find((l) => (l as IPaintItem).name === 'ui');
+    if (!camadaUI) {
+      camadaUI = new this.scope.Layer();
+      (camadaUI as IPaintItem).name = 'ui';
     }
 
     this.grupo = new this.scope.Group();
-    camadaGuias.addChild(this.grupo);
+    camadaUI.addChild(this.grupo);
 
     this.grupo.name = 'bounding-box';
     (this.grupo as IPaintItem).guide = true;
@@ -91,8 +91,12 @@ export class BoundingBox {
 
     let limitesTotais: paper.Rectangle | null = null;
     for (const item of items) {
-      // We use the provided bounds (which should be the "flat" bounds if rotating)
-      const bounds = item.bounds;
+      // Otimização de performance extrema: item.strokeBounds é muito pesado para rodar a 60 FPS.
+      // Usamos item.bounds e expandimos matematicamente pela metade da borda.
+      let bounds = item.bounds.clone();
+      if (item.strokeWidth && item.strokeWidth > 0) {
+         bounds = bounds.expand(item.strokeWidth);
+      }
 
       if (!limitesTotais) {
         limitesTotais = bounds.clone();
@@ -108,7 +112,14 @@ export class BoundingBox {
 
     this.mostrar();
 
-    this.caixa.bounds = limitesTotais;
+    // Em vez de usar `this.caixa.bounds = limitesTotais` (que quebra se o objeto tiver
+    // largura ou altura zero, como uma linha reta, pois a escala por zero vira infinito),
+    // recriamos ou modificamos os pontos diretamente.
+    this.caixa.segments[0].point = limitesTotais.bottomLeft;
+    this.caixa.segments[1].point = limitesTotais.topLeft;
+    this.caixa.segments[2].point = limitesTotais.topRight;
+    this.caixa.segments[3].point = limitesTotais.bottomRight;
+    
     const b = limitesTotais;
 
     this.alcas['tl'].position = b.topLeft;
@@ -188,6 +199,17 @@ export class BoundingBox {
 
   public esconder() {
     this.grupo.visible = false;
+  }
+
+  public traduzir(delta: paper.Point) {
+    if (!this.grupo.visible) return;
+    this.grupo.position = this.grupo.position.add(delta);
+  }
+
+  public rotacionarVisuais(angulo: number, centro: paper.Point) {
+    if (!this.grupo.visible) return;
+    this.grupo.pivot = centro;
+    this.grupo.rotation = angulo;
   }
 
   public mostrar() {

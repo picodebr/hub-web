@@ -38,8 +38,8 @@ export const patchBlocklyContextMenu = () => {
       };
     }
 
-    // Limpa itens existentes para garantir remoção total
-    const idsToRemove = ['variableDelete', 'variableRename', 'blockDuplicate', 'cleanWorkspace', 'blockCollapseExpand', 'blockInline'];
+    // Limpa apenas os que realmente precisam ser substituídos ou ocultos
+    const idsToRemove = ['variableDelete', 'variableRename', 'blockDuplicate'];
 
     idsToRemove.forEach((id) => {
       if (registry.getItem(id)) {

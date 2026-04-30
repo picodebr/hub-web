@@ -25,11 +25,11 @@ interface VariableDeleteModalProps {
 }
 
 const VariableDeleteModal: React.FC<VariableDeleteModalProps> = ({ isOpen, onClose, workspace, isUploadMode, initialSelection }) => {
-  const { stageVariables, uploadVariables, deleteVariable, forceSyncVariables } = useProject();
+  const { getUserVariables, stageVariables, uploadVariables, deleteVariable, forceSyncVariables } = useProject();
   const [selectedVars, setSelectedVars] = useState<string[]>([]);
   const availableVars = useMemo(() => {
-    return (isUploadMode ? uploadVariables : stageVariables) as { name: string; type: string }[];
-  }, [isUploadMode, stageVariables, uploadVariables]);
+    return getUserVariables(isUploadMode ? 'upload' : 'stage') as any[];
+  }, [isUploadMode, getUserVariables, stageVariables, uploadVariables]);
 
   // Reset selecionado ao abrir (sem usar useEffect para evitar cascading renders)
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
@@ -113,7 +113,7 @@ const VariableDeleteModal: React.FC<VariableDeleteModalProps> = ({ isOpen, onClo
               <>
                 <p className="fw-bold text-secondary mb-3">Selecione as variáveis para excluir:</p>
                 <div className="list-group" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  {availableVars.map((v: { name: string; type: string }) => (
+                  {availableVars.map((v: any) => (
                     <label key={v.name} className="list-group-item d-flex gap-3 align-items-center cursor-pointer" style={{ cursor: 'pointer' }}>
                       <input
                         className="form-check-input flex-shrink-0"
@@ -122,8 +122,15 @@ const VariableDeleteModal: React.FC<VariableDeleteModalProps> = ({ isOpen, onClo
                         onChange={() => handleCheckboxChange(v.name)}
                         style={{ width: '1.5em', height: '1.5em' }}
                       />
-                      <span className="fw-bold">{v.name}</span>
-                      <span className="badge bg-secondary ms-auto">{v.type}</span>
+                      <div className="d-flex flex-column">
+                        <span className="fw-bold">{v.name}</span>
+                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                          {v.isGlobal ? '(Global)' : '(Para este ator)'}
+                        </small>
+                      </div>
+                      <span className="badge bg-secondary ms-auto">
+                        {v.type === 'Number' ? 'Número' : v.type === 'String' ? 'Texto' : v.type}
+                      </span>
                     </label>
                   ))}
                 </div>

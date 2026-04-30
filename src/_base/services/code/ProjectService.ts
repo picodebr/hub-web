@@ -126,6 +126,10 @@ export class ProjectService extends EventEmitter<ProjectEvents> {
     return this.spriteService.duplicateSprite(id);
   }
 
+  public createClone(id: string): SpriteData | undefined {
+    return this.spriteService.createClone(id);
+  }
+
   public clearClones(): void {
     this.spriteService.clearClones();
   }
@@ -190,6 +194,16 @@ export class ProjectService extends EventEmitter<ProjectEvents> {
     this.costumeService.removeCostumeFromSprite(spriteId, costumeId, this.spriteService.getSprites(), (bId) =>
       this.backdropService.deleteBackdrop(bId),
     );
+    this.spriteService.syncAllClones();
+    this.spriteService.bumpRevision();
+  }
+
+  public duplicateCostume(spriteId: string, costumeId: string): void {
+    if (spriteId === 'stage') {
+      this.backdropService.duplicateBackdrop(costumeId);
+    } else {
+      this.costumeService.duplicateCostume(spriteId, costumeId, this.spriteService.getSprites());
+    }
     this.spriteService.syncAllClones();
     this.spriteService.bumpRevision();
   }
@@ -364,14 +378,17 @@ export class ProjectService extends EventEmitter<ProjectEvents> {
 
   public addVariable(mode: 'stage' | 'upload', name: string, type: string, scope?: 'global' | 'local', ownerId?: string): void {
     this.variableService.addVariable(mode, name, type, scope, ownerId);
+    this.spriteService.bumpRevision();
   }
 
   public renameVariable(mode: 'stage' | 'upload', oldName: string, newName: string): void {
     this.variableService.renameVariable(mode, oldName, newName);
+    this.spriteService.bumpRevision();
   }
 
   public deleteVariable(mode: 'stage' | 'upload', name: string): void {
     this.variableService.deleteVariable(mode, name);
+    this.spriteService.bumpRevision();
   }
 
   public updateVariableInBlocks(name: string, value: string | number | boolean, mode: 'stage' | 'upload'): void {
@@ -393,15 +410,27 @@ export class ProjectService extends EventEmitter<ProjectEvents> {
   }
 
   public addList(mode: 'stage' | 'upload', name: string, scope?: 'global' | 'local', ownerId?: string): SpriteList | null {
-    return this.variableService.addList(mode, name, scope, ownerId);
+    const list = this.variableService.addList(mode, name, scope, ownerId);
+    this.spriteService.bumpRevision();
+    return list;
   }
 
   public renameList(mode: 'stage' | 'upload', oldName: string, newName: string): void {
     this.variableService.renameList(mode, oldName, newName);
+    this.spriteService.bumpRevision();
   }
 
   public deleteList(mode: 'stage' | 'upload', name: string): void {
     this.variableService.deleteList(mode, name);
+    this.spriteService.bumpRevision();
+  }
+
+  public updateVariableValueById(mode: 'stage' | 'upload', id: string, value: string | number | boolean): void {
+    this.variableService.updateVariableValueById(mode, id, value);
+  }
+
+  public updateListItemsById(mode: 'stage' | 'upload', id: string, items: any[]): void {
+    this.variableService.updateListItemsById(mode, id, items);
   }
 
   public forceSyncLists(): void {

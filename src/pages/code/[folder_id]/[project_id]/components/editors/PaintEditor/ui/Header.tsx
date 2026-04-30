@@ -6,14 +6,7 @@
  * camadas. Implementa um design responsivo que adapta o tamanho dos ícones
  * e sliders conforme a largura da viewport.
  */
-/**
- * PaintEditor Header - Painel de controle superior (Ribbon-style).
- *
- * Responsabilidade: Gerir as ações globais de edição (Undo/Redo, Flip, Group),
- * controles de estilo (Cores, Espessura de Traço, Fonte) e organização de
- * camadas. Implementa um design responsivo que adapta o tamanho dos ícones
- * e sliders conforme a largura da viewport.
- */
+'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Undo2,
@@ -31,8 +24,7 @@ import {
 } from 'lucide-react';
 import HsbColorPicker from '../../../shared/HsbColorPicker';
 import { PaintState } from '@/_base/domain/entities/IPaintEditor';
-// Mantém retrocompatibilidade se já estiver sendo usado externamente,
-// mas agora aponta para a interface centralizada.
+
 export type { PaintState };
 
 interface HeaderProps {
@@ -55,6 +47,7 @@ interface HeaderProps {
   strokeWidth: number;
   brushSize: number;
   fillTransparent: boolean;
+  strokeTransparent: boolean;
   fontFamily: string;
   fontSize: number;
   activeToolId: string;
@@ -63,7 +56,6 @@ interface HeaderProps {
 
 /* ── Hook responsivo: retorna tamanhos baseados na largura da tela ── */
 function useResponsiveSize() {
-  // Valores padrão seguros para SSR
   const defaultSizes = React.useMemo(
     () => ({ icon: 16, pad: 'p-1.5', gap: 'gap-1', gpx: 'px-1.5', colorBox: 'w-7 h-7', slider: 'w-16 sm:w-20', fontSize: 'text-[12px]' }),
     [],
@@ -83,8 +75,6 @@ function useResponsiveSize() {
   const [sizes, setSizes] = useState(defaultSizes);
 
   useEffect(() => {
-    // Atualiza para o tamanho real após a montagem no cliente
-    // Promise.resolve().then() evita o erro de 'setState síncrono dentro de effect'
     Promise.resolve().then(() => {
       const current = calc();
       setSizes((prev) => {
@@ -159,6 +149,7 @@ export const Header: React.FC<HeaderProps> = ({
   strokeWidth,
   brushSize,
   fillTransparent,
+  strokeTransparent,
   fontFamily,
   fontSize,
   activeToolId,
@@ -197,7 +188,6 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 🎨 Cores */}
         <RibbonGroup label="Cores" color="text-sky-400" gap={s.gap} gpx={s.gpx}>
           <div className="flex items-center gap-2 px-1">
-            {/* Preenchimento */}
             <HsbColorPicker
               initialColor={fillColor}
               isTransparent={fillTransparent}
@@ -205,19 +195,32 @@ export const Header: React.FC<HeaderProps> = ({
               onTransparentToggle={() => onChangeState({ fillTransparent: true })}
               compact
               variant="fill"
+              isActive={!fillTransparent}
             />
 
-            {/* Botão Transparência (Standalone as per screenshot) */}
             <button
-              onClick={() => onChangeState({ fillTransparent: !fillTransparent })}
-              className={`w-10 h-10 !rounded-full border-2 outline-none focus:outline-none transition-all flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.03)] ${fillTransparent ? 'bg-sky-500 text-white border-sky-500 shadow-sm' : 'bg-white text-slate-200 border-slate-300 hover:border-sky-100 hover:shadow-lg active:scale-95'}`}
+              onClick={() => onChangeState({ fillTransparent: true })}
+              className={`w-10 h-10 !rounded-full border-2 outline-none focus:outline-none transition-all flex items-center justify-center shadow-sm ${
+                fillTransparent 
+                  ? 'bg-white border-blue-400 ring-4 ring-blue-50/50 scale-105' 
+                  : 'bg-white border-slate-200 text-slate-300 hover:border-blue-200 hover:shadow-md'
+              }`}
               title="Sem Preenchimento"
             >
-              <i className="bi bi-slash-circle text-[18px]" />
+              <div className="relative w-7 h-7 rounded-full border border-slate-100 flex items-center justify-center overflow-hidden">
+                <div className="absolute w-[140%] h-[3px] bg-red-500/80 -rotate-45" />
+              </div>
             </button>
 
-            {/* Contorno */}
-            <HsbColorPicker initialColor={strokeColor} onColorChange={(hex) => onChangeState({ strokeColor: hex })} compact variant="stroke" />
+            <HsbColorPicker 
+              initialColor={strokeColor} 
+              isTransparent={strokeTransparent}
+              onColorChange={(hex) => onChangeState({ strokeColor: hex, strokeTransparent: false })} 
+              onTransparentToggle={() => onChangeState({ strokeTransparent: true })}
+              compact 
+              variant="stroke" 
+              isActive={false} 
+            />
           </div>
         </RibbonGroup>
 
@@ -227,9 +230,7 @@ export const Header: React.FC<HeaderProps> = ({
         <RibbonGroup label="Traço" color="text-sky-400" gap={s.gap} gpx={s.gpx}>
           <div className="flex items-center gap-3 lg:gap-6 px-1">
             <div className="flex flex-col items-center gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[8px] sm:text-[12px]  text-sky-400/80">Linha</span>
-              </div>
+              <span className="text-[8px] sm:text-[12px] text-sky-400/80">Linha</span>
               <div className="flex items-center gap-2">
                 <input
                   type="range"
@@ -246,9 +247,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             <div className="flex flex-col items-center gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[8px] sm:text-[12px] text-sky-400/80">{activeToolId === 'eraser' ? 'Borracha' : 'Pincel'}</span>
-              </div>
+              <span className="text-[8px] sm:text-[12px] text-sky-400/80">{activeToolId === 'eraser' ? 'Borracha' : 'Pincel'}</span>
               <div className="flex items-center gap-2">
                 <input
                   type="range"
@@ -269,7 +268,6 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* ── LINHA INFERIOR ── */}
       <div className="flex flex-wrap items-end justify-center gap-x-1 sm:gap-x-2 md:gap-x-4 lg:gap-x-6 px-1 lg:px-4 py-1.5">
-        {/* 🅰️ Fonte */}
         <RibbonGroup label="Fonte" color="text-sky-400" gap={s.gap} gpx={s.gpx}>
           <div className="flex items-center gap-1">
             <select
@@ -277,8 +275,7 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => onChangeState({ fontFamily: e.target.value })}
               className={`h-5 sm:h-6 md:h-7 text-[9px] bg-white border-[2px] border-slate-200 rounded-lg px-1 outline-none text-sky-700 cursor-pointer hover:border-sky-300 focus:border-sky-400 transition-all w-[60px] sm:w-[155px] appearance-none`}
               style={{
-                backgroundImage:
-                  'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
+                backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right 4px top 50%',
                 backgroundSize: '6px auto',
@@ -297,14 +294,12 @@ export const Header: React.FC<HeaderProps> = ({
               value={fontSize}
               onChange={(e) => onChangeState({ fontSize: parseInt(e.target.value) || 12 })}
               className={`h-5 sm:h-6 md:h-7 w-9 sm:w-11 bg-white border-[2px] border-slate-200 rounded-lg px-0.5 outline-none text-center text-sky-700 hover:border-sky-300 focus:border-sky-400 transition-all text-[9px]`}
-              title="Tamanho da Fonte"
             />
           </div>
         </RibbonGroup>
 
         <Sep />
 
-        {/* 🔄 Transformar */}
         <RibbonGroup label="Transformar" color="text-sky-400" gap={s.gap} gpx={s.gpx}>
           <Btn onClick={onFlipHorizontal} title="Inverter Horizontal" color="text-slate-500" pad={s.pad}>
             <FlipHorizontal size={s.icon} strokeWidth={2.5} />
@@ -316,7 +311,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         <Sep />
 
-        {/* 📦 Agrupar */}
         <RibbonGroup label="Agrupar" color="text-sky-400" gap={s.gap} gpx={s.gpx}>
           <Btn onClick={onGroup} title="Agrupar" color="text-slate-500" pad={s.pad}>
             <Group size={s.icon} strokeWidth={2.5} />
@@ -328,7 +322,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         <Sep />
 
-        {/* 📐 Organizar */}
         <RibbonGroup label="Organizar" color="text-sky-400" gap={s.gap} gpx={s.gpx}>
           <Btn onClick={onMoveForward} title="Mover para Frente" color="text-slate-500" pad={s.pad}>
             <ChevronUp size={s.icon} strokeWidth={3} />

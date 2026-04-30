@@ -10,7 +10,7 @@ import { IPaintExportOptions, IPaintItem } from '@/_base/domain/entities/IPaintE
 import { DRAWING_CONFIG, SVG_ID_WHITELIST } from '../constants';
 
 export class SvgService {
-  constructor(private scope: paper.PaperScope) {}
+  constructor(private scope: paper.PaperScope) { }
 
   /**
    * Exporta o desenho como SVG para miniatura e para o palco.
@@ -26,21 +26,35 @@ export class SvgService {
 
     const dl = project.layers.find((l) => l.name === 'drawing') || project.activeLayer;
 
-    // 🛡️ Oculta retângulos de suporte e limpa elementos indesejados
-    const hiddenItems: paper.Item[] = [];
     const artboardCenter = new this.scope.Point(
       DRAWING_CONFIG.abX + DRAWING_CONFIG.artboard.w / 2,
       DRAWING_CONFIG.abY + DRAWING_CONFIG.artboard.h / 2,
     );
 
+    // 1. Thumbnail Bounds: computed BEFORE any visibility changes so that
+    // guide items (PBT_BOUNDS_BOX, SCRATCH_BBOX_HACK) — which are always invisible —
+    // never inflate dl.bounds into artboard dimensions.
+    let thumbBounds = dl.bounds.clone().expand(4);
+    if (!thumbBounds || thumbBounds.width < 1 || thumbBounds.height < 1) {
+      thumbBounds = new this.scope.Rectangle(artboardCenter.x - 1, artboardCenter.y - 1, 2, 2);
+    }
+
+    // Hide only VISIBLE guide/artboard items for the export, and track them for restoration.
+    // Items already invisible (PBT_BOUNDS_BOX, SCRATCH_BBOX_HACK) are skipped entirely so
+    // that restoration never accidentally makes them visible again.
+    const hiddenItems: paper.Item[] = [];
+
     [...dl.children].forEach((item) => {
-      // Remove/Oculta marcadores internos e retângulos que cobrem o fundo
-      if (item.name === 'PBT_BOUNDS_BOX' || (item as any).guide) {
+      if (item.name === 'PBT_BOUNDS_BOX') return;
+      if (!item.visible) return;
+
+      if ((item as any).guide) {
         item.visible = false;
         hiddenItems.push(item);
+        return;
       }
 
-      // Especial: Se não for Backdrop, oculta retângulos que tenham exatamente o tamanho do artboard e sejam brancos/transparentes
+      // Oculta retângulos que tenham exatamente o tamanho do artboard (ex: fundo branco de Backdrop)
       if (!options?.isBackdrop && item instanceof this.scope.Path.Rectangle) {
         const b = item.bounds;
         if (Math.abs(b.width - DRAWING_CONFIG.artboard.w) < 2 && Math.abs(b.height - DRAWING_CONFIG.artboard.h) < 2) {
@@ -62,68 +76,50 @@ export class SvgService {
       const h = bounds.height.toFixed(2);
       const x = bounds.x.toFixed(2);
       const y = bounds.y.toFixed(2);
-      return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="${x} ${y} ${w} ${h}" width="${w}" height="${h}">${content}</svg>`;
+      return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}">${content}</svg>`;
     };
 
-    // 1. Thumbnail Bounds: Sempre rente ao conteúdo
-    let thumbBounds = dl.bounds.clone().expand(4);
-    if (!thumbBounds || thumbBounds.width < 1 || thumbBounds.height < 1) {
-      thumbBounds = new this.scope.Rectangle(artboardCenter.x - 1, artboardCenter.y - 1, 2, 2);
-    }
+    const exportOptions: IPaintExportOptions = {
+      asString: true,
+      match: (item: paper.Item) => {
+        // SEMPRE exportamos o PBT_BOUNDS_BOX. Ele é invisível, então não interfere no jogo,
+        // mas é vital para o editor saber a posição real do palco ao re-abrir o arquivo.
+        if (item.name === 'PBT_BOUNDS_BOX') return true;
+
+        // Para o palco e miniatura, exportamos apenas o que é visível para o usuário.
+        return item.visible && !item.locked && !(item as any).guide && item.name !== 'SCRATCH_BBOX_HACK';
+      }
+    };
 
     let thumbnailSvg = '';
     try {
-      const thumbInner = dl.exportSVG({ asString: true } as IPaintExportOptions) as string;
+      // 🛡️ FIX: paper.js exportSVG can throw SecurityError if there's a tainted canvas
+      const thumbInner = dl.exportSVG(exportOptions) as string;
       thumbnailSvg = buildFullSvg(thumbInner, thumbBounds);
     } catch (e) {
-      console.error('Erro ao exportar SVG para thumbnail:', e);
-      thumbnailSvg = '';
+      console.warn('[SvgService] Fallback: Could not export thumbnail SVG due to security/taint constraints.', e);
+      thumbnailSvg = ''; // Fallback: A UI mostrará um placeholder ou a última imagem válida
     }
 
     // 2. Stage SVG:
-    // Se for Backdrop: 480x360 estático.
-    // Se for Sprite: Crop simétrico em relação ao centro do Artboard.
-    // Isso garante que o centro (0,0) do Ator continue no centro do desenho,
-    // mas o 'bounding box' seja o menor possível para os balões e sensores.
-    let stageBounds: paper.Rectangle;
-
-    if (options?.isBackdrop) {
-      stageBounds = new this.scope.Rectangle(DRAWING_CONFIG.abX, DRAWING_CONFIG.abY, DRAWING_CONFIG.artboard.w, DRAWING_CONFIG.artboard.h);
-    } else {
-      // Calcula o bounding box REAL apenas dos elementos de desenho (pula guias e invisíveis)
-      let contentBounds: paper.Rectangle | null = null;
-      dl.children.forEach((item) => {
-        if (item.visible && !item.locked && !(item as any).guide && item.name !== 'PBT_BOUNDS_BOX') {
-          if (!contentBounds) contentBounds = item.bounds.clone();
-          else contentBounds = contentBounds.unite(item.bounds);
-        }
-      });
-
-      if (!contentBounds) {
-        // Caso vazio, exporta um pequeno box central
-        stageBounds = new this.scope.Rectangle(artboardCenter.x - 1, artboardCenter.y - 1, 2, 2);
-      } else {
-        const cb = contentBounds as paper.Rectangle;
-        // Calcula a distância máxima do centro do artboard até os limites do conteúdo
-        const dx = Math.max(Math.abs(cb.left - artboardCenter.x), Math.abs(cb.right - artboardCenter.x));
-        const dy = Math.max(Math.abs(cb.top - artboardCenter.y), Math.abs(cb.bottom - artboardCenter.y));
-
-        // Cria um retângulo simétrico para manter o centro do Artboard como centro do SVG (Rotation Center)
-        const sizeX = Math.ceil(dx * 2 + 4);
-        const sizeY = Math.ceil(dy * 2 + 4);
-        stageBounds = new this.scope.Rectangle(artboardCenter.x - sizeX / 2, artboardCenter.y - sizeY / 2, sizeX, sizeY);
-      }
-    }
+    // Sempre exportamos no tamanho do artboard (480x360) para garantir mapeamento 1:1 com o palco.
+    // Isso evita que o ator mude de tamanho ou estique dependendo da sua posição no editor.
+    const stageBounds = new this.scope.Rectangle(
+      DRAWING_CONFIG.abX,
+      DRAWING_CONFIG.abY,
+      DRAWING_CONFIG.artboard.w,
+      DRAWING_CONFIG.artboard.h,
+    );
     let stageSvg = '';
     try {
-      const stageInner = dl.exportSVG({ asString: true } as IPaintExportOptions) as string;
+      const stageInner = dl.exportSVG(exportOptions) as string;
       stageSvg = buildFullSvg(stageInner, stageBounds);
     } catch (e) {
-      console.error('Erro ao exportar SVG para stage:', e);
+      console.error('[SvgService] Critical: Could not export stage SVG.', e);
       stageSvg = '';
     }
 
-    // Restaura tudo
+    // Restaura apenas os itens que foram ocultados para o export
     hiddenItems.forEach((i) => (i.visible = true));
 
     if (wasClipped && clipMask) {
@@ -131,8 +127,8 @@ export class SvgService {
       dl.clipped = true;
     }
 
-    const dl_again = project.layers.find((l) => l.name === 'drawing');
-    if (dl_again) dl_again.activate();
+    const projectLayer = project.layers.find((l) => l.name === 'drawing');
+    if (projectLayer) projectLayer.activate();
 
     return { thumbnailSvg, stageSvg };
   }
@@ -145,22 +141,62 @@ export class SvgService {
     const project = this.scope.project;
     if (!importedNode || !project) return;
 
+    console.log('[SvgService] Iniciando releaseSVG para o nó:', importedNode.name || 'Group', importedNode);
+
     // Encontra a camada de desenho
     const dl = project.layers.find((l) => l.name === 'drawing') || project.activeLayer;
+    console.log('[SvgService] Camada de destino (drawing):', dl.name, dl);
 
     const processNode = (node: paper.Item) => {
-      // Remove máscaras de recorte que o Scratch às vezes gera e que atrapalham a edição
+      // 1. "FRITAR" TRANSFORMAÇÕES (Baking): 
+      // Aplicamos apenas em VETORES. Para Rasters (PNG/JPG), mantemos a matriz
+      // para evitar problemas de re-pixelização e perda de qualidade.
+      if (!(node instanceof this.scope.Raster)) {
+        (node as IPaintItem).applyMatrix = true;
+      }
+
+      // 2. GRADIENTES -> CORES SÓLIDAS:
+      if (node.fillColor && (node.fillColor as any).gradient) {
+        const grad = (node.fillColor as any);
+        if (grad.stops && grad.stops.length > 0) {
+          node.fillColor = grad.stops[0].color;
+        }
+      }
+      if (node.strokeColor && (node.strokeColor as any).gradient) {
+        const grad = (node.strokeColor as any);
+        if (grad.stops && grad.stops.length > 0) {
+          node.strokeColor = grad.stops[0].color;
+        }
+      }
+
+      // 3. REMOVER MÁSCARAS E CLIPPATHS:
+      // O Scratch não suporta máscaras vetoriais complexas.
       const group = node as paper.Group;
       if (group.clipped && node.children.length > 0) {
         group.clipped = false;
-        node.children[0].remove();
+        node.children[0].remove(); // Remove o item que servia de máscara
       }
 
-      // Garante que as transformações (scale, rotate, translate) sejam aplicadas aos caminhos
-      // Em paper.js, applyMatrix é uma propriedade de Item.
-      (node as IPaintItem).applyMatrix = true;
+      // 4. LIMPEZA DE FILTROS E EFEITOS:
+      node.shadowColor = null; // Scratch não suporta drop-shadows vetoriais
+      node.blendMode = 'normal'; // Garante compatibilidade total
 
-      // Recursividade para processar todos os filhos sem destruir grupos
+      // HACK FIX: Scratch artboard bounds marker
+      if (node instanceof this.scope.Path.Rectangle || node instanceof this.scope.PathItem) {
+        const b = node.bounds;
+        if (Math.abs(b.width - DRAWING_CONFIG.artboard.w) < 2 && Math.abs(b.height - DRAWING_CONFIG.artboard.h) < 2) {
+          const hasVisibleFill = node.fillColor && node.fillColor.alpha > 0.01;
+          const hasVisibleStroke = node.strokeColor && node.strokeColor.alpha > 0.01;
+          if (!hasVisibleFill && !hasVisibleStroke) {
+            node.locked = true;
+            (node as any).guide = true;
+            node.name = 'SCRATCH_BBOX_HACK';
+            node.visible = false;
+          }
+        }
+      }
+
+      // Recursividade
       if (node.children && node.children.length > 0) {
         [...node.children].forEach((child) => processNode(child));
       }
@@ -168,32 +204,24 @@ export class SvgService {
 
     processNode(importedNode);
 
-    // Desagrupamento recursivo condicional: move itens para a camada de desenho
-    // EXCETO se o grupo possuir um ID da nossa Whitelist de padronização.
-    // DESCOMPRESSÃO DE HIERARQUIA (FLATTENING):
-    // SVGs externos (especialmente do Scratch) costumam vir com dezenas de
-    // grupos (<g>) aninhados desnecessariamente. Esta lógica recursiva
-    // "achata" a hierarquia para que o usuário possa clicar e selecionar
-    // caminhos individuais sem precisar "entrar" em 10 grupos.
-    // Preservamos grupos apenas se tiverem IDs da whitelist (ex: 'eye', 'mouth').
+    // Desagrupamento e Baking Final
     const flatten = (item: paper.Item) => {
+      // Garante que transformações do pai foram "fritas" no filho antes de desagrupar (apenas para vetores)
+      if (!(item instanceof this.scope.Raster)) {
+        item.applyMatrix = true;
+      }
       if (item instanceof this.scope.Group) {
-        // Se for um grupo com ID padrão, preservamos ele como uma unidade
         if (item.name && SVG_ID_WHITELIST.includes(item.name)) {
           dl.addChild(item);
           return;
         }
-
         const children = [...item.children];
         children.forEach((child) => {
-          // BAKED TRANSFORMATIONS:
-          // Garante que a transformação do pai (scale/rotate) seja aplicada
-          // permanentemente ao filho (baked) antes de movê-lo para a raiz.
-          // Isso evita que o item "pule" ou mude de forma ao ser desagrupado.
-          child.applyMatrix = true;
+          if (!(child instanceof this.scope.Raster)) {
+            child.applyMatrix = true;
+          }
           flatten(child);
         });
-
         if (item !== importedNode) {
           item.children.forEach((c) => dl.addChild(c));
           item.remove();
@@ -205,10 +233,28 @@ export class SvgService {
 
     flatten(importedNode);
 
-    // Caso o nó raiz importado fosse um grupo sem ID especial, ele agora está vazio ou deve ser removido
     if (importedNode instanceof this.scope.Group && (!importedNode.name || !SVG_ID_WHITELIST.includes(importedNode.name))) {
       importedNode.children.forEach((c) => dl.addChild(c));
       importedNode.remove();
     }
+
+    // Após processar tudo, forçamos uma atualização de matrizes em toda a camada (apenas vetores)
+    dl.applyMatrix = true;
+    dl.children.forEach(c => {
+      if (!(c instanceof this.scope.Raster)) {
+        c.applyMatrix = true;
+      }
+    });
+  }
+
+  /**
+   * Converte um item (ou grupo) em um Bitmap (Raster) de alta resolução.
+   * Útil para fallback quando o SVG é complexo demais para ser vetorizado no Scratch.
+   */
+  rasterizeItem(item: paper.Item): paper.Raster {
+    // No Paper.js, passamos a resolução dentro de um objeto de opções
+    const raster = item.rasterize({ resolution: 300 }); 
+    item.remove();
+    return raster;
   }
 }

@@ -12,9 +12,8 @@ export class TextTool extends BaseTool {
     getState: () => ToolState,
     saveHistory: () => void,
     private onShowInput: (point: paper.Point) => void,
-    onLiveSync?: () => void,
   ) {
-    super(scope, getState, saveHistory, onLiveSync);
+    super(scope, getState, saveHistory);
   }
 
   protected setupHandlers() {
@@ -32,6 +31,7 @@ export class TextTool extends BaseTool {
 
     const state = this.getState();
     const textItem = new this.scope.PointText(point);
+    this.drawingLayer.addChild(textItem);
     textItem.content = text;
     textItem.fillColor = this.fillColor || new this.scope.Color('black');
     textItem.fontSize = state.fontSize;

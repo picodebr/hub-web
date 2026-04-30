@@ -9,28 +9,29 @@
 import React from 'react';
 import Image from 'next/image';
 import { BackdropData } from '@/_base/domain/entities';
+import { ScratchAddButton } from '../shared/ScratchAddButton';
 
 interface StageColumnProps {
   activeSpriteId: string;
   backdropImage: string;
+  activeBackdropName?: string;
   backdrops: BackdropData[];
   selectSprite: (id: string) => void;
   addSurpriseBackdrop: () => void;
   openBackdropGallery: () => void;
   openPaintEditor: () => void;
-  buttonScale: number;
   backdropInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export function StageColumn({
   activeSpriteId,
   backdropImage,
+  activeBackdropName,
   backdrops,
   selectSprite,
   addSurpriseBackdrop,
   openBackdropGallery,
   openPaintEditor,
-  buttonScale,
   backdropInputRef,
 }: StageColumnProps) {
   const isSelected = activeSpriteId === 'stage';
@@ -57,36 +58,26 @@ export function StageColumn({
       </div>
 
       {/* Label e contagem de cenários */}
-      <div className="stage-selector-panel__label">Cenários</div>
-      <div className="stage-selector-panel__count">{backdrops.length}</div>
+      <div className="stage-selector-panel__label" title={activeBackdropName || 'Cenários'}>
+        {activeBackdropName || 'Cenários'}
+      </div>
+      <div className="stage-selector-panel__count">480 x 360</div>
 
       {/* Botão flutuante estilo Scratch para adicionar cenários */}
-      <div
-        className="add-backdrop-container"
-        style={{ transform: `scale(${buttonScale})`, transformOrigin: 'bottom right' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="add-backdrop-label shadow-sm">Selecionar Cenário</div>
-        <div className="add-backdrop-menu shadow">
-          <button className="add-sprite-item" onClick={() => backdropInputRef.current?.click()} title="Carregar Cenário">
-            <i className="bi bi-upload"></i>
-          </button>
-          <button className="add-sprite-item" onClick={() => addSurpriseBackdrop()} title="Surpresa">
-            <i className="bi bi-stars"></i>
-          </button>
-          <button className="add-sprite-item" onClick={() => openPaintEditor()} title="Pintar">
-            <i className="bi bi-brush"></i>
-          </button>
-          <button className="add-sprite-item" onClick={() => openBackdropGallery()} title="Procurar">
-            <i className="bi bi-search"></i>
-          </button>
-        </div>
-
-        <button className="btn btn-primary btn-add-backdrop-main shadow-sm" title="Escolher um Cenário" onClick={() => openBackdropGallery()}>
-          <div className="position-relative d-flex align-items-center justify-content-center">
-            <i className="bi bi-image-fill"></i>
-          </div>
-        </button>
+      <div onClick={(e) => e.stopPropagation()}>
+        <ScratchAddButton
+          mainLabel="Selecionar Cenário"
+          mainTitle="Escolher um Cenário"
+          mainIcon="bi-image-fill"
+          center={true}
+          onMainClick={() => openBackdropGallery()}
+          items={[
+            { icon: 'bi-upload', title: 'Carregar Cenário', onClick: () => backdropInputRef.current?.click() },
+            { icon: 'bi-stars', title: 'Surpresa', onClick: () => addSurpriseBackdrop() },
+            { icon: 'bi-brush', title: 'Pintar', onClick: () => openPaintEditor() },
+            { icon: 'bi-search', title: 'Procurar', onClick: () => openBackdropGallery() },
+          ]}
+        />
       </div>
     </div>
   );

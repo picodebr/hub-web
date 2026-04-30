@@ -188,7 +188,7 @@ export class CostumeService {
       sprites[spriteIndex] = {
         ...sprite,
         currentCostumeId: costume.id,
-        costume: costume.url,
+        costume: costume.stageUrl || costume.url,
       };
       this.emitter.emit('spritesChange', sprites);
     }
@@ -212,7 +212,7 @@ export class CostumeService {
     if (currentCostumeId === costumeId) {
       const first = updatedCostumes[0];
       currentCostumeId = first.id;
-      costumeUrl = first.url;
+      costumeUrl = first.stageUrl || first.url;
     }
 
     sprites[spriteIndex] = {
@@ -220,6 +220,29 @@ export class CostumeService {
       costumes: updatedCostumes,
       currentCostumeId,
       costume: costumeUrl,
+    };
+
+    this.emitter.emit('spritesChange', sprites);
+  }
+  public duplicateCostume(spriteId: string, costumeId: string, sprites: SpriteData[]): void {
+    const spriteIndex = sprites.findIndex((s) => s.id === spriteId);
+    if (spriteIndex === -1) return;
+
+    const sprite = sprites[spriteIndex];
+    const costume = sprite.costumes.find((c) => c.id === costumeId);
+    if (!costume) return;
+
+    const newCostume: CostumeData = {
+      ...costume,
+      id: `costume${Date.now()}`,
+      name: `${costume.name} 2`,
+    };
+
+    sprites[spriteIndex] = {
+      ...sprite,
+      costumes: [...sprite.costumes, newCostume],
+      currentCostumeId: newCostume.id,
+      costume: newCostume.stageUrl || newCostume.url,
     };
 
     this.emitter.emit('spritesChange', sprites);

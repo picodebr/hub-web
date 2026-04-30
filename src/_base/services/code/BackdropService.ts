@@ -28,7 +28,7 @@ export class BackdropService {
   }
 
   private initializeDefaults(): void {
-    this.backdrops = [{ id: 'b1', name: 'Cenário 1', url: '/img/fundo.png', sounds: [], currentSoundId: null }];
+    this.backdrops = [{ id: 'b1', name: 'Cenário 1', url: '/svg/Backdrops/vazio.svg', sounds: [], currentSoundId: null }];
     this.activeBackdropId = 'b1';
   }
 
@@ -62,14 +62,14 @@ export class BackdropService {
     let newBackdrop;
 
     if (file) {
-      const url = await BrowserFileSystem.processFile(file);
+      const url = await BrowserFileSystem.processFile(file, true);
       const name = file.name.split('.')[0];
       newBackdrop = { id: newId, name, url, sounds: [], currentSoundId: null };
     } else {
       newBackdrop = {
         id: newId,
         name: `Cenário ${this.backdrops.length + 1}`,
-        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgwIiBoZWlnaHQ9IjM2MCIgdmlld0JveD0iMCAwIDQ4MCAzNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PC9zdmc+',
+        url: '/svg/Backdrops/vazio.svg',
         sounds: [],
         currentSoundId: null,
       };
@@ -268,5 +268,24 @@ export class BackdropService {
 
     this.backdrops[idx] = { ...backdrop, sounds: updatedSounds };
     this.emitChange();
+  }
+
+  public duplicateBackdrop(id: string): void {
+    const backdrop = this.backdrops.find((b) => b.id === id);
+    if (!backdrop) return;
+
+    const newId = `backdrop${Date.now()}`;
+    const newBackdrop = {
+      ...backdrop,
+      id: newId,
+      name: `${backdrop.name} 2`,
+      sounds: [...backdrop.sounds],
+    };
+
+    this.backdrops = [...this.backdrops, newBackdrop];
+    this.activeBackdropId = newId;
+    this.emitChange();
+    this.emitter.emit('activeBackdropChange', newId);
+    this.emitter.emit('activeSpriteChange', 'stage');
   }
 }
