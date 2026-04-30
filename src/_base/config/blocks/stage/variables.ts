@@ -16,7 +16,8 @@ const blockListContents = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -39,7 +40,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -57,7 +59,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -74,7 +77,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -93,7 +97,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -111,7 +116,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             },
             { "type": "input_value", "name": "ITEM" }
         ],
@@ -129,7 +135,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -146,7 +153,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -167,7 +175,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -184,7 +193,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -200,7 +210,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             }
         ],
         "inputsInline": true,
@@ -216,7 +227,8 @@ export const blockVariables = [
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list"
+                "defaultType": "list",
+                "variable": "minha lista"
             },
             { "type": "input_value", "name": "ITEM" }
         ],

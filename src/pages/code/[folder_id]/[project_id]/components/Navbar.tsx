@@ -56,7 +56,6 @@ export default function CodeNavbar({ project }: IProps) {
 
   // Estado auxiliar para controle visual do botão de upload
   const [isUploadingLocal, setIsUploadingLocal] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   // Helpers de Estado Visual
   const isConnecting = false; // Simplified, or can be tracked inside FirmwareContext if needed
@@ -95,24 +94,11 @@ export default function CodeNavbar({ project }: IProps) {
   /**
    * Lida com a exportação do projeto atual para um arquivo JSON.
    */
-  const handleSaveProject = async () => {
-    if (!project || isSaving) return;
-
-    try {
-      setIsSaving(true);
-      const workspace = runnerContext.blocklyWorkspaceRef?.current?.getWorkspace?.();
-      await SerializationService.saveProject(contextAdapter, project, 'meu_projeto.json', workspace || undefined);
-      toast({ title: 'Projeto salvo com sucesso!', status: 'success' });
-    } catch (err) {
-      console.error('[Navbar] Erro ao salvar:', err);
-      toast({
-        title: 'Erro ao salvar projeto',
-        description: 'Não foi possível salvar os dados no servidor.',
-        status: 'error',
-      });
-    } finally {
-      setIsSaving(false);
-    }
+  const handleSaveProject = () => {
+    if (!project) return;
+    const workspace = runnerContext.blocklyWorkspaceRef?.current?.getWorkspace?.();
+    SerializationService.saveProject(contextAdapter, project, 'meu_projeto.json', workspace || undefined);
+    toast({ title: 'Projeto salvo com sucesso!', status: 'success' });
   };
 
   /**
@@ -189,27 +175,15 @@ export default function CodeNavbar({ project }: IProps) {
               <button
                 className="btn btn-sm "
                 onClick={handleSaveProject}
-                disabled={isSaving}
                 style={{
                   backgroundColor: '#4483ff',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '6px 12px',
-                  opacity: isSaving ? 0.7 : 1,
-                  cursor: isSaving ? 'not-allowed' : 'pointer',
                 }}
               >
-                {isSaving ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2"></span>
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-save me-1" style={{ fontSize: '14px' }}></i> Salvar
-                  </>
-                )}
+                <i className="bi bi-save me-1" style={{ fontSize: '14px' }}></i> Salvar
               </button>
 
               {/* Botão Abrir */}

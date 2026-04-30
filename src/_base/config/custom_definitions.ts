@@ -297,12 +297,10 @@ export function registerCustomExtensions() {
             options.push(['ponteiro do mouse', 'posiMouse']);
           }
 
-          // Adiciona todos os sprites reais (não clones), exceto o próprio.
-          // Usa o nome como valor (igual ao Scratch) para evitar IDs obsoletos
-          // quando sprites são recriados.
+          // Adiciona todos os sprites reais (não clones), exceto o próprio
           sprites.forEach((s) => {
             if (s.id !== activeSpriteId && !s.isClone) {
-              options.push([s.name, s.name]);
+              options.push([s.name, s.id]);
             }
           });
 

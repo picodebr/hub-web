@@ -142,7 +142,6 @@ export interface RuntimeActions {
   getIdentifiedClass: () => string;
   getConfidence: (className: string) => number;
   updateMonitorValue: (monitorId: string, value: string | number) => void;
-  setDraggable: (draggable: boolean, targetId?: string) => void;
 }
 
 export type RuntimeContextType = RuntimeState & RuntimeActions;
@@ -361,7 +360,6 @@ export function RuntimeProvider({ children }: { children: ReactNode }) {
         return preds?.find((p: IMLPrediction) => p.label === className)?.value || 0;
       },
       updateMonitorValue: runner.updateMonitorValue,
-      setDraggable: runner.setDraggable,
     }),
     [
       setIsUploadMode,

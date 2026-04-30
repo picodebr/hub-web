@@ -14,20 +14,21 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import * as paper from 'paper';
 import { BaseTool, ToolState } from '../core/tools/BaseTool';
-import { SelectTool } from '../core/tools/selection/SelectTool';
-import { BrushTool } from '../core/tools/freehand/BrushTool';
-import { EraserTool } from '../core/tools/freehand/EraserTool';
-import { RectTool } from '../core/tools/shapes/RectTool';
-import { CircleTool } from '../core/tools/shapes/CircleTool';
-import { LineTool } from '../core/tools/shapes/LineTool';
-import { BucketTool } from '../core/tools/shapes/BucketTool';
+import { SelectTool } from '../core/tools/SelectTool';
+import { PencilTool } from '../core/tools/PencilTool';
+import { EraserTool } from '../core/tools/EraserTool';
+import { RectTool } from '../core/tools/RectTool';
+import { CircleTool } from '../core/tools/CircleTool';
+import { LineTool } from '../core/tools/LineTool';
+import { BucketTool } from '../core/tools/BucketTool';
 import { TextTool } from '../core/tools/TextTool';
 
 export function useTools(
     scope: paper.PaperScope | null,
     state: ToolState,
     saveHistory: () => void,
-    onShowTextInput: (point: paper.Point) => void
+    onShowTextInput: (point: paper.Point) => void,
+    onLiveSync: () => void
 ) {
     const [activeToolId, setActiveToolId] = useState('select');
 
@@ -41,6 +42,9 @@ export function useTools(
     const onShowTextInputRef = useRef(onShowTextInput);
     useEffect(() => { onShowTextInputRef.current = onShowTextInput; }, [onShowTextInput]);
 
+    const onLiveSyncRef = useRef(onLiveSync);
+    useEffect(() => { onLiveSyncRef.current = onLiveSync; }, [onLiveSync]);
+
     const toolsRef = useRef<Record<string, BaseTool> | null>(null);
 
     // Cria ferramentas UMA VEZ quando o escopo está pronto
@@ -50,16 +54,17 @@ export function useTools(
         const getState = () => stateRef.current;
         const doSave = () => saveHistoryRef.current();
         const doShowText = (p: paper.Point) => onShowTextInputRef.current(p);
+        const doLiveSync = () => onLiveSyncRef.current();
 
         toolsRef.current = {
-            select: new SelectTool(scope, getState, doSave),
-            pencil: new BrushTool(scope, getState, doSave),
-            eraser: new EraserTool(scope, getState, doSave),
-            rect: new RectTool(scope, getState, doSave),
-            circle: new CircleTool(scope, getState, doSave),
-            line: new LineTool(scope, getState, doSave),
-            bucket: new BucketTool(scope, getState, doSave),
-            text: new TextTool(scope, getState, doSave, doShowText),
+            select: new SelectTool(scope, getState, doSave, doLiveSync),
+            pencil: new PencilTool(scope, getState, doSave, doLiveSync),
+            eraser: new EraserTool(scope, getState, doSave, doLiveSync),
+            rect: new RectTool(scope, getState, doSave, doLiveSync),
+            circle: new CircleTool(scope, getState, doSave, doLiveSync),
+            line: new LineTool(scope, getState, doSave, doLiveSync),
+            bucket: new BucketTool(scope, getState, doSave, doLiveSync),
+            text: new TextTool(scope, getState, doSave, doShowText, doLiveSync),
         };
 
         // Ativa ferramenta padrão
@@ -90,19 +95,5 @@ export function useTools(
         }
     }, [activeToolId]);
 
-    /**
-     * Limpa o estado visual de seleção da ferramenta activa antes de trocar de costume.
-     * Chama deactivate() + activate() na ferramenta actual para que highlight clones
-     * e bounding box sejam destruídos/recriados limpos no novo contexto de desenho.
-     */
-    const clearSelectionForCostumeSwitch = useCallback(() => {
-        if (!toolsRef.current) return;
-        const tool = toolsRef.current[activeToolId];
-        if (tool) {
-            tool.deactivate();
-            tool.activate();
-        }
-    }, [activeToolId]);
-
-    return { activeToolId, activateTool, commitText, notifyProjectChange, clearSelectionForCostumeSwitch };
+    return { activeToolId, activateTool, commitText, notifyProjectChange };
 }

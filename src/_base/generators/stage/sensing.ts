@@ -114,11 +114,4 @@ export const initSensingGenerators = () => {
         const code = `((Date.now() - new Date(2000, 0, 1).getTime()) / (1000 * 60 * 60 * 24))`;
         return [code, Order.DIVISION];
     };
-
-    // defina modo de arrasto para [modo]
-    javascriptGenerator.forBlock['sensing_setdragmode'] = function(block: Blockly.Block) {
-        const mode = block.getFieldValue('DRAG_MODE');
-        return `sprite.setDraggable(${mode === 'draggable'});\n`;
-    };
 };
-

@@ -25,7 +25,8 @@ export abstract class BaseTool {
   constructor(
     protected scope: paper.PaperScope,
     protected getState: () => ToolState,
-    protected saveHistory: () => void
+    protected saveHistory: () => void,
+    protected onLiveSync?: () => void,
   ) {
     this.tool = new this.scope.Tool();
     this.setupHandlers();

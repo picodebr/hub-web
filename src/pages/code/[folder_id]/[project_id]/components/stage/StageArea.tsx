@@ -1,5 +1,10 @@
 /**
  * StageArea - O ambiente de renderização visual e interação (Palco).
+ *
+ * Responsabilidade: Renderizar os atores (sprites), cenários e balões de fala
+ * em tempo real com base no estado global.
+ *
+ * Agora roda nosso Motor WebGL customizado por baixo dos panos!
  */
 'use client';
 
@@ -108,6 +113,8 @@ export default function StageArea() {
   const { sprites, updateSprite, selectSprite, activeSpriteId, monitors } = useProject();
   const { isStageFullScreen } = useUI();
 
+  // Memoiza apenas os sprites que têm balão de fala — evita recriar o JSX no heartbeat de 30fps
+  // quando nenhum sprite está "falando"
   const spritesWithBubble = React.useMemo(() => sprites.filter((s) => !!s.bubbleText), [sprites]);
 
   const [draggingId, setDraggingId] = React.useState<string | null>(null);
@@ -138,13 +145,17 @@ export default function StageArea() {
       if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
       flashTimeoutRef.current = setTimeout(() => {
         setFlashSpriteId(null);
-      }, 3000); 
+      }, 2000); // 2 segundos totais
     };
 
     window.addEventListener('flash-sprite', handleFlash);
     return () => window.removeEventListener('flash-sprite', handleFlash);
   }, []);
 
+  // O backdrop é lido pelo motor WebGL diretamente via getProjectService() no render loop —
+  // não há necessidade de ler o backdrop via React state neste componente.
+
+  // INICIALIZAÇÃO WEBGL
   React.useEffect(() => {
     if (canvasRef.current) {
       const dpr = window.devicePixelRatio || 1;
@@ -154,51 +165,55 @@ export default function StageArea() {
     }
   }, []);
 
+  // RENDER LOOP: Loop contínuo independente do React para garantir 60fps exatos e evitar "piscadas".
+  // IMPORTANTE: Este loop é 100% síncrono — sem async/await — para nunca bloquear um frame.
+  // Texturas faltantes são carregadas em background via preloadNonBlocking() e aparecem
+  // automaticamente no próximo frame quando estiverem prontas na GPU.
   React.useEffect(() => {
     let frameId: number;
 
     const renderLoop = () => {
       const renderer = getWebGLRenderer();
-      if (renderer && canvasRef.current && containerRef.current) {
+      if (renderer && canvasRef.current) {
         const dpr = window.devicePixelRatio || 1;
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const containerW = containerRect.width;
-        const containerH = containerRect.height;
-        
-        const stageRatio = 480 / 360;
-        let finalW = containerW;
-        let finalH = containerH;
 
-        if (containerW / containerH > stageRatio) {
-          finalW = containerH * stageRatio;
-        } else {
-          finalH = containerW / stageRatio;
+        // Garantir que a resolução de buffers do WebGL seja multiplicada pela escala nativa (Zoom)
+        const targetW = Math.floor(480 * scale * dpr);
+        const targetH = Math.floor(360 * scale * dpr);
+
+        // Se a escala for 0 (palco oculto), não faz sentido renderizar
+        if (targetW > 0 && targetH > 0) {
+          if (canvasRef.current.width !== targetW || canvasRef.current.height !== targetH) {
+            canvasRef.current.width = targetW;
+            canvasRef.current.height = targetH;
+          }
+
+          // Obtém o estado real direto da fonte (bypassa gargalos de batching do React state)
+          const ps = getProjectService();
+          const currentSprites = ps.getSprites();
+          const currentActiveId = ps.getActiveSpriteId();
+          const currentActiveBackdropInfo = ps.backdrops.find((b: any) => b.id === ps.activeBackdropId);
+          const currentBackdropUrl = currentActiveBackdropInfo?.url || '';
+
+          // Dispara carregamento em background para texturas ausentes (não bloqueia este frame)
+          renderer.preloadNonBlocking(currentBackdropUrl, currentSprites as any);
+
+          // Avança o frame counter da colisão sincronizado com o render
+          getCollisionEngine()?.tickFrame();
+
+          // Desenha toda a cena sincronizadamente com o que já está na GPU
+          renderer.drawSceneSync(currentBackdropUrl, currentSprites as any, [1.0, 1.0, 1.0, 1.0], currentActiveId);
         }
-
-        const targetW = Math.round(finalW * dpr);
-        const targetH = Math.round(finalH * dpr);
-
-        if (canvasRef.current.width !== targetW || canvasRef.current.height !== targetH) {
-          canvasRef.current.width = targetW;
-          canvasRef.current.height = targetH;
-          if (renderer.updateCanvas) renderer.updateCanvas(canvasRef.current);
-        }
-
-        const ps = getProjectService();
-        const currentSprites = ps.getSprites();
-        const currentActiveBackdropInfo = ps.backdrops.find((b: any) => b.id === ps.activeBackdropId);
-        const currentBackdropUrl = currentActiveBackdropInfo?.url || '';
-
-        renderer.preloadNonBlocking(currentBackdropUrl, currentSprites as any);
-        getCollisionEngine()?.tickFrame();
-        renderer.drawSceneSync(currentBackdropUrl, currentSprites as any, [1.0, 1.0, 1.0, 1.0], flashSpriteId);
       }
+
       frameId = requestAnimationFrame(renderLoop);
     };
 
+    // Inicia o loop
     frameId = requestAnimationFrame(renderLoop);
+
     return () => cancelAnimationFrame(frameId);
-  }, [flashSpriteId]);
+  }, [scale]); // Depende apenas da escala da janela, ignora sprites para não recriar o loop à toa
 
   const handleStageMouseDown = (e: React.MouseEvent) => {
     if (!stageRef.current) return;
@@ -247,17 +262,14 @@ export default function StageArea() {
         }
 
         potentialClickIdRef.current = spr.id;
-        
-        const isDraggable = !isStageFullScreen || !!spr.draggable;
-        
-        if (isDraggable) {
+
+        if (!isStageFullScreen) {
           setDraggingId(spr.id);
           dragState.draggingId = spr.id;
 
           dragStartRef.current.spriteX = spr.x;
           dragStartRef.current.spriteY = spr.y;
         }
-
         return;
       }
     }
@@ -265,31 +277,23 @@ export default function StageArea() {
 
   React.useEffect(() => {
     if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        const availableWidth = Math.max(10, width - 2);
+        const availableHeight = Math.max(10, height - 2);
 
-    const updateScale = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const availableWidth = Math.max(10, rect.width - 32);
-      const availableHeight = isStageFullScreen ? Math.max(10, rect.height - 120) : 9999;
+        const scaleW = availableWidth / 480;
 
-      const scaleW = (availableWidth - 2) / 480;
-      const scaleH = (availableHeight - 2) / 360;
+        const scaleH = isStageFullScreen ? availableHeight / 360 : Infinity;
 
-      let newScale = Math.min(scaleW, scaleH, 2.0);
-      
-      // Snap para 1.0 para evitar blur de sub-pixel se estiver muito próximo do tamanho real
-      if (newScale > 0.98 && newScale < 1.05) newScale = 1.0;
-
-      setScale(newScale);
-      window.dispatchEvent(new CustomEvent('stage-width-changed', { detail: 480 * newScale + 2 }));
-    };
-
-    const observer = new ResizeObserver(() => updateScale());
+        // Escolhemos o menor entre os dois para garantir que o palco caiba no container
+        setScale(Math.min(scaleW, scaleH, 2.0));
+      }
+    });
     observer.observe(containerRef.current);
-    updateScale();
-
     return () => observer.disconnect();
-  }, [isStageFullScreen]);
+  }, [isStageFullScreen]); // 'scale' removido: incluí-lo causava reconexão circular (scale muda → effect roda → observer reconecta)
 
   React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -298,6 +302,7 @@ export default function StageArea() {
       const deltaX = (e.clientX - dragStartRef.current.mouseX) / scale;
       const deltaY = (e.clientY - dragStartRef.current.mouseY) / scale;
 
+      // Verifica threshold de movimento (3px) para ignorar o clique
       if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
         hasDraggedRef.current = true;
       }
@@ -311,6 +316,8 @@ export default function StageArea() {
 
     const handleMouseUp = () => {
       if (!isPointerDown) return;
+
+      // Dispara eventos apenas se não houve arraste significativo
       if (!hasDraggedRef.current) {
         if (potentialClickIdRef.current) {
           window.dispatchEvent(
@@ -322,6 +329,8 @@ export default function StageArea() {
           window.dispatchEvent(new CustomEvent('stage-clicked'));
         }
       }
+
+      // Cleanup
       setIsPointerDown(false);
       setDraggingId(null);
       dragState.draggingId = null;
@@ -343,22 +352,18 @@ export default function StageArea() {
   return (
     <div
       ref={containerRef}
-      className={`w-100 h-100 d-flex align-items-center justify-content-center stage-area-container ${isStageFullScreen ? 'fullscreen' : ''}`}
+      className={`w-100 d-flex align-items-center ${isStageFullScreen ? 'justify-content-center' : 'justify-content-start'} stage-area-container`}
       style={{
-        minHeight: 0,
+        backgroundColor: '#e9eef2',
+        flex: '1 1 auto',
         overflow: 'hidden',
-        flex: isStageFullScreen ? '1' : undefined,
       }}
     >
       <div
         style={{
-          width: `${480 * scale + 2}px`,
-          height: `${360 * scale + 2}px`,
+          width: `${480 * scale}px`,
+          height: `${360 * scale}px`,
           position: 'relative',
-          border: '1px solid #ccc',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          boxSizing: 'border-box',
         }}
       >
         <div
@@ -370,34 +375,31 @@ export default function StageArea() {
             width: '480px',
             height: '360px',
             transform: `scale(${scale})`,
-            transformOrigin: `top left`,
-            position: `absolute`,
+            border: '1px solid #ccc',
+            borderRadius: '16px',
+            transformOrigin: `top right`,
+            position: `absolute !important` as any,
             top: 0,
-            left: 0,
+            right: 0,
+            left: `auto`,
             margin: 0,
-            border: 'none',
           }}
           onMouseDown={handleStageMouseDown}
         >
+          {/* MOTOR WEBGL */}
           <canvas
             ref={canvasRef}
             style={{
               position: 'absolute',
               top: 0,
               left: 0,
-              width: '100%',
-              height: '100%',
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
-              display: 'block',
-              margin: '0 auto',
-              imageRendering: 'auto',
-              cursor: draggingId ? 'grabbing' : 'default',
-              borderRadius: '16px',
+              zIndex: 0,
+              width: '480px',
+              height: '360px',
             }}
           />
 
+          {/* OVERLAYS (Balões, Modais, Monitores) via DOM -> zIndex alto */}
           <div
             style={{
               position: 'absolute',
@@ -411,23 +413,16 @@ export default function StageArea() {
           >
             {spritesWithBubble.map((spr) => {
               if (!spr.bubbleText) return null;
-              const cb = (spr as any)._contentBounds;
-              const size = spr.size / 100;
-              let targetX = spr.x;
-              let targetY = spr.y;
 
-              if (cb) {
-                // Posiciona no topo do CONTEÚDO real (ignora áreas transparentes)
-                const dy = (cb.y + cb.h / 2) - cb.fullH / 2;
-                const dx = (cb.x + cb.w / 2) - cb.fullW / 2;
-                targetY = spr.y - (dy * size) + (cb.h / 2) * size;
-                targetX = spr.x + (dx * size);
-              } else {
-                const realH = (spr as any)._realHeight || 50;
-                targetY = spr.y + (realH * size) / 2;
-              }
+              // Calcula o offset usando o tamanho real da textura (fornecido pelo WebGLRenderer)
+              const realH = (spr as any)._realHeight || 50;
+              const sizeH = realH * (spr.size / 100);
 
-              const isFlippedY = targetY > 100;
+              const targetX = spr.x;
+              // targetY aponta para o topo dos pixels do personagem.
+              // Como o WebGL desenha o personagem centralizado, o topo está em Y + (metade da altura visual).
+              const targetY = spr.y + sizeH / 2;
+              const isFlippedY = spr.y > 60; // Inverte o balão se estiver muito no topo do palco
 
               return (
                 <div
@@ -444,37 +439,25 @@ export default function StageArea() {
               );
             })}
 
+            {/* Bounding Box do Ator Ativo (Estilo Scratch) */}
             {(() => {
               const flashSprite = sprites.find((s) => s.id === flashSpriteId);
               if (!flashSprite || flashSprite.id === 'stage' || !flashSprite.visible) return null;
-              
-              const cb = (flashSprite as any)._contentBounds;
-              if (!cb) return null;
-
-              // Cálculo para centralizar o retângulo no conteúdo real, não no canva inteiro
-              const size = flashSprite.size / 100;
-              const dx = (cb.x + cb.w / 2) - cb.fullW / 2;
-              const dy = (cb.y + cb.h / 2) - cb.fullH / 2;
-              
-              const xBox = flashSprite.x + (dx * size);
-              const yBox = flashSprite.y - (dy * size);
-              
               return (
                 <div
                   className="flash-bounding-box"
                   style={{
                     position: 'absolute',
-                    left: `calc(50% + ${xBox}px)`,
-                    top: `calc(50% - ${yBox}px)`,
-                    width: `${cb.w * size}px`,
-                    height: `${cb.h * size}px`,
+                    left: `calc(50% + ${flashSprite.x}px)`,
+                    top: `calc(50% - ${flashSprite.y}px)`,
+                    width: `${((flashSprite as any)._realWidth || 50) * (flashSprite.size / 100)}px`,
+                    height: `${((flashSprite as any)._realHeight || 50) * (flashSprite.size / 100)}px`,
                     transform: `translate(-50%, -50%) rotate(${flashSprite.rotationStyle === 'left-right' ? 0 : 90 - flashSprite.angle}deg) scaleX(${flashSprite.rotationStyle === 'left-right' && flashSprite.angle < 0 ? -1 : 1})`,
-                    border: '2px dashed #3b82f6',
+                    border: '2px dashed #3b82f6', // blue-500
                     backgroundColor: 'rgba(59, 130, 246, 0.05)',
                     borderRadius: '4px',
                     pointerEvents: 'none',
                     boxSizing: 'border-box',
-                    zIndex: 1000
                   }}
                 />
               );
@@ -501,6 +484,7 @@ export default function StageArea() {
               ),
             )}
           </div>
+
           <AskModal />
         </div>
       </div>

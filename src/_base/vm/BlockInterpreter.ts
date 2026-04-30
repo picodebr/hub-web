@@ -67,10 +67,6 @@ export class BlockInterpreter {
       if (thread.isAborted) return;
     }
 
-    if (this.runner.debugMode) {
-      console.log(`[PicoVM] Sprite: ${thread.spriteId}, Block: ${block.type}`);
-    }
-
     // ── Highlight ON ─────────────────────────────────────
     thread.currentBlockId = block.id;
     thread.highlight?.(block.id, true);
@@ -323,12 +319,6 @@ export class BlockInterpreter {
         r.resetTimer();
         break;
       }
-      case 'sensing_setdragmode': {
-        const mode = block.getFieldValue('DRAG_MODE');
-        r.setDraggable(mode === 'draggable', id);
-        break;
-      }
-
 
       // ══════════════════════════════════════════════
       // EVENTOS (transmissão)

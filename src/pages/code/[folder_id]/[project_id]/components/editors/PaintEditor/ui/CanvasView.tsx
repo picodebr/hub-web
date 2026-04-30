@@ -7,9 +7,10 @@
  * entre o Paper.js View e o layout do React.
  */
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-
+import * as paper from 'paper';
 import { DRAWING_CONFIG } from '../constants';
-import { HiMagnifyingGlassMinus, HiMagnifyingGlassPlus, HiArrowsPointingOut } from 'react-icons/hi2';
+import { BiZoomIn, BiZoomOut } from 'react-icons/bi';
+import { FaMaximize } from 'react-icons/fa6';
 
 /* ── Hook responsivo ── */
 function useResponsiveSize() {
@@ -136,24 +137,24 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-2xl px-2 py-1.5 shadow-lg border border-slate-200/50 z-20">
         <button
           onClick={onZoomOut}
-          className={`${s.pad} text-[#ccc] hover:text-indigo-500 rounded-xl transition-all hover:bg-indigo-50 hover:scale-110 active:scale-95`}
+          className={`${s.pad} text-slate-500 hover:text-indigo-500 rounded-xl transition-all hover:bg-indigo-50 hover:scale-110 active:scale-95`}
           title="Diminuir Zoom"
         >
-          <HiMagnifyingGlassMinus size={s.icon} />
+          <BiZoomOut size={s.icon} strokeWidth={2.5} />
         </button>
         <button
           onClick={onZoomToFit}
-          className={`${s.pad} text-[#ccc] hover:text-indigo-500 rounded-xl transition-all hover:bg-indigo-50 hover:scale-110 active:scale-95`}
+          className={`${s.pad} text-slate-500 hover:text-indigo-500 rounded-xl transition-all hover:bg-indigo-50 hover:scale-110 active:scale-95`}
           title="Encaixar"
         >
-          <HiArrowsPointingOut size={s.icon} />
+          <FaMaximize size={s.icon} strokeWidth={2.5} />
         </button>
         <button
           onClick={onZoomIn}
-          className={`${s.pad} text-[#ccc] hover:text-indigo-500 rounded-xl transition-all hover:bg-indigo-50 hover:scale-110 active:scale-95`}
+          className={`${s.pad} text-slate-500 hover:text-indigo-500 rounded-xl transition-all hover:bg-indigo-50 hover:scale-110 active:scale-95`}
           title="Aumentar Zoom"
         >
-          <HiMagnifyingGlassPlus size={s.icon} />
+          <BiZoomIn size={s.icon} strokeWidth={2.5} />
         </button>
       </div>
 

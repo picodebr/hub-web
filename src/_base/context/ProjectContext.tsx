@@ -32,7 +32,6 @@ interface ProjectContextType {
   setSprites: (sprites: SpriteData[]) => void;
   setActiveSpriteId: (id: string) => void;
   getSpriteById: (id: string) => SpriteData | undefined;
-  duplicateSprite: (id: string) => void;
   lastRealSpriteId: string;
 
   // Costumes
@@ -42,7 +41,6 @@ interface ProjectContextType {
   switchCostume: (spriteId: string, costumeId: string) => void;
   renameCostume: (spriteId: string, costumeId: string, newName: string) => void;
   removeCostumeFromSprite: (spriteId: string, costumeId: string) => void;
-  duplicateCostume: (spriteId: string, costumeId: string) => void;
 
   // Sounds
   addSoundToSprite: (spriteId: string, file?: File) => Promise<void>;
@@ -269,7 +267,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         volume: 100,
         bubbleText: '',
         bubbleType: null,
-        draggable: false,
       } as SpriteData;
     }
     return sprites.find((s) => s.id === activeSpriteId) || sprites[0];
@@ -296,7 +293,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const setSprites = useCallback((ns: SpriteData[]) => projectService.setSprites(ns), [projectService]);
   const setActiveSpriteId = useCallback((id: string) => projectService.setActiveSpriteId(id), [projectService]);
   const getSpriteById = useCallback((id: string) => projectService.getSpriteById(id), [projectService]);
-  const duplicateSprite = useCallback((id: string) => projectService.duplicateSprite(id), [projectService]);
 
   // Costume methods
   const addCostumeToSprite = useCallback(async (sid: string, f?: File) => await projectService.addCostumeToSprite(sid, f), [projectService]);
@@ -311,7 +307,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const switchCostume = useCallback((sid: string, cid: string) => projectService.switchCostume(sid, cid), [projectService]);
   const renameCostume = useCallback((sid: string, cid: string, n: string) => projectService.renameCostume(sid, cid, n), [projectService]);
   const removeCostumeFromSprite = useCallback((sid: string, cid: string) => projectService.removeCostumeFromSprite(sid, cid), [projectService]);
-  const duplicateCostume = useCallback((sid: string, cid: string) => projectService.duplicateCostume(sid, cid), [projectService]);
 
   // Sound methods — roteados para cenário quando sid === 'stage'
   const addSoundToSprite = useCallback(
@@ -450,14 +445,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setSprites,
       setActiveSpriteId,
       getSpriteById,
-      duplicateSprite,
       addCostumeToSprite,
       updateCostume,
       updateCostumeThumbnail,
       switchCostume,
       renameCostume,
       removeCostumeFromSprite,
-      duplicateCostume,
       addSoundToSprite,
       switchSound,
       renameSound,
@@ -526,14 +519,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setSprites,
       setActiveSpriteId,
       getSpriteById,
-      duplicateSprite,
       addCostumeToSprite,
       updateCostume,
       updateCostumeThumbnail,
       switchCostume,
       renameCostume,
       removeCostumeFromSprite,
-      duplicateCostume,
       addSoundToSprite,
       switchSound,
       renameSound,

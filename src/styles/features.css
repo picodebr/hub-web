@@ -38,15 +38,15 @@
 }
 
 /* --- Menus de Contexto e Dropdowns --- */
-html body .blocklyDropDownDiv {
+ .blocklyDropDownDiv {
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.15);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Menus do Google/Blockly (Dropdowns de Campos) - Estilo Scratch Blue */
-html body .goog-menu,
-html body .blocklyMenu {
+ .goog-menu,
+ .blocklyMenu {
   background: #4C97FF;
   /* Azul Scratch */
   padding: 4px 0;
@@ -54,8 +54,8 @@ html body .blocklyMenu {
 }
 
 /* Itens de Menu (Dropdowns de Campos) */
-html body .goog-menuitem,
-html body .blocklyMenuItem {
+ .goog-menuitem,
+ .blocklyMenuItem {
   padding: 8px 16px;
   color: white;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -69,23 +69,23 @@ html body .blocklyMenuItem {
   position: relative;
 }
 
-html body .goog-menuitem-content,
-html body .blocklyMenuItemContent {
+ .goog-menuitem-content,
+ .blocklyMenuItemContent {
   color: white;
   text-align: center;
   flex: 1;
 }
 
-html body .goog-menuitem:hover,
-html body .blocklyMenuItem:hover {
+ .goog-menuitem:hover,
+ .blocklyMenuItem:hover {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* Menu de Contexto (Botão Direito) - Estilo Premium White */
-html body .blocklyContextMenu {
+ .blocklyContextMenu {
   background-color: #ffffff;
   font-family: var(--font-outfit), sans-serif;
-  font-size: 14px; /* Ajustado de 18px para ser mais proporcional */
+  font-size: 18px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 4px 0;
@@ -93,42 +93,23 @@ html body .blocklyContextMenu {
   z-index: 20000;
 }
 
-/* Garante que os itens do menu de contexto tenham texto escuro (Premium White) */
-html body .blocklyContextMenu .goog-menuitem,
-html body .blocklyContextMenu .blocklyMenuItem {
-  color: #575E75 !important;
-  padding: 8px 24px;
-  justify-content: flex-start; /* Alinhamento à esquerda padrão de menus de contexto */
-}
-
-html body .blocklyContextMenu .goog-menuitem-content,
-html body .blocklyContextMenu .blocklyMenuItemContent {
-  color: #575E75 !important;
-  text-align: left;
-}
-
-html body .blocklyContextMenu .goog-menuitem:hover,
-html body .blocklyContextMenu .blocklyMenuItem:hover {
-  background-color: rgba(76, 151, 255, 0.1); /* Azul claro suave no hover */
-}
-
 /* Barra de Rolagem Customizada nos Dropdowns (Fina e Branca) */
-html body .goog-menu::-webkit-scrollbar,
-html body .blocklyMenu::-webkit-scrollbar {
+ .goog-menu::-webkit-scrollbar,
+ .blocklyMenu::-webkit-scrollbar {
   width: 6px;
   background: transparent;
   display: block;
 }
 
-html body .goog-menu::-webkit-scrollbar-thumb,
-html body .blocklyMenu::-webkit-scrollbar-thumb {
+ .goog-menu::-webkit-scrollbar-thumb,
+ .blocklyMenu::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.8);
   border-radius: 10px;
 }
 
 /* Estilo do Checkmark (Visto) nos Menus */
-html body .goog-menuitem-checkbox,
-html body .blocklyMenuItemCheckbox {
+ .goog-menuitem-checkbox,
+ .blocklyMenuItemCheckbox {
   position: absolute;
   left: 8px;
   filter: brightness(0) invert(1);

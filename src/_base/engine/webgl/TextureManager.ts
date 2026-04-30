@@ -34,144 +34,108 @@ export class TextureManager {
 
     /**
      * Inicia o carregamento de uma textura em background (fire-and-forget).
+     * Não bloqueia - use no render loop para garantir que texturas estejam
+     * disponíveis nos próximos frames sem pausar o frame atual.
      */
     startLoading(url: string | null): void {
         if (!url || url === '/img/empty.png') return;
         if (this.textureCache.has(url) || this.pendingHires.has(url)) return;
-        this.loadTexture(url).catch(() => {});
+        // Dispara o carregamento sem await - o cache será populado quando terminar
+        this.loadTexture(url).catch(() => {/* silencia erros de textura em background */});
     }
 
     /**
      * Carrega uma imagem de forma assíncrona, faz upload pra GPU e a retorna.
+     * Compatível com base64, URLs externas e SVGs (rasteriza antes).
      */
     async loadTexture(url: string | null): Promise<{ tex: WebGLTexture | null, width: number, height: number }> {
-        if (!url || url === '/img/empty.png') return { tex: null, width: 0, height: 0 };
+        if (!url) return { tex: null, width: 0, height: 0 };
+        if (url === '/img/empty.png') return { tex: null, width: 0, height: 0 }; // Evitar baixar dummy images constantemente, a n?o ser q seja requerido
 
-        if (this.textureCache.has(url)) return this.textureCache.get(url)!;
-        if (this.pendingHires.has(url)) return this.pendingHires.get(url)!;
+        // Se já tá em cache, maravilha
+        if (this.textureCache.has(url)) {
+            return this.textureCache.get(url)!;
+        }
 
-        const promise = (async () => {
-            try {
-                // Estratégia de Alta Resolução para SVGs:
-                // Forçamos a rasterização em uma resolução alvo alta (ex: 2048px)
+        // Se já está na fila de download, espere
+        if (this.pendingHires.has(url)) {
+            return this.pendingHires.get(url)!;
+        }
+
+        const promise = new Promise<{ tex: WebGLTexture, width: number, height: number }>((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous'; // Para CORS
+            
+            img.onload = () => {
+                let sourceToUpload: HTMLImageElement | HTMLCanvasElement = img;
+
+                // Rasterização de SVGs. WebGL nao carrega vetor, então desenhamos no canvas para rasterizar
                 if (url.includes('.svg') || url.startsWith('data:image/svg+xml')) {
-                    const res = await this.loadSvgHighRes(url);
-                    return this.uploadToGpu(url, res.source, res.width, res.height);
+                    const canvas = document.createElement('canvas');
+                    
+                    // Fator de escala agressivo para garantir nitidez dos vetores
+                    // em alta resolução (ex. em tela cheia)
+                    const dpr = window.devicePixelRatio || 1;
+                    const upscale = dpr * 2.5; // Aproximadamente o nível de oversampling do Scratch 3
+                    
+                    canvas.width = img.width * upscale;
+                    canvas.height = img.height * upscale;
+                    
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.scale(upscale, upscale);
+                        // Desenha usando o tamanho original, o scale do contexto cuida da alta resolução
+                        ctx.drawImage(img, 0, 0, img.width, img.height);
+                        sourceToUpload = canvas;
+                    }
                 }
 
-                // Imagens normais (PNG/JPG)
-                return new Promise<{ tex: WebGLTexture, width: number, height: number }>((resolve, reject) => {
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    img.onload = () => {
-                        const result = this.uploadToGpu(url, img, img.naturalWidth || img.width, img.naturalHeight || img.height);
-                        resolve(result);
-                    };
-                    img.onerror = reject;
-                    img.src = url;
-                });
-            } catch (err) {
+                const tex = this.gl.createTexture();
+                if (!tex) {
+                    reject("Falha ao criar WebGLTexture.");
+                    return;
+                }
+
+                this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
+                
+                // FlipY = true para imagens ficarem corretas (WebGL lê de baixo pra cima)
+                this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, 1);
+                
+                this.gl.texImage2D(
+                    this.gl.TEXTURE_2D, 
+                    0, 
+                    this.gl.RGBA, 
+                    this.gl.RGBA, 
+                    this.gl.UNSIGNED_BYTE, 
+                    sourceToUpload
+                );
+
+                // Configuração padrão para spritesheet (Clamp to Edge e Nearest ou Linear)
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+                
+                // LinearFilter gera bordas borradas, Nearest gera bordas sharp no zoom
+                // Scratch usa Linear + Mipmaps as vezes, usaremos Linear
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+                this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+
+                const result = { tex, width: img.naturalWidth || img.width, height: img.naturalHeight || img.height };
+                this.textureCache.set(url, result);
                 this.pendingHires.delete(url);
-                throw err;
-            }
-        })();
+                resolve(result);
+            };
+
+            img.onerror = () => {
+                this.pendingHires.delete(url);
+                reject(new Error(`Failed to load image: ${url}`));
+            };
+
+            img.src = url;
+        });
 
         this.pendingHires.set(url, promise);
         return promise;
-    }
-
-    private uploadToGpu(
-        url: string, 
-        source: HTMLImageElement | HTMLCanvasElement, 
-        logicalW: number, 
-        logicalH: number
-    ): { tex: WebGLTexture, width: number, height: number } {
-        const tex = this.gl.createTexture();
-        if (!tex) throw new Error("Falha ao criar WebGLTexture");
-
-        this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
-        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, 1);
-        this.gl.pixelStorei(this.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-        
-        // Usa formato interno RGBA8 do WebGL 2 para maior precisão
-        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA8, this.gl.RGBA, this.gl.UNSIGNED_BYTE, source);
-
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-        
-        this.gl.generateMipmap(this.gl.TEXTURE_2D);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_LINEAR);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-
-        // Habilita Anisotropia se disponível (melhora muito a nitidez em downscaling)
-        const ext = this.gl.getExtension('EXT_texture_filter_anisotropic') || 
-                    this.gl.getExtension('MOZ_EXT_texture_filter_anisotropic') || 
-                    this.gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-        if (ext) {
-            const max = this.gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
-            this.gl.texParameterf(this.gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, max);
-        }
-
-        const result = { tex, width: logicalW, height: logicalH };
-        this.textureCache.set(url, result);
-        this.pendingHires.delete(url);
-        return result;
-    }
-
-    private async loadSvgHighRes(url: string): Promise<{ source: HTMLCanvasElement, width: number, height: number }> {
-        const response = await fetch(url);
-        let svgText = await response.text();
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(svgText, 'image/svg+xml');
-        const svgElement = doc.querySelector('svg');
-
-        if (!svgElement) throw new Error("SVG inválido");
-
-        const viewBox = svgElement.getAttribute('viewBox');
-        let logicalW = 480, logicalH = 360;
-
-        if (viewBox) {
-            const parts = viewBox.split(/\s+/).map(Number);
-            if (parts.length === 4) {
-                logicalW = parts[2];
-                logicalH = parts[3];
-            }
-        } else {
-            logicalW = parseFloat(svgElement.getAttribute('width') || '480');
-            logicalH = parseFloat(svgElement.getAttribute('height') || '360');
-        }
-
-        // Resolução de renderização interna (2048px na maior dimensão)
-        const targetRes = 2048;
-        const scale = targetRes / Math.max(logicalW, logicalH);
-        const renderW = logicalW * scale;
-        const renderH = logicalH * scale;
-
-        svgElement.setAttribute('width', renderW.toString());
-        svgElement.setAttribute('height', renderH.toString());
-
-        const serialized = new XMLSerializer().serializeToString(svgElement);
-        const blob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' });
-        const blobUrl = URL.createObjectURL(blob);
-
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = renderW;
-                canvas.height = renderH;
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
-                    ctx.drawImage(img, 0, 0, renderW, renderH);
-                }
-                URL.revokeObjectURL(blobUrl);
-                resolve({ source: canvas, width: logicalW, height: logicalH });
-            };
-            img.onerror = reject;
-            img.src = blobUrl;
-        });
     }
 }

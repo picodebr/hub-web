@@ -9,16 +9,21 @@ import Image from 'next/image';
 import { useProject } from '@/_base/context/ProjectContext';
 import dynamic from 'next/dynamic';
 import { useExecutionRunner } from '@/_base/context/ExecutionRunnerContext';
-import { ScratchAddButton } from '../shared/ScratchAddButton';
-import { LoadingEditor } from '../shared/LoadingEditor';
 
 const PaintEditor = dynamic(() => import('./PaintEditor/index'), {
   ssr: false,
-  loading: LoadingEditor,
+  loading: () => (
+    <div className="flex-1 flex items-center justify-center bg-[#f8fafc]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-4 border-[#4483ff] border-t-transparent rounded-full animate-spin"></div>
+        <span className="text-slate-500 font-medium">Carregando Editor...</span>
+      </div>
+    </div>
+  ),
 });
 
 export default function CostumeEditor() {
-  const { activeSprite, addCostumeToSprite, removeCostumeFromSprite, renameCostume, switchCostume, duplicateCostume } = useProject();
+  const { activeSprite, addCostumeToSprite, removeCostumeFromSprite, renameCostume, switchCostume } = useProject();
   const { isAnyCodeRunning } = useExecutionRunner();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,10 +38,8 @@ export default function CostumeEditor() {
   const [editingCostumeId, setEditingCostumeId] = useState<string | null>(null);
   const [tempName, setTempName] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; costumeId: string } | null>(null);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const handleClick = () => setContextMenu(null);
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
@@ -104,10 +107,10 @@ export default function CostumeEditor() {
 
   return (
     <div className="flex-1 flex h-full w-full bg-[#f0f0f0] overflow-hidden min-h-0 min-w-0">
-      {/* Unified Container - Clean look without heavy borders */}
-      <div className="flex-1 flex overflow-hidden rounded-tr-[16px] bg-[#fafafa]">
-        {/* ── Sidebar ── */}
-        <div className="flex flex-col bg-[#f8fafc] shrink-0 relative z-[200] overflow-visible" style={{ width: '150px', borderRight: '1px solid #ccc' }}>
+      {/* Container principal - borda igual ao workspace do Blockly */}
+      <div className="flex-1 flex overflow-hidden border-t border-r border-[#ccc] rounded-tr-[16px] bg-white shadow-[inset_-3px_0_0_0_black]">
+        {/* Sidebar esquerda: 150px como no scratch-gui */}
+        <div className="flex flex-col bg-[#f9f9f9] border-r border-[#ddd] flex-shrink-0 relative overflow-visible" style={{ width: '150px' }}>
           {/* Lista de fantasias com scroll */}
           <div className="flex-1 overflow-y-auto flex flex-col items-center pt-[10px] px-[10px] custom-scrollbar" style={{ paddingBottom: '80px' }}>
             {activeSprite.costumes?.map((costume, index) => {
@@ -130,7 +133,7 @@ export default function CostumeEditor() {
                                         ${
                                           isActive
                                             ? 'border-[#4483ff] shadow-[0_0_0_3px_rgba(68,131,255,0.25)] bg-white'
-                                            : 'border-[#ddd] hover:border-[#4483ff] bg-white'
+                                            : 'border-[rgba(0,0,0,0.12)] hover:border-[#4483ff] bg-white'
                                         }
                                     `}
                 >
@@ -225,24 +228,32 @@ export default function CostumeEditor() {
           </div>
 
           {/* Menu de adição (estilo Scratch hover) */}
-          <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '80px', pointerEvents: 'none' }}>
-            <div style={{ pointerEvents: 'auto' }}>
-              <ScratchAddButton
-                mainLabel="Escolha uma Fantasia"
-                mainTitle="Escolher uma Fantasia"
-                mainIcon="bi-person-plus-fill"
-                onMainClick={() => {}}
-                center={true}
-                alignLabel="right"
-                items={[
-                  { icon: 'bi-upload', title: 'Carregar Fantasia', onClick: handleUploadClick },
-                  { icon: 'bi-stars', title: 'Surpresa', onClick: () => {} },
-                  { icon: 'bi-brush', title: 'Pintar', onClick: async () => { await addCostumeToSprite(activeSprite.id); } },
-                  { icon: 'bi-search', title: 'Procurar', onClick: () => {} },
-                ]}
-              />
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
+          <div className="add-sprite-container container-center">
+            <div className="add-sprite-label label-right shadow-sm">Escolha uma Fantasia</div>
+            <div className="add-sprite-menu shadow">
+              <button className="add-sprite-item" onClick={handleUploadClick} title="Carregar Fantasia">
+                <i className="bi bi-upload"></i>
+              </button>
+              <button className="add-sprite-item" onClick={() => {}} title="Surpresa">
+                <i className="bi bi-stars"></i>
+              </button>
+              <button
+                className="add-sprite-item"
+                onClick={async () => {
+                  await addCostumeToSprite(activeSprite.id);
+                }}
+                title="Pintar"
+              >
+                <i className="bi bi-brush"></i>
+              </button>
+              <button className="add-sprite-item" onClick={() => {}} title="Procurar">
+                <i className="bi bi-search"></i>
+              </button>
             </div>
+            <button className="btn btn-primary btn-add-sprite-main shadow" title="Escolher uma Fantasia" onClick={() => {}}>
+              <i className="bi bi-person-plus-fill"></i>
+            </button>
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
           </div>
         </div>
 
@@ -251,17 +262,13 @@ export default function CostumeEditor() {
                     O PaintEditor detecta mudanças de costumeId internamente e recarrega sem remonte. */}
         {activeCostumeId ? (
           <div className="flex-1 flex flex-col h-full overflow-hidden min-h-0">
-            {mounted ? (
-              <PaintEditor
-                key={activeSprite.id}
-                spriteId={activeSprite.id}
-                costumeId={activeCostumeId}
-                costumeName={currentCostume?.name || 'Fantasia'}
-                initialUrl={currentCostume?.stageUrl || currentCostume?.url || activeSprite.costume || ''}
-              />
-            ) : (
-              <LoadingEditor />
-            )}
+            <PaintEditor
+              key={activeSprite.id}
+              spriteId={activeSprite.id}
+              costumeId={activeCostumeId}
+              costumeName={currentCostume?.name || 'Fantasia'}
+              initialUrl={currentCostume?.stageUrl || currentCostume?.url || activeSprite.costume || ''}
+            />
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center bg-[#e9eef2] text-gray-500">Nenhuma fantasia selecionada.</div>
@@ -282,17 +289,6 @@ export default function CostumeEditor() {
           >
             <i className="bi bi-download"></i>
             Exportar
-          </button>
-          <button
-            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-slate-700 flex items-center gap-2 border-0 bg-transparent transition-colors"
-            onClick={() => {
-              duplicateCostume(activeSprite.id, contextMenu.costumeId);
-              setContextMenu(null);
-            }}
-            style={{ fontSize: '14px', fontWeight: '500' }}
-          >
-            <i className="bi bi-files"></i>
-            Duplicar
           </button>
           <button
             className="w-full text-left px-4 py-2 hover:bg-blue-50 text-slate-700 flex items-center gap-2 border-0 bg-transparent transition-colors"

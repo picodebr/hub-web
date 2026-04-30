@@ -11,8 +11,12 @@ import LiveWaveform from '../shared/LiveWaveform';
 import { Undo2, Redo2, Volume2, Volume1, VolumeX, FastForward, Rewind, Waves, Bot, ChevronRight, ChevronLeft, Mic } from 'lucide-react';
 import { applyEffect, EffectName } from '@/_base/lib/audio/AudioEffects';
 import { AudioRecorder } from '@/_base/lib/audio/AudioRecorder';
-import { ScratchAddButton } from '../shared/ScratchAddButton';
 
+// Azul principal do site
+const BLUE = '#4c97ff';
+const BLUE_DARK = '#3373cc';
+const BLUE_BG = '#eef4ff';
+const BLUE_BORDER = '#cce0ff';
 /* ── UI Helpers (Matching PaintEditor Pattern) ── */
 const RibbonGroup: React.FC<{ label: string; color?: string; gap?: string; children: React.ReactNode; isShort?: boolean }> = ({
   label,
@@ -44,10 +48,10 @@ const RibbonBtn: React.FC<{
             ${isShort ? 'p-1 min-w-[32px]' : 'p-2 min-w-[44px]'}
             ${
               disabled
-                ? 'opacity-20 grayscale pointer-events-none'
+                ? 'opacity-30 cursor-default'
                 : isActive
-                  ? 'bg-[#4483ff] text-white shadow-sm'
-                  : 'text-[#4483ff] hover:bg-white hover:shadow-md hover:scale-105 active:scale-95'
+                  ? 'bg-[#4c97ff] text-white shadow-sm'
+                  : 'text-slate-500 hover:bg-white hover:shadow-md hover:scale-105 active:scale-95'
             }`}
   >
     <div className={`flex items-center justify-center ${isShort ? 'h-4' : 'h-5'}`}>{children}</div>
@@ -71,7 +75,7 @@ export default function SoundEditor() {
   const [bufferHistory, setBufferHistory] = useState<AudioBuffer[]>([]);
   const [redoHistory, setRedoHistory] = useState<AudioBuffer[]>([]);
   const [applyingEffect, setApplyingEffect] = useState(false);
-  const [, setActiveEffectKey] = useState<EffectName | null>(null);
+  const [activeEffectKey, setActiveEffectKey] = useState<EffectName | null>(null);
   const [selection, setSelection] = useState<WaveSelection | null>(null);
 
   // Refs síncronos — evitam stale closures e race conditions entre efeitos
@@ -422,13 +426,17 @@ export default function SoundEditor() {
   const playSize = S ? 48 : 80; // Aumentado ligeiramente para telas grandes
   const playBorder = S ? 4 : 5;
   const playIconFs = S ? 20 : 28;
+  const fxWidth = S ? 58 : 64;
+  const fxPad = S ? '5px 4px' : '8px 4px';
+  const fxFs = S ? 9 : 10;
+  const undoSize = S ? 28 : 36;
 
   // ── Render ──────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex h-full w-full bg-[#f0f0f0] overflow-hidden min-h-0 min-w-0">
       {/* Unified Container with border matching Blockly Workspace */}
       <div className="flex-1 flex overflow-hidden border-t-[1px] border-r-[1px] border-[#ccc] rounded-tr-[16px] bg-[#fafafa] shadow-[inset_-3px_0_0_0_black]">
-        {/* ── Sidebar ── */}
+        {/* ── Sidebar ──────────────────────────────────────────── */}
         <div className="w-[90px] flex flex-col bg-[#f8fafc] border-r border-[#ccc] flex-shrink-0 relative z-[200] overflow-visible">
           <div className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-2 items-center custom-scrollbar relative">
             {(activeSprite.sounds ?? []).map((sound, index) => {
@@ -522,28 +530,28 @@ export default function SoundEditor() {
           </div>
 
           {/* Bottom Add Menu (Scratch Style) */}
-          <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '80px', pointerEvents: 'none' }}>
-            <div style={{ pointerEvents: 'auto' }}>
-              <ScratchAddButton
-                mainLabel="Escolher um Som"
-                mainTitle="Adicionar Som"
-                mainIcon="bi-plus-lg"
-                onMainClick={() => {}}
-                center={true}
-                alignLabel="right"
-                items={[
-                  { icon: 'bi-mic-fill', title: 'Gravar Som', onClick: () => setViewMode('recorder') },
-                  { icon: 'bi-upload', title: 'Carregar Som', onClick: () => fileInputRef.current?.click() },
-                  { icon: 'bi-stars', title: 'Surpresa', onClick: () => addSoundToSprite(activeSprite.id) },
-                ]}
-              />
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="audio/*" style={{ display: 'none' }} />
+          <div className="add-sprite-container container-center">
+            <div className="add-sprite-label label-right shadow-sm">Escolher um Som</div>
+            <div className="add-sprite-menu shadow">
+              <button className="add-sprite-item" onClick={() => setViewMode('recorder')} title="Gravar Som">
+                <i className="bi bi-mic-fill"></i>
+              </button>
+              <button className="add-sprite-item" onClick={() => fileInputRef.current?.click()} title="Carregar Som">
+                <i className="bi bi-upload"></i>
+              </button>
+              <button className="add-sprite-item" onClick={() => addSoundToSprite(activeSprite.id)} title="Surpresa">
+                <i className="bi bi-stars"></i>
+              </button>
             </div>
+            <button className="btn btn-primary btn-add-sprite-main shadow" title="Adicionar Som">
+              <i className="bi bi-plus-lg"></i>
+            </button>
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="audio/*" style={{ display: 'none' }} />
           </div>
         </div>
 
         {/* ── Main Area ───────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-[#e9eef2]">
+        <div className="flex-1 flex flex-col overflow-hidden bg-[#f0f0f0]">
           {/* Ribbon Style Header */}
           <div
             className="flex bg-[#fafafa] border-b border-[#ccc] shrink-0 select-none overflow-x-auto overflow-y-hidden custom-scrollbar items-center px-2"
@@ -659,7 +667,7 @@ export default function SoundEditor() {
                           buffer={audioBuffer}
                           height={S ? 80 : 200}
                           playhead={playhead}
-                          color="#4483ff"
+                          color="#4c97ff"
                           selection={selection}
                           onSelectionChange={setSelection}
                         />
@@ -673,14 +681,16 @@ export default function SoundEditor() {
                       onClick={handlePlay}
                       disabled={loading || !audioBuffer || applyingEffect}
                       className={`shadow-xl flex items-center justify-center transition-all duration-200 border-white
-                                                ${isPlaying ? 'scale-110' : 'hover:scale-110 active:scale-95 shadow-lg'} 
-                                                ${!audioBuffer || loading || applyingEffect ? 'opacity-80 grayscale-[0.3] cursor-not-allowed' : 'cursor-pointer'}`}
+                                                ${
+                                                  isPlaying
+                                                    ? 'bg-gradient-to-br from-[#ff6680] to-[#ff4466] scale-110'
+                                                    : 'bg-gradient-to-br from-[#4c97ff] to-[#3373cc] hover:scale-110 active:scale-95 shadow-[#4c97ff]/20'
+                                                } ${!audioBuffer || loading || applyingEffect ? 'opacity-40 grayscale pointer-events-none' : ''}`}
                       style={{
                         width: playSize,
                         height: playSize,
                         borderRadius: '50%',
                         borderWidth: playBorder,
-                        backgroundColor: isPlaying ? '#ff4d4d' : '#4483ff',
                       }}
                     >
                       <i
@@ -740,15 +750,8 @@ export default function SoundEditor() {
 
                         <button
                           onClick={recordingStatus === 'idle' ? handleStartRecording : handleStopRecording}
-                          className={`border-white shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95`}
-                          style={{ 
-                            width: playSize, 
-                            height: playSize, 
-                            borderRadius: '50%', 
-                            borderWidth: playBorder - 1, 
-                            cursor: 'pointer',
-                            backgroundColor: recordingStatus === 'recording' ? '#333333' : '#ff4d4d'
-                          }}
+                          className={`border-white shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${recordingStatus === 'recording' ? 'bg-slate-800' : 'bg-red-500'}`}
+                          style={{ width: playSize, height: playSize, borderRadius: '50%', borderWidth: playBorder - 1 }}
                         >
                           {recordingStatus === 'recording' ? (
                             <div className="w-5 h-5 bg-white rounded-sm" />
@@ -776,20 +779,14 @@ export default function SoundEditor() {
                         </div>
 
                         <div className={`bg-sky-50 rounded-2xl ${S ? 'p-2' : 'p-3'} border border-sky-100`}>
-                          <WaveformViewer buffer={recordedBuffer} height={S ? 60 : 100} color="#4483ff" playhead={recordedPlayhead} />
+                          <WaveformViewer buffer={recordedBuffer} height={S ? 60 : 100} color="#0ea5e9" playhead={recordedPlayhead} />
                         </div>
 
                         <div className="flex items-center justify-center">
                           <button
                             onClick={handlePlayRecorded}
-                            className={`shadow-lg flex items-center justify-center transition-all border-white ${isPlayingRecorded ? 'bg-red-500' : ''}`}
-                            style={{ 
-                              width: S ? 40 : 64, 
-                              height: S ? 40 : 64, 
-                              borderRadius: '50%', 
-                              borderWidth: S ? 3 : 4,
-                              backgroundColor: isPlayingRecorded ? '#ff4d4d' : '#4483ff'
-                            }}
+                            className={`shadow-lg flex items-center justify-center transition-all border-white ${isPlayingRecorded ? 'bg-red-500' : 'bg-sky-400'}`}
+                            style={{ width: S ? 40 : 64, height: S ? 40 : 64, borderRadius: '50%', borderWidth: S ? 3 : 4 }}
                           >
                             <i
                               className={`bi ${isPlayingRecorded ? 'bi-stop-fill' : 'bi-play-fill'} text-white ${!isPlayingRecorded && 'pl-1'}`}
@@ -812,8 +809,8 @@ export default function SoundEditor() {
                         </button>
                         <button
                           onClick={handleSaveRecording}
-                          className={`flex-[2] ${S ? 'py-2' : 'py-3'} font-bold text-sm text-white shadow-lg shadow-sky-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all`}
-                          style={{ borderRadius: '32px', backgroundColor: '#4483ff' }}
+                          className={`flex-[2] bg-gradient-to-r from-sky-400 to-sky-600 ${S ? 'py-2' : 'py-3'} rounded-[32px] font-bold text-sm text-white shadow-lg shadow-sky-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all`}
+                          style={{ borderRadius: '32px' }}
                         >
                           Salvar som
                         </button>

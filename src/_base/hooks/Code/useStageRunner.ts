@@ -131,12 +131,14 @@ export function useStageRunner() {
   const MARGEM_SEGURANCA = 20;
 
   const clampX = (x: number, sprite?: SpriteData) => {
-    const lim = STAGE_LIMIT_X;
+    const spriteW = ((sprite?.width || 0) * (sprite?.size || 100)) / 100;
+    const lim = STAGE_LIMIT_X + spriteW / 2 - MARGEM_SEGURANCA;
     return Math.max(-lim, Math.min(lim, x));
   };
 
   const clampY = (y: number, sprite?: SpriteData) => {
-    const lim = STAGE_LIMIT_Y;
+    const spriteH = ((sprite?.height || 0) * (sprite?.size || 100)) / 100;
+    const lim = STAGE_LIMIT_Y + spriteH / 2 - MARGEM_SEGURANCA;
     return Math.max(-lim, Math.min(lim, y));
   };
   const normalizeAngle = (angle: number) => {
@@ -207,7 +209,8 @@ export function useStageRunner() {
           },
           true,
         );
-        getCollisionEngine()?.clearCache();
+
+        await yieldFrame();
       }
     },
     [projectService, checkExecution, yieldFrame, clampX, clampY],
@@ -228,7 +231,7 @@ export function useStageRunner() {
           },
           true,
         );
-        getCollisionEngine()?.clearCache();
+        await yieldFrame();
       }
     },
     [projectService, checkExecution, yieldFrame],
@@ -246,7 +249,7 @@ export function useStageRunner() {
 
       const sprite = projectService.getSpriteById(id);
       projectService.updateSprite(id, { x: clampX(x, sprite), y: clampY(y, sprite) });
-      getCollisionEngine()?.clearCache();
+      await yieldFrame();
     },
     [projectService, checkExecution, yieldFrame, clampX, clampY],
   );
@@ -265,7 +268,7 @@ export function useStageRunner() {
 
       const sprite = projectService.getSpriteById(id);
       projectService.updateSprite(id, { x: clampX(numX, sprite) }, true);
-      getCollisionEngine()?.clearCache();
+      await yieldFrame();
     },
     [projectService, checkExecution, yieldFrame, clampX],
   );
@@ -284,7 +287,7 @@ export function useStageRunner() {
 
       const sprite = projectService.getSpriteById(id);
       projectService.updateSprite(id, { y: clampY(numY, sprite) }, true);
-      getCollisionEngine()?.clearCache();
+      await yieldFrame();
     },
     [projectService, checkExecution, yieldFrame, clampY],
   );
@@ -413,8 +416,8 @@ export function useStageRunner() {
 
         const spriteW = ((sprite.width || 0) * (sprite.size || 100)) / 100;
         const spriteH = ((sprite.height || 0) * (sprite.size || 100)) / 100;
-        const limitX = STAGE_LIMIT_X;
-        const limitY = STAGE_LIMIT_Y;
+        const limitX = STAGE_LIMIT_X + spriteW / 2 - MARGEM_SEGURANCA;
+        const limitY = STAGE_LIMIT_Y + spriteH / 2 - MARGEM_SEGURANCA;
 
         if (newX <= -limitX && vx < 0) {
           newAngle = -sprite.angle;
@@ -559,7 +562,6 @@ export function useStageRunner() {
           },
           true,
         );
-        getCollisionEngine()?.clearCache();
       }
     },
     [projectService, checkExecution],
@@ -686,15 +688,6 @@ export function useStageRunner() {
     },
     [projectService, checkExecution],
   );
-  
-  const setDraggable = useCallback(
-    (draggable: boolean, targetId?: string) => {
-      if (!checkExecution()) return;
-      const id = targetId || projectService.getActiveSpriteId();
-      projectService.updateSprite(id, { draggable });
-    },
-    [projectService, checkExecution],
-  );
 
   // --- Ações de Mouse & Teclado ---
 
@@ -807,7 +800,7 @@ export function useStageRunner() {
       // Fallback para getActiveSpriteId() apenas quando callerSpriteId não é fornecido
       // (compatibilidade com chamadas diretas sem contexto de execução).
       const idToClone = targetId === 'myself' ? callerSpriteId || projectService.getActiveSpriteId() : targetId;
-      const newClone = projectService.createClone(idToClone);
+      const newClone = projectService.duplicateSprite(idToClone);
 
       if (newClone) {
         console.log(`[useStageRunner] Clone criado: ${newClone.id} a partir de ${idToClone}`);
@@ -969,13 +962,12 @@ export function useStageRunner() {
     if (timerStartRef.current === 0) timerStartRef.current = Date.now();
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isRunningRef.current) return;
       const matchedKey = normalizeKey(e.key);
 
       // Marca como ativa para blocos "tecla pressionada?"
       keysActiveRef.current[matchedKey] = true;
       keysActiveRef.current['any'] = true; // Scratch: 'any' key is true if any key is down
-
-      if (!isRunningRef.current) return;
 
       const listeners = keyListenersRef.current[matchedKey];
       if (listeners) {
@@ -1410,8 +1402,6 @@ export function useStageRunner() {
       changeVolume,
       getVolume,
       updateMonitorValue,
-      setDraggable,
-
     }),
     [
       isRunning,
@@ -1471,8 +1461,6 @@ export function useStageRunner() {
       changeVolume,
       getVolume,
       updateMonitorValue,
-      setDraggable,
-
     ],
   );
 }

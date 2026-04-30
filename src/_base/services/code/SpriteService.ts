@@ -35,26 +35,25 @@ export class SpriteService {
     this.sprites = [
       {
         id: 'sprite1',
-        name: 'Tobi',
+        name: 'Ator 1',
         x: 0,
         y: 0,
         angle: 90,
         size: 100,
         visible: true,
         rotationStyle: 'all around',
-        costume: '/svg/spriteLibrary/Tobi/tobi_costume1.svg',
+        costume: '/svg/spriteLibrary/Gato/costume1.svg',
         currentCostumeId: 'c1',
         costumes: [
-          { id: 'c1', name: 'tobi_costume1', url: '/svg/spriteLibrary/Tobi/tobi_costume1.svg' },
-          { id: 'c2', name: 'tobi_costume2', url: '/svg/spriteLibrary/Tobi/tobi_costume2.svg' },
+          { id: 'c1', name: 'costume1', url: '/svg/spriteLibrary/Gato/costume1.svg' },
+          { id: 'c2', name: 'costume2', url: '/svg/spriteLibrary/Gato/costume2.svg' },
         ],
-        sounds: [{ id: 'sound1', name: 'Latido', url: '/song/tobi_sound.mp3', format: 'mp3' }],
+        sounds: [{ id: 'sound1', name: 'Meow', url: '/song/Meow.wav', format: 'wav' }],
         currentSoundId: 'sound1',
         volume: 100,
         soundEffects: {},
         bubbleText: '',
         bubbleType: null,
-        draggable: false,
         blocks: undefined,
         code: '',
       },
@@ -121,10 +120,8 @@ export class SpriteService {
   public async addSprite(file?: File): Promise<void> {
     const newId = `sprite${Date.now()}`;
 
-    const BLANK_SVG = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgwIiBoZWlnaHQ9IjM2MCIgdmlld0JveD0iMCAwIDQ4MCAzNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PC9zdmc+';
-
-    const createSprite = (url: string = BLANK_SVG, costumeName: string = 'fantasia1'): SpriteData => {
-      const isBlank = url === BLANK_SVG;
+    const createSprite = (url: string = '/svg/spriteLibrary/Gato/costume1.svg', costumeName: string = 'costume1'): SpriteData => {
+      const isDefault = url === '/svg/spriteLibrary/Gato/costume1.svg';
       return {
         id: newId,
         name: `Ator ${this.sprites.length + 1}`,
@@ -136,14 +133,18 @@ export class SpriteService {
         rotationStyle: 'all around',
         costume: url,
         currentCostumeId: 'c1',
-        costumes: [{ id: 'c1', name: costumeName, url: url }],
+        costumes: isDefault
+          ? [
+              { id: 'c1', name: 'costume1', url: '/svg/spriteLibrary/Gato/costume1.svg' },
+              { id: 'c2', name: 'costume2', url: '/svg/spriteLibrary/Gato/costume2.svg' },
+            ]
+          : [{ id: 'c1', name: costumeName, url: url }],
         sounds: [],
         currentSoundId: null,
         volume: 100,
         soundEffects: {},
         bubbleText: '',
         bubbleType: null,
-        draggable: false,
         blocks: {
           blocks: { languageVersion: 0, blocks: [] },
           variables: [],
@@ -199,7 +200,6 @@ export class SpriteService {
       soundEffects: {},
       bubbleText: '',
       bubbleType: null,
-      draggable: false,
       blocks: {
         blocks: { languageVersion: 0, blocks: [] },
         variables: [],
@@ -244,7 +244,7 @@ export class SpriteService {
     this.emitter.emit('spritesChange', this.sprites);
   }
 
-  public createClone(id: string): SpriteData | undefined {
+  public duplicateSprite(id: string): SpriteData | undefined {
     const sprite = this.getSprites().find((s) => s.id === id);
     if (!sprite) return undefined;
 
@@ -274,25 +274,6 @@ export class SpriteService {
     this.stateRevision++;
     this.emitter.emit('spritesChange', [...this.sprites]);
     return clone;
-  }
-
-  public duplicateSprite(id: string): SpriteData | undefined {
-    const sprite = this.getSprites().find((s) => s.id === id);
-    if (!sprite) return undefined;
-
-    const newId = `sprite${Date.now()}`;
-    const newSprite: SpriteData = {
-      ...JSON.parse(JSON.stringify(sprite)),
-      id: newId,
-      name: `${sprite.name} 2`,
-      isClone: false,
-      parentId: undefined,
-    };
-
-    this.sprites.push(newSprite);
-    this.stateRevision++;
-    this.emitter.emit('spritesChange', [...this.sprites]);
-    return newSprite;
   }
 
   public clearClones(): void {

@@ -5,7 +5,6 @@
 import React from 'react';
 import Image from 'next/image';
 import { SpriteData } from '@/_base/domain/entities';
-import { ScratchAddButton } from '../shared/ScratchAddButton';
 
 interface SpriteGridProps {
   sprites: SpriteData[];
@@ -16,8 +15,8 @@ interface SpriteGridProps {
   addSurpriseSprite: () => void;
   openSpriteGallery: () => void;
   openPaintEditor: () => void;
+  buttonScale: number;
   spriteInputRef: React.RefObject<HTMLInputElement | null>;
-  duplicateSprite: (id: string) => void;
 }
 
 export function SpriteGrid({
@@ -28,23 +27,9 @@ export function SpriteGrid({
   addSurpriseSprite,
   openSpriteGallery,
   openPaintEditor,
+  buttonScale,
   spriteInputRef,
-  duplicateSprite,
 }: SpriteGridProps) {
-  const [contextMenu, setContextMenu] = React.useState<{ x: number; y: number; spriteId: string } | null>(null);
-
-  React.useEffect(() => {
-    const handleClick = () => setContextMenu(null);
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
-  }, []);
-
-  const handleContextMenu = (e: React.MouseEvent, spriteId: string) => {
-    e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY, spriteId });
-  };
-
-
   return (
     <div className="flex-grow-1 position-relative bg-white" style={{ minHeight: 0, overflow: 'visible' }}>
       {/* SCROLL CONTAINER INTERNO */}
@@ -58,7 +43,6 @@ export function SpriteGrid({
                 cursor: 'pointer',
                 border: activeSpriteId === sprite.id ? '1px solid #4C97FF' : '1px solid #ccc',
               }}
-              onContextMenu={(e) => handleContextMenu(e, sprite.id)}
               onClick={() => {
                 selectSprite(sprite.id);
                 window.dispatchEvent(new CustomEvent('flash-sprite', { detail: sprite.id }));
@@ -122,54 +106,34 @@ export function SpriteGrid({
       </div>
 
       {/* Scratch-style Hover Menu for Adding Sprites */}
-      <ScratchAddButton
-        mainLabel="Selecione um Ator"
-        mainTitle="Escolher um Ator"
-        mainIcon="bi-person-plus-fill"
-        onMainClick={() => openSpriteGallery()}
-        items={[
-          { icon: 'bi-upload', title: 'Carregar Ator', onClick: () => spriteInputRef.current?.click() },
-          { icon: 'bi-stars', title: 'Surpresa', onClick: () => addSurpriseSprite() },
-          { icon: 'bi-brush', title: 'Pintar', onClick: () => openPaintEditor() },
-          { icon: 'bi-search', title: 'Procurar', onClick: () => openSpriteGallery() },
-        ]}
-      />
-
-      {/* Context Menu */}
-      {contextMenu && (
-        <div
-          className="fixed bg-white shadow-[0_2px_10px_rgba(0,0,0,0.15)] border border-gray-200 py-1 rounded-md z-[9999]"
-          style={{
-            top: contextMenu.y,
-            left: contextMenu.x,
-            minWidth: '150px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            className="w-full text-left px-4 py-2 hover:bg-slate-100 text-slate-700 border-0 bg-transparent transition-colors"
-            onClick={() => {
-              duplicateSprite(contextMenu.spriteId);
-              setContextMenu(null);
-            }}
-            style={{ fontSize: '13px', fontWeight: '500' }}
-          >
-            duplicar
+      <div className="add-sprite-container" style={{ transform: `scale(${buttonScale})`, transformOrigin: 'bottom right' }}>
+        <div className="add-sprite-label shadow-sm">Selecione um Ator</div>
+        <div className="add-sprite-menu shadow">
+          {/* 1. Upload Button */}
+          <button className="add-sprite-item" onClick={() => spriteInputRef.current?.click()} title="Carregar Ator">
+            <i className="bi bi-upload"></i>
           </button>
-          <div className="h-[1px] bg-gray-200 my-1"></div>
-          <button
-            className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 border-0 bg-transparent transition-colors"
-            onClick={() => {
-              deleteSprite(contextMenu.spriteId);
-              setContextMenu(null);
-            }}
-            style={{ fontSize: '13px', fontWeight: '500' }}
-          >
-            apagar
+
+          {/* 2. Surprise Button */}
+          <button className="add-sprite-item" onClick={() => addSurpriseSprite()} title="Surpresa">
+            <i className="bi bi-stars"></i>
+          </button>
+
+          {/* 3. Paint Button */}
+          <button className="add-sprite-item" onClick={() => openPaintEditor()} title="Pintar">
+            <i className="bi bi-brush"></i>
+          </button>
+
+          {/* 4. Search Button */}
+          <button className="add-sprite-item" onClick={() => openSpriteGallery()} title="Procurar">
+            <i className="bi bi-search"></i>
           </button>
         </div>
-      )}
+
+        <button className="btn btn-primary btn-add-sprite-main shadow" title="Escolher um Ator" onClick={() => openSpriteGallery()}>
+          <i className="bi bi-person-plus-fill"></i>
+        </button>
+      </div>
     </div>
   );
 }

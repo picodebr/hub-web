@@ -1,5 +1,11 @@
 /**
  * Página Principal (Home) - Orquestrador da Interface.
+ *
+ * Este é o componente central onde o Blockly e o Palco coabitam. Ele gerencia:
+ * 1. O layout responsivo entre o editor de blocos e o palco de simulação.
+ * 2. A transição para o modo de "Upload" (C++ Preview).
+ * 3. A integração com hooks globais de execução (`useCodeExecution`) e entrada (`useKeyboardInput`).
+ * 4. O registro do workspace do Blockly no contexto global para persistência.
  */
 'use client';
 
@@ -8,7 +14,7 @@ import CodePreview from './components/CodePreview';
 import { useCodeExecution } from '@/_base/hooks/Code/useCodeExecution';
 import { getCodeProject } from '@/_base/services/codeProject';
 import { cookieManager } from '@/_base/utils';
-import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
+import { ICodeProject, IProjectSourceCode } from '@/_base/interfaces/codeProject/IProject';
 import { GetServerSideProps } from 'next';
 import { isUuid } from 'uuidv4';
 import { useUI } from '@/_base/context/UIContext';
@@ -45,11 +51,13 @@ const NewCode: React.FC<IProps> = ({ project }) => {
 
   const blocklyRef = useRef<BlocklyWorkspaceRef | null>(null);
 
+  // Registra blocklyRef no ExecutionRunnerContext para que Navbar/Runner possam acessá-lo
   const { setBlocklyWorkspaceRef } = runnerContext;
   useEffect(() => {
     setBlocklyWorkspaceRef(blocklyRef);
   }, [setBlocklyWorkspaceRef]);
 
+  // --- HOOKS ---
   const { handleRun, handleStop, handleBlockClick, handleRunCode } = useCodeExecution(blocklyRef);
 
   useEffect(() => {
@@ -58,6 +66,7 @@ const NewCode: React.FC<IProps> = ({ project }) => {
     }
   }, [isUploadMode, handleStop]);
 
+  // --- MODAL EVENT LISTENERS ---
   useEffect(() => {
     const handleConfirmRestore = () => {
       handleStop();
@@ -68,6 +77,7 @@ const NewCode: React.FC<IProps> = ({ project }) => {
     return () => window.removeEventListener('confirm-restore-board', handleConfirmRestore);
   }, [handleStop, restoreBoard]);
 
+  // --- UI STATE ---
   const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
 
   return (
@@ -77,12 +87,15 @@ const NewCode: React.FC<IProps> = ({ project }) => {
         <StageBridge />
 
         <div className="container-fluid flex-grow-1 d-flex flex-column px-0" style={{ overflow: 'hidden' }}>
-          <div className="d-flex h-100 flex-nowrap w-100">
+          <div className="row h-100 g-0 flex-nowrap">
             {/* BLOCKLY CONTAINER */}
             <div
               className="p-0"
               id="blockly-container"
               style={{
+                flex: isUploadMode ? '0 0 100%' : '1 1 0%',
+                width: isUploadMode ? '100%' : 'auto',
+                maxWidth: isUploadMode ? '100%' : 'none',
                 minWidth: 0,
                 border: `none`,
               }}
@@ -90,15 +103,19 @@ const NewCode: React.FC<IProps> = ({ project }) => {
               <BlocklyWorkspace ref={blocklyRef} onBlockClick={handleBlockClick} onRunCode={handleRunCode} />
             </div>
 
+            {/* ML Recognition floating window (STAGE MODE ONLY) */}
             {!isUploadMode && <MLRecognitionWindow isOpen={isRecognitionWindowOpen} onClose={() => setIsRecognitionWindowOpen(false)} />}
 
+            {/* Warning Modal for Disconnected Board Runs */}
             <BoardConnectionWarningModal />
             <DeviceLostModal />
             <RestoreConfirmModal />
             <UploadTimeoutModal />
 
+            {/* Floating Code Preview Overlay - Always render for Smooth Transitions */}
             <CodePreview isOpen={isCodePanelOpen} isUploadMode={isUploadMode} onToggle={() => setIsCodePanelOpen(false)} />
 
+            {/* Floating button to reopen code panel when hidden - Animated */}
             <button
               className="btn shadow-sm position-absolute d-flex align-items-center justify-content-center"
               style={{
@@ -135,32 +152,28 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                 flexDirection: 'column',
                 paddingLeft: '12px',
                 paddingRight: '12px',
-                paddingTop: '0px'
+                paddingTop: '0px',
               }}
             >
               {!isUploadMode && (
                 <>
+                  {/* 1. STAGE SECTION (FLEX AUTO TO SHRINK-WRAP STAGE HEIGHT) */}
                   <div
-                    className={`stage-section d-flex flex-column ${isStageFullScreen ? 'align-items-center fullscreen' : 'align-items-center'} w-100`}
+                    className={`stage-section d-flex flex-column ${isStageFullScreen ? 'align-items-center fullscreen' : 'align-items-start'} w-100`}
                     style={{ flex: '0 0 auto', backgroundColor: '#e9eef2' }}
                   >
                     <div
                       className="stage-header w-100 d-flex align-items-center px-3"
-                      style={{ backgroundColor: '#e9eef2', minHeight: '52px', position: isStageFullScreen ? 'absolute' : 'relative' }}
+                      style={{ backgroundColor: '#e9eef2', minHeight: '52px', position: 'relative' }}
                     >
+                      {/* LEFTSIDE: Controles do Palco (Bandeiras) */}
                       <div className="d-flex align-items-center justify-content-start" style={{ flex: 1 }}>
                         <div className="stage-controls d-flex align-items-center mb-0 gap-3">
                           <button
                             id="btnGo"
                             className={`btn btn-link p-0 btn-go d-flex align-items-center ${runnerContext.isAnyCodeRunning ? 'inactive' : 'active'}`}
                             title="Play"
-                            onClick={(e) => {
-                              handleRun();
-                              e.currentTarget.blur();
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === ' ') e.preventDefault();
-                            }}
+                            onClick={handleRun}
                           >
                             <i className="bi bi-play-fill" style={{ fontSize: '1.8rem' }}></i>
                           </button>
@@ -168,32 +181,21 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                             id="btnStop"
                             className={`btn btn-link p-0 btn-stop d-flex align-items-center ${runnerContext.isAnyCodeRunning ? 'active' : 'inactive'}`}
                             title="Parar"
-                            onClick={(e) => {
-                              handleStop();
-                              e.currentTarget.blur();
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === ' ') e.preventDefault();
-                            }}
+                            onClick={handleStop}
                           >
                             <i className="bi bi-octagon-fill" style={{ fontSize: '1.4rem' }}></i>
                           </button>
                         </div>
                       </div>
 
+                      {/* RIGHTSIDE: Botões Interagir/Fechar */}
                       <div className="d-flex align-items-center justify-content-end gap-3" style={{ flex: 1 }}>
                         <button
                           id="btnMaximize"
                           className="btn btn-link p-0 d-flex align-items-center text-secondary"
                           title={isStageFullScreen ? 'Sair da Tela Cheia' : 'Tela Cheia'}
                           style={{ transition: 'color 0.2s' }}
-                          onClick={(e) => {
-                            setIsStageFullScreen(!isStageFullScreen);
-                            e.currentTarget.blur();
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === ' ') e.preventDefault();
-                          }}
+                          onClick={() => setIsStageFullScreen(!isStageFullScreen)}
                         >
                           <i className={`bi ${isStageFullScreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'}`} style={{ fontSize: '1.1rem' }}></i>
                         </button>
@@ -224,7 +226,8 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                     <StageArea />
                   </div>
 
-                  <div className="management-section flex-grow-1 d-flex flex-column align-items-center w-100">
+                  {/* 2. MANAGEMENT SECTION (DYNAMIC SIZE & SCROLL) */}
+                  <div className="management-section flex-grow-1 d-flex flex-column">
                     <SpriteList />
                   </div>
                 </>
@@ -238,7 +241,7 @@ const NewCode: React.FC<IProps> = ({ project }) => {
 };
 export default NewCode;
 
-export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
+export const getServerSideProps: GetServerSideProps = async ({ req, query, params }) => {
   cookieManager.updateToken(req);
 
   const projectId = query.project_id || ``;

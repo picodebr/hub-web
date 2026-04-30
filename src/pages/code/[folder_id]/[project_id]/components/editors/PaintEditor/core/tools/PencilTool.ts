@@ -1,14 +1,15 @@
 /**
- * BrushTool - Ferramenta de desenho livre em forma de Blobs (como no Scratch).
+ * PencilTool - Ferramenta de desenho livre (Lápis).
  * 
  * Responsabilidade: Gerar caminhos (Paths) baseados no rastro do mouse, 
- * aplicar suavização (Smoothing) e converter o Stroke em um Filled Path (Blob).
- * Isso permite a união com outras formas da mesma cor.
+ * aplicar suavização (Smoothing) para evitar serrilhados e fechar 
+ * automaticamente o caminho se as extremidades estiverem próximas, 
+ * facilitando o preenchimento posterior.
  */
 import * as paper from 'paper';
-import { BaseTool } from '../BaseTool';
+import { BaseTool } from './BaseTool';
 
-export class BrushTool extends BaseTool {
+export class PencilTool extends BaseTool {
     private currentPath: paper.Path | null = null;
 
     protected setupHandlers() {
@@ -26,6 +27,7 @@ export class BrushTool extends BaseTool {
             const realPoint = this.getRealPoint(event);
             if (this.currentPath) {
                 this.currentPath.add(realPoint);
+                this.onLiveSync?.();
             }
         };
 
@@ -40,6 +42,9 @@ export class BrushTool extends BaseTool {
 
                     if (dist < threshold) {
                         this.currentPath.closed = true;
+                        // O SEGREDO: Definimos um preenchimento com Alpha 0 (quase transparente)
+                        // Isso faz com que o Paper.js detecte o "interior" no hitTest,
+                        // permitindo que o balde de tinta funcione ao clicar dentro.
                         this.currentPath.fillColor = new this.scope.Color(0, 0, 0, 0.00001);
                         this.currentPath.lastSegment.point = this.currentPath.firstSegment.point;
                     }
@@ -47,9 +52,6 @@ export class BrushTool extends BaseTool {
 
                 this.currentPath.simplify(1);
                 this.currentPath.smooth({ type: 'catmull-rom', factor: 0.5 });
-
-                this.drawingLayer.addChild(this.currentPath);
-                
                 this.saveHistory();
                 this.currentPath = null;
             }

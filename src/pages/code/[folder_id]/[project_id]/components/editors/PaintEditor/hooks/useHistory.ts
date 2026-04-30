@@ -25,20 +25,19 @@ export function useHistory(scope: paper.PaperScope | null, onSync: () => void) {
 
     const managerRef = useRef<HistoryManager | null>(null);
 
+    // Cria HistoryManager uma vez quando o escopo está pronto
+    useEffect(() => {
+        if (!scope) return;
+        managerRef.current = new HistoryManager(scope, () => onSyncRef.current());
+        return () => { managerRef.current = null; };
+    }, [scope]);
+
     const updateStatus = useCallback(() => {
         if (managerRef.current) {
             setCanUndo(managerRef.current.canUndo());
             setCanRedo(managerRef.current.canRedo());
         }
     }, []);
-
-    // Cria HistoryManager uma vez quando o escopo está pronto
-    useEffect(() => {
-        if (!scope) return;
-        managerRef.current = new HistoryManager(scope, () => onSyncRef.current());
-        updateStatus();
-        return () => { managerRef.current = null; };
-    }, [scope, updateStatus]);
 
     const saveHistory = useCallback(() => {
         managerRef.current?.saveHistory();

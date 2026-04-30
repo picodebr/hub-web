@@ -2,16 +2,12 @@ import { WebGLRenderer } from './WebGLRenderer';
 import { SpriteData } from '@/_base/domain/entities';
 
 // Passo de amostragem em pixels do palco (granularidade da colisão)
-const SAMPLE_STEP = 1;
+const SAMPLE_STEP = 4;
 
 interface AlphaMask {
   data: Uint8Array; // canal alpha da imagem original (1 byte por pixel)
   w: number; // largura original da imagem
   h: number; // altura original da imagem
-  contentX: number; // x inicial do conteúdo real
-  contentY: number; // y inicial do conteúdo real
-  contentW: number; // largura do conteúdo real
-  contentH: number; // altura do conteúdo real
 }
 
 export class CollisionEngine {
@@ -40,11 +36,6 @@ export class CollisionEngine {
     this.currentFrameId++;
   }
 
-  /** Limpa o cache de colisão manualmente (útil após mudar fantasia ou posição no mesmo frame). */
-  public clearCache(): void {
-    this.touchCache.clear();
-  }
-
   // ─── Construção de máscara (uma vez por URL) ─────────────────────────────
 
   private ensureMask(url: string): void {
@@ -54,55 +45,17 @@ export class CollisionEngine {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
-      let w = img.naturalWidth || img.width;
-      let h = img.naturalHeight || img.height;
-
-      // Robustez para SVGs: Se o navegador usar o tamanho padrão (ex: 300x150) por falta de width/height,
-      // tentamos inferir o tamanho real se for um SVG que exportamos ou conhecemos.
-      // No PiCode, o artboard padrão é 480x360.
-      if ((url.includes('.svg') || url.startsWith('data:image/svg+xml')) && (w === 300 || w === 0)) {
-         // Fallback conservador: se detectamos o comportamento de "tamanho padrão" do navegador,
-         // e é um SVG, assumimos o 480x360 do palco para evitar o "shrink" do hit-test.
-         w = 480;
-         h = 360;
-      }
-
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
       this.buildCanvas.width = w;
       this.buildCanvas.height = h;
       this.buildCtx.clearRect(0, 0, w, h);
-      this.buildCtx.drawImage(img, 0, 0, w, h);
+      this.buildCtx.drawImage(img, 0, 0);
       const raw = this.buildCtx.getImageData(0, 0, w, h).data;
-      // Extrai só o canal alpha para economizar memória e calcula bounds reais
+      // Extrai só o canal alpha para economizar memória
       const alpha = new Uint8Array(w * h);
-      let minX = w, minY = h, maxX = 0, maxY = 0;
-      let hasPixels = false;
-
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const a = raw[(y * w + x) * 4 + 3];
-          alpha[y * w + x] = a;
-          if (a > 10) {
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
-            hasPixels = true;
-          }
-        }
-      }
-
-      if (!hasPixels) {
-        minX = 0; minY = 0; maxX = w; maxY = h;
-      }
-
-      this.maskCache.set(url, { 
-        data: alpha, 
-        w, h,
-        contentX: minX,
-        contentY: minY,
-        contentW: maxX - minX + 1,
-        contentH: maxY - minY + 1
-      });
+      for (let i = 0; i < w * h; i++) alpha[i] = raw[i * 4 + 3];
+      this.maskCache.set(url, { data: alpha, w, h });
     };
     img.onerror = () => this.maskCache.delete(url);
     img.src = url;
@@ -176,26 +129,14 @@ export class CollisionEngine {
       this.lastCacheFrameId = this.currentFrameId;
     }
 
-    // Carrega a máscara de A antes do AABB para usar as dimensões reais da imagem.
-    // sprite.width/height podem ser undefined até o renderer renderizar o primeiro frame.
-    if (spriteA.costume) this.ensureMask(spriteA.costume);
-    const mA = spriteA.costume ? this.maskCache.get(spriteA.costume) : undefined;
+    const wA = (spriteA.width || 50) * ((spriteA.size || 100) / 100);
+    const hA = (spriteA.height || 50) * ((spriteA.size || 100) / 100);
 
-    // Usa dimensões da máscara (reais) quando disponíveis; fallback para sprite.width ou 50px.
-    const imgWA = (mA && mA !== 'loading') ? mA.w : (spriteA.width || 50);
-    const imgHA = (mA && mA !== 'loading') ? mA.h : (spriteA.height || 50);
-    const wA = imgWA * ((spriteA.size || 100) / 100);
-    const hA = imgHA * ((spriteA.size || 100) / 100);
+    if (spriteA.costume) this.ensureMask(spriteA.costume);
 
     for (const cand of candidates) {
-      // Carrega a máscara do candidato antes do AABB pelo mesmo motivo.
-      if (cand.costume) this.ensureMask(cand.costume);
-      const mB = cand.costume ? this.maskCache.get(cand.costume) : undefined;
-
-      const imgWB = (mB && mB !== 'loading') ? mB.w : (cand.width || 50);
-      const imgHB = (mB && mB !== 'loading') ? mB.h : (cand.height || 50);
-      const wB = imgWB * ((cand.size || 100) / 100);
-      const hB = imgHB * ((cand.size || 100) / 100);
+      const wB = (cand.width || 50) * ((cand.size || 100) / 100);
+      const hB = (cand.height || 50) * ((cand.size || 100) / 100);
 
       // AABB: descarte rápido
       if (Math.abs(spriteA.x - cand.x) >= (wA + wB) / 2 || Math.abs(spriteA.y - cand.y) >= (hA + hB) / 2) continue;
@@ -209,7 +150,12 @@ export class CollisionEngine {
         continue;
       }
 
-      // Máscara ainda carregando → resultado conservador (assume colisão)
+      if (cand.costume) this.ensureMask(cand.costume);
+
+      const mA = spriteA.costume ? this.maskCache.get(spriteA.costume) : undefined;
+      const mB = cand.costume ? this.maskCache.get(cand.costume) : undefined;
+
+      // Máscara ainda carregando → AABB conservador
       if (!mA || mA === 'loading' || !mB || mB === 'loading') return true;
 
       // Pré-computa rotação inversa (1× por candidato, não por ponto amostrado)
@@ -245,25 +191,10 @@ export class CollisionEngine {
     if (!sprite.costume) return true;
     this.ensureMask(sprite.costume);
     const m = this.maskCache.get(sprite.costume);
-    if (!m || m === 'loading') return false; // enquanto carrega ou se falhar, ignora (evita drag no palco inteiro)
+    if (!m || m === 'loading') return true; // ainda carregando → permite interação
 
     const rot = this.getInverseRot(sprite);
     return this.sampleAlpha(sprite, m, stageX, stageY, rot.cos, rot.sin) > 10;
-  }
-
-  public getContentBounds(url: string | null) {
-    if (!url) return null;
-    this.ensureMask(url);
-    const m = this.maskCache.get(url);
-    if (!m || m === 'loading') return null;
-    return {
-      x: m.contentX,
-      y: m.contentY,
-      w: m.contentW,
-      h: m.contentH,
-      fullW: m.w,
-      fullH: m.h
-    };
   }
 
   // ─── WebGL: isTouchingColor ───────────────────────────────────────────────
@@ -289,7 +220,6 @@ export class CollisionEngine {
 
   public async isTouchingColor(targetSpriteId: string, hexColor: string, backdropUrl: string | null, sprites: SpriteData[]): Promise<boolean> {
     const gl = this.renderer.getGL();
-    if (!gl) return false;
     const W = gl.canvas.width;
     const H = gl.canvas.height;
 
@@ -328,7 +258,6 @@ export class CollisionEngine {
     sprites: SpriteData[],
   ): Promise<boolean> {
     const gl = this.renderer.getGL();
-    if (!gl) return false;
     const W = gl.canvas.width;
     const H = gl.canvas.height;
 

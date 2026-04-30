@@ -28,7 +28,6 @@ export function usePaperProject(canvasRef: React.RefObject<HTMLCanvasElement | n
     // Cria Layers
     const guideLayer = new newScope.Layer({ name: 'guides' });
     const drawingLayer = new newScope.Layer({ name: 'drawing' });
-    const uiLayer = new newScope.Layer({ name: 'ui' });
 
     // Desenha os limites da tela (Stage Artboard) na camada de guias
     guideLayer.activate();

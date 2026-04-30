@@ -215,7 +215,7 @@ export default function RocketLoader({ isVisible, phase, errorMessage }: RocketL
         .is-failing { animation: failurePulse 2s infinite; }
     `;
 
-    const portalContent = (
+    return createPortal(
         <>
             <style>{componentStyles}</style>
 
@@ -339,8 +339,7 @@ export default function RocketLoader({ isVisible, phase, errorMessage }: RocketL
                     )}
                 </div>
             </div>
-        </>
+        </>,
+        document.body
     );
-
-    return createPortal(portalContent as any, document.body) as any;
 }

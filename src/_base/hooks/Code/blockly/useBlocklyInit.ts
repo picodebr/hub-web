@@ -148,45 +148,13 @@ export function useBlocklyInit(params: UseBlocklyInitParams): {
 
       Blockly.defineBlocksWithJsonArray([
         {
-          type: 'variables_get',
-          message0: '%1',
-          args0: [
-            {
-              type: 'field_variable',
-              name: 'VAR',
-              variable: '',
-              variableTypes: ['Number', 'String'],
-              defaultType: 'Number',
-            },
-          ],
-          output: null,
-          style: 'variable_blocks',
-        },
-        {
-          type: 'variables_set',
-          message0: 'definir %1 como %2',
-          args0: [
-            {
-              type: 'field_variable',
-              name: 'VAR',
-              variable: '',
-              variableTypes: ['Number', 'String'],
-              defaultType: 'Number',
-            },
-            { type: 'input_value', name: 'VALUE' },
-          ],
-          previousStatement: null,
-          nextStatement: null,
-          style: 'variable_blocks',
-        },
-        {
           type: 'math_change',
-          message0: 'mudar %1 por %2',
+          message0: '%{BKY_MATH_CHANGE_TITLE}',
           args0: [
             {
               type: 'field_variable',
               name: 'VAR',
-              variable: '',
+              variable: '%{BKY_MATH_CHANGE_TITLE_ITEM}',
               variableTypes: ['Number'],
               defaultType: 'Number',
             },
@@ -195,6 +163,7 @@ export function useBlocklyInit(params: UseBlocklyInitParams): {
           previousStatement: null,
           nextStatement: null,
           style: 'variable_blocks',
+          helpUrl: '%{BKY_MATH_CHANGE_HELPURL}',
           extensions: ['math_change_tooltip'],
         },
         {
@@ -204,7 +173,6 @@ export function useBlocklyInit(params: UseBlocklyInitParams): {
             {
               type: 'field_variable',
               name: 'VAR',
-              variable: '',
               variableTypes: ['Number', 'String'],
               defaultType: 'Number',
             },
@@ -220,7 +188,6 @@ export function useBlocklyInit(params: UseBlocklyInitParams): {
             {
               type: 'field_variable',
               name: 'VAR',
-              variable: '',
               variableTypes: ['Number', 'String'],
               defaultType: 'Number',
             },
@@ -373,23 +340,17 @@ export function useBlocklyInit(params: UseBlocklyInitParams): {
         }
 
         const refreshToolbox = () => {
-          if (!workspaceRef.current || (workspaceRef.current as any).disposed) return;
-          
-          Blockly.Events.disable();
-          try {
-            const isStageSelected = activeSpriteIdRef.current === 'stage';
-            workspaceRef.current.updateToolbox(isUploadMode ? getUploadToolbox(activeExtensions) : getStageToolbox(activeExtensions, isStageSelected));
-            Blockly.svgResize(workspaceRef.current);
+          if (!workspaceRef.current) return;
+          const isStageSelected = activeSpriteIdRef.current === 'stage';
+          workspaceRef.current.updateToolbox(isUploadMode ? getUploadToolbox(activeExtensions) : getStageToolbox(activeExtensions, isStageSelected));
+          Blockly.svgResize(workspaceRef.current);
 
-            const toolbox = workspaceRef.current.getToolbox();
-            if (toolbox) {
-              (toolbox as Blockly.IToolbox).refreshSelection();
-            }
-            // Chama com 0ms para garantir que o stack de refreshSelection terminou
-            setTimeout(applyCustomCategoryIcons, 0);
-          } finally {
-            Blockly.Events.enable();
+          const toolbox = workspaceRef.current.getToolbox();
+          if (toolbox) {
+            (toolbox as Blockly.IToolbox).refreshSelection();
           }
+          // Chama com 0ms para garantir que o stack de refreshSelection terminou
+          setTimeout(applyCustomCategoryIcons, 0);
         };
         refreshToolbox();
 
@@ -421,14 +382,11 @@ export function useBlocklyInit(params: UseBlocklyInitParams): {
         if (workspaceRef.current) {
           try {
             Blockly.Events.disable(); // Evita que recycler dispare eventos durante disposal
-            const ws = workspaceRef.current;
-            (ws as any).dispose();
-          } catch (e) {
-            console.warn('[useBlocklyInit] Error during workspace disposal:', e);
+            (workspaceRef.current as unknown as { dispose: () => void }).dispose();
+          } catch {
+            /* ignore */
           } finally {
             Blockly.Events.enable();
-            workspaceRef.current = null;
-            setWorkspace(null);
           }
         }
         if (div) {

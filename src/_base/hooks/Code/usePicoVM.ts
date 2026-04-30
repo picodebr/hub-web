@@ -23,7 +23,7 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
   const runner = useExecutionRunner();
   const { sprites, activeSpriteId, backdrops, activeBackdropId, setMonitorVisibility, updateMonitorItems } = useProject();
   const { isSerialConnected, board } = useFirmware();
-  const { setShowBoardConnectionWarning, isUploadMode } = useUI();
+  const { setShowBoardConnectionWarning } = useUI();
 
   const vm = getPicoVM();
 
@@ -37,8 +37,6 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
   backdropsRef.current = backdrops;
   const activeBackdropIdRef = useRef(activeBackdropId);
   activeBackdropIdRef.current = activeBackdropId;
-  const isUploadModeRef = useRef(isUploadMode);
-  isUploadModeRef.current = isUploadMode;
 
   // ─────────────────────────────────────────────────────────
   // Highlight callback — chama setBlockHighlight no workspace visível
@@ -116,8 +114,6 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
       resetTimer: () => runner.resetTimer(),
       askAndWait: (q, id) => runner.askAndWait(q, id),
       getSpriteProperty: (t, p) => runner.getSpriteProperty(t, p),
-      setDraggable: (d, id) => runner.setDraggable(d, id),
-
 
       // State readers — leem diretamente do ProjectService (fonte de verdade)
       // IMPORTANTE: NÃO usar spritesRef.current aqui. O React state é sincronizado
@@ -189,20 +185,6 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
       // Runtime lifecycle
       clearClones: () => getProjectService().clearClones(),
 
-      // Debugging
-      debugMode: vm.debugMode,
-
-      // State writers — sincronizam runtime da VM com o ProjectService persistente
-      isUploadMode: isUploadModeRef.current,
-      updateVariableValueById: (id, val) => {
-        const mode = isUploadModeRef.current ? 'upload' : 'stage';
-        getProjectService().updateVariableValueById(mode, id, val);
-      },
-      updateListItemsById: (id, items) => {
-        const mode = isUploadModeRef.current ? 'upload' : 'stage';
-        getProjectService().updateListItemsById(mode, id, items);
-      },
-
       // Hardware board
       board: board ?? null,
     }),
@@ -213,11 +195,6 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
   // Configura a VM sempre que as dependências mudam
   // ─────────────────────────────────────────────────────────
   useEffect(() => {
-    // Injetamos globalmente para depuração via console
-    if (typeof window !== 'undefined') {
-      (window as any).__PICO_VM__ = vm;
-    }
-
     vm.configure({
       runner: vmRunner,
       getActiveWorkspace: () => blocklyRef.current?.getWorkspace() ?? null,
@@ -231,6 +208,7 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
   // ─────────────────────────────────────────────────────────
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (!getExecutionEngine().isProjectRunning()) return;
       vm.triggerKeyPress(e.key);
     };
     window.addEventListener('keydown', onKeyDown);

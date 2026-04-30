@@ -11,9 +11,13 @@ export function SpritePropertiesPanel({ displaySprite, updateSprite }: SpritePro
   const directionInputRef = useRef<HTMLInputElement>(null);
   const [isDirectionPickerOpen, setIsDirectionPickerOpen] = useState(false);
 
+  // Valores locais para os inputs (para permitir apagar tudo/vazio)
   const [localValues, setLocalValues] = useState({ x: '', y: '', size: '', angle: '' });
   const focusedField = useRef<string | null>(null);
 
+  // Sincroniza valores globais -> locais (apenas se não estiver editando o campo)
+  // Usa valores primitivos arredondados como dependências para evitar loop infinito
+  // (mesmo padrão do shouldComponentUpdate do Scratch GUI)
   const roundedX = Math.round(displaySprite.x);
   const roundedY = Math.round(displaySprite.y);
   const roundedSize = Math.round(displaySprite.size);
@@ -28,17 +32,22 @@ export function SpritePropertiesPanel({ displaySprite, updateSprite }: SpritePro
     }));
   }, [roundedX, roundedY, roundedSize, roundedAngle]);
 
+  /**
+   * Auxiliar para lidar com mudanças em campos numéricos das propriedades.
+   */
   const handleNumChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
     if (!displaySprite) return;
     const valStr = e.target.value;
 
+    // Atualiza UI local imediatamente
     setLocalValues((prev) => ({ ...prev, [field]: valStr }));
 
-    if (valStr === '-' || valStr === '.') return;
+    if (valStr === '-' || valStr === '.') return; // Permite digitar sinal de negativo ou ponto decimal
 
     let val = valStr === '' ? 0 : Number(valStr);
     if (!isNaN(val)) {
       if (field === 'angle') {
+        // Força o ângulo a se manter no formato Scratch (-179 a 180).
         let deg = val % 360;
         if (deg > 180) deg -= 360;
         if (deg <= -180) deg += 360;
@@ -51,6 +60,7 @@ export function SpritePropertiesPanel({ displaySprite, updateSprite }: SpritePro
   return (
     <div className="properties-panel border-bottom shadow-sm z-1 bg-white">
       <div className="d-flex align-items-center gap-2 mb-2">
+        {/* Nome do Ator */}
         <div className="d-flex align-items-center gap-1 flex-grow-1 overflow-hidden">
           <span className=" text-secondary text-truncate" style={{ minWidth: '35px' }}>
             Ator
@@ -64,6 +74,7 @@ export function SpritePropertiesPanel({ displaySprite, updateSprite }: SpritePro
           />
         </div>
 
+        {/* Coordenadas X e Y */}
         <div className="d-flex align-items-center gap-1">
           <span className=" text-secondary">x</span>
           <input
@@ -99,6 +110,7 @@ export function SpritePropertiesPanel({ displaySprite, updateSprite }: SpritePro
       </div>
 
       <div className="d-flex align-items-center justify-content-between gap-1 flex-wrap">
+        {/* Visibilidade (Mostrar/Esconder) */}
         <div className="d-flex align-items-center gap-1">
           <span className=" text-secondary">Mostrar</span>
           <div className="btn-group btn-group-sm">
@@ -119,6 +131,7 @@ export function SpritePropertiesPanel({ displaySprite, updateSprite }: SpritePro
           </div>
         </div>
 
+        {/* Tamanho (%) */}
         <div className="d-flex align-items-center gap-1">
           <span className=" text-secondary">Tamanho</span>
           <input
@@ -137,6 +150,7 @@ export function SpritePropertiesPanel({ displaySprite, updateSprite }: SpritePro
           />
         </div>
 
+        {/* Direção (Ângulo em graus) */}
         <div className="d-flex align-items-center gap-1 pe-1 position-relative">
           <span className=" text-secondary">Direção</span>
           <input
@@ -156,6 +170,7 @@ export function SpritePropertiesPanel({ displaySprite, updateSprite }: SpritePro
             }}
           />
 
+          {/* Modal do Seletor de Direção */}
           {isDirectionPickerOpen && (
             <DirectionPicker
               angle={displaySprite.angle}
