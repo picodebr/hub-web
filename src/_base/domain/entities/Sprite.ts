@@ -64,6 +64,8 @@ export interface SpriteData {
     isStage?: boolean;
     parentId?: string; // ID of the original sprite (if this is a clone)
     rotationStyle: 'all around' | 'left-right' | 'don\'t rotate';
+    draggable: boolean;
+
 
 
     width?: number; // Largura real calculada da imagem

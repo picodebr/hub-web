@@ -138,6 +138,24 @@ export class VariableService {
     }
   }
 
+  public updateVariableValueById(mode: 'stage' | 'upload', id: string, value: VariableValue): void {
+    const targetList = mode === 'upload' ? this.uploadVariables : this.stageVariables;
+    const v = targetList.find((x) => x.id === id);
+    if (v) {
+      v.value = value;
+      this.emitVariablesChange(mode);
+    }
+  }
+
+  public updateListItemsById(mode: 'stage' | 'upload', id: string, items: any[]): void {
+    const targetList = mode === 'upload' ? this.uploadLists : this.stageLists;
+    const l = targetList.find((x) => x.id === id);
+    if (l) {
+      l.items = items;
+      this.emitListsChange(mode);
+    }
+  }
+
   public forceSyncLists(): void {
     this.emitter.emit('stageListsChange', [...this.stageLists]);
     this.emitter.emit('uploadListsChange', [...this.uploadLists]);

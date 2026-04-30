@@ -28,7 +28,6 @@ export class PicoVM extends EventEmitter<any> {
   private targetLists = new Map<string, Map<string, unknown[]>>();
   private interpreter: BlockInterpreter | null = null;
   private config: VMConfig | null = null;
-  private _framePromise: Promise<void> | null = null;
 
   // ── Debug state ───────────────────────────────────────────
   private _debugMode = false;
@@ -37,10 +36,17 @@ export class PicoVM extends EventEmitter<any> {
   private _pauseResolvers: Array<() => void> = [];
 
   // ── Scheduler state ───────────────────────────────────────
-  /** Máximo de blocos executados por frame antes de ceder ao rAF */
-  readonly MAX_STEPS_PER_FRAME = 1000;
+  /** Máximo de blocos executados por frame antes de ceder ao rAF (Scratch style ~40) */
+  readonly MAX_STEPS_PER_FRAME = 40;
   private _frameSteps = 0;
-  private _frameScheduled = false;
+  /**
+   * Fila de continuações de threads aguardando o próximo frame.
+   * Cada thread que chama _waitOneFrame() insere seu próprio resolver aqui.
+   * Na próxima rAF, todos são retomados em ordem FIFO — round-robin por frame,
+   * equivalente ao scheduler cooperativo do Scratch.
+   */
+  private _yieldResolvers: Array<() => void> = [];
+  private _rafHandle: number | null = null;
 
   // ─────────────────────────────────────────────────────────
   // Configuração (chamada pelo hook React a cada render)
@@ -81,12 +87,13 @@ export class PicoVM extends EventEmitter<any> {
 
   /** Restaura o brilho (glow) de todos os blocos ativos no ator selecionado */
   private _refreshActiveHighlights(): void {
-    if (!this.config?.onHighlight) return;
-    const activeId = this.config.getActiveSpriteId();
+    const config = this.config;
+    if (!config || !config.onHighlight) return;
+    const activeId = config.getActiveSpriteId();
 
     for (const thread of this.threads.values()) {
       if (thread.spriteId === activeId && thread.currentBlockId) {
-        this.config.onHighlight(thread.currentBlockId, true);
+        config.onHighlight(thread.currentBlockId, true);
       }
     }
   }
@@ -161,17 +168,30 @@ export class PicoVM extends EventEmitter<any> {
     }
   }
 
+  /**
+   * Suspende a thread atual até o próximo frame de animação.
+   *
+   * Cada thread insere seu próprio resolver na fila _yieldResolvers.
+   * Quando o rAF dispara, TODOS os resolvers são chamados em ordem FIFO:
+   * Thread A roda até seu próximo yield → Thread B roda até seu próximo yield → ...
+   * Isso garante round-robin por frame — equivalente ao scheduler do Scratch.
+   */
   private _waitOneFrame(): Promise<void> {
-    if (this._framePromise) return this._framePromise;
-
-    this._framePromise = new Promise((resolve) => {
-      requestAnimationFrame(() => {
-        this._resetFrameBudget();
-        this._framePromise = null;
-        resolve();
-      });
+    return new Promise<void>((resolve) => {
+      this._yieldResolvers.push(resolve);
+      this._scheduleRaf();
     });
-    return this._framePromise;
+  }
+
+  private _scheduleRaf(): void {
+    if (this._rafHandle !== null) return;
+    this._rafHandle = requestAnimationFrame(() => {
+      this._rafHandle = null;
+      this._resetFrameBudget();
+      // Retoma todas as threads em ordem de registro (FIFO round-robin)
+      const resolvers = this._yieldResolvers.splice(0);
+      resolvers.forEach((r) => r());
+    });
   }
 
   private _resetFrameBudget(): void {
@@ -241,6 +261,16 @@ export class PicoVM extends EventEmitter<any> {
       thread.abort();
     }
     this.threads.clear();
+
+    // Cancela o rAF pendente e libera todas as threads em espera
+    if (this._rafHandle !== null) {
+      cancelAnimationFrame(this._rafHandle);
+      this._rafHandle = null;
+    }
+    // Resolve os resolvers pendentes para que as threads que estão em _waitOneFrame
+    // possam terminar normalmente (o isAborted já foi setado acima via thread.abort()).
+    const resolvers = this._yieldResolvers.splice(0);
+    resolvers.forEach((r) => r());
 
     if (stopEngine) {
       this.config?.runner?.clearClones?.();
@@ -416,8 +446,9 @@ export class PicoVM extends EventEmitter<any> {
 
     // Proxy de highlight que respeita o estado ativo da interface
     thread.highlight = (id, on) => {
-      if (spriteId === this.config?.getActiveSpriteId()) {
-        this.config.onHighlight?.(id, on);
+      const config = this.config;
+      if (config && spriteId === config.getActiveSpriteId()) {
+        config.onHighlight?.(id, on);
       }
     };
 
@@ -507,6 +538,16 @@ export class PicoVM extends EventEmitter<any> {
     const registry = getSpriteBlockRegistry();
     const ws = optWs || registry.getWorkspace(spriteId);
     if (!ws) return;
+
+    // Inicializa variáveis e listas se o estado runtime estiver vazio.
+    // Isso permite que "Testar Bloco" funcione com os dados atuais do projeto
+    // mesmo sem ter clicado na bandeira verde.
+    if (this.targetVariables.size === 0) {
+      const sprites = this.config.runner.getSprites();
+      sprites.forEach((s) => this._initializeTargetVariables(s));
+      this._initializeFromWorkspace(ws);
+    }
+
     const block = ws.getBlockById(blockId);
     if (!block) return;
 
@@ -605,11 +646,14 @@ export class PicoVM extends EventEmitter<any> {
 
   /** Define valor de variável no escopo correto */
   setVariableValue(targetId: string, varId: string, value: unknown): void {
+    if (!this.config) return;
+
     // Se a variável existe localmente, atualiza localmente
     const localVars = this.targetVariables.get(targetId);
     if (localVars && localVars.has(varId)) {
       localVars.set(varId, value);
       this._updateMonitorIfExisting(targetId, varId, value);
+      this.config.runner.updateVariableValueById?.(varId, value);
       return;
     }
 
@@ -618,15 +662,19 @@ export class PicoVM extends EventEmitter<any> {
     if (globalVars && globalVars.has(varId)) {
       globalVars.set(varId, value);
       this._updateMonitorIfExisting('stage', varId, value);
+      this.config.runner.updateVariableValueById?.(varId, value);
       return;
     }
 
     // Se não existir em lugar nenhum, cria no escopo local por segurança (comportamento Scratch)
-    if (!localVars) {
-      this.targetVariables.set(targetId, new Map());
+    let finalLocalVars = localVars;
+    if (!finalLocalVars) {
+      finalLocalVars = new Map<string, unknown>();
+      this.targetVariables.set(targetId, finalLocalVars);
     }
-    this.targetVariables.get(targetId)!.set(varId, value);
+    finalLocalVars.set(varId, value);
     this._updateMonitorIfExisting(targetId, varId, value);
+    this.config.runner.updateVariableValueById?.(varId, value);
   }
 
   /**
@@ -704,10 +752,13 @@ export class PicoVM extends EventEmitter<any> {
 
   /** Define valor de lista no escopo correto */
   setListValue(targetId: string, listId: string, items: unknown[]): void {
+    if (!this.config) return;
+
     const localLists = this.targetLists.get(targetId);
     if (localLists && localLists.has(listId)) {
       localLists.set(listId, items);
       this._notifyListMonitor(listId, items);
+      this.config.runner.updateListItemsById?.(listId, items);
       return;
     }
 
@@ -715,12 +766,18 @@ export class PicoVM extends EventEmitter<any> {
     if (globalLists && globalLists.has(listId)) {
       globalLists.set(listId, items);
       this._notifyListMonitor(listId, items);
+      this.config.runner.updateListItemsById?.(listId, items);
       return;
     }
 
-    if (!localLists) this.targetLists.set(targetId, new Map());
-    this.targetLists.get(targetId)!.set(listId, items);
+    let finalLocalLists = localLists;
+    if (!finalLocalLists) {
+      finalLocalLists = new Map<string, unknown[]>();
+      this.targetLists.set(targetId, finalLocalLists);
+    }
+    finalLocalLists.set(listId, items);
     this._notifyListMonitor(listId, items);
+    this.config.runner.updateListItemsById?.(listId, items);
   }
 
   /** Retorna os itens de uma lista (para polling externo, se necessário) */
@@ -757,6 +814,7 @@ export function getPicoVM(): PicoVM {
     _instance = new PicoVM();
     if (typeof window !== 'undefined') {
       (window as unknown as Record<string, unknown>).__picovm = _instance;
+      (window as unknown as Record<string, unknown>).__PICO_VM__ = _instance;
     }
   }
   return _instance;

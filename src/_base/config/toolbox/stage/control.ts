@@ -14,7 +14,6 @@ export const getCatControl = (isStage: boolean = false) => {
     cat.addBlock(new BlockBuilder('se_entao_senao'));
     cat.addBlock(new BlockBuilder('control_wait_until'));
     cat.addBlock(new BlockBuilder('control_repeat_until'));
-    cat.addBlock(new BlockBuilder('control_for_each'));
     cat.addBlock(new BlockBuilder('control_stop').withField('STOP_OPTION', 'all'));
 
     if (!isStage) {

@@ -310,7 +310,7 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
         const element = document.querySelector('#blocklyDiv') as HTMLElement;
         const mimetype = 'image/png';
 
-        if (element && params.source_code.mode === 'block') {
+        if (element && params.source_code?.mode === 'block') {
           const [canvas, { link, path }] = await Promise.all([
             html2canvas(element, {
               x: 380,

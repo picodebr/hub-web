@@ -227,5 +227,24 @@ export const blockSensing = [
         "message0": "dias desde 2000",
         "output": "Number",
         "colour": "#5CB1D6"
+    },
+    {
+        "type": "sensing_setdragmode",
+        "message0": "defina modo de arrasto para %1",
+        "args0": [
+            {
+                "type": "field_dropdown",
+                "name": "DRAG_MODE",
+                "options": [
+                    ["arrastável", "draggable"],
+                    ["não arrastável", "not draggable"]
+                ]
+            }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": "#5CB1D6",
+        "tooltip": "Define se o ator pode ser arrastado pelo usuário no modo tela cheia",
+        "helpUrl": ""
     }
 ];

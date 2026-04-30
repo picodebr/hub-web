@@ -12,6 +12,7 @@ export const getCatSensing = (isStage: boolean = false) => {
         cat.addBlock(new BlockBuilder('sensing_touchingcolor').withField('COLOUR', '#ff0000'));
         cat.addBlock(new BlockBuilder('sensing_coloristouchingcolor').withField('COLOUR1', '#0000ff').withField('COLOUR2', '#ff0000'));
         cat.addBlock(new BlockBuilder('sensing_distanceto'));
+        cat.addBlock(new BlockBuilder('sensing_setdragmode'));
     }
 
     // Teclado e Mouse

@@ -54,6 +54,8 @@ interface Props {
     compact?: boolean;
     /** variant: 'fill' (solid circle) or 'stroke' (hollow ring) */
     variant?: 'fill' | 'stroke';
+    /** isActive: shows a selection ring around the swatch */
+    isActive?: boolean;
 }
 
 const CHECKERED = 'conic-gradient(#e0e0e0 0% 25%, #ffffff 0% 50%, #e0e0e0 0% 75%, #ffffff 0% 100%) 0 0 / 12px 12px';
@@ -66,27 +68,39 @@ export default function HsbColorPicker({
     onTransparentToggle,
     showTransparentToggle = false,
     compact = false,
-    variant = 'fill'
+    variant = 'fill',
+    isActive = false
 }: Props) {
     const [open, setOpen] = useState(false);
-    const [hue, setHue] = useState(50);
-    const [sat, setSat] = useState(100);
-    const [bri, setBri] = useState(100);
+    
+    // Initialize HSB state directly from initialColor to avoid first-render mismatch
+    const [initialH, initialS, initialB] = hex2hsb(initialColor);
+    const [hue, setHue] = useState(initialH);
+    const [sat, setSat] = useState(initialS);
+    const [bri, setBri] = useState(initialB);
+    
     const [transparent, setTransparent] = useState(isTransparent);
     const [eyedropperSupported, setEyedropperSupported] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => { setEyedropperSupported('EyeDropper' in window); }, []);
 
+    // Keep track of the hex version of our current HSB to compare with initialColor
+    const currentHex = hsb2hex(hue, sat, bri);
+
     useEffect(() => {
         if (!initialColor || !initialColor.startsWith('#') || initialColor.length < 7) return;
+        
+        // Prevent feedback loops: only update local HSB if initialColor is different from currentHex
+        if (initialColor.toLowerCase() === currentHex.toLowerCase()) return;
+
         try {
             const [h, s, b] = hex2hsb(initialColor);
             setHue(h);
             setSat(Math.max(s, 0));
             setBri(Math.max(b, 0));
         } catch { /* ignore */ }
-    }, [initialColor]);
+    }, [initialColor, currentHex]);
 
     useEffect(() => { setTransparent(isTransparent); }, [isTransparent]);
 
@@ -98,8 +112,6 @@ export default function HsbColorPicker({
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, [open]);
-
-    const currentHex = hsb2hex(hue, sat, bri);
 
     const applyChange = useCallback((h: number, s: number, b: number) => {
         setHue(h); setSat(s); setBri(b);
@@ -171,20 +183,30 @@ export default function HsbColorPicker({
 
             <button
                 onClick={() => setOpen(!open)}
-                className={`group relative outline-none focus:outline-none overflow-hidden transition-all duration-200 flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.03)] ${compact ? 'w-10 h-10 !rounded-full p-0 bg-transparent border-2' : 'h-10 px-4 rounded-2xl border-[3px] bg-white gap-3'} ${open ? 'border-blue-400 shadow-xl scale-105' : 'border-slate-300 hover:border-blue-200 hover:shadow-lg active:scale-95'}`}
+                className={`group relative outline-none focus:outline-none transition-all duration-300 flex items-center justify-center ${
+                    compact 
+                        ? `w-10 h-10 !rounded-full bg-white p-0 shadow-sm border-2 ${isActive || open ? 'border-blue-400 ring-[3.5px] ring-blue-400/20 shadow-[0_0_20px_rgba(59,130,246,0.15)] scale-105' : 'border-slate-200 hover:border-blue-200 hover:shadow-md hover:scale-105'}` 
+                        : `h-10 px-4 rounded-2xl border-[3px] bg-white gap-3 shadow-[0_4px_12px_rgba(0,0,0,0.03)] ${open ? 'border-blue-400 shadow-xl scale-105' : 'border-slate-300 hover:border-blue-200 hover:shadow-lg active:scale-95'}`
+                }`}
             >
                 {variant === 'fill' ? (
-                    <div className="w-full h-full rounded-full border border-black/5 relative overflow-hidden flex items-center justify-center"
+                    <div className={`${compact ? 'w-7 h-7' : 'w-full h-full'} rounded-full border border-black/5 relative overflow-hidden flex items-center justify-center`}
                         style={{ background: transparent ? CHECKERED : currentHex }}>
                         {transparent && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-[140%] h-[3px] bg-red-500 -rotate-45 shadow-sm" />
+                                <div className="w-[140%] h-[3px] bg-red-500/80 -rotate-45 shadow-sm" />
                             </div>
                         )}
                     </div>
                 ) : (
-                    <div className="w-8 h-8 rounded-full border-[6px] bg-white shadow-inner shrink-0"
-                        style={{ borderColor: currentHex }} />
+                    <div className={`${compact ? 'w-7 h-7' : 'w-full h-full'} rounded-full border-[5px] relative flex items-center justify-center transition-all`}
+                        style={{ borderColor: currentHex }}>
+                         <div className="w-full h-full rounded-full bg-white flex items-center justify-center shadow-inner border border-black/5">
+                            {transparent && (
+                                <div className="w-[140%] h-[2px] bg-red-500/80 -rotate-45 shadow-sm" />
+                            )}
+                         </div>
+                    </div>
                 )}
                 {!compact && (
                     <>

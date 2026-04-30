@@ -184,14 +184,13 @@ export const blockControl = [
             {
                 "type": "field_variable",
                 "name": "VAR",
-                "variable": "item"
+                "variable": ""
             },
             {
                 "type": "field_variable",
                 "name": "LIST",
                 "variableTypes": ["list"],
-                "defaultType": "list",
-                "variable": "minha lista"
+                "defaultType": "list"
             }
         ],
         "message1": "faça %1",

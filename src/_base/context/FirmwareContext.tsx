@@ -39,6 +39,8 @@ export function FirmwareProvider({ children }: { children: ReactNode }) {
     setShowRocket(true);
     setRocketErrorMessage('');
 
+    console.log(`[Upload] Enviando código C++ para a placa:\n${uploadCode}`);
+
     try {
       await UploadFirmwareUseCase.execute(
         uploadCode,
