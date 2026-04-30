@@ -12,4 +12,5 @@ export interface IPageProps {
   isOpen: boolean;
   stopTour: () => void;
   setUser: (user: IHubUser) => void;
+  fullScreen?: boolean;
 }

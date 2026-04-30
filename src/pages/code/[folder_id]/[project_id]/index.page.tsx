@@ -547,6 +547,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
       hideHeaderOnMobile: true,
       fullScreenOnMobile: true,
       openNewCode: !!query[`allow-new-code`],
+      fullScreen: true
+
     },
   };
 };

@@ -26,6 +26,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   hideHeaderOnMobile,
   fullScreenOnMobile,
   setUser,
+  fullScreen
 }) => {
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
   const [school, setSchool] = useState<IHubUserSchool | null>(null);
@@ -77,7 +78,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '0 0.5rem 0 1rem' }}
               sx={{
                 '& > :last-child': {
-                  padding: '1rem 0.5rem 1rem 0',
+                  padding: fullScreen? `0` : '1rem 0.5rem 1rem 0',
                   // Se a sua página tiver scroll próprio, você pode precisar garantir a altura dela aqui
                 },
               }}

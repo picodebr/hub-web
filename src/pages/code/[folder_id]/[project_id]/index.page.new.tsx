@@ -1,12 +1,3 @@
-/**
- * Página Principal (Home) - Orquestrador da Interface.
- *
- * Este é o componente central onde o Blockly e o Palco coabitam. Ele gerencia:
- * 1. O layout responsivo entre o editor de blocos e o palco de simulação.
- * 2. A transição para o modo de "Upload" (C++ Preview).
- * 3. A integração com hooks globais de execução (`useCodeExecution`) e entrada (`useKeyboardInput`).
- * 4. O registro do workspace do Blockly no contexto global para persistência.
- */
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -32,7 +23,7 @@ import { DeviceLostModal } from './components/modals/DeviceLostModal';
 import { RestoreConfirmModal } from './components/modals/RestoreConfirmModal';
 import { UploadTimeoutModal } from './components/modals/UploadTimeoutModal';
 import CodeNavbar from './components/Navbar';
-import { Flex } from '@chakra-ui/react';
+import { Flex, Button } from '@chakra-ui/react'; // Importei o Button do Chakra
 
 interface IProps {
   project: ICodeProject | null;
@@ -51,13 +42,11 @@ const NewCode: React.FC<IProps> = ({ project }) => {
 
   const blocklyRef = useRef<BlocklyWorkspaceRef | null>(null);
 
-  // Registra blocklyRef no ExecutionRunnerContext para que Navbar/Runner possam acessá-lo
   const { setBlocklyWorkspaceRef } = runnerContext;
   useEffect(() => {
     setBlocklyWorkspaceRef(blocklyRef);
   }, [setBlocklyWorkspaceRef]);
 
-  // --- HOOKS ---
   const { handleRun, handleStop, handleBlockClick, handleRunCode } = useCodeExecution(blocklyRef);
 
   useEffect(() => {
@@ -66,7 +55,6 @@ const NewCode: React.FC<IProps> = ({ project }) => {
     }
   }, [isUploadMode, handleStop]);
 
-  // --- MODAL EVENT LISTENERS ---
   useEffect(() => {
     const handleConfirmRestore = () => {
       handleStop();
@@ -77,68 +65,124 @@ const NewCode: React.FC<IProps> = ({ project }) => {
     return () => window.removeEventListener('confirm-restore-board', handleConfirmRestore);
   }, [handleStop, restoreBoard]);
 
-  // --- UI STATE ---
   const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
 
+  // --- Forçar Modo Paisagem e Tela Cheia ---
+  const forceLandscapeMode = async () => {
+    try {
+      const docEl = document.documentElement;
+      if (docEl.requestFullscreen) {
+        await docEl.requestFullscreen();
+      }
+      
+      // Tenta travar a orientação usando a Screen Orientation API
+      // Nota: Nem todos os navegadores mobile (ex: Safari) suportam isso 100%
+      if (window.screen && window.screen.orientation && 'lock' in window.screen.orientation) {
+        // @ts-ignore
+        await window.screen.orientation.lock('landscape');
+      }
+    } catch (error) {
+      console.warn('Bloqueio de orientação não suportado ou negado pelo navegador:', error);
+    }
+  };
+
   return (
-    <Flex direction="column" flex="1" position="fixed" top="0" left="0" right="0" bottom="0" overflow="hidden" zIndex="100">
-      <CodeNavbar project={project} />
-      <div className="d-flex flex-column flex-grow-1 overflow-hidden" style={{ position: 'relative' }}>
-        <StageBridge />
+    <>
+      {/* 
+        ESTILOS GLOBAIS PARA O OVERLAY DE PORTRAIT 
+        Só aparecerá em telas menores que 1024px quando o celular estiver em pé.
+      */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .portrait-lock-overlay {
+          display: none;
+        }
+        @media screen and (max-width: 1024px) and (orientation: portrait) {
+          .portrait-lock-overlay {
+            display: flex !important;
+          }
+          .main-ide-content {
+            display: none !important;
+          }
+        }
+      `}} />
 
-        <div className="container-fluid flex-grow-1 d-flex flex-column px-0" style={{ overflow: 'hidden' }}>
-          <div className="row h-100 g-0 flex-nowrap">
-            {/* BLOCKLY CONTAINER */}
-            <div
-              className="p-0"
-              id="blockly-container"
-              style={{
-                flex: isUploadMode ? '0 0 100%' : '1 1 0%',
-                width: isUploadMode ? '100%' : 'auto',
-                maxWidth: isUploadMode ? '100%' : 'none',
-                minWidth: 0,
-                border: `none`,
-              }}
-            >
-              <BlocklyWorkspace ref={blocklyRef} onBlockClick={handleBlockClick} onRunCode={handleRunCode} />
-            </div>
+      {/* OVERLAY DE BLOQUEIO (MODO PORTRAIT) */}
+      <div 
+        className="portrait-lock-overlay"
+        style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: '#131432',
+          color: 'white',
+          zIndex: 99999,
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: '2rem'
+        }}
+      >
+        <i className="bi bi-phone-landscape" style={{ fontSize: '4rem', marginBottom: '1rem', animation: 'spin 2s linear infinite' }}></i>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Gire o seu dispositivo</h2>
+        <p style={{ marginBottom: '2rem' }}>
+          Para programar e visualizar o palco corretamente, precisamos que a tela esteja na horizontal.
+        </p>
+        <Button colorScheme="blue" onClick={forceLandscapeMode}>
+          Entrar em Tela Cheia e Girar
+        </Button>
+      </div>
 
-            {/* ML Recognition floating window (STAGE MODE ONLY) */}
-            {!isUploadMode && <MLRecognitionWindow isOpen={isRecognitionWindowOpen} onClose={() => setIsRecognitionWindowOpen(false)} />}
+      {/* CONTEÚDO PRINCIPAL (Recebe a classe main-ide-content para ser escondido no portrait) */}
+      <Flex className="main-ide-content" direction="column" flex="1" position="fixed" top="0" left="0" right="0" bottom="0" overflow="hidden" zIndex="100">
+        <CodeNavbar project={project} />
+        <div className="d-flex flex-column flex-grow-1 overflow-hidden" style={{ position: 'relative' }}>
+          <StageBridge />
 
-            {/* Warning Modal for Disconnected Board Runs */}
-            <BoardConnectionWarningModal />
-            <DeviceLostModal />
-            <RestoreConfirmModal />
-            <UploadTimeoutModal />
+          <div className="container-fluid flex-grow-1 d-flex flex-column px-0" style={{ overflow: 'hidden' }}>
+            <div className="row h-100 g-0 flex-nowrap">
+              
+              {/* BLOCKLY CONTAINER */}
+              <div
+                className="p-0"
+                id="blockly-container"
+                style={{
+                  flex: isUploadMode ? '0 0 100%' : '1 1 0%',
+                  width: isUploadMode ? '100%' : 'auto',
+                  maxWidth: isUploadMode ? '100%' : 'none',
+                  minWidth: 0,
+                  border: `none`,
+                }}
+              >
+                <BlocklyWorkspace ref={blocklyRef} onBlockClick={handleBlockClick} onRunCode={handleRunCode} />
+              </div>
 
-            {/* Floating Code Preview Overlay - Always render for Smooth Transitions */}
-            <CodePreview isOpen={isCodePanelOpen} isUploadMode={isUploadMode} onToggle={() => setIsCodePanelOpen(false)} />
+              {/* ... Restante do seu código permanece idêntico ... */}
+              {!isUploadMode && <MLRecognitionWindow isOpen={isRecognitionWindowOpen} onClose={() => setIsRecognitionWindowOpen(false)} />}
+              
+              <BoardConnectionWarningModal />
+              <DeviceLostModal />
+              <RestoreConfirmModal />
+              <UploadTimeoutModal />
 
-            {/* Floating button to reopen code panel when hidden - Animated */}
-            <button
-              className="btn shadow-sm position-absolute d-flex align-items-center justify-content-center"
-              style={{
-                right: '15px',
-                top: '10px',
-                width: '45px',
-                height: '45px',
-                borderRadius: '12px',
-                zIndex: 1000,
-                backgroundColor: '#131432',
-                border: 'none',
-                color: '#fff',
-                opacity: isUploadMode && !isCodePanelOpen ? 1 : 0,
-                transform: isUploadMode && !isCodePanelOpen ? 'scale(1)' : 'scale(0.5)',
-                pointerEvents: isUploadMode && !isCodePanelOpen ? 'all' : 'none',
-              }}
-              onClick={() => setIsCodePanelOpen(true)}
-            >
-              <i className="bi bi-code-slash" style={{ fontSize: '1.2rem' }}></i>
-            </button>
+              <CodePreview isOpen={isCodePanelOpen} isUploadMode={isUploadMode} onToggle={() => setIsCodePanelOpen(false)} />
 
-            {/* RIGHT PANEL: STAGE & MANAGEMENT */}
-            <div
+              {/* Floating button */}
+              <button
+                className="btn shadow-sm position-absolute d-flex align-items-center justify-content-center"
+                style={{
+                  right: '15px', top: '10px', width: '45px', height: '45px', borderRadius: '12px',
+                  zIndex: 1000, backgroundColor: '#131432', border: 'none', color: '#fff',
+                  opacity: isUploadMode && !isCodePanelOpen ? 1 : 0,
+                  transform: isUploadMode && !isCodePanelOpen ? 'scale(1)' : 'scale(0.5)',
+                  pointerEvents: isUploadMode && !isCodePanelOpen ? 'all' : 'none',
+                }}
+                onClick={() => setIsCodePanelOpen(true)}
+              >
+                <i className="bi bi-code-slash" style={{ fontSize: '1.2rem' }}></i>
+              </button>
+
+              {/* RIGHT PANEL: STAGE & MANAGEMENT */}
+             <div
               className="p-0"
               id="right-panel"
               style={{
@@ -233,10 +277,12 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                 </>
               )}
             </div>
+              
+            </div>
           </div>
         </div>
-      </div>
-    </Flex>
+      </Flex>
+    </>
   );
 };
 export default NewCode;
@@ -266,6 +312,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query, param
       iframeUrl: process.env.NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL || '',
       hideHeaderOnMobile: true,
       fullScreenOnMobile: true,
+      fullScreen: true
     },
   };
 };
