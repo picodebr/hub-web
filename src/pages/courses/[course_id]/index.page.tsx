@@ -187,8 +187,8 @@ const Course: React.FC<IProps> = ({ courseId }) => {
     <Flex flex="1" direction="column" h="100%" overflowY="auto" overflowX="hidden" pb="2rem" pr="0.5rem">
       {/* Cabeçalho da Página */}
       <InternalPageHeader
-        title="Meus Cursos e Trilhas"
-        description="Seu aprendizado começa aqui"
+        title={course?.title || `Curso`}
+        description={course?.description || ``}
         actions={
           allModulesFinished && certificateTemplate
             ? [
