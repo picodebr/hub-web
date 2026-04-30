@@ -365,7 +365,7 @@ export function PreviewPanel() {
                       top={0}
                       h="full"
                       bg={piBlue}
-                      transition="width 0.7s ease-out"
+                      transition={mode === 'webcam' ? 'none' : 'width 0.5s ease-out'}
                       borderRadius="full"
                       boxShadow="4px 0 12px rgba(0,82,204,0.2)"
                       w={`${percent}%`}

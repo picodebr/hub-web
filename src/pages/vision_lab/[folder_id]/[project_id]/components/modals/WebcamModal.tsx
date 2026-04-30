@@ -114,14 +114,14 @@ export function VisionLabWebcamModal() {
         maxH="95vh"
         h="auto"
         animation={`${float} 4s ease-in-out infinite`}
-        // Combinação de shadow-2xl e ring-4 ring-white/50 do Tailwind
         boxShadow="0 0 0 4px rgba(255, 255, 255, 0.5), 0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+        fontFamily='"Nunito", "Poppins", sans-serif'
       >
         {/* Header */}
         <Flex p={{ base: 3, sm: 4 }} borderBottom="1px solid" borderColor="gray.100" justify="space-between" align="center" bg="gray.50">
           <Flex align="center" gap={2}>
             <VideoIcon color={piBlue} size={20} />
-            <Heading as="h3" fontSize="lg" fontWeight="bold" color="gray.700">
+            <Heading as="h3" fontSize="lg" fontWeight="bold" color="gray.700" fontFamily='"Nunito", "Poppins", sans-serif' mb={0} lineHeight="1">
               Capturar Imagens -{' '}
               <Box as="span" color={piBlue}>
                 {activeClass.name}

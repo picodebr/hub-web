@@ -17,6 +17,9 @@ interface AppState {
   classes: VisionLabClassData[];
   nextClassId: number;
 
+  // Inicializa o estado a partir de um projeto salvo
+  initFromProject: (labels: string[]) => void;
+
   // Ações de Classe
   addClass: () => void;
   updateClassName: (id: number, name: string) => void;
@@ -83,6 +86,13 @@ export const useVisionLabStore = create<AppState>((set, get) => ({
   trainingProgress: "",
 
   setTrainingState: (newState) => set((state) => ({ ...state, ...newState })),
+
+  initFromProject: (labels) => {
+    const state = get();
+    state.classes.forEach((cls) => cls.samples.forEach((s) => s.activation.dispose()));
+    const classes = labels.map((name, index) => ({ id: index, name, samples: [] }));
+    set({ classes, nextClassId: labels.length, isTrained: true, isTraining: false, trainingProgress: '' });
+  },
 
   openWebcamModal: (id) => set({ activeModalClassId: id }),
   closeWebcamModal: () => set({ activeModalClassId: null }),
