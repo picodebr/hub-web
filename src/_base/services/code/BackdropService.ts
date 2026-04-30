@@ -270,6 +270,13 @@ export class BackdropService {
     this.emitChange();
   }
 
+  public renameBackdrop(id: string, newName: string): void {
+    const idx = this.backdrops.findIndex((b) => b.id === id);
+    if (idx === -1) return;
+    this.backdrops[idx] = { ...this.backdrops[idx], name: newName };
+    this.emitChange();
+  }
+
   public duplicateBackdrop(id: string): void {
     const backdrop = this.backdrops.find((b) => b.id === id);
     if (!backdrop) return;

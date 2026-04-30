@@ -91,14 +91,53 @@ export class SvgService {
       }
     };
 
+    // Fallback para canvas tainted: rasteriza a camada via view.draw() → canvas.toDataURL()
+    // e gera um SVG que embute a imagem PNG. Menos eficiente mas sempre funciona.
+    const buildFallbackSvg = (bounds: paper.Rectangle): string => {
+      try {
+        const project = this.scope.project;
+        if (!project) return '';
+        const view = this.scope.view;
+        // Força renderização do frame atual
+        view.update();
+        const nativeCanvas = view.element as HTMLCanvasElement;
+        if (!nativeCanvas) return '';
+        // Calcula o mapeamento de coordenadas paper → canvas pixel
+        const vb = view.bounds;
+        const scaleX = nativeCanvas.width / vb.width;
+        const scaleY = nativeCanvas.height / vb.height;
+        const px = Math.round((bounds.x - vb.x) * scaleX);
+        const py = Math.round((bounds.y - vb.y) * scaleY);
+        const pw = Math.round(bounds.width * scaleX);
+        const ph = Math.round(bounds.height * scaleY);
+        const crop = document.createElement('canvas');
+        crop.width = Math.max(1, pw);
+        crop.height = Math.max(1, ph);
+        const ctx = crop.getContext('2d');
+        if (!ctx) return '';
+        ctx.drawImage(nativeCanvas, px, py, pw, ph, 0, 0, pw, ph);
+        const dataUrl = crop.toDataURL('image/png');
+        const w = bounds.width.toFixed(2);
+        const h = bounds.height.toFixed(2);
+        const x = bounds.x.toFixed(2);
+        const y = bounds.y.toFixed(2);
+        return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}"><image xlink:href="${dataUrl}" x="${x}" y="${y}" width="${w}" height="${h}" style="image-rendering:pixelated"/></svg>`;
+      } catch (fallbackErr) {
+        console.error('[SvgService] Fallback também falhou:', fallbackErr);
+        return '';
+      }
+    };
+
     let thumbnailSvg = '';
     try {
-      // 🛡️ FIX: paper.js exportSVG can throw SecurityError if there's a tainted canvas
+      // paper.js exportSVG pode lançar SecurityError se houver canvas tainted (imagem cross-origin
+      // carregada sem CORS correto). Com o CORS fix no PaintEditor isso não deve mais ocorrer,
+      // mas mantemos o fallback para segurança.
       const thumbInner = dl.exportSVG(exportOptions) as string;
       thumbnailSvg = buildFullSvg(thumbInner, thumbBounds);
     } catch (e) {
-      console.warn('[SvgService] Fallback: Could not export thumbnail SVG due to security/taint constraints.', e);
-      thumbnailSvg = ''; // Fallback: A UI mostrará um placeholder ou a última imagem válida
+      console.warn('[SvgService] Fallback para rasterização de thumbnail (canvas tainted?):', e);
+      thumbnailSvg = buildFallbackSvg(thumbBounds);
     }
 
     // 2. Stage SVG:
@@ -115,8 +154,8 @@ export class SvgService {
       const stageInner = dl.exportSVG(exportOptions) as string;
       stageSvg = buildFullSvg(stageInner, stageBounds);
     } catch (e) {
-      console.error('[SvgService] Critical: Could not export stage SVG.', e);
-      stageSvg = '';
+      console.warn('[SvgService] Fallback para rasterização de stage (canvas tainted?):', e);
+      stageSvg = buildFallbackSvg(stageBounds);
     }
 
     // Restaura apenas os itens que foram ocultados para o export

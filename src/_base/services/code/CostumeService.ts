@@ -91,7 +91,11 @@ export class CostumeService {
     if (spriteId === 'stage') {
       const backdropIndex = backdrops.findIndex((b) => b.id === costumeId);
       if (backdropIndex !== -1) {
-        backdrops[backdropIndex] = { ...backdrops[backdropIndex], url: stageUrl || thumbnailUrl };
+        backdrops[backdropIndex] = {
+          ...backdrops[backdropIndex],
+          url: thumbnailUrl,
+          stageUrl: stageUrl || backdrops[backdropIndex].stageUrl || thumbnailUrl,
+        };
         this.emitter.emit('backdropChange', backdrops);
         if (activeBackdropId === costumeId) {
           this.emitter.emit('activeBackdropChange', activeBackdropId);
@@ -134,7 +138,11 @@ export class CostumeService {
     if (spriteId === 'stage') {
       const backdropIndex = backdrops.findIndex((b) => b.id === costumeId);
       if (backdropIndex !== -1) {
-        backdrops[backdropIndex] = { ...backdrops[backdropIndex], url: stageUrl || thumbnailUrl };
+        backdrops[backdropIndex] = {
+          ...backdrops[backdropIndex],
+          url: thumbnailUrl,
+          stageUrl: stageUrl || backdrops[backdropIndex].stageUrl || thumbnailUrl,
+        };
         this.emitter.emit('backdropChange', backdrops);
       }
       return;

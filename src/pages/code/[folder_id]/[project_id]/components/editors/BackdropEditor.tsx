@@ -17,7 +17,7 @@ const PaintEditor = dynamic(() => import('./PaintEditor/index'), {
 });
 
 export default function BackdropEditor() {
-    const { activeSprite, addCostumeToSprite, removeCostumeFromSprite, renameCostume, switchCostume } = useProject();
+    const { activeSprite, addCostumeToSprite, removeCostumeFromSprite, renameBackdrop, switchCostume } = useProject();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [editingCostumeId, setEditingCostumeId] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export default function BackdropEditor() {
 
     const handleRenameSubmit = () => {
         if (editingCostumeId && tempName.trim()) {
-            renameCostume('stage', editingCostumeId, tempName.trim());
+            renameBackdrop(editingCostumeId, tempName.trim());
         }
         setEditingCostumeId(null);
     };

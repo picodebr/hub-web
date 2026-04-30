@@ -9,7 +9,8 @@ import { SoundData } from './Sprite';
 export interface BackdropData {
     id: string;
     name: string;
-    url: string;
+    url: string;       // thumbnail cropado (sidebar)
+    stageUrl?: string; // SVG 480×360 para renderização no palco
     sounds: SoundData[];
     currentSoundId: string | null;
 }
