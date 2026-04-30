@@ -38,7 +38,7 @@ const SharedProjects: React.FC = () => {
         overflow="hidden auto"
         isLoaded={!isLoading}
         gap="1rem"
-        gridTemplateColumns="repeat(auto-fill, minmax(240px, 1fr))"
+        gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(150px, 1fr))', sm: 'repeat(auto-fill, minmax(240px, 1fr))' }}
         gridTemplateRows="minmax(min-content, max-content)"
         borderRadius="md"
         flex="1"
@@ -49,7 +49,6 @@ const SharedProjects: React.FC = () => {
             direction="column"
             bgColor="white"
             borderRadius="10px"
-            
             padding="1rem"
             color="primary700"
             border="1px"

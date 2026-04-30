@@ -17,6 +17,7 @@ import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { IHubUserSchool } from '@/_base/interfaces/school';
 import { PiExamLight } from 'react-icons/pi';
 import { TbCircuitResistor } from 'react-icons/tb';
+import { dimensions } from '@/styles/global';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   selectedPage,
@@ -26,7 +27,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   hideHeaderOnMobile,
   fullScreenOnMobile,
   setUser,
-  fullScreen
+  fullScreen,
 }) => {
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
   const [school, setSchool] = useState<IHubUserSchool | null>(null);
@@ -71,32 +72,21 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
             <RedefinePass user={user} />
             <Flex
               flex="1"
+              // height={`calc(100% - ${dimensions.header.height})`}
               height="100%"
-              overflow="hidden"
+              overflow="hidden auto"
               direction="column"
               position="relative"
               p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '0 0.5rem 0 1rem' }}
               sx={{
                 '& > :last-child': {
-                  padding: fullScreen? `0` : '1rem 0.5rem 1rem 0',
+                  padding: fullScreen ? `0` : '1rem 0.5rem 1rem 0',
                   // Se a sua página tiver scroll próprio, você pode precisar garantir a altura dela aqui
+                  // height: '100%',
+                  // overflowY: 'auto',
                 },
               }}
             >
-              {/* {showBackButton && (
-                <Flex
-                  userSelect="none"
-                  cursor="pointer"
-                  fontWeight="600"
-                  color={colorMode === 'light' ? 'primary700' : 'primary300'}
-                  onClick={() => (backButtonPath ? router.push(backButtonPath) : router.back())}
-                  pb="0.5rem"
-                  w="fit-content"
-                >
-                  <FiChevronLeft fontSize="20px" style={{ marginTop: '2px' }} />
-                  <Text textAlign="left">Voltar</Text>
-                </Flex>
-              )} */}
               {children}
             </Flex>
           </Flex>

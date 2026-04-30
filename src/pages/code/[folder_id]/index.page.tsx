@@ -125,20 +125,23 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
       />
 
       <Skeleton
-        display="grid"
-        overflow="hidden auto"
+        display={{ base: `grid`, sm: 'grid' }}
+        overflow="auto"
+        minH="calc(100% - 2rem)"
         isLoaded={!isLoading}
         gap="1rem"
-        gridTemplateColumns="repeat(auto-fill, minmax(240px, 1fr))"
-        gridTemplateRows="minmax(min-content, max-content)"
+        gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(150px, 1fr))', sm: 'repeat(auto-fill, minmax(240px, 1fr))' }}
+        gridTemplateRows={{ base: undefined, sm: 'minmax(min-content, max-content)' }}
+        gridAutoRows={{ base: '200px', sm: `max-content` }}
+        rowGap={{ base: `1rem`, sm: `3rem`, md: `1rem` }}
         borderRadius="md"
         flex="1"
         pt="1rem "
       >
         {targetFolder?.projects?.map((project, index) => (
           <InternalCard
-            maxH="240px"
             key={project.id}
+            minH="200px"
             index={index}
             onClick={() =>
               Object.keys(project.metadata || {}).length
@@ -151,12 +154,12 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
               { label: `Remover`, onClick: () => setTargetProjectToRemove(project), Icon: Trash2, important: true },
             ]}
             content={
-              <div className="p-3 pb-2 h-40" style={{ overflow: `hidden` }}>
+              <Flex className="p-3 pb-2" h={{ base: `6rem`, sm: 40 }}>
                 <CodeThumbnail lines={[project.metadata?.uploadMode.code || project.source_code?.code || '']} />
-              </div>
+              </Flex>
             }
             footer={
-              <div className="flex items-center justify-between gap-2 flex-1">
+              <div className="flex items-end justify-between gap-2 flex-1 h-full">
                 <p className="text-[11px] text-muted-foreground/70 truncate">{moment(project.updated_at).fromNow()}</p>
                 {(() => {
                   const isPrivate = !!project.private;

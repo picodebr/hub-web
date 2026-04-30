@@ -114,42 +114,49 @@ const CodeFolders: React.FC = () => {
       />
 
       {/* Grid de Pastas */}
-      <Skeleton isLoaded={!isLoading} className="flex-1 rounded-md overflow-hidden">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 overflow-y-auto pb-8 px-2 content-start h-full pt-2">
-          {folders.length ? (
-            folders.map((folder, index) => {
-              return (
-                <InternalCard
-                  key={folder.id}
-                  index={index}
-                  onClick={() => router.push(`/code/${folder.id}?_p=${folder.name}`)}
-                  title={folder.name}
-                  Icon={FolderOpen}
-                  actions={[
-                    { label: `Editar`, onClick: () => setTargetFolderToUpdate(folder), Icon: Pencil },
-                    { label: `Remover`, onClick: () => setTargetFolderToRemove(folder), Icon: Trash2, important: true },
-                  ]}
-                  footer={
-                    <>
-                      <p className="text-[11px] text-muted-foreground truncate flex-1 flex items-center gap-1.5">
-                        <Layers className="w-3 h-3" />
-                        {folder.projects?.length || `0`} {folder.projects?.length === 1 ? 'projeto' : 'projetos'}
-                      </p>
-                      <span className="text-[10px] text-muted-foreground/60 shrink-0">{moment(getLastActivityFromFolder(folder)).fromNow()}</span>
-                    </>
-                  }
-                  showFooterIcon
-                />
-              );
-            })
-          ) : (
-            <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground mt-10">
-              <FolderOpen className="w-16 h-16 mb-4 opacity-20" />
-              <p className="text-lg font-medium text-foreground/70">Lista vazia</p>
-              <p className="text-sm">Crie uma nova pasta para organizar seus códigos.</p>
-            </div>
-          )}
-        </div>
+      <Skeleton
+        isLoaded={!isLoading}
+        display="grid"
+        overflow="hidden auto"
+        gap="1rem"
+        gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(150px, 1fr))', sm: 'repeat(auto-fill, minmax(240px, 1fr))' }}
+        gridTemplateRows="minmax(min-content, max-content)"
+        borderRadius="md"
+        flex="1"
+      >
+        {folders.length ? (
+          folders.map((folder, index) => {
+            return (
+              <InternalCard
+                key={folder.id}
+                index={index}
+                onClick={() => router.push(`/code/${folder.id}?_p=${folder.name}`)}
+                title={folder.name}
+                Icon={FolderOpen}
+                actions={[
+                  { label: `Editar`, onClick: () => setTargetFolderToUpdate(folder), Icon: Pencil },
+                  { label: `Remover`, onClick: () => setTargetFolderToRemove(folder), Icon: Trash2, important: true },
+                ]}
+                footer={
+                  <>
+                    <p className="text-[11px] text-muted-foreground truncate flex-1 flex items-center gap-1.5">
+                      <Layers className="w-3 h-3" />
+                      {folder.projects?.length || `0`} {folder.projects?.length === 1 ? 'projeto' : 'projetos'}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground/60 shrink-0">{moment(getLastActivityFromFolder(folder)).fromNow()}</span>
+                  </>
+                }
+                showFooterIcon
+              />
+            );
+          })
+        ) : (
+          <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground mt-10">
+            <FolderOpen className="w-16 h-16 mb-4 opacity-20" />
+            <p className="text-lg font-medium text-foreground/70">Lista vazia</p>
+            <p className="text-sm">Crie uma nova pasta para organizar seus códigos.</p>
+          </div>
+        )}
       </Skeleton>
 
       {/* only modals from here down */}

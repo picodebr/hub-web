@@ -20,9 +20,21 @@ interface IProps {
   footer?: React.ReactElement;
   actions?: IActionProps[];
   maxH?: string;
+  minH?: string;
 }
 
-export const InternalCard: React.FC<IProps> = ({ index, onClick, content, Icon, title, showFooterIcon, footer, actions, maxH }) => {
+export const InternalCard: React.FC<IProps> = ({
+  index,
+  onClick,
+  content,
+  Icon,
+  title,
+  showFooterIcon,
+  footer,
+  actions,
+  maxH = `240px`,
+  minH = `240px`,
+}) => {
   const gradient = FOLDER_GRADIENTS[index % FOLDER_GRADIENTS.length];
 
   return (
@@ -33,8 +45,8 @@ export const InternalCard: React.FC<IProps> = ({ index, onClick, content, Icon, 
       transition={{ delay: index * 0.05 }}
       whileHover={{ y: -4 }}
       onClick={onClick}
-      style={{ maxHeight: maxH }}
-      className="group relative rounded-3xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer border border-border/50 bg-card flex flex-col h-fit"
+      style={{ maxHeight: maxH, minHeight: minH }}
+      className="relative rounded-3xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer border border-border/50 bg-card flex flex-col"
     >
       {/* Área do Gradiente Superior */}
       {content || (
@@ -99,7 +111,7 @@ export const InternalCard: React.FC<IProps> = ({ index, onClick, content, Icon, 
 
         <p className="font-semibold text-foreground text-xl mb-1 mt-3 truncate group-hover:text-primary transition-colors pr-8">{title}</p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           {showFooterIcon && (
             <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white shrink-0`}>
               {!!Icon && <Icon className="w-3 h-3" />}
