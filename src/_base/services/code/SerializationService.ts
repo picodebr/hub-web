@@ -22,6 +22,7 @@ import { ProjectMapper } from '../../adapters/mappers/ProjectMapper';
 import { getProjectService } from './ProjectService';
 import { updateCodeProject } from '../codeProject';
 import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
+import { getPresignedUrl, uploadFile } from '../upload';
 
 // Re-exporta interface para componentes que a utilizam
 export interface IProjectContextUI {
@@ -68,6 +69,39 @@ export interface ProjectFile {
 // const saveUseCase = new SaveProjectUseCase(repository);
 // loadUseCase removido (carregamento é feito por arquivo direto, não por ID)
 
+/**
+ * Identifica e faz upload de assets base64 (data: URLs) para o S3 de forma recursiva.
+ * Isso reduz drasticamente o tamanho do payload JSON enviado ao servidor, evitando erros 413.
+ */
+const uploadBase64Assets = async (obj: any): Promise<void> => {
+  if (!obj || typeof obj !== 'object') return;
+
+  const entries = Object.entries(obj);
+  for (const [key, value] of entries) {
+    if (typeof value === 'string' && value.startsWith('data:')) {
+      try {
+        // Converte data URL para Blob/File
+        const res = await fetch(value);
+        const blob = await res.blob();
+        const mimeType = value.split(';')[0].split(':')[1] || 'image/png';
+        const extension = mimeType.split('/')[1] || 'png';
+        const file = new File([blob], `asset-${Date.now()}.${extension}`, { type: mimeType });
+
+        // Upload para o S3
+        const { link, full_path } = await getPresignedUrl(mimeType, 'code-assets' as any, 'public-read' as any);
+        await uploadFile(link, file);
+
+        // Substitui o base64 pela URL do S3 no objeto original
+        obj[key] = full_path;
+      } catch (err) {
+        console.error('[SerializationService] Falha ao migrar asset base64:', err);
+      }
+    } else if (value && typeof value === 'object') {
+      await uploadBase64Assets(value);
+    }
+  }
+};
+
 export const SerializationService = {
   /**
    * Helper legado para compatibilidade com a UI atual, mas internamente usa Clean Architecture.
@@ -103,6 +137,10 @@ export const SerializationService = {
 
       // 3. DOWNLOAD: Gera o Blob do DTO para permitir que o usuário salve o arquivo físico.
       const dto = ProjectMapper.entityToDto(projectEntity);
+
+      // 4. MIGRAÇÃO DE ASSETS: Antes de enviar para a API, garante que nenhum base64 pesado
+      // esteja no JSON, enviando-os para o S3.
+      await uploadBase64Assets(dto);
 
       await updateCodeProject({ id: project.id, metadata: dto });
 
@@ -168,6 +206,7 @@ export const SerializationService = {
           variables: s.variables || [],
           code: s.code || '',
           rotationStyle: s.rotationStyle || 'all around',
+          draggable: s.draggable ?? false,
         }));
 
       // Registra blocos customizados por varredura (Fallback para arquivos antigos)

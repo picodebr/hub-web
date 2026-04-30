@@ -23,7 +23,7 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
   const runner = useExecutionRunner();
   const { sprites, activeSpriteId, backdrops, activeBackdropId, setMonitorVisibility, updateMonitorItems } = useProject();
   const { isSerialConnected, board } = useFirmware();
-  const { setShowBoardConnectionWarning } = useUI();
+  const { setShowBoardConnectionWarning, isUploadMode } = useUI();
 
   const vm = getPicoVM();
 
@@ -37,6 +37,8 @@ export function usePicoVM(blocklyRef: React.RefObject<BlocklyWorkspaceRef | null
   backdropsRef.current = backdrops;
   const activeBackdropIdRef = useRef(activeBackdropId);
   activeBackdropIdRef.current = activeBackdropId;
+  const isUploadModeRef = useRef(isUploadMode);
+  isUploadModeRef.current = isUploadMode;
 
   // ─────────────────────────────────────────────────────────
   // Highlight callback — chama setBlockHighlight no workspace visível
