@@ -268,14 +268,26 @@ export default function StageArea() {
 
     const updateScale = () => {
       if (!containerRef.current) return;
+      
+      // No modo tela cheia, preferimos usar window.inner para evitar problemas de sincronização do DOM
       const rect = containerRef.current.getBoundingClientRect();
-      const availableWidth = Math.max(10, rect.width - 32);
-      const availableHeight = isStageFullScreen ? Math.max(10, rect.height - 120) : 9999;
+      const currentW = isStageFullScreen ? window.innerWidth : rect.width;
+      const currentH = isStageFullScreen ? window.innerHeight : rect.height;
+
+      const availableWidth = Math.max(10, currentW - (isStageFullScreen ? 40 : 32));
+      
+      // No modo normal, limitamos a altura disponível com base na viewport para evitar que o palco
+      // "empurre" outros elementos ou seja cortado em telas muito curtas (ex: mobile landscape).
+      const maxAvailableHeight = typeof window !== 'undefined' ? window.innerHeight - 150 : 9999;
+      const availableHeight = isStageFullScreen 
+        ? Math.max(10, currentH - 120) 
+        : Math.min(currentH > 50 ? currentH : 9999, maxAvailableHeight);
 
       const scaleW = (availableWidth - 2) / 480;
       const scaleH = (availableHeight - 2) / 360;
 
-      let newScale = Math.min(scaleW, scaleH, 2.0);
+      // Aumentamos o limite para 4.0 para suportar melhor telas grandes e 4K em modo tela cheia
+      let newScale = Math.min(scaleW, scaleH, 4.0);
       
       // Snap para 1.0 para evitar blur de sub-pixel se estiver muito próximo do tamanho real
       if (newScale > 0.98 && newScale < 1.05) newScale = 1.0;

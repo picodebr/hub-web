@@ -222,7 +222,13 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                 <>
                   <div
                     className={`stage-section d-flex flex-column ${isStageFullScreen ? 'align-items-center fullscreen' : 'align-items-center'} w-100`}
-                    style={{ flex: '0 0 auto', backgroundColor: '#e9eef2' }}
+                    style={{ 
+                      flex: isStageFullScreen ? '1' : '0 1 auto', 
+                      minHeight: 0,
+                      maxHeight: isStageFullScreen ? 'none' : 'calc(100vh - 120px)',
+                      backgroundColor: '#e9eef2',
+                      overflow: 'hidden'
+                    }}
                   >
                     <div
                       className="stage-header w-100 d-flex align-items-center px-3"

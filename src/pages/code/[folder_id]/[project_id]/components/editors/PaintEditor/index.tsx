@@ -118,16 +118,65 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
   // - stageSvg: Mantém o artboard 480x360 (garante posição correta no palco).
   const syncToContext = useCallback(() => {
     if (!svgService || !scope) return;
+
+    const dl = scope.project?.layers?.find((l) => l.name === 'drawing') || scope.project?.activeLayer;
+
+    // Gera PNG thumbnail para fantasias raster (usado como `url` pelo paint editor)
+    let pngThumbnailUrl: string | null = null;
+
+    if (dl) {
+      const realItems = dl.children.filter((i) =>
+        i.visible && !i.locked && !(i as any).guide &&
+        i.name !== 'PBT_BOUNDS_BOX' && i.name !== 'SCRATCH_BBOX_HACK'
+      );
+
+      // Guard: canvas vazio durante transição — não exportar SVG em branco
+      if (realItems.length === 0) return;
+
+      if (realItems.length === 1 && realItems[0] instanceof scope.Raster) {
+        const raster = realItems[0] as paper.Raster;
+        // Guard: raster ainda não carregou
+        if (raster.width === 0 || raster.height === 0) return;
+
+        try {
+          const imgEl = raster.image as HTMLCanvasElement | HTMLImageElement | null;
+          if (!imgEl) return;
+
+          const displayW = Math.max(2, Math.round(raster.bounds.width));
+          const displayH = Math.max(2, Math.round(raster.bounds.height));
+          if (displayW <= 1 && displayH <= 1) return;
+
+          const offscreen = document.createElement('canvas');
+          offscreen.width = displayW;
+          offscreen.height = displayH;
+          const ctx = offscreen.getContext('2d');
+          if (!ctx) return;
+          ctx.drawImage(imgEl as CanvasImageSource, 0, 0, displayW, displayH);
+          const candidate = offscreen.toDataURL('image/png');
+          if (candidate && candidate !== 'data:,') pngThumbnailUrl = candidate;
+        } catch (_) { /* fallthrough */ }
+      }
+    }
+
+    // Exporta SVG para stageUrl e thumbnailUrl
     const { thumbnailSvg, stageSvg } = svgService.exportDrawingSVG({ isBackdrop: isBackdropRef.current });
     if (!thumbnailSvg || !stageSvg) return;
 
     const encode = (s: string) => btoa(new TextEncoder().encode(s).reduce((a, b) => a + String.fromCharCode(b), ''));
-    const thumbUrl = `data:image/svg+xml;base64,${encode(thumbnailSvg)}`;
-    const stageUrl = `data:image/svg+xml;base64,${encode(stageSvg)}`;
+    const thumbnailSvgUrl = `data:image/svg+xml;base64,${encode(thumbnailSvg)}`;
 
-    // Armazenamos a URL sincronizada para que o useEffect de carga inicial a ignore
+    // Para rasters: stageUrl = thumbnailSvg (viewBox = content bounds = tamanho correto no palco
+    //   + muda quando o raster move → invalida cache → palco atualiza).
+    // Para vetores: stageUrl = stageSvg (artboard completo, necessário para o paint editor
+    //   recarregar com posicionamento correto via PBT_BOUNDS_BOX).
+    const stageUrl = pngThumbnailUrl
+      ? thumbnailSvgUrl  // raster: thumbnail tem viewBox do conteúdo
+      : `data:image/svg+xml;base64,${encode(stageSvg)}`; // vetor: artboard completo
+
+    // thumbUrl: PNG para rasters (paint editor recarrega centrado), SVG thumbnail para vetores
+    const thumbUrl = pngThumbnailUrl ?? thumbnailSvgUrl;
+
     lastSyncedUrlRef.current = stageUrl;
-
     updateCostumeRef.current(spriteIdRef.current, costumeIdRef.current, thumbUrl, stageUrl);
   }, [scope]);
 
@@ -380,8 +429,6 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
         const maxW = DRAWING_CONFIG.artboard.w * scaleFactor;
         const maxH = DRAWING_CONFIG.artboard.h * scaleFactor;
 
-        // Se for cenário (isBackdrop), sempre forçamos o ajuste ao canva (480x360)
-        // Isso resolve o problema de "perder a referência" com imagens de tamanhos diferentes
         if (rb.width > maxW || rb.height > maxH || isBackdropEffective) {
           const scale = Math.min(maxW / rb.width, maxH / rb.height);
           raster.scale(scale);
@@ -393,9 +440,13 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
           saveHistory();
         }
 
+        // syncToContext gera: PNG como `url` (para paint editor recarregar) e
+        // SVG wrapper como `stageUrl` (para o palco renderizar no tamanho correto).
         requestAnimationFrame(() => syncToContext());
+
         setTimeout(() => zoomAfterLoadRef.current(), 50);
       };
+
 
       // IMPORTANTE: Para que o PNG/JPG apareça no palco (Stage), ele não pode ser 
       // apenas um link para um arquivo local. Precisamos "desenhar" ele em um canvas
@@ -457,15 +508,15 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
       decodeSvgUrl(initialUrl)
         .then((svgString) => {
           if (loadId !== currentLoadIdRef.current) return;
-          // Se a URL é um data URI gerado por nós, ou se o SVG possui o marcador de artboard interno,
-          // pulamos a normalização de dimensões para preservar o posicionamento absoluto.
-          const isInternal = initialUrl.startsWith('data:');
-          
-          // Regex robusto para detectar o viewBox oficial do palco (272 120 480 360) 
+
+          // Regex robusto para detectar o viewBox oficial do palco (272 120 480 360)
           // aceitando variações de decimais (.00) e espaços.
           const picoViewBoxRegex = /viewBox\s*=\s*["']272(\.0+)?\s+120(\.0+)?\s+480(\.0+)?\s+360(\.0+)?["']/;
           const hasPicoMarker = svgString.includes('PBT_BOUNDS_BOX') || picoViewBoxRegex.test(svgString);
-          
+
+          // Se a URL é um data URI gerado por nós, preserva posição absoluta (hasPicoMarker=true).
+          // Nota: fantasias raster agora armazenam PNG diretamente (não chegam aqui como SVG).
+          const isInternal = initialUrl.startsWith('data:');
           importSvgString(svgString, true, isInternal || hasPicoMarker, loadId);
         })
         .catch((err: any) => {

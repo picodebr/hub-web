@@ -31,13 +31,25 @@ export class SvgService {
       DRAWING_CONFIG.abY + DRAWING_CONFIG.artboard.h / 2,
     );
 
-    // 1. Thumbnail Bounds: computed BEFORE any visibility changes so that
-    // guide items (PBT_BOUNDS_BOX, SCRATCH_BBOX_HACK) — which are always invisible —
-    // never inflate dl.bounds into artboard dimensions.
-    let thumbBounds = dl.bounds.clone().expand(4);
-    if (!thumbBounds || thumbBounds.width < 1 || thumbBounds.height < 1) {
+    // 1. Thumbnail Bounds: computed MANUALLY from visible real items only.
+    // Paper.js includes INVISIBLE items in layer.bounds, so using dl.bounds
+    // would include PBT_BOUNDS_BOX (the artboard marker) and inflate the
+    // viewBox to the full 480×360 artboard → logicalW=480 → sprite fills stage.
+    const realVisibleItems = dl.children.filter((i: paper.Item) =>
+      i.visible && !i.locked && !(i as any).guide &&
+      i.name !== 'PBT_BOUNDS_BOX' && i.name !== 'SCRATCH_BBOX_HACK'
+    );
+
+    let thumbBounds: paper.Rectangle;
+    if (realVisibleItems.length > 0) {
+      thumbBounds = realVisibleItems.reduce((acc: paper.Rectangle | null, item: paper.Item) => {
+        const b = item.bounds;
+        return acc ? acc.unite(b) : b.clone();
+      }, null as paper.Rectangle | null)!.expand(4);
+    } else {
       thumbBounds = new this.scope.Rectangle(artboardCenter.x - 1, artboardCenter.y - 1, 2, 2);
     }
+
 
     // Hide only VISIBLE guide/artboard items for the export, and track them for restoration.
     // Items already invisible (PBT_BOUNDS_BOX, SCRATCH_BBOX_HACK) are skipped entirely so
