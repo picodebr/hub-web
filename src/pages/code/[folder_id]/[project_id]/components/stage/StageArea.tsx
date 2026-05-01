@@ -147,9 +147,9 @@ export default function StageArea() {
 
   React.useEffect(() => {
     if (canvasRef.current) {
-      const dpr = window.devicePixelRatio || 1;
-      canvasRef.current.width = 480 * dpr;
-      canvasRef.current.height = 360 * dpr;
+      // Inicializa com resolução base; o render loop ajusta conforme o scale
+      canvasRef.current.width = 480;
+      canvasRef.current.height = 360;
       initWebGL(canvasRef.current);
     }
   }, []);
@@ -159,24 +159,15 @@ export default function StageArea() {
 
     const renderLoop = () => {
       const renderer = getWebGLRenderer();
-      if (renderer && canvasRef.current && containerRef.current) {
+      if (renderer && canvasRef.current && stageRef.current) {
         const dpr = window.devicePixelRatio || 1;
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const containerW = containerRect.width;
-        const containerH = containerRect.height;
-        
-        const stageRatio = 480 / 360;
-        let finalW = containerW;
-        let finalH = containerH;
 
-        if (containerW / containerH > stageRatio) {
-          finalW = containerH * stageRatio;
-        } else {
-          finalH = containerW / stageRatio;
-        }
-
-        const targetW = Math.round(finalW * dpr);
-        const targetH = Math.round(finalH * dpr);
+        // O canvas WebGL deve ter dimensões físicas = resolução lógica do stage × DPR
+        // O stage lógico é sempre 480×360. O scale é aplicado via CSS transform no stageRef.
+        // Para render nítido, o canvas precisa de pixels suficientes para a resolução
+        // que será exibida: 480*scale pixels de largura CSS * dpr pixels físicos.
+        const targetW = Math.round(480 * scale * dpr);
+        const targetH = Math.round(360 * scale * dpr);
 
         if (canvasRef.current.width !== targetW || canvasRef.current.height !== targetH) {
           canvasRef.current.width = targetW;
@@ -198,7 +189,7 @@ export default function StageArea() {
 
     frameId = requestAnimationFrame(renderLoop);
     return () => cancelAnimationFrame(frameId);
-  }, [flashSpriteId]);
+  }, [flashSpriteId, scale]);
 
   const handleStageMouseDown = (e: React.MouseEvent) => {
     if (!stageRef.current) return;
@@ -397,13 +388,9 @@ export default function StageArea() {
               position: 'absolute',
               top: 0,
               left: 0,
-              width: '100%',
-              height: '100%',
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
+              width: '480px',
+              height: '360px',
               display: 'block',
-              margin: '0 auto',
               imageRendering: 'auto',
               cursor: draggingId ? 'grabbing' : 'default',
               borderRadius: '16px',

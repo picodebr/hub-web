@@ -121,7 +121,7 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
 
     const dl = scope.project?.layers?.find((l) => l.name === 'drawing') || scope.project?.activeLayer;
 
-    // Gera PNG thumbnail para fantasias raster (usado como `url` pelo paint editor)
+    // Gera PNG thumbnail para fantasias raster (usado como `url` e `stageUrl` pelo palco)
     let pngThumbnailUrl: string | null = null;
 
     if (dl) {
@@ -138,22 +138,25 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
         // Guard: raster ainda não carregou
         if (raster.width === 0 || raster.height === 0) return;
 
+        // Gera PNG a partir do canvas do raster. Os `return` foram removidos do try block
+        // para não abortar a sincronização completa quando apenas a geração do thumbnail falha.
         try {
           const imgEl = raster.image as HTMLCanvasElement | HTMLImageElement | null;
-          if (!imgEl) return;
-
-          const displayW = Math.max(2, Math.round(raster.bounds.width));
-          const displayH = Math.max(2, Math.round(raster.bounds.height));
-          if (displayW <= 1 && displayH <= 1) return;
-
-          const offscreen = document.createElement('canvas');
-          offscreen.width = displayW;
-          offscreen.height = displayH;
-          const ctx = offscreen.getContext('2d');
-          if (!ctx) return;
-          ctx.drawImage(imgEl as CanvasImageSource, 0, 0, displayW, displayH);
-          const candidate = offscreen.toDataURL('image/png');
-          if (candidate && candidate !== 'data:,') pngThumbnailUrl = candidate;
+          if (imgEl) {
+            const displayW = Math.max(2, Math.round(raster.bounds.width));
+            const displayH = Math.max(2, Math.round(raster.bounds.height));
+            if (displayW > 1 || displayH > 1) {
+              const offscreen = document.createElement('canvas');
+              offscreen.width = displayW;
+              offscreen.height = displayH;
+              const ctx = offscreen.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(imgEl as CanvasImageSource, 0, 0, displayW, displayH);
+                const candidate = offscreen.toDataURL('image/png');
+                if (candidate && candidate !== 'data:,') pngThumbnailUrl = candidate;
+              }
+            }
+          }
         } catch (_) { /* fallthrough */ }
       }
     }
@@ -165,12 +168,15 @@ export const PaintEditor: React.FC<PaintEditorProps> = ({ spriteId, costumeId, c
     const encode = (s: string) => btoa(new TextEncoder().encode(s).reduce((a, b) => a + String.fromCharCode(b), ''));
     const thumbnailSvgUrl = `data:image/svg+xml;base64,${encode(thumbnailSvg)}`;
 
-    // Para rasters: stageUrl = thumbnailSvg (viewBox = content bounds = tamanho correto no palco
-    //   + muda quando o raster move → invalida cache → palco atualiza).
+    // Para rasters: stageUrl = pngThumbnailUrl (PNG direto).
+    //   Usar o PNG diretamente evita o loop de reload: lastSyncedUrlRef = stageUrl = pngThumbnailUrl
+    //   = costume.url = initialUrl → isRecentlySynced=true → load effect não recarrega o canvas.
+    //   O palco carrega o PNG normalmente (não precisa de loadSvgHighRes), e o tamanho real
+    //   (logicalW/H) é extraído das dimensões naturais do PNG.
     // Para vetores: stageUrl = stageSvg (artboard completo, necessário para o paint editor
     //   recarregar com posicionamento correto via PBT_BOUNDS_BOX).
     const stageUrl = pngThumbnailUrl
-      ? thumbnailSvgUrl  // raster: thumbnail tem viewBox do conteúdo
+      ? pngThumbnailUrl  // raster: PNG direto → palco usa tamanho real do conteúdo
       : `data:image/svg+xml;base64,${encode(stageSvg)}`; // vetor: artboard completo
 
     // thumbUrl: PNG para rasters (paint editor recarrega centrado), SVG thumbnail para vetores

@@ -1,8 +1,8 @@
 import { getPresignedUrl, uploadFile } from '../services/upload';
 
 const MAX_FILE_SIZE_MB = 10;
-const MAX_SPRITE_DIMENSION = 960; // Redimensionado para caber melhor no palco (480x360) mantendo qualidade
-const MAX_BACKDROP_DIMENSION = 960;
+const MAX_SPRITE_DIMENSION = 1440; // Qualidade suficiente para telas de alta densidade
+const MAX_BACKDROP_DIMENSION = 1920; // Full HD para backdrops em telas grandes
 
 export class BrowserFileSystem {
   public static async readFileAsDataURL(file: File): Promise<string> {
