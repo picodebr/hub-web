@@ -328,7 +328,7 @@ export default function StageArea() {
   return (
     <div
       ref={containerRef}
-      className={`w-100 d-flex align-items-center ${isStageFullScreen ? 'justify-content-center' : 'justify-content-start'} stage-area-container ${isStageFullScreen ? 'fullscreen' : ''}`}
+      className={`w-100 d-flex align-items-center justify-content-center stage-area-container ${isStageFullScreen ? 'fullscreen' : ''}`}
       style={{
         backgroundColor: '#e9eef2',
         flex: '1 1 auto',
@@ -337,10 +337,9 @@ export default function StageArea() {
     >
       <div
         style={{
-          width: `${480 * scale + 2}px`,
-          height: `${360 * scale + 2}px`,
+          width: `${480 * scale}px`,
+          height: `${360 * scale}px`,
           position: 'relative',
-          border: '1px solid #ccc',
           borderRadius: '16px',
           overflow: 'hidden',
           boxSizing: 'border-box',

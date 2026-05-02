@@ -297,8 +297,8 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
 
         if (oldName && newName) {
           const mode = isUploadModeRef.current ? 'upload' : 'stage';
-          const variable = workspaceRef.current.getVariableById(varId);
-          const varType = variable?.type;
+          const variable = varId ? workspaceRef.current.getVariableById(varId) : null;
+          const varType = variable ? (variable as unknown as { type: string }).type : undefined;
 
           if (varType === 'list') {
             renameList(mode, oldName, newName);
@@ -826,7 +826,7 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
       {!isUploadMode && <BlocklyTabHeader activeTab={activeTab} onTabChange={setActiveTab} isStage={activeSpriteId === 'stage'} />}
 
-      <div style={{ flex: 1, width: '100%', height: '100%', position: 'relative', overflow: 'hidden', minHeight: 0 }}>
+      <div style={{ flex: 1, width: '100%', height: '100%', position: 'relative', overflow: 'hidden', minHeight: 0, backgroundColor: '#e9eef2' }}>
         <div
           id="blockly-injection-container"
           style={{

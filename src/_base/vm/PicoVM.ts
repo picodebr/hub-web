@@ -690,6 +690,7 @@ export class PicoVM extends EventEmitter<any> {
     for (const wsVar of allWsVars) {
       const varType = (wsVar as unknown as { type: string }).type;
       const varId = wsVar.getId();
+      if (!varId) continue;
 
       if (varType === 'list') {
         // Inicializa lista vazia se não existir ainda
