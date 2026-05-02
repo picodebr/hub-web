@@ -221,18 +221,12 @@ const NewCode: React.FC<IProps> = ({ project }) => {
               {!isUploadMode && (
                 <>
                   <div
-                    className={`stage-section d-flex flex-column ${isStageFullScreen ? 'align-items-center fullscreen' : 'align-items-center'} w-100`}
-                    style={{ 
-                      flex: isStageFullScreen ? '1' : '0 1 auto', 
-                      minHeight: 0,
-                      maxHeight: isStageFullScreen ? 'none' : 'calc(100vh - 120px)',
-                      backgroundColor: '#e9eef2',
-                      overflow: 'hidden'
-                    }}
+                    className={`stage-section d-flex flex-column ${isStageFullScreen ? 'align-items-center fullscreen' : 'align-items-start'} w-100`}
+                    style={{ flex: '0 0 auto', backgroundColor: '#e9eef2' }}
                   >
                     <div
                       className="stage-header w-100 d-flex align-items-center px-3"
-                      style={{ backgroundColor: '#e9eef2', minHeight: '52px', position: isStageFullScreen ? 'absolute' : 'relative' }}
+                      style={{ backgroundColor: '#e9eef2', minHeight: '52px' }}
                     >
                       <div className="d-flex align-items-center justify-content-start" style={{ flex: 1 }}>
                         <div className="stage-controls d-flex align-items-center mb-0 gap-3">
@@ -310,7 +304,7 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                     <StageArea />
                   </div>
 
-                  <div className="management-section flex-grow-1 d-flex flex-column align-items-center w-100">
+                  <div className="management-section flex-grow-1 d-flex flex-column">
                     <SpriteList />
                   </div>
                 </>
