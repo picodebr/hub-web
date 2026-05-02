@@ -11,6 +11,7 @@
   max-height: none !important;
   height: auto !important;
   margin: 0 !important;
+  padding: 0 6px 0 6px !important;
 }
 
 .main-ide-content .stage-section {
@@ -19,6 +20,17 @@
 
 .main-ide-content .management-section {
   min-height: 150px !important;
+}
+
+.main-ide-content .stage-header {
+  border-bottom: none !important;
+}
+
+.main-ide-content .stage-section.fullscreen .stage-area-container {
+  flex: 1 1 auto !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 24px !important;
 }
 
 /* 1. Layout & Estrutura Base
