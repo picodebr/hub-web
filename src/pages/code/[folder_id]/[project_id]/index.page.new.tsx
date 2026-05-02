@@ -164,27 +164,6 @@ const NewCode: React.FC<IProps> = ({ project }) => {
 
             <CodePreview isOpen={isCodePanelOpen} isUploadMode={isUploadMode} onToggle={() => setIsCodePanelOpen(false)} />
 
-            <button
-              className="btn shadow-sm position-absolute d-flex align-items-center justify-content-center"
-              style={{
-                right: '15px',
-                top: '10px',
-                width: '45px',
-                height: '45px',
-                borderRadius: '12px',
-                zIndex: 1000,
-                backgroundColor: '#131432',
-                border: 'none',
-                color: '#fff',
-                opacity: isUploadMode && !isCodePanelOpen ? 1 : 0,
-                transform: isUploadMode && !isCodePanelOpen ? 'scale(1)' : 'scale(0.5)',
-                pointerEvents: isUploadMode && !isCodePanelOpen ? 'all' : 'none',
-              }}
-              onClick={() => setIsCodePanelOpen(true)}
-            >
-              <i className="bi bi-code-slash" style={{ fontSize: '1.2rem' }}></i>
-            </button>
-
               {/* Floating button */}
               <button
                 className="btn shadow-sm position-absolute d-flex align-items-center justify-content-center"

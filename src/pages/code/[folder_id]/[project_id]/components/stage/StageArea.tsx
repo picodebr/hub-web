@@ -413,7 +413,7 @@ export default function StageArea() {
               return (
                 <div
                   key={'bubble_' + spr.id}
-                  className="speech-bubble"
+                  className="stage-speech-bubble"
                   style={{
                     position: 'absolute',
                     left: `calc(50% + ${targetX}px)`,
