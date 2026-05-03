@@ -184,6 +184,11 @@ export class ProjectService extends EventEmitter<ProjectEvents> {
     this.spriteService.bumpRevision();
   }
 
+  public renameBackdrop(backdropId: string, newName: string): void {
+    this.backdropService.renameBackdrop(backdropId, newName);
+    this.spriteService.bumpRevision();
+  }
+
   public switchCostume(spriteId: string, costumeId: string): void {
     this.costumeService.switchCostume(spriteId, costumeId, this.spriteService.getSprites(), (bId) => this.backdropService.selectBackdrop(bId));
     this.spriteService.syncAllClones();

@@ -164,27 +164,6 @@ const NewCode: React.FC<IProps> = ({ project }) => {
 
             <CodePreview isOpen={isCodePanelOpen} isUploadMode={isUploadMode} onToggle={() => setIsCodePanelOpen(false)} />
 
-            <button
-              className="btn shadow-sm position-absolute d-flex align-items-center justify-content-center"
-              style={{
-                right: '15px',
-                top: '10px',
-                width: '45px',
-                height: '45px',
-                borderRadius: '12px',
-                zIndex: 1000,
-                backgroundColor: '#131432',
-                border: 'none',
-                color: '#fff',
-                opacity: isUploadMode && !isCodePanelOpen ? 1 : 0,
-                transform: isUploadMode && !isCodePanelOpen ? 'scale(1)' : 'scale(0.5)',
-                pointerEvents: isUploadMode && !isCodePanelOpen ? 'all' : 'none',
-              }}
-              onClick={() => setIsCodePanelOpen(true)}
-            >
-              <i className="bi bi-code-slash" style={{ fontSize: '1.2rem' }}></i>
-            </button>
-
               {/* Floating button */}
               <button
                 className="btn shadow-sm position-absolute d-flex align-items-center justify-content-center"
@@ -221,12 +200,12 @@ const NewCode: React.FC<IProps> = ({ project }) => {
               {!isUploadMode && (
                 <>
                   <div
-                    className={`stage-section d-flex flex-column ${isStageFullScreen ? 'align-items-center fullscreen' : 'align-items-center'} w-100`}
+                    className={`stage-section d-flex flex-column ${isStageFullScreen ? 'align-items-center fullscreen' : 'align-items-start'} w-100`}
                     style={{ flex: '0 0 auto', backgroundColor: '#e9eef2' }}
                   >
                     <div
                       className="stage-header w-100 d-flex align-items-center px-3"
-                      style={{ backgroundColor: '#e9eef2', minHeight: '52px', position: isStageFullScreen ? 'absolute' : 'relative' }}
+                      style={{ backgroundColor: '#e9eef2', minHeight: '52px' }}
                     >
                       <div className="d-flex align-items-center justify-content-start" style={{ flex: 1 }}>
                         <div className="stage-controls d-flex align-items-center mb-0 gap-3">
@@ -304,7 +283,7 @@ const NewCode: React.FC<IProps> = ({ project }) => {
                     <StageArea />
                   </div>
 
-                  <div className="management-section flex-grow-1 d-flex flex-column align-items-center w-100">
+                  <div className="management-section flex-grow-1 d-flex flex-column">
                     <SpriteList />
                   </div>
                 </>

@@ -20,7 +20,7 @@ void main() {
 
 // Fragment shader com suporte aos efeitos de Scratch (ghost, color, brightness, etc)
 export const FRAGMENT_SHADER_SOURCE = `#version 300 es
-precision mediump float;
+precision highp float;
 
 in vec2 v_texCoord;
 out vec4 outColor;

@@ -9,7 +9,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback, useRef } from 'react';
-import { SpriteData, BackdropData, IBlocklyWorkspaceJson, SpriteVariable, SpriteList, IMLModel, MonitorData } from '../domain/entities';
+import { SpriteData, CostumeData, BackdropData, IBlocklyWorkspaceJson, SpriteVariable, SpriteList, IMLModel, MonitorData } from '../domain/entities';
 import { getProjectService, ProjectService } from '../services/code';
 
 interface ProjectContextType {
@@ -63,6 +63,7 @@ interface ProjectContextType {
   selectBackdrop: (id: string) => void;
   setBackdrops: (backdrops: BackdropData[]) => void;
   setActiveBackdropId: (id: string) => void;
+  renameBackdrop: (backdropId: string, newName: string) => void;
 
   // Global Variables (Separated by Mode)
   stageVariables: SpriteVariable[];
@@ -252,7 +253,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       return {
         id: 'stage',
         name: 'Palco',
-        costumes: backdrops as any, // Cast specifically to avoid compatibility issues if BackdropData evolves differently
+        costumes: backdrops as CostumeData[],
         currentCostumeId: activeBackdropId,
         sounds: activeBackdrop?.sounds ?? [],
         currentSoundId: activeBackdrop?.currentSoundId ?? null,
@@ -261,7 +262,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         angle: 0,
         size: 100,
         visible: true,
-        costume: activeBackdrop?.url || '',
+        costume: activeBackdrop?.stageUrl || activeBackdrop?.url || '',
         blocks: stageBlocks?.blocks,
         code: stageBlocks?.code || '',
         isStage: true,
@@ -372,6 +373,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const selectBackdrop = useCallback((id: string) => projectService.selectBackdrop(id), [projectService]);
   const setBackdrops = useCallback((nb: BackdropData[]) => projectService.setBackdrops(nb), [projectService]);
   const setActiveBackdropId = useCallback((id: string) => projectService.setActiveBackdropId(id), [projectService]);
+  const renameBackdrop = useCallback((id: string, n: string) => projectService.renameBackdrop(id, n), [projectService]);
 
   // Variable methods
   const getUserVariables = useCallback(
@@ -474,6 +476,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       selectBackdrop,
       setBackdrops,
       setActiveBackdropId,
+      renameBackdrop,
       stageVariables,
       uploadVariables,
       getUserVariables,
@@ -547,6 +550,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       selectBackdrop,
       setBackdrops,
       setActiveBackdropId,
+      renameBackdrop,
       getUserVariables,
       addVariable,
       renameVariable,

@@ -91,7 +91,9 @@ export class TextureManager {
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, 1);
-        this.gl.pixelStorei(this.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
+        // Não pré-multiplica o alpha aqui; o shader faz isso no output
+        // para manter consistência com premultipliedAlpha:false do contexto WebGL2
+        this.gl.pixelStorei(this.gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
         
         // Usa formato interno RGBA8 do WebGL 2 para maior precisão
         this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA8, this.gl.RGBA, this.gl.UNSIGNED_BYTE, source);
@@ -142,8 +144,8 @@ export class TextureManager {
             logicalH = parseFloat(svgElement.getAttribute('height') || '360');
         }
 
-        // Resolução de renderização interna (2048px na maior dimensão)
-        const targetRes = 2048;
+        // Resolução de renderização interna (4096px na maior dimensão para nitidez em telas grandes)
+        const targetRes = 4096;
         const scale = targetRes / Math.max(logicalW, logicalH);
         const renderW = logicalW * scale;
         const renderH = logicalH * scale;

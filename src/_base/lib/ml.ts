@@ -121,6 +121,28 @@ export async function predictImage(imageElement: HTMLImageElement | HTMLVideoEle
   });
 }
 
+export async function loadModelFromUrls(modelUrl: string, binUrl: string): Promise<tf.LayersModel> {
+  await tf.ready();
+
+  const [modelResponse, binResponse] = await Promise.all([fetch(modelUrl), fetch(binUrl)]);
+
+  if (!modelResponse.ok) throw new Error('Falha ao baixar o modelo (model.json)');
+  if (!binResponse.ok) throw new Error('Falha ao baixar os pesos (weights.bin)');
+
+  const modelJson = await modelResponse.json();
+  const weightData = await binResponse.arrayBuffer();
+  const weightSpecs = modelJson.weightsManifest?.[0]?.weights ?? [];
+
+  if (trainedModel) {
+    trainedModel.dispose();
+    trainedModel = null;
+  }
+
+  const loaded = await tf.loadLayersModel(tf.io.fromMemory(modelJson.modelTopology, weightSpecs, weightData));
+  trainedModel = loaded as tf.Sequential;
+  return loaded;
+}
+
 export async function getModelArtifacts(): Promise<{ modelJson: any; weightData: ArrayBuffer | undefined }> {
   if (!trainedModel) throw new Error('Nenhum modelo treinado disponível para extrair os artefatos.');
 

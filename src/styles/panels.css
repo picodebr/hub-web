@@ -2,6 +2,37 @@
    Painéis Específicos da Aplicação (Palco, Sprites, Código)
    ========================================================================== */
 
+/* 0. Neutralização de globals.css para a nova página do editor
+   (globals.css tem regras !important incompatíveis com o layout WebGL)
+   ========================================================================== */
+
+.main-ide-content .stage-area-container {
+  aspect-ratio: unset !important;
+  max-height: none !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 6px 0 6px !important;
+}
+
+.main-ide-content .stage-section {
+  min-height: 0 !important;
+}
+
+.main-ide-content .management-section {
+  min-height: 150px !important;
+}
+
+.main-ide-content .stage-header {
+  border-bottom: none !important;
+}
+
+.main-ide-content .stage-section.fullscreen .stage-area-container {
+  flex: 1 1 auto !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 24px !important;
+}
+
 /* 1. Layout & Estrutura Base
    ========================================================================== */
 
@@ -13,7 +44,7 @@ html body #right-panel {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: var(--scratch-lightblue);
   overflow: hidden;
   flex: 0 0 540px;
   width: 540px;
@@ -123,10 +154,11 @@ html body .stage-column {
    ========================================================================== */
 
 html body .stage-section {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  background-color: #fff;
+  background-color: var(--scratch-lightblue);
   z-index: 10;
 }
 
@@ -179,10 +211,8 @@ html body .stage-section {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0 16px 6px 16px;
+  padding: 0 6px 0 6px;
   overflow: hidden;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .stage-content {
@@ -211,19 +241,15 @@ html body .stage-section.fullscreen {
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   background-color: #ffffff;
 }
 
 html body .stage-section.fullscreen .stage-header {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 52px;
   flex: 0 0 52px;
-  z-index: 100;
   background-color: #ffffff;
 }
 
@@ -233,7 +259,6 @@ html body .stage-section.fullscreen .stage-area-container {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
   padding: 0;
   border-radius: 0;
 }
@@ -250,12 +275,11 @@ html body .management-section {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
   min-height: 200px;
   max-width: 100%;
-  background-color: #e9eef2;
+  background-color: var(--scratch-lightblue);
   overflow: hidden;
-  padding: 0 16px;
-  box-sizing: border-box;
 }
 
 html body .sprite-management-area {
@@ -266,9 +290,7 @@ html body .sprite-management-area {
   min-height: 0;
   overflow: hidden;
   gap: 8px;
-  padding: 8px 0px;
-  width: calc(100% + 5px);
-  max-width: 1000px;
+  padding: 0 8px 8px 8px;
 }
 
 .sprite-info-panel {
@@ -545,7 +567,11 @@ html body.upload-mode #blockly-container {
 /* --- Step 5: 650px (Breakpoint Crítico) --- */
 @media (max-height: 650px) {
 
-  /* Removido o override de largura de 330px que cortava o conteúdo */
+  html body:not(.upload-mode) #right-panel {
+    flex: 0 0 330px;
+    width: 330px;
+  }
+
   html body .sprite-card {
     width: 50px;
     height: 62px;

@@ -20,6 +20,7 @@ const pulse = emotionKeyframes`
 // ==========================================
 const piBlue = '#0052CC';
 const piGreen = '#10B981';
+const piYellow = '#FACC15';
 
 const customScrollbar = {
   '&::-webkit-scrollbar': { width: '6px', height: '6px' },
@@ -50,7 +51,7 @@ export function PreviewPanel() {
         try {
           const scores = await predictImage(videoRef.current, true);
           setPredictions(scores);
-        } catch (e) {}
+        } catch (e) { }
       }
 
       if (isPredictingRef.current) {
@@ -88,7 +89,7 @@ export function PreviewPanel() {
       try {
         const scores = await predictImage(imageRef.current, false);
         setPredictions(scores);
-      } catch (e) {}
+      } catch (e) { }
     }
   };
 
@@ -219,17 +220,7 @@ export function PreviewPanel() {
               Arquivo
             </Button>
           </Flex>
-          <Flex gap={1.5}>
-            <IconButton
-              aria-label="Fechar"
-              icon={<X size={16} />}
-              size="sm"
-              bg="#F1F5F9"
-              color="gray.400"
-              borderRadius="lg"
-              _hover={{ bg: 'gray.200' }}
-            />
-          </Flex>
+
         </Flex>
       </Flex>
 
@@ -351,7 +342,7 @@ export function PreviewPanel() {
                   <Box
                     flex={1}
                     h="8"
-                    bg="#F1F5F9"
+                    bg="#cbd5e1"
                     borderRadius="full"
                     position="relative"
                     overflow="hidden"
@@ -364,20 +355,18 @@ export function PreviewPanel() {
                       left={0}
                       top={0}
                       h="full"
-                      bg={piBlue}
-                      transition="width 0.7s ease-out"
+                      bg={percent > 75 ? piYellow : piBlue}
+                      transition={mode === 'webcam' ? 'none' : 'width 0.5s ease-out'}
                       borderRadius="full"
-                      boxShadow="4px 0 12px rgba(0,82,204,0.2)"
+                      boxShadow={percent > 75 ? `4px 0 12px ${piYellow}66` : `4px 0 12px rgba(0,82,204,0.2)`}
                       w={`${percent}%`}
                     />
                     <Flex position="absolute" inset={0} align="center" justify="center">
                       <Text
                         fontSize={{ base: '10px', sm: 'xs' }}
                         fontWeight="black"
-                        color="gray.400"
+                        color={percent > 0 ? '#fffcfc' : '#444444'}
                         letterSpacing="tighter"
-                        mixBlendMode="difference"
-                        sx={{ color: 'white' }}
                       >
                         {percent}%
                       </Text>

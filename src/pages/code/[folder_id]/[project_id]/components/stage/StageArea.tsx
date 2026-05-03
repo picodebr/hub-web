@@ -147,9 +147,9 @@ export default function StageArea() {
 
   React.useEffect(() => {
     if (canvasRef.current) {
-      const dpr = window.devicePixelRatio || 1;
-      canvasRef.current.width = 480 * dpr;
-      canvasRef.current.height = 360 * dpr;
+      // Inicializa com resolução base; o render loop ajusta conforme o scale
+      canvasRef.current.width = 480;
+      canvasRef.current.height = 360;
       initWebGL(canvasRef.current);
     }
   }, []);
@@ -159,24 +159,15 @@ export default function StageArea() {
 
     const renderLoop = () => {
       const renderer = getWebGLRenderer();
-      if (renderer && canvasRef.current && containerRef.current) {
+      if (renderer && canvasRef.current && stageRef.current) {
         const dpr = window.devicePixelRatio || 1;
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const containerW = containerRect.width;
-        const containerH = containerRect.height;
-        
-        const stageRatio = 480 / 360;
-        let finalW = containerW;
-        let finalH = containerH;
 
-        if (containerW / containerH > stageRatio) {
-          finalW = containerH * stageRatio;
-        } else {
-          finalH = containerW / stageRatio;
-        }
-
-        const targetW = Math.round(finalW * dpr);
-        const targetH = Math.round(finalH * dpr);
+        // O canvas WebGL deve ter dimensões físicas = resolução lógica do stage × DPR
+        // O stage lógico é sempre 480×360. O scale é aplicado via CSS transform no stageRef.
+        // Para render nítido, o canvas precisa de pixels suficientes para a resolução
+        // que será exibida: 480*scale pixels de largura CSS * dpr pixels físicos.
+        const targetW = Math.round(480 * scale * dpr);
+        const targetH = Math.round(360 * scale * dpr);
 
         if (canvasRef.current.width !== targetW || canvasRef.current.height !== targetH) {
           canvasRef.current.width = targetW;
@@ -198,7 +189,7 @@ export default function StageArea() {
 
     frameId = requestAnimationFrame(renderLoop);
     return () => cancelAnimationFrame(frameId);
-  }, [flashSpriteId]);
+  }, [flashSpriteId, scale]);
 
   const handleStageMouseDown = (e: React.MouseEvent) => {
     if (!stageRef.current) return;
@@ -265,29 +256,23 @@ export default function StageArea() {
 
   React.useEffect(() => {
     if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        const availableWidth = Math.max(10, width - 2);
+        const availableHeight = Math.max(10, height - 2);
 
-    const updateScale = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const availableWidth = Math.max(10, rect.width - 32);
-      const availableHeight = isStageFullScreen ? Math.max(10, rect.height - 120) : 9999;
+        const scaleW = availableWidth / 480;
+        const scaleH = isStageFullScreen ? availableHeight / 360 : Infinity;
 
-      const scaleW = (availableWidth - 2) / 480;
-      const scaleH = (availableHeight - 2) / 360;
+        let newScale = Math.min(scaleW, scaleH, 2.0);
+        if (newScale > 0.98 && newScale < 1.05) newScale = 1.0;
 
-      let newScale = Math.min(scaleW, scaleH, 2.0);
-      
-      // Snap para 1.0 para evitar blur de sub-pixel se estiver muito próximo do tamanho real
-      if (newScale > 0.98 && newScale < 1.05) newScale = 1.0;
-
-      setScale(newScale);
-      window.dispatchEvent(new CustomEvent('stage-width-changed', { detail: 480 * newScale + 2 }));
-    };
-
-    const observer = new ResizeObserver(() => updateScale());
+        setScale(newScale);
+        window.dispatchEvent(new CustomEvent('stage-width-changed', { detail: 480 * newScale + 2 }));
+      }
+    });
     observer.observe(containerRef.current);
-    updateScale();
-
     return () => observer.disconnect();
   }, [isStageFullScreen]);
 
@@ -343,19 +328,18 @@ export default function StageArea() {
   return (
     <div
       ref={containerRef}
-      className={`w-100 h-100 d-flex align-items-center justify-content-center stage-area-container ${isStageFullScreen ? 'fullscreen' : ''}`}
+      className={`w-100 d-flex align-items-center justify-content-center stage-area-container ${isStageFullScreen ? 'fullscreen' : ''}`}
       style={{
-        minHeight: 0,
+        backgroundColor: '#e9eef2',
+        flex: '1 1 auto',
         overflow: 'hidden',
-        flex: isStageFullScreen ? '1' : undefined,
       }}
     >
       <div
         style={{
-          width: `${480 * scale + 2}px`,
-          height: `${360 * scale + 2}px`,
+          width: `${480 * scale}px`,
+          height: `${360 * scale}px`,
           position: 'relative',
-          border: '1px solid #ccc',
           borderRadius: '16px',
           overflow: 'hidden',
           boxSizing: 'border-box',
@@ -385,13 +369,9 @@ export default function StageArea() {
               position: 'absolute',
               top: 0,
               left: 0,
-              width: '100%',
-              height: '100%',
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
+              width: '480px',
+              height: '360px',
               display: 'block',
-              margin: '0 auto',
               imageRendering: 'auto',
               cursor: draggingId ? 'grabbing' : 'default',
               borderRadius: '16px',
@@ -432,7 +412,7 @@ export default function StageArea() {
               return (
                 <div
                   key={'bubble_' + spr.id}
-                  className="speech-bubble"
+                  className="stage-speech-bubble"
                   style={{
                     position: 'absolute',
                     left: `calc(50% + ${targetX}px)`,

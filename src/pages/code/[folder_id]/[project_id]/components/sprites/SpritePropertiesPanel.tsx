@@ -49,7 +49,7 @@ export function SpritePropertiesPanel({ displaySprite, updateSprite }: SpritePro
   };
 
   return (
-    <div className="properties-panel border-bottom shadow-sm z-1 bg-white">
+    <div className="properties-panel border-bottom z-1 bg-white">
       <div className="d-flex align-items-center gap-2 mb-2">
         <div className="d-flex align-items-center gap-1 flex-grow-1 overflow-hidden">
           <span className=" text-secondary text-truncate" style={{ minWidth: '35px' }}>

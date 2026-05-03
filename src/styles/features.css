@@ -3,7 +3,7 @@
    =============================== */
 
 /* --- Balões de Fala (Speech Bubbles) --- */
-.speech-bubble {
+.stage-speech-bubble {
   position: absolute;
   font-family: var(--font-outfit), sans-serif;
   font-size: 14px;

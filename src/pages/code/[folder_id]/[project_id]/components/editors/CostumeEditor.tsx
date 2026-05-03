@@ -257,7 +257,20 @@ export default function CostumeEditor() {
                 spriteId={activeSprite.id}
                 costumeId={activeCostumeId}
                 costumeName={currentCostume?.name || 'Fantasia'}
-                initialUrl={currentCostume?.stageUrl || currentCostume?.url || activeSprite.costume || ''}
+                initialUrl={(() => {
+                  // Para fantasias raster (PNG/JPG): o paint editor deve carregar do `url` (PNG puro)
+                  // para sempre centralizar via handleRasterLoad. O `stageUrl` é o SVG wrapper usado
+                  // pelo renderizador do palco com coordenadas corretas.
+                  // Para fantasias SVG: `stageUrl` tem o PBT_BOUNDS_BOX de posicionamento.
+                  const rawUrl = currentCostume?.url || '';
+                  const isRasterUrl = rawUrl.startsWith('data:image/png') ||
+                    rawUrl.startsWith('data:image/jpeg') ||
+                    rawUrl.startsWith('data:image/gif') ||
+                    rawUrl.startsWith('data:image/webp');
+                  return isRasterUrl
+                    ? rawUrl
+                    : (currentCostume?.stageUrl || rawUrl || activeSprite.costume || '');
+                })()}
               />
             ) : (
               <LoadingEditor />

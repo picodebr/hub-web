@@ -12,7 +12,7 @@ import { VisionLabConfirmModal } from './components/modals/ConfirmModal';
 import { GetServerSideProps } from 'next';
 import { cookieManager } from '@/_base/utils';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
-import { getModelArtifacts, getTrainedModel } from '@/_base/lib/ml';
+import { getModelArtifacts, getTrainedModel, loadModelFromUrls } from '@/_base/lib/ml';
 import { getPresignedUrl } from '@/_base/services/upload';
 import { useEffect, useState } from 'react';
 import { IVisionLabProject } from '@/_base/interfaces/visionLab/IVisionLabProject';
@@ -51,7 +51,7 @@ export default function VisionLab({ projectId }: { projectId: string }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const { isLoaded, error } = useTensorFlow();
-  const { classes, isTrained } = useVisionLabStore();
+  const { classes, isTrained, initFromProject } = useVisionLabStore();
   const toast = useCustomToast();
 
   useEffect(() => {
@@ -68,6 +68,16 @@ export default function VisionLab({ projectId }: { projectId: string }) {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (!isLoaded || !targetProject?.model_path || !targetProject?.bin_path || !targetProject.labels?.length) return;
+    (async () => {
+      try {
+        await loadModelFromUrls(targetProject.model_path!, targetProject.bin_path!);
+        initFromProject(targetProject.labels);
+      } catch {}
+    })();
+  }, [isLoaded, targetProject]);
 
   const handleSave = useAsyncCallback(
     async () => {
