@@ -88,7 +88,10 @@ export default function CodeNavbar({ project }: IProps) {
   };
 
   useEffect(() => {
-    if (!project?.metadata) return;
+    if (!project?.metadata) {
+      SerializationService.resetProject(contextAdapter);
+      return;
+    }
     SerializationService.loadProject(project.metadata, contextAdapter);
   }, [project]);
 

@@ -240,13 +240,29 @@ export const MLRecognitionWindow: React.FC<MLRecognitionWindowProps> = React.mem
     setCameraError(null);
     setModelLoading(true);
     try {
-      const absoluteModelURL = new URL(activeModel.modelJsonUrl, window.location.origin).href;
       const gWindow = window as unknown as IGlobalWindow;
       const tf = gWindow.tf;
       const mobilenet = gWindow.mobilenet;
       if (!tf || !mobilenet) throw new Error('TensorFlow libs not ready.');
+
+      // Fetch ambos os arquivos explicitamente para evitar que o TF.js
+      // resolva 'weights.bin' como caminho relativo ao model.json — o
+      // bin_path salvo no banco é um UUID diferente do model_path.
+      const [modelResponse, binResponse] = await Promise.all([
+        fetch(activeModel.modelJsonUrl),
+        fetch(activeModel.modelBinUrl),
+      ]);
+
+      if (!modelResponse.ok) throw new Error(`Falha ao baixar model.json (${modelResponse.status})`);
+      if (!binResponse.ok) throw new Error(`Falha ao baixar weights.bin (${binResponse.status})`);
+
+      const modelJson = await modelResponse.json();
+      const weightData = await binResponse.arrayBuffer();
+      const weightSpecs = modelJson.weightsManifest?.[0]?.weights ?? [];
+
       const baseModel = await mobilenet.load();
-      const customModel = await tf.loadLayersModel(absoluteModelURL);
+      const customModel = await tf.loadLayersModel(tf.io.fromMemory(modelJson.modelTopology, weightSpecs, weightData));
+
       tmModelRef.current = {
         baseModel: baseModel as ITMModel['baseModel'],
         customModel: customModel as ITMModel['customModel'],
