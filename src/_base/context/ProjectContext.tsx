@@ -206,7 +206,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         setLastRealSpriteId(newId);
       }
     };
-    const handleActiveBackdropChange = (newId: string) => setActiveBackdropIdState(newId);
+    // backdrops é atualizado junto com activeBackdropId no mesmo batch React para evitar
+    // a janela onde activeBackdropId aponta para um ID ainda não presente em backdrops,
+    // causando fallback para backdrops[0] (cenário padrão) antes do RAF sync chegar.
+    const handleActiveBackdropChange = (newId: string) => {
+      setActiveBackdropIdState(newId);
+      setBackdropsState([...projectService.getBackdrops()]);
+    };
 
     projectService.on('activeSpriteChange', handleActiveSpriteChange);
     projectService.on('activeBackdropChange', handleActiveBackdropChange);

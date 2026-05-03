@@ -96,7 +96,9 @@ export const getUploadToolbox = (activeExtensions: string[] = [], hasUploadModel
             .withIcon('/svg/cerebro.svg')
             .addButton('Trocar Modelo', 'CHANGE_UPLOAD_ML_MODEL')
             .addBlock(new BlockBuilder('ml_upload_on_class'))
-            .addBlock(new BlockBuilder('ml_upload_current_class'));
+            .addBlock(new BlockBuilder('ml_upload_current_class'))
+            .addBlock(new BlockBuilder('ml_upload_identified_class'))
+            .addBlock(new BlockBuilder('ml_upload_get_confidence'));
         contents.push(mlCategory.toJSON());
     }
 

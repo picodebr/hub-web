@@ -140,6 +140,7 @@ export class CodeExecutor {
             function setPwm(pin, val) { return callParent('setPwm', [pin, val]); }
             function setServo(pin, deg) { return callParent('setServo', [pin, deg]); }
             function setPullup(pin) { return callParent('setPullup', [pin]); }
+            function getUltrasonic(trig, echo) { return callParent('getUltrasonic', [trig, echo]); }
             
             // --- VARIÁVEIS DE ESTADO SÍNCRONAS ---
             window.__activeGens = {};
@@ -276,7 +277,7 @@ export class CodeExecutor {
                 isIdentifiedClass, getConfidence,
                 getSpriteProperty,
                 board: {
-                    getDigital, setDigital, getAnalog, setPwm, setServo, setPullup
+                    getDigital, setDigital, getAnalog, setPwm, setServo, setPullup, getUltrasonic
                 }
             };
 

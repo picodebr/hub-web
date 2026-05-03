@@ -15,7 +15,7 @@ import { useExecutionRunner } from '../../context/RuntimeContext';
 import { useProject } from '../../context/ProjectContext';
 import { useFirmware } from '../../context/FirmwareContext';
 import { SpriteData } from '../../domain/entities';
-import { getPicoVM } from '../../vm/PicoVM';
+import { getProjectService } from '../../services/code';
 import { CodeExecutor } from '@/_base/services/code/CodeExecutor';
 
 export function useSandboxExecutor() {
@@ -123,8 +123,22 @@ export function useSandboxExecutor() {
         // Isso sincroniza os loops "para sempre" a ~60fps, igual ao Scratch.
         // Sem isso, o loop roda na velocidade do postMessage (centenas de fps, imprevisível).
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-      } else if (data.action === 'broadcast') await getPicoVM().triggerBroadcast(data.args[0]);
-      else if (data.action === 'broadcastAndWait') await getPicoVM().triggerBroadcast(data.args[0]);
+      } else if (data.action === 'broadcast') {
+        getProjectService().emit('broadcast', data.args[0]);
+      } else if (data.action === 'broadcastAndWait') {
+        const message = data.args[0];
+        const ps = getProjectService();
+        await new Promise<void>((resolve) => {
+          const onDone = (msg: string) => {
+            if (msg === message) {
+              ps.off('broadcastDone', onDone);
+              resolve();
+            }
+          };
+          ps.on('broadcastDone', onDone);
+          ps.emit('broadcast', message);
+        });
+      }
       else if (data.action === 'createClone') await createClone(data.args[0], spriteId);
       else if (data.action === 'deleteClone') await deleteClone(spriteId);
       else if (data.action === 'setDraggable') stageContext.setDraggable(data.args[0], spriteId);
@@ -151,6 +165,9 @@ export function useSandboxExecutor() {
         // setPullup não está na interface IHardwareBoard — verificamos em runtime
         const boardWithPullup = board as typeof board & { setPullup?: (pin: number | string) => void };
         boardWithPullup?.setPullup?.(data.args[0]);
+      } else if (data.action === 'getUltrasonic') {
+        const boardWithUltrasonic = board as typeof board & { getUltrasonic?: (trig: number | string, echo: number | string) => Promise<number> };
+        result = await boardWithUltrasonic?.getUltrasonic?.(data.args[0], data.args[1]) ?? 0;
       }
 
       // Getters de estado do sprite

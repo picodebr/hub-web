@@ -19,6 +19,8 @@ export default class StageBoard implements IHardwareBoard {
   // Cache de estados dos pinos digitais e analógicos
   estadosPinos: { [pin: number]: number } = {};
   analogStates: { [pin: number]: number } = {};
+  // Cache de distância ultrassônica por pino de eco (em cm)
+  ultrasonicStates: { [echoPin: number]: number } = {};
 
   // Buffer de bytes recebidos da porta serial
   buffer: number[] = [];
@@ -191,8 +193,16 @@ export default class StageBoard implements IHardwareBoard {
         this.buffer.splice(0, 3);
       } else if (cmd === 0xf0) {
         const fim = this.buffer.indexOf(0xf7);
-        if (fim !== -1) this.buffer.splice(0, fim + 1);
-        else break;
+        if (fim === -1) break;
+        // Resposta do ultrassônico: [0xF0, 0x62, echoPin, lsb, msb, 0xF7]
+        if (fim >= 4 && this.buffer[1] === 0x62) {
+          const echoPin = this.buffer[2];
+          const lsb = this.buffer[3] & 0x7f;
+          const msb = this.buffer[4] & 0x7f;
+          const durationUs = lsb | (msb << 7);
+          this.ultrasonicStates[echoPin] = Math.round(durationUs / 58);
+        }
+        this.buffer.splice(0, fim + 1);
       } else if (cmd === 0xf9) {
         if (this.buffer.length < 3) break;
         this.buffer.splice(0, 3);
@@ -308,6 +318,16 @@ export default class StageBoard implements IHardwareBoard {
       this.configuredPins.add(`PULLUP_${pino}`);
       this.configuredPins.add(pino);
     }
+  }
+
+  async getUltrasonic(trigPin: number | string, echoPin: number | string): Promise<number> {
+    const trig = parseInt(trigPin as string);
+    const echo = parseInt(echoPin as string);
+    // Envia comando Sysex 0x62 (PingFirmata): [0xF0, 0x62, trigPin, echoPin, 0xF7]
+    // O firmware responde com [0xF0, 0x62, echoPin, lsb, msb, 0xF7] (duração em µs, 7-bit each)
+    await this.enviarBytes([0xf0, 0x62, trig, echo, 0xf7]);
+    // Retorna o último valor cacheado (mesmo padrão de getDigital/getAnalog)
+    return this.ultrasonicStates[echo] ?? 0;
   }
 
   registerButton(pin: number | string, callback: () => void) {
