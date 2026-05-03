@@ -45,6 +45,24 @@ export const initBoardGenerators = () => {
         return [code, Order.ATOMIC];
     };
 
+    // Semáforo: vermelho=13, amarelo=12, verde=4
+    javascriptGenerator.forBlock['board_traffic_light_stage'] = function (block: Blockly.Block) {
+        const color = block.getFieldValue('COLOR');
+        const state = block.getFieldValue('STATE');
+        const pinMap: Record<string, string> = { VERMELHO: '13', AMARELO: '12', VERDE: '4' };
+        const pin = pinMap[color];
+        const val = state === 'HIGH' ? 'true' : 'false';
+        return `await stage.board.setDigital('${pin}', ${val});\n`;
+    };
+
+    // Escrita Digital — pinos 1-13 com ligado/desligado (stage/Firmata)
+    javascriptGenerator.forBlock['board_set_pin_stage'] = function (block: Blockly.Block) {
+        const pin = block.getFieldValue('PIN');
+        const state = block.getFieldValue('STATE');
+        const val = state === 'HIGH' ? 'true' : 'false';
+        return `await stage.board.setDigital('${pin}', ${val});\n`;
+    };
+
     // Escrita Digital
     javascriptGenerator.forBlock['set_digital_pin_pt'] = function (block: Blockly.Block) {
         const pin = block.getFieldValue('PIN');
@@ -80,13 +98,19 @@ export const initBoardGenerators = () => {
         return `await stage.board.setPullup('${pin}');\n`;
     };
 
-    // Ultrassônico (Simulado ou Mockado, pois exige protocolo especial ou PING)
-    javascriptGenerator.forBlock['board_ultrasonic_read'] = function (_block: Blockly.Block) {
-        // HC-SR04 via Firmata requer Sysex Config geralmente (PingFirmata).
-        // O StageBoard.ts atual não tem implementação de Ultrassônico via Sysex.
-        // Retornamos 0 para evitar crash.
-        return ['0', Order.ATOMIC];
+    // Ultrassônico — stage (Sysex 0x62 / PingFirmata)
+    const ultrasonicGen = function (block: Blockly.Block): [string, number] {
+        const trig = block.getFieldValue('TRIG');
+        const echo = block.getFieldValue('ECHO');
+        const unit = block.getFieldValue('UNIT');
+        const raw = `(await stage.board.getUltrasonic('${trig}', '${echo}'))`;
+        // cm já vem do cache (duração/58); pol = duração/148 → dividimos o cm por 2.54
+        const code = unit === 'IN' ? `(${raw} / 2.54)` : raw;
+        return [code, Order.ATOMIC];
     };
+    javascriptGenerator.forBlock['board_ultrasonic_read_stage'] = ultrasonicGen;
+    // Reutiliza o mesmo generator para o bloco do modo upload (sobrescreve o mock)
+    javascriptGenerator.forBlock['board_ultrasonic_read'] = ultrasonicGen;
 
     // LDR (Simples Analog Read no A5 fixo, conforme tooltip legado)
     javascriptGenerator.forBlock['board_ldr_read'] = function (_block: Blockly.Block) {

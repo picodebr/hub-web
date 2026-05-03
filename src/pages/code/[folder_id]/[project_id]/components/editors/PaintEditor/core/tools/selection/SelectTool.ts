@@ -315,6 +315,12 @@ export class SelectTool extends BaseTool {
   }
 
   onProjectChange() {
+    // Após undo/redo o project.clear() orphana o grupo do BoundingBox (sem parent layer).
+    // Destruímos o objeto antigo para que updateBoundingBox crie um novo na 'ui' layer recriada.
+    if ((this as any).caixaDelimitadora) {
+      try { (this as any).caixaDelimitadora.remover(); } catch {}
+      (this as any).caixaDelimitadora = null;
+    }
     this.clearHighlightClones();
     this.updateBoundingBox();
   }

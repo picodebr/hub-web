@@ -12,6 +12,9 @@ import { CategoryBuilder, BlockBuilder, shadowBlock } from "../../../lib/blockly
 export const getBoardCategory = () => {
     const cat = new CategoryBuilder("Placa", "#00C896")
         .withIcon('/svg/Piboard-icon.svg')
+        .addBlock(new BlockBuilder('board_ultrasonic_read_stage').withField('TRIG', '9').withField('ECHO', '10').withField('UNIT', 'CM'))
+        .addBlock(new BlockBuilder('board_traffic_light_stage').withField('COLOR', 'VERMELHO').withField('STATE', 'HIGH'))
+        .addBlock(new BlockBuilder('board_set_pin_stage').withField('PIN', '13').withField('STATE', 'HIGH'))
         .addBlock(new BlockBuilder('board_read_digital_pin_stage').withField('PIN', '2'))
         .addBlock(new BlockBuilder('board_read_analog_pin_stage').withField('PIN', '0'))
         .addBlock(new BlockBuilder('board_button_read_stage'))

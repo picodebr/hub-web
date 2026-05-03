@@ -27,14 +27,16 @@ export class HistoryManager {
         const project = this.scope.project;
         if (!project) return;
 
-        const uiLayers = project.layers.filter(l => l.name === 'guides' || l.name === 'highlight');
+        const uiLayers = project.layers.filter(l => l.name === 'guides' || l.name === 'highlight' || l.name === 'ui');
         uiLayers.forEach(l => l.remove());
 
         const jsonState = project.exportJSON();
         const guides = uiLayers.find(l => l.name === 'guides');
         const highlight = uiLayers.find(l => l.name === 'highlight');
+        const ui = uiLayers.find(l => l.name === 'ui');
         if (guides) project.insertLayer(0, guides);
         if (highlight) project.addLayer(highlight);
+        if (ui) project.addLayer(ui);
 
         if (jsonState) {
             this.history = [jsonState];
@@ -46,17 +48,21 @@ export class HistoryManager {
         const project = this.scope.project;
         if (!project) return;
 
-        // Desativa temporariamente as camadas de UI para que não sejam salvas no histórico/JSON
-        const uiLayers = project.layers.filter(l => l.name === 'guides' || l.name === 'highlight');
+        // Desativa temporariamente as camadas de UI para que não sejam salvas no histórico/JSON.
+        // 'ui' também é excluído: contém BoundingBox e highlight clones que são estado visual
+        // efêmero — salvar no snapshot causa reaparecerem com layout desatualizado no undo.
+        const uiLayers = project.layers.filter(l => l.name === 'guides' || l.name === 'highlight' || l.name === 'ui');
         uiLayers.forEach(l => l.remove());
 
         const jsonState = project.exportJSON();
-        
+
         // Restaura as camadas de UI imediatamente após a exportação - garantindo a ordem correta
         const guides = uiLayers.find(l => l.name === 'guides');
         const highlight = uiLayers.find(l => l.name === 'highlight');
+        const ui = uiLayers.find(l => l.name === 'ui');
         if (guides) project.insertLayer(0, guides);
         if (highlight) project.addLayer(highlight);
+        if (ui) project.addLayer(ui);
 
         if (jsonState) {
             // Se desenhar após um undo, apaga o futuro
