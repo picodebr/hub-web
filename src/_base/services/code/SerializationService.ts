@@ -314,6 +314,18 @@ export const SerializationService = {
     }
   },
 
+  resetProject: (context: IProjectContextUI) => {
+    const projectService = getProjectService();
+    projectService.reset();
+    context.setIsUploadMode(false);
+    context.setActiveExtensions([]);
+    context.setActiveStageMLModel(null);
+    context.setActiveUploadMLModel(null);
+    context.setUploadModeBlocks(null);
+    context.setUploadCode('');
+    projectService.emit('projectLoaded', undefined);
+  },
+
   handleFileSelect: (event: React.ChangeEvent<HTMLInputElement>, context: IProjectContextUI) => {
     const file = event.target.files?.[0];
     if (!file) return;

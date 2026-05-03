@@ -464,6 +464,19 @@ export class ProjectService extends EventEmitter<ProjectEvents> {
       this.spriteService.bumpRevision();
     }
   }
+
+  public reset(): void {
+    this.spriteService = new SpriteService(this);
+    this.costumeService = new CostumeService(this);
+    this.backdropService = new BackdropService(this);
+    this.variableService = new VariableService(this);
+    this.soundService = new SoundService(this);
+    this.broadcastMessages = ['mensagem1'];
+    // Bump revision so the RAF heartbeat in ProjectContext detects the change
+    this.spriteService.bumpRevision();
+    this.emit('activeSpriteChange', this.spriteService.getActiveSpriteId());
+    this.emit('activeBackdropChange', this.backdropService.getActiveBackdropId());
+  }
 }
 
 // Exporta instância singleton do ProjectService
