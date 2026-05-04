@@ -10,9 +10,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import * as tf from '@tensorflow/tfjs';
+import * as mobilenet from '@tensorflow-models/mobilenet';
 import { useProject } from '@/_base/context/ProjectContext';
 import { useUI } from '@/_base/context/UIContext';
-import { IGlobalWindow, ITMModel, IMLPrediction } from '@/_base/domain/entities';
+import { ITMModel, IMLPrediction } from '@/_base/domain/entities';
 
 type InputTab = 'webcam' | 'arquivo';
 
@@ -41,7 +43,6 @@ export const MLRecognitionWindow: React.FC<MLRecognitionWindowProps> = React.mem
   const [fileImageReady, setFileImageReady] = useState(false);
 
   // TF.js & Model State
-  const [scriptsLoaded, setScriptsLoaded] = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
   const tmModelRef = useRef<ITMModel | null>(null);
   const reqAnimFrameRef = useRef<number | null>(null);
@@ -197,57 +198,16 @@ export const MLRecognitionWindow: React.FC<MLRecognitionWindowProps> = React.mem
     };
   }, [isOpen]);
 
-  // --- Injeção de Scripts (TFJS + MobileNet) ---
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const gWindow = window as unknown as IGlobalWindow;
-    if (gWindow.mobilenet || document.getElementById('mobilenet-script')) {
-      setScriptsLoaded(true);
-      return;
-    }
-
-    // INJEÇÃO TARDIA (LAZY SCRIPT INJECTION):
-    // Para evitar pesar o bundle inicial da aplicação, carregamos o
-    // TensorFlow.js e o MobileNet apenas quando o usuário abre a
-    // janela de reconhecimento pela primeira vez.
-    const loadScripts = async () => {
-      const tfScript = document.createElement('script');
-      tfScript.id = 'tfjs-script';
-      tfScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js';
-      document.body.appendChild(tfScript);
-
-      tfScript.onload = () => {
-        const mobileNetScript = document.createElement('script');
-        mobileNetScript.id = 'mobilenet-script';
-        mobileNetScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js';
-        document.body.appendChild(mobileNetScript);
-
-        mobileNetScript.onload = () => {
-          setScriptsLoaded(true);
-        };
-      };
-    };
-
-    loadScripts();
-  }, [isOpen]);
-
   // --- Carrega o modelo TF (sem câmera) ---
   const ensureModelLoaded = useCallback(async (): Promise<boolean> => {
     if (tmModelRef.current) return true;
-    if (!scriptsLoaded || !activeModel) return false;
+    if (!activeModel) return false;
 
     setCameraError(null);
     setModelLoading(true);
     try {
-      const gWindow = window as unknown as IGlobalWindow;
-      const tf = gWindow.tf;
-      const mobilenet = gWindow.mobilenet;
-      if (!tf || !mobilenet) throw new Error('TensorFlow libs not ready.');
+      await tf.ready();
 
-      // Fetch ambos os arquivos explicitamente para evitar que o TF.js
-      // resolva 'weights.bin' como caminho relativo ao model.json — o
-      // bin_path salvo no banco é um UUID diferente do model_path.
       const [modelResponse, binResponse] = await Promise.all([
         fetch(activeModel.modelJsonUrl),
         fetch(activeModel.modelBinUrl),
@@ -274,15 +234,12 @@ export const MLRecognitionWindow: React.FC<MLRecognitionWindowProps> = React.mem
       setModelLoading(false);
       return false;
     }
-  }, [scriptsLoaded, activeModel]);
+  }, [activeModel]);
 
   // Função auxiliar: roda inferência em qualquer elemento de imagem/vídeo
   const runInference = useCallback(
     (source: HTMLVideoElement | HTMLImageElement) => {
       if (!tmModelRef.current || !activeModel) return;
-      const gWindow = window as unknown as IGlobalWindow;
-      const tf = gWindow.tf;
-      if (!tf) return;
 
       const { baseModel, customModel } = tmModelRef.current;
       let formattedData: IMLPrediction[] = [];
@@ -290,8 +247,8 @@ export const MLRecognitionWindow: React.FC<MLRecognitionWindowProps> = React.mem
       tf.tidy(() => {
         const imgTensor = tf.browser.fromPixels(source);
         const resized = tf.image.resizeBilinear(imgTensor, [224, 224]);
-        const activation = baseModel.infer(resized, 'conv_preds');
-        const preds = customModel.predict(activation);
+        const activation = (baseModel as mobilenet.MobileNet).infer(resized as tf.Tensor3D, true);
+        const preds = (customModel as tf.LayersModel).predict(activation) as tf.Tensor;
         const data = preds.dataSync() as Float32Array;
         formattedData = Array.from(data).map((val: number, i: number) => ({
           label: activeModel?.labels?.[i] || `Classe ${i}`,
@@ -313,7 +270,7 @@ export const MLRecognitionWindow: React.FC<MLRecognitionWindowProps> = React.mem
     let isPredicting = true;
 
     const initModelAndCamera = async () => {
-      if (!isOpen || collapsed || !scriptsLoaded || !activeModel) return;
+      if (!isOpen || collapsed || !activeModel) return;
 
       setCameraError(null);
       setCameraReady(false);
@@ -366,7 +323,7 @@ export const MLRecognitionWindow: React.FC<MLRecognitionWindowProps> = React.mem
       if (videoElem) videoElem.srcObject = null;
       setCameraReady(false);
     };
-  }, [isOpen, scriptsLoaded, activeModel, collapsed, activeTab, ensureModelLoaded, runInference]);
+  }, [isOpen, activeModel, collapsed, activeTab, ensureModelLoaded, runInference]);
 
   // --- Para a câmera ao mudar para aba ARQUIVO ---
   useEffect(() => {
