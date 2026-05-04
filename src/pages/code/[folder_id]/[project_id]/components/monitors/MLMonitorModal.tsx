@@ -8,6 +8,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import * as tf from '@tensorflow/tfjs';
+import * as mobilenet from '@tensorflow-models/mobilenet';
 import { MLExtensionModal } from '../ml/MLExtensionModal';
 import { useProject } from '@/_base/context/ProjectContext';
 import { useFirmware } from '@/_base/context/FirmwareContext';
@@ -21,27 +23,6 @@ interface MLMonitorModalProps {
   onBack: () => void;
 }
 
-// Interfaces para TensorFlow.js e MobileNet (carregados via CDN)
-interface ITF {
-  browser: {
-    fromPixels: (el: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement | null) => unknown;
-  };
-  image: {
-    resizeBilinear: (tensor: unknown, size: [number, number]) => unknown;
-  };
-  loadLayersModel: (url: string) => Promise<{
-    predict: (activation: unknown) => {
-      dataSync: () => Float32Array;
-    };
-  }>;
-  tidy: (fn: () => void) => void;
-}
-
-interface IMobileNet {
-  load: () => Promise<{
-    infer: (tensor: unknown, layer: string) => unknown;
-  }>;
-}
 
 export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorModalProps) {
   const { activeUploadMLModel } = useProject();
@@ -59,7 +40,6 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
 
   // TF.js & Model State
-  const [scriptsLoaded, setScriptsLoaded] = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
   const tmModelRef = useRef<ITMModel | null>(null);
   const reqAnimFrameRef = useRef<number | null>(null);
@@ -69,6 +49,7 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
   const borderColor = '#6f42c1'; // Roxo (Cor comum para IA/ML)
   const labelsRef = useRef<string[]>([]);
   const lastSentClassRef = useRef<string>('');
+  const frameCounterRef = useRef(0);
 
   const loadedModelUrlRef = useRef<string | null>(null);
 
@@ -127,49 +108,6 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
     }
   }, [isSerialConnected, board]);
 
-  // --- Injeção de Scripts (TFJS + MobileNet) ---
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const win = window as unknown as { mobilenet: IMobileNet; tf: ITF };
-
-    if (win.mobilenet || win.tf) {
-      setScriptsLoaded(true);
-      return;
-    }
-
-    if (document.getElementById('mobilenet-script')) {
-      // Scripts tags exist, wait for them to load
-      const checkInterval = setInterval(() => {
-        if (win.mobilenet && win.tf) {
-          setScriptsLoaded(true);
-          clearInterval(checkInterval);
-        }
-      }, 200);
-      return () => clearInterval(checkInterval);
-    }
-
-    const loadScripts = async () => {
-      const tfScript = document.createElement('script');
-      tfScript.id = 'tfjs-script';
-      tfScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js';
-      document.body.appendChild(tfScript);
-
-      tfScript.onload = () => {
-        const mobileNetScript = document.createElement('script');
-        mobileNetScript.id = 'mobilenet-script';
-        mobileNetScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js';
-        document.body.appendChild(mobileNetScript);
-
-        mobileNetScript.onload = () => {
-          setScriptsLoaded(true);
-        };
-      };
-    };
-
-    loadScripts();
-  }, [isOpen]);
-
   useEffect(() => {
     if (!isOpen) {
       stopCameraAndIA();
@@ -182,7 +120,7 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
 
   // --- Inicialização de Modelo & Câmera ---
   const startMonitoring = async () => {
-    if (!isOpen || !scriptsLoaded || !activeUploadMLModel) {
+    if (!isOpen || !activeUploadMLModel) {
       if (!activeUploadMLModel) setCameraError('Nenhum modelo carregado no projeto.');
       return;
     }
@@ -208,17 +146,27 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
     }
 
     try {
-      const absoluteModelURL = new URL(activeUploadMLModel.modelJsonUrl, window.location.origin).href;
-      const win = window as unknown as { mobilenet: IMobileNet; tf: ITF };
-      const tf = win.tf;
-      const mobilenet = win.mobilenet;
-
-      if (!tf || !mobilenet) throw new Error('Bibliotecas do TensorFlow não prontas.');
+      await tf.ready();
 
       // Carregar modelos apenas se não estiverem na ref
       if (!tmModelRef.current) {
+        const [modelResponse, binResponse] = await Promise.all([
+          fetch(activeUploadMLModel.modelJsonUrl),
+          fetch(activeUploadMLModel.modelBinUrl),
+        ]);
+        if (!modelResponse.ok)
+          throw new Error(`Falha ao baixar model.json (HTTP ${modelResponse.status})`);
+        if (!binResponse.ok)
+          throw new Error(`Falha ao baixar weights.bin (HTTP ${binResponse.status})`);
+
+        const modelJson = await modelResponse.json();
+        const weightData = await binResponse.arrayBuffer();
+        const weightSpecs = modelJson.weightsManifest?.[0]?.weights ?? [];
+
         const baseModel = await mobilenet.load();
-        const customModel = await tf.loadLayersModel(absoluteModelURL);
+        const customModel = await tf.loadLayersModel(
+          tf.io.fromMemory(modelJson.modelTopology, weightSpecs, weightData),
+        );
         tmModelRef.current = {
           baseModel: baseModel as ITMModel['baseModel'],
           customModel: customModel as ITMModel['customModel'],
@@ -262,16 +210,14 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
         }
 
         if (sourceElement) {
-          const win = window as unknown as { tf: ITF };
-          const tf = win.tf;
           const { baseModel, customModel } = tmModelRef.current;
           let formattedData: { label: string; value: number }[] = [];
 
           tf.tidy(() => {
             const imgTensor = tf.browser.fromPixels(sourceElement!);
             const resized = tf.image.resizeBilinear(imgTensor, [224, 224]);
-            const activation = baseModel.infer(resized, 'conv_preds');
-            const preds = customModel.predict(activation);
+            const activation = (baseModel as mobilenet.MobileNet).infer(resized as tf.Tensor3D, true);
+            const preds = (customModel as tf.LayersModel).predict(activation) as tf.Tensor;
             const data = preds.dataSync() as Float32Array;
 
             formattedData = Array.from(data).map((val: number, i: number) => ({
@@ -281,13 +227,17 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
           });
 
           if (formattedData.length > 0) {
-            setPredictions(formattedData);
-            window.dispatchEvent(new CustomEvent('ml-predictions-update', { detail: formattedData }));
+            // Atualiza UI a ~15fps (a cada 4 frames) para não sobrecarregar o React
+            frameCounterRef.current = (frameCounterRef.current + 1) % 4;
+            if (frameCounterRef.current === 0) {
+              setPredictions(formattedData);
+              window.dispatchEvent(new CustomEvent('ml-predictions-update', { detail: formattedData }));
+            }
 
             // Send top class via Serial to Arduino continuously
             const topClass = formattedData.reduce((a, b) => (a.value > b.value ? a : b));
             if (topClass) {
-              const payload = topClass.label + '\n';
+              const payload = `${topClass.label}:${topClass.value.toFixed(1)}\n`;
 
               // Avoid flooding the console, only log when changed
               if (topClass.label !== lastSentClassRef.current) {
@@ -533,7 +483,7 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
                           <div
                             className={`progress-bar ${p.value > 80 ? 'bg-success' : 'bg-primary'}`}
                             role="progressbar"
-                            style={{ width: `${Math.max(p.value, 2)}%`, transition: 'width 0.1s linear' }}
+                            style={{ width: `${Math.max(p.value, 2)}%` }}
                             aria-valuenow={p.value}
                             aria-valuemin={0}
                             aria-valuemax={100}

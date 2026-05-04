@@ -15,13 +15,20 @@ export interface IGlobalWindow extends Window {
     __p_setFillColor?: (color: string) => void;
     __p_setStrokeColor?: (color: string) => void;
     tf?: {
-        loadLayersModel: (url: string) => Promise<unknown>;
+        loadLayersModel: (source: string | unknown) => Promise<unknown>;
         tidy: <T>(fn: () => T) => T;
         browser: {
             fromPixels: (element: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement) => unknown;
         };
         image: {
             resizeBilinear: (tensor: unknown, size: [number, number]) => unknown;
+        };
+        io: {
+            fromMemory: (
+                modelTopology: unknown,
+                weightSpecs?: unknown,
+                weightData?: ArrayBuffer,
+            ) => unknown;
         };
     };
     mobilenet?: {
