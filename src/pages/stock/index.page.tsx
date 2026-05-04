@@ -18,6 +18,9 @@ import { Reserves } from './components/Reserves';
 import { IHubGroup, IHubGroupOrder } from '@/_base/interfaces/group';
 import { acceptOrder, listTeacherGroups, rejectOrder, updateOrderStatus } from '@/_base/services/group';
 import { Orders } from '../groups/[group_id]/components/Pedidos/components/Orders';
+import { InternalPageHeader } from '@/components/InternalPageHeader';
+import { Package } from 'lucide-react';
+import { FaPlus } from 'react-icons/fa6';
 
 const Stock: React.FC = () => {
   const [unSavedstock, setUnsavedStock] = useState<IStockMaker[]>([]);
@@ -117,19 +120,24 @@ const Stock: React.FC = () => {
 
   return (
     <Flex direction="column">
-      <Flex w="100%" justify="space-between" gap="1rem">
-        <TabSwitch
-          tabs={stockPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
-          onSwitch={(view) => setPageView(view as any)}
-          currentTabColor="primary700"
-        />
-        {pageView === `Estoque` && (
-          <Flex align="center" gap="1rem">
-            <PlusButton label="Adicionar Item" rightIcon={<IoMdAdd />} alignSelf="flex-end" onClick={onOpen} isLoading={isLoading} />
-            <PlusButton label="Salvar" rightIcon={<FaSave />} alignSelf="flex-end" warning={needSave} onClick={handleSave} isLoading={isLoading} />
-          </Flex>
-        )}
-      </Flex>
+      <InternalPageHeader
+        title="Estoque Maker"
+        description="Gerencie os itens do seu estoque"
+        icon={<Package className="w-6 h-6 text-primary" />}
+        buttons={
+          pageView === `Estoque`
+            ? [
+                { label: `Adicionar Item`, leftIcon: <FaPlus />, onClick: onOpen, isLoading },
+                { label: `Salvar`, leftIcon: <FaSave />, onClick: handleSave, isLoading },
+              ]
+            : undefined
+        }
+      />
+      <TabSwitch
+        tabs={stockPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
+        onSwitch={(view) => setPageView(view as any)}
+        currentTabColor="primary700"
+      />
       <AnimatePresence mode="wait">{PageViewComponent[pageView]}</AnimatePresence>
     </Flex>
   );

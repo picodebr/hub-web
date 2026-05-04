@@ -50,6 +50,7 @@ import { CoinIcon } from '@/components/Logo';
 import { AttendanceList } from './components/AttendanceList';
 import { Exam } from './components/Exam';
 import { ClassLoading } from './components/ClassLoading';
+import { InternalPageHeader } from '@/components/InternalPageHeader';
 
 export type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; groups: ReactNode; coins: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -352,7 +353,7 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
   const PageView: Record<ClassPageView, ReactNode> = {
     'Lista de Presença': <AttendanceList hub_class={hubClass} />,
     Alunos: (
-      <Box bg={bgCard} borderRadius="xl" boxShadow="sm" overflowY="auto" overflowX="hidden" flex="1" mb="0.5rem">
+      <Box borderRadius="xl" boxShadow="sm" pb="2rem" bg="transparent">
         <StudentTable
           rows={students}
           onRowClick={(e) => router.push(`/students/${e.id}`)}
@@ -379,7 +380,7 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
       </Box>
     ),
     Projetos: (
-      <Box flex="1" overflowY="auto" pb="2rem" px="2px" mb="0.5rem">
+      <Box flex="1" px="2px" pb="2rem">
         <motion.div variants={containerVariants} initial="hidden" animate="show">
           <Grid gap="1.5rem" gridTemplateColumns="repeat(auto-fill, minmax(260px, 1fr))">
             {dataProjects.map((project) => (
@@ -438,30 +439,21 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
   return isLoading ? (
     <ClassLoading className={pageTitle} />
   ) : (
-    <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflow="hidden">
+    <Flex direction="column" w="100%" h="100%" gap="1.5rem">
       {/* HEADER DE ABAS E BOTÃO PRINCIPAL */}
+      <InternalPageHeader
+        title={hubClass?.display_name || ``}
+        description={`${hubClass?.students?.length || `0`} ${hubClass?.students?.length === 1 ? 'aluno' : 'alunos'} • ${hubClass?.projects?.length || `0`} ${hubClass?.projects?.length === 1 ? 'projeto' : 'projetos'} #${hubClass?.code || ''}`}
+        buttons={
+          pageView === 'Projetos' ? [{ label: `Novo Projeto`, leftIcon: <FaPlus />, onClick: () => setNewProject(EMPTY_PROJECT_DATA) }] : undefined
+        }
+      />
+
       <Flex justify="space-between" align={{ base: 'flex-start', md: 'center' }} direction={{ base: 'column', md: 'row' }} gap="1rem">
         <TabSwitch
           tabs={classPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
           onSwitch={(view) => setPageView(view as any)}
         />
-        {pageView === 'Projetos' && (
-          <Button
-            colorScheme="blue"
-            bg="primary600"
-            color="white"
-            leftIcon={<FaPlus />}
-            _hover={{ bg: 'primary700', transform: 'translateY(-2px)', boxShadow: 'md' }}
-            transition="all 0.2s"
-            onClick={() => setNewProject(EMPTY_PROJECT_DATA)}
-            h="44px"
-            px="1.5rem"
-            borderRadius="lg"
-            alignSelf={{ base: 'stretch', md: 'auto' }}
-          >
-            Novo Projeto
-          </Button>
-        )}
       </Flex>
 
       {/* CONTEÚDO PRINCIPAL (RENDERIZAÇÃO CONDICIONAL) */}

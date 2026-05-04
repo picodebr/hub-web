@@ -3,15 +3,7 @@ import { GetServerSideProps } from 'next';
 import { FaPlus } from 'react-icons/fa';
 import { FiUsers, FiBookOpen, FiArrowUpRight } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import {
-  Checkbox,
-  Skeleton,
-  Flex,
-  Text,
-  Icon,
-  Box,
-  Button,
-} from '@chakra-ui/react';
+import { Checkbox, Skeleton, Flex, Text, Icon, Box, Button } from '@chakra-ui/react';
 
 import { useAsyncCallback, useAuth, useCustomToast, useCustomRouter, useDarkMode } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
@@ -22,6 +14,8 @@ import { SmallModal } from '@/components/Modal/Small';
 import { AvatarList } from '@/components/AvatarList';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { sortGradesByClass } from '@/_base/utils';
+import { InternalPageHeader } from '@/components/InternalPageHeader';
+import { Users } from 'lucide-react';
 
 type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
 
@@ -39,7 +33,7 @@ const itemVariants = {
 // Mapa de cores para a barra lateral baseado na série
 const getColorByGrade = (grade: string): string => {
   const colorMap: { [key: string]: string } = {
-    'G3': '#D946EF', // Magenta
+    G3: '#D946EF', // Magenta
     '6': '#8B5CF6', // Purple
     '7': '#06B6D4', // Cyan
     '8': '#10B981', // Emerald
@@ -49,7 +43,7 @@ const getColorByGrade = (grade: string): string => {
     'MakersPro Creators': '#8B5CF6', // Violet
     'MakersPro Innovators': '#06B6D4', // Cyan
     'MakersPro Experts': '#F59E0B', // Amber
-    'CulturaTech': '#EF4444', // Red
+    CulturaTech: '#EF4444', // Red
   };
   return colorMap[grade] || '#6366F1'; // Indigo como padrão
 };
@@ -132,36 +126,12 @@ const Classes: React.FC = () => {
     <Flex direction="column" w="100%" h="100%" overflowY="auto" overflowX="hidden" pb="2rem">
       <Flex direction="column" w="100%" maxW="7xl" mx="auto" px="2rem" gap="2rem">
         {/* Header com Call to Action */}
-        <Flex align="center" justify="space-between" direction={{ base: 'column', sm: 'row' }} gap="2rem" mb="1rem">
-          <Flex align="flex-start" gap="1rem">
-            <Flex bg="primary.100" color="primary600" p="0.625rem" borderRadius="lg" flexShrink={0}>
-              <Icon as={FiBookOpen} boxSize="1.5rem" />
-            </Flex>
-            <Flex direction="column" gap="0.25rem">
-              <Text fontSize="24px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
-                Turmas
-              </Text>
-              <Text fontSize="14px" color="gray.500">
-                Gerencie suas turmas e alunos
-              </Text>
-            </Flex>
-          </Flex>
-
-          <Button
-            bg="primary600"
-            color="white"
-            leftIcon={<FaPlus />}
-            borderRadius="lg"
-            px="1.5rem"
-            h="44px"
-            flexShrink={0}
-            _hover={{ bg: 'primary.700', transform: 'translateY(-2px)', boxShadow: 'md' }}
-            transition="all 0.2s"
-            onClick={() => setOpenOpt({ class_code: true })}
-          >
-            Adicionar Turma
-          </Button>
-        </Flex>
+        <InternalPageHeader
+          title="Turmas"
+          description="Gerencie suas turmas e alunos"
+          icon={<Users className="w-6 h-6 text-primary" />}
+          buttons={[{ label: `Adicionar Turma`, leftIcon: <FaPlus />, onClick: () => setOpenOpt({ class_code: true }) }]}
+        />
 
         {/* Grid de Turmas */}
         {!classes.data.length && !classes._isLoading ? (
@@ -169,223 +139,203 @@ const Classes: React.FC = () => {
         ) : (
           <motion.div variants={containerVariants} initial="hidden" animate="show">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sortedClasses.map((hubClass) => {
-              const showBadge = [
-                '6',
-                '7',
-                '8',
-                '9',
-                'MakersPro Mini',
-                'MakersPro Explorers',
-                'MakersPro Creators',
-                'MakersPro Innovators',
-                'MakersPro Experts',
-                'CulturaTech',
-              ].includes(hubClass.grade);
+              {sortedClasses.map((hubClass) => {
+                const showBadge = [
+                  '6',
+                  '7',
+                  '8',
+                  '9',
+                  'MakersPro Mini',
+                  'MakersPro Explorers',
+                  'MakersPro Creators',
+                  'MakersPro Innovators',
+                  'MakersPro Experts',
+                  'CulturaTech',
+                ].includes(hubClass.grade);
 
-              const sidebarColor = getColorByGrade(hubClass.grade);
+                const sidebarColor = getColorByGrade(hubClass.grade);
 
-              return (
-                <Skeleton key={hubClass.id} rounded="1.5rem" isLoaded={!classes._isLoading}>
-                  <motion.div variants={itemVariants}>
-                    <Flex
-                      w="100%"
-                      direction="column"
-                      position="relative"
-                      borderRadius="1.5rem"
-                      cursor="pointer"
-                      onClick={() => navigateToClass(hubClass)}
-                      bg={bgCard}
-                      border="1px solid"
-                      borderColor={borderColor}
-                      boxShadow="sm"
-                      transition="all 0.2s"
-                      overflow="hidden"
-                      _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
-                    >
-                      {/* Topo: Ícone + Código */}
-                      <Flex 
-                        justify="space-between" 
-                        align="flex-start" 
-                        pl="0.875rem"
-                        pr="0.875rem"
-                        pt="1.125rem"
-                        pb="0.75rem"
-                      >
-                        <Flex 
-                          bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'} 
-                          color="primary.500" 
-                          p="0.375rem" 
-                          borderRadius="md"
-                          w="fit-content"
-                        >
-                          <Icon as={FiUsers} boxSize="0.875rem" />
-                        </Flex>
-
-                        {showBadge && (
-                          <Text 
-                            fontSize="14px" 
-                            fontWeight="700" 
-                            color={colorMode === 'light' ? 'gray.400' : 'gray.500'}
-                          >
-                            #{hubClass.code}
-                          </Text>
-                        )}
-                      </Flex>
-
-                      {/* Seção com Barra Lateral: Nome + Alunos + Seta */}
+                return (
+                  <Skeleton key={hubClass.id} rounded="1.5rem" isLoaded={!classes._isLoading}>
+                    <motion.div variants={itemVariants}>
                       <Flex
+                        w="100%"
                         direction="column"
-                        pl="1rem"
-                        pr="0.875rem"
-                        py="1rem"
-                        pb="1.125rem"
-                        borderLeft="4px solid"
-                        borderColor={sidebarColor}
-                        transition="border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-                        _hover={{ borderLeftWidth: '6px' }}
-                        gap="1rem"
+                        position="relative"
+                        borderRadius="1.5rem"
+                        cursor="pointer"
+                        onClick={() => navigateToClass(hubClass)}
+                        bg={bgCard}
+                        border="1px solid"
+                        borderColor={borderColor}
+                        boxShadow="sm"
+                        transition="all 0.2s"
+                        overflow="hidden"
+                        _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
                       >
-                        {/* Nome da Turma */}
-                        <Text 
-                          fontWeight="700" 
-                          fontSize="14px" 
-                          color={colorMode === 'dark' ? 'white' : 'gray.800'} 
-                          noOfLines={1}
-                          lineHeight="1.2"
-                        >
-                          {hubClass.display_name}
-                        </Text>
+                        {/* Topo: Ícone + Código */}
+                        <Flex justify="space-between" align="flex-start" pl="0.875rem" pr="0.875rem" pt="1.125rem" pb="0.75rem">
+                          <Flex
+                            bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'}
+                            color="primary.500"
+                            p="0.375rem"
+                            borderRadius="md"
+                            w="fit-content"
+                          >
+                            <Icon as={FiUsers} boxSize="0.875rem" />
+                          </Flex>
 
-                        {/* Alunos + Seta */}
+                          {showBadge && (
+                            <Text fontSize="14px" fontWeight="700" color={colorMode === 'light' ? 'gray.400' : 'gray.500'}>
+                              #{hubClass.code}
+                            </Text>
+                          )}
+                        </Flex>
+
+                        {/* Seção com Barra Lateral: Nome + Alunos + Seta */}
                         <Flex
-                          align="center"
-                          justify="space-between"
+                          direction="column"
+                          pl="1rem"
+                          pr="0.875rem"
+                          py="1rem"
+                          pb="1.125rem"
+                          borderLeft="4px solid"
+                          borderColor={sidebarColor}
+                          transition="border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                          _hover={{ borderLeftWidth: '6px' }}
+                          gap="1rem"
                         >
-                          <Text fontSize="11px" fontWeight="600" color="gray.500">
-                            {hubClass.students?.length || 0} Alunos
+                          {/* Nome da Turma */}
+                          <Text fontWeight="700" fontSize="14px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1} lineHeight="1.2">
+                            {hubClass.display_name}
                           </Text>
-                          <Icon as={FiArrowUpRight} boxSize="0.8rem" color="gray.400" />
+
+                          {/* Alunos + Seta */}
+                          <Flex align="center" justify="space-between">
+                            <Text fontSize="11px" fontWeight="600" color="gray.500">
+                              {hubClass.students?.length || 0} Alunos
+                            </Text>
+                            <Icon as={FiArrowUpRight} boxSize="0.8rem" color="gray.400" />
+                          </Flex>
                         </Flex>
                       </Flex>
-                    </Flex>
-                  </motion.div>
-                </Skeleton>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
+                    </motion.div>
+                  </Skeleton>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
-      {/* Modal: Adicionar Turmas */}
-      <SmallModal
-        title={`Turmas da Escola ${school?.display_name || ''}`}
-        show={!!modalOpt.class_code}
-        onConfirm={handleAddClasses}
-        okText="Adicionar Turmas"
-        size="lg"
-        isLoading={classes._isLoading}
-        onCancel={onCloseModal}
-        topIcon="ray"
-        disableOkButton={!selectedClasses.length}
-      >
-        <Flex direction="column" gap="1rem">
-          <Text fontSize="14px" color="gray.500">
-            Selecione as turmas nas quais você leciona para adicioná-las ao seu painel.
-          </Text>
-
-          {/* Cabeçalho de Seleção (Selecionar Todas) */}
-          <Flex
-            align="center"
-            justify="space-between"
-            bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
-            p="1rem"
-            borderRadius="xl"
-            border="1px solid"
-            borderColor={borderColor}
-          >
-            <Text fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
-              Selecionar todas as disponíveis
+        {/* Modal: Adicionar Turmas */}
+        <SmallModal
+          title={`Turmas da Escola ${school?.display_name || ''}`}
+          show={!!modalOpt.class_code}
+          onConfirm={handleAddClasses}
+          okText="Adicionar Turmas"
+          size="lg"
+          isLoading={classes._isLoading}
+          onCancel={onCloseModal}
+          topIcon="ray"
+          disableOkButton={!selectedClasses.length}
+        >
+          <Flex direction="column" gap="1rem">
+            <Text fontSize="14px" color="gray.500">
+              Selecione as turmas nas quais você leciona para adicioná-las ao seu painel.
             </Text>
-            <Checkbox
-              size="lg"
-              colorScheme="blue"
-              isChecked={sortGradesByClass(allClasses)
-                .filter(classIsAvailable)
-                .every((c) => selectedClasses.find((s) => s.id === c.id))}
-              isDisabled={classes._isLoading}
-              onChange={(e) => {
-                if (e.target.checked) setSelectedClasses(sortGradesByClass(allClasses).filter(classIsAvailable));
-                else setSelectedClasses([]);
-              }}
-            />
-          </Flex>
 
-          {/* Lista Scrollável de Turmas */}
-          <Flex
-            direction="column"
-            gap="0.5rem"
-            maxH="40vh"
-            overflowY="auto"
-            pr="0.5rem"
-            css={{ '&::-webkit-scrollbar': { width: '6px' }, '&::-webkit-scrollbar-thumb': { background: '#CBD5E0', borderRadius: '10px' } }}
-          >
-            {sortGradesByClass(allClasses).map((hubClass) => {
-              const isAvail = classIsAvailable(hubClass);
+            {/* Cabeçalho de Seleção (Selecionar Todas) */}
+            <Flex
+              align="center"
+              justify="space-between"
+              bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
+              p="1rem"
+              borderRadius="xl"
+              border="1px solid"
+              borderColor={borderColor}
+            >
+              <Text fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+                Selecionar todas as disponíveis
+              </Text>
+              <Checkbox
+                size="lg"
+                colorScheme="blue"
+                isChecked={sortGradesByClass(allClasses)
+                  .filter(classIsAvailable)
+                  .every((c) => selectedClasses.find((s) => s.id === c.id))}
+                isDisabled={classes._isLoading}
+                onChange={(e) => {
+                  if (e.target.checked) setSelectedClasses(sortGradesByClass(allClasses).filter(classIsAvailable));
+                  else setSelectedClasses([]);
+                }}
+              />
+            </Flex>
 
-              return (
-                <Flex
-                  key={hubClass.id}
-                  align="center"
-                  justify="space-between"
-                  p="1rem"
-                  bg={bgCard}
-                  borderRadius="xl"
-                  border="1px solid"
-                  borderColor={borderColor}
-                  opacity={isAvail ? 1 : 0.5}
-                  transition="all 0.2s"
-                  _hover={isAvail ? { borderColor: 'primary.300', bg: colorMode === 'light' ? 'primary.50' : 'whiteAlpha.50' } : {}}
-                >
-                  <Flex align="center" gap="1rem" overflow="hidden">
-                    <Flex bg={colorMode === 'light' ? 'gray.100' : 'whiteAlpha.200'} p="0.5rem" borderRadius="md" color="gray.500">
-                      <Icon as={FiUsers} />
+            {/* Lista Scrollável de Turmas */}
+            <Flex
+              direction="column"
+              gap="0.5rem"
+              maxH="40vh"
+              overflowY="auto"
+              pr="0.5rem"
+              css={{ '&::-webkit-scrollbar': { width: '6px' }, '&::-webkit-scrollbar-thumb': { background: '#CBD5E0', borderRadius: '10px' } }}
+            >
+              {sortGradesByClass(allClasses).map((hubClass) => {
+                const isAvail = classIsAvailable(hubClass);
+
+                return (
+                  <Flex
+                    key={hubClass.id}
+                    align="center"
+                    justify="space-between"
+                    p="1rem"
+                    bg={bgCard}
+                    borderRadius="xl"
+                    border="1px solid"
+                    borderColor={borderColor}
+                    opacity={isAvail ? 1 : 0.5}
+                    transition="all 0.2s"
+                    _hover={isAvail ? { borderColor: 'primary.300', bg: colorMode === 'light' ? 'primary.50' : 'whiteAlpha.50' } : {}}
+                  >
+                    <Flex align="center" gap="1rem" overflow="hidden">
+                      <Flex bg={colorMode === 'light' ? 'gray.100' : 'whiteAlpha.200'} p="0.5rem" borderRadius="md" color="gray.500">
+                        <Icon as={FiUsers} />
+                      </Flex>
+                      <Text fontWeight="600" color={colorMode === 'dark' ? 'white' : 'gray.800'} isTruncated title={hubClass.display_name}>
+                        {hubClass.display_name}
+                      </Text>
                     </Flex>
-                    <Text fontWeight="600" color={colorMode === 'dark' ? 'white' : 'gray.800'} isTruncated title={hubClass.display_name}>
-                      {hubClass.display_name}
-                    </Text>
+                    <Checkbox
+                      defaultChecked={!isAvail}
+                      isDisabled={!isAvail}
+                      size="lg"
+                      colorScheme="blue"
+                      onChange={(v) => handleChangeSelectedClass(hubClass, v.target.checked)}
+                      isChecked={!isAvail || !!selectedClasses.find((s) => s.id === hubClass.id)}
+                    />
                   </Flex>
-                  <Checkbox
-                    defaultChecked={!isAvail}
-                    isDisabled={!isAvail}
-                    size="lg"
-                    colorScheme="blue"
-                    onChange={(v) => handleChangeSelectedClass(hubClass, v.target.checked)}
-                    isChecked={!isAvail || !!selectedClasses.find((s) => s.id === hubClass.id)}
-                  />
-                </Flex>
-              );
-            })}
+                );
+              })}
+            </Flex>
           </Flex>
-        </Flex>
-      </SmallModal>
+        </SmallModal>
 
-      {/* Modal: Remover Turma */}
-      <SmallModal
-        title="Remover turma"
-        show={!!modalOpt.confirm_remove}
-        onConfirm={handleRemoveClass}
-        okText="Sim, remover"
-        isLoading={classes._isLoading}
-        onCancel={onCloseModal}
-        topIcon="warning"
-      >
-        <Flex direction="column" gap="1rem" align="center" textAlign="center">
-          <Text color="gray.500" fontSize="15px">
-            Tem certeza que deseja remover esta turma do seu painel? Você não perderá os dados, mas precisará adicioná-la novamente para acessá-la.
-          </Text>
-        </Flex>
-      </SmallModal>
+        {/* Modal: Remover Turma */}
+        <SmallModal
+          title="Remover turma"
+          show={!!modalOpt.confirm_remove}
+          onConfirm={handleRemoveClass}
+          okText="Sim, remover"
+          isLoading={classes._isLoading}
+          onCancel={onCloseModal}
+          topIcon="warning"
+        >
+          <Flex direction="column" gap="1rem" align="center" textAlign="center">
+            <Text color="gray.500" fontSize="15px">
+              Tem certeza que deseja remover esta turma do seu painel? Você não perderá os dados, mas precisará adicioná-la novamente para acessá-la.
+            </Text>
+          </Flex>
+        </SmallModal>
       </Flex>
     </Flex>
   );

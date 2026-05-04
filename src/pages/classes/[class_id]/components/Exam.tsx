@@ -238,7 +238,7 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
   const subTextColor = colorMode === 'light' ? 'gray500' : 'gray400';
 
   return (
-    <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflowY="auto" pb="0.5rem">
+    <Flex direction="column" w="100%" h="100%" gap="1.5rem" pb="2rem">
       {/* 1. HERO BANNER: Ciclo de Avaliação (DESIGN CLEAN) */}
       <Flex
         bg={bgCard}
@@ -356,7 +356,7 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
       )}
 
       {/* 4. LISTA DE ALUNOS */}
-      <Box bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflow="hidden" flex="1">
+      <Box bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" flex="1">
         <Flex bg={hoverBg} p="1rem 1.5rem" borderBottom="1px solid" borderColor={borderColor} justify="space-between" align="center">
           <Text fontWeight="700" color={textColor}>
             Status de Avaliação dos Alunos
@@ -379,8 +379,8 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
           )}
         </Flex>
 
-        <Flex direction="column" overflowY="auto" maxH="calc(100% - 3rem)" p="0.5rem">
-          <motion.div variants={listVariants} initial="hidden" animate="show">
+        <Flex direction="column" h="100%">
+          <motion.div variants={listVariants} initial="hidden" animate="show" style={{ height: `100%` }}>
             {students.map((student) => {
               const isFinished = !!finishedForms.find((f) => f.student_id === student.id);
 

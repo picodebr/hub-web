@@ -12,6 +12,8 @@ import { IHubBook, IHubBookCategory } from '@/_base/interfaces/book';
 import { useAsyncCallback, useAuth, useDarkMode } from '@/_base/hooks';
 import { IHubVideo, IHubVideoCategory } from '@/_base/interfaces/video';
 import { listVideoCategories } from '@/_base/services/video';
+import { InternalPageHeader } from '@/components/InternalPageHeader';
+import { BookOpen, Search } from 'lucide-react';
 
 type BookByGrade = Record<string, IHubBook[]>;
 type VideoByGrade = Record<string, IHubVideo[]>;
@@ -30,10 +32,10 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
   const [videoCategories, setVideoCategories] = useState<IHubVideoCategory[]>([]);
   const [bookCategory, setBookCategory] = useState<IHubBookCategory | null>(null);
   const [videoCategory, setVideoCategory] = useState<IHubVideoCategory | null>(null);
-
   const [modalVideo, setModalVideo] = useState<IHubVideo | null>(null);
   const [targetBook, setTargetBook] = useState<IHubBook | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // --- BUSCA INICIAL DE DADOS ---
   const getBooks = useAsyncCallback(
@@ -202,6 +204,24 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
 
   return (
     <Flex w="100%" h="100%" direction="column" gap="1.5rem">
+      <InternalPageHeader
+        title="Biblioteca"
+        description="Acesse seus livros, guias e materiais didáticos"
+        icon={<BookOpen className="w-6 h-6 text-primary" />}
+        actions={[
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar material..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ paddingLeft: `2.25rem` }}
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-card border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+            />
+          </div>,
+        ]}
+      />
       {/* Abas Superiores */}
       <Box flexShrink={0}>
         <TabSwitch
@@ -258,55 +278,61 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
               </Box>
             ) : (
               // Visão do Educador: Itera por todas as séries
-              sortedAllGrades.map((grade) => (
-                <motion.div key={grade} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                  <Box
-                    bg={colorMode === 'light' ? 'gray50' : 'whiteAlpha.50'}
-                    p="1.5rem"
-                    borderRadius="2xl"
-                    border="1px solid"
-                    borderColor={borderColor}
-                  >
-                    {/* Cabeçalho da Série */}
-                    <Text fontSize="22px" fontWeight="800" color="primary700" mb="0.5rem">
-                      {formatClassGrade(grade)}
-                    </Text>
-                    <Divider borderColor={borderColor} mb="1.5rem" />
+              sortedAllGrades
+                .filter(
+                  (grade) =>
+                    booksByGrade[grade]?.filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase())).length ||
+                    videosByGrade[grade]?.filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase())).length,
+                )
+                .map((grade) => (
+                  <motion.div key={grade} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    <Box
+                      bg={colorMode === 'light' ? 'gray50' : 'whiteAlpha.50'}
+                      p="1.5rem"
+                      borderRadius="2xl"
+                      border="1px solid"
+                      borderColor={borderColor}
+                    >
+                      {/* Cabeçalho da Série */}
+                      <Text fontSize="22px" fontWeight="800" color="primary700" mb="0.5rem">
+                        {formatClassGrade(grade)}
+                      </Text>
+                      <Divider borderColor={borderColor} mb="1.5rem" />
 
-                    <Flex direction="column" gap="2.5rem">
-                      {/* Grid de Vídeos da Série */}
-                      {videosByGrade[grade]?.length > 0 && (
-                        <Box>
-                          <Flex align="center" gap="0.5rem" mb="1rem">
-                            <Icon as={FiVideo} color="gray500" fontSize="1.2rem" />
-                            <Text fontSize="14px" fontWeight="700" color="gray500" textTransform="uppercase">
-                              Vídeos Relacionados
-                            </Text>
-                          </Flex>
-                          <Grid templateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap="1.5rem">
-                            {videosByGrade[grade].map(renderVideoCard)}
-                          </Grid>
-                        </Box>
-                      )}
+                      <Flex direction="column" gap="2.5rem">
+                        {/* Grid de Vídeos da Série */}
+                        {videosByGrade[grade]?.filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 && (
+                          <Box>
+                            <Flex align="center" gap="0.5rem" mb="1rem">
+                              <Icon as={FiVideo} color="gray500" fontSize="1.2rem" />
+                              <Text fontSize="14px" fontWeight="700" color="gray500" textTransform="uppercase">
+                                Vídeos Relacionados
+                              </Text>
+                            </Flex>
+                            <Grid templateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap="1.5rem">
+                              {videosByGrade[grade].filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase())).map(renderVideoCard)}
+                            </Grid>
+                          </Box>
+                        )}
 
-                      {/* Grid de Livros da Série */}
-                      {booksByGrade[grade]?.length > 0 && (
-                        <Box>
-                          <Flex align="center" gap="0.5rem" mb="1rem">
-                            <Icon as={FiBook} color="gray500" fontSize="1.2rem" />
-                            <Text fontSize="14px" fontWeight="700" color="gray500" textTransform="uppercase">
-                              Livros e Materiais
-                            </Text>
-                          </Flex>
-                          <Grid templateColumns="repeat(auto-fill, minmax(180px, 1fr))" gap="1.5rem">
-                            {booksByGrade[grade].map(renderBookCard)}
-                          </Grid>
-                        </Box>
-                      )}
-                    </Flex>
-                  </Box>
-                </motion.div>
-              ))
+                        {/* Grid de Livros da Série */}
+                        {booksByGrade[grade]?.filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 && (
+                          <Box>
+                            <Flex align="center" gap="0.5rem" mb="1rem">
+                              <Icon as={FiBook} color="gray500" fontSize="1.2rem" />
+                              <Text fontSize="14px" fontWeight="700" color="gray500" textTransform="uppercase">
+                                Livros e Materiais
+                              </Text>
+                            </Flex>
+                            <Grid templateColumns="repeat(auto-fill, minmax(180px, 1fr))" gap="1.5rem">
+                              {booksByGrade[grade].filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase())).map(renderBookCard)}
+                            </Grid>
+                          </Box>
+                        )}
+                      </Flex>
+                    </Box>
+                  </motion.div>
+                ))
             )}
           </Flex>
         )}

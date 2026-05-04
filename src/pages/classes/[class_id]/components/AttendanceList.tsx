@@ -173,7 +173,7 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" gap="1.5rem" h="100%" overflow="hidden" pb="0.5rem">
+    <Flex direction="column" gap="1.5rem" h="100%" pb="0.5rem">
       {/* Dashboard Stats */}
       <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap="1rem">
         <StatCard icon={FaGraduationCap} label="Turma" value={hub_class?.display_name || '...'} bg={bgCard} border={borderColor} />
@@ -252,13 +252,14 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
       </Flex>
 
       {/* Tabela de Alunos */}
-      <Box bg={bgCard} borderRadius="xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflow="hidden" flex="1">
+      <Box bg={bgCard} borderRadius="xl" border="1px solid" borderColor={borderColor} boxShadow="sm" flex="1">
         <Grid
           templateColumns="auto 1fr 1fr 1fr auto"
           gap="4"
           px="6"
           py="4"
           bg="gray.50"
+          borderRadius="xl"
           fontSize="12px"
           fontWeight="bold"
           color="gray.500"
@@ -272,7 +273,7 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
           <Text textAlign="center">Status</Text>
         </Grid>
 
-        <Flex direction="column" overflowY="auto" maxH="calc(100% - 3rem)">
+        <Flex direction="column" h="100%">
           <AnimatePresence mode="popLayout">
             {filteredStudents.map((student, i) => (
               <motion.div
@@ -291,7 +292,6 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
                   py="3"
                   alignItems="center"
                   cursor="pointer"
-                  borderBottom="1px solid"
                   borderColor="gray.100"
                   _hover={{ bg: 'primary.25' }}
                 >
