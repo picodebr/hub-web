@@ -185,7 +185,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex flex="1" direction="column" h="100%" overflowY="auto" overflowX="hidden" pb="2rem" pr="0.5rem">
+    <Flex flex="1" direction="column" h="100%" pb="12rem" pr="0.5rem">
       {/* Cabeçalho da Página */}
       <InternalPageHeader
         title={course?.title || `Curso`}
@@ -220,7 +220,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
           ))}
         </Grid>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8 pt-2 w-full max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start  pb-4">
           {modules.length ? (
             modules.map((mod, index) => {
               const gradients = [
@@ -247,9 +247,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
                   className={`group relative rounded-2xl hover:shadow-lg transition-all duration-300 ${mod.is_available ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'} border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col h-fit p-4`}
                 >
                   {/* Gradiente Superior com Número do Módulo */}
-                  <div
-                    className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}
-                  >
+                  <div className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}>
                     {/* Padrão decorativo de linhas */}
                     <div
                       className="absolute inset-0 opacity-20"
@@ -306,7 +304,16 @@ const Course: React.FC<IProps> = ({ courseId }) => {
                     {/* Barra de Progresso */}
                     {mod.is_available && (
                       <>
-                        <Progress value={percentage} min={0} max={100} size="sm" borderRadius="full" colorScheme={isFinished ? 'green' : 'blue'} bg={colorMode === 'light' ? 'gray.200' : 'gray.700'} mt="0.25rem" />
+                        <Progress
+                          value={percentage}
+                          min={0}
+                          max={100}
+                          size="sm"
+                          borderRadius="full"
+                          colorScheme={isFinished ? 'green' : 'blue'}
+                          bg={colorMode === 'light' ? 'gray.200' : 'gray.700'}
+                          mt="0.25rem"
+                        />
 
                         {/* Aulas Concluídas */}
                         <Text fontSize="11px" color={colorMode === 'light' ? 'gray.600' : 'gray.400'} fontWeight="500">

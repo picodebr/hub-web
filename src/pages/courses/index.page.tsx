@@ -71,7 +71,7 @@ const Courses: React.FC = () => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex flex="1" direction="column" h="100%" overflowY="auto" overflowX="hidden" pb="2rem" pr="0.5rem">
+    <Flex flex="1" direction="column" h="100%" pb="24rem !important" pr="0.5rem">
       {/* Cabeçalho da Página */}
       <InternalPageHeader
         title="Meus Cursos e Trilhas"
@@ -92,7 +92,7 @@ const Courses: React.FC = () => {
           ))}
         </Grid>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8 pt-2 w-full max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
           {courses.length ? (
             courses.map((course, index) => {
               const { finished, total, percentage } = getProgress(course);
@@ -121,9 +121,7 @@ const Courses: React.FC = () => {
                   className="group relative rounded-2xl hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col h-fit p-4"
                 >
                   {/* Gradiente Superior com Imagem */}
-                  <div
-                    className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}
-                  >
+                  <div className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}>
                     {course.thumbnail && (
                       <Box
                         backgroundImage={`url(${course.thumbnail})`}
@@ -152,7 +150,18 @@ const Courses: React.FC = () => {
                     {/* Status Badge - Top Right */}
                     <Box position="absolute" top="3" right="3">
                       {isFinished ? (
-                        <Badge colorScheme="green" variant="solid" borderRadius="full" px="3" py="1" display="flex" alignItems="center" gap="1" fontSize="11px" fontWeight="700">
+                        <Badge
+                          colorScheme="green"
+                          variant="solid"
+                          borderRadius="full"
+                          px="3"
+                          py="1"
+                          display="flex"
+                          alignItems="center"
+                          gap="1"
+                          fontSize="11px"
+                          fontWeight="700"
+                        >
                           <Icon as={FiCheckCircle} w="3" h="3" />
                           CONCLUÍDO
                         </Badge>
@@ -161,7 +170,18 @@ const Courses: React.FC = () => {
                           {percentage}%
                         </Badge>
                       ) : (
-                        <Badge colorScheme="gray" variant="solid" borderRadius="full" px="3" py="1" display="flex" alignItems="center" gap="1" fontSize="11px" fontWeight="700">
+                        <Badge
+                          colorScheme="gray"
+                          variant="solid"
+                          borderRadius="full"
+                          px="3"
+                          py="1"
+                          display="flex"
+                          alignItems="center"
+                          gap="1"
+                          fontSize="11px"
+                          fontWeight="700"
+                        >
                           <Icon as={FiClock} w="3" h="3" />
                           NÃO INICIADO
                         </Badge>
@@ -182,7 +202,16 @@ const Courses: React.FC = () => {
                     </Text>
 
                     {/* Barra de Progresso */}
-                    <Progress value={percentage} min={0} max={100} size="sm" borderRadius="full" colorScheme={isFinished ? 'green' : 'blue'} bg={colorMode === 'light' ? 'gray.200' : 'gray.700'} mt="0.25rem" />
+                    <Progress
+                      value={percentage}
+                      min={0}
+                      max={100}
+                      size="sm"
+                      borderRadius="full"
+                      colorScheme={isFinished ? 'green' : 'blue'}
+                      bg={colorMode === 'light' ? 'gray.200' : 'gray.700'}
+                      mt="0.25rem"
+                    />
 
                     {/* Aulas Concluídas */}
                     <Text fontSize="11px" color={colorMode === 'light' ? 'gray.600' : 'gray.400'} fontWeight="500">

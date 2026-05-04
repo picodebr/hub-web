@@ -16,20 +16,12 @@ import { IHubUserSchool } from '@/_base/interfaces/school';
 import { TbCircuitResistor } from 'react-icons/tb';
 import { dimensions } from '@/styles/global';
 
-export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
-  selectedPage,
-  user,
-  children,
-  headerLabel,
-  hideHeaderOnMobile,
-  fullScreenOnMobile,
-  setUser,
-  fullScreen,
-}) => {
+export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, user, children, headerLabel, hideHeaderOnMobile, setUser }) => {
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
   const [school, setSchool] = useState<IHubUserSchool | null>(null);
 
   const { colorMode } = useDarkMode();
+  const { isSidebarOpen } = useNavbar();
 
   const menuItems = (user?.role === 'student' ? studentMenuItems : teacherMenuItems).filter(
     (e) => user?.role === `master` || e.page !== `vision_lab`,
@@ -47,7 +39,6 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
       bgImg={`/patterns/background-${colorMode}.svg`}
       bgRepeat="no-repeat"
       bgSize="cover"
-      // bg="#f6f6f6"
     >
       {!selectedPage || NAKED_PAGES.includes(selectedPage) ? (
         children
@@ -63,24 +54,20 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
             onUpdateSchool={setSchool}
             onUpdateUser={setUser}
           />
-          <Flex flex="1" overflow="hidden" gap={{ base: '1rem', md: '1.5rem', lg: '2rem' }} maxW="100vw">
+          <Flex flex="1" overflow="hidden" gap="1rem">
             <Navbar page={selectedPage} user={user} menuItems={menuItems} stockItems={stockItems} school={school} />
             <RedefinePass user={user} />
             <Flex
               flex="1"
-              // height={`calc(100% - ${dimensions.header.height})`}
               height="100%"
               overflow="hidden auto"
               direction="column"
               position="relative"
               maxW="100%"
-              p={{ base: fullScreenOnMobile ? '0' : '1rem 1.5rem 1rem 1rem', md: '1.5rem 2.5rem 1.5rem 1.5rem', lg: '2rem 4rem 2rem 1.5rem' }}
               sx={{
                 '& > :last-child': {
-                  padding: '0',
-                  maxW: '1440px',
-                  margin: '0 auto',
-                  width: '100%',
+                  padding: { base: '1rem', lg: isSidebarOpen ? '2rem 10rem 2rem 10rem' : '1rem 16rem 2rem 16rem' },
+                  w: '100%',
                 },
               }}
             >

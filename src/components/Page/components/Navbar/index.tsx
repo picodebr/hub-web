@@ -137,13 +137,14 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
           willChange: 'width, opacity',
           display: 'flex',
           flexDirection: 'column',
+          background: 'transparent',
         }}
       >
         {isSidebarOpen ? (
           <Flex
             direction="column"
-            minW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
-            maxW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
+            minW={{ xl: dimensions.navbar.width }}
+            maxW={{ xl: dimensions.navbar.width }}
             bg="white"
             borderRadius="0 24px 0 0"
             border="none"

@@ -116,7 +116,7 @@ const Stock: React.FC = () => {
   };
 
   return (
-    <Flex direction="column" overflow="hidden" mb="-1rem">
+    <Flex direction="column">
       <Flex w="100%" justify="space-between" gap="1rem">
         <TabSwitch
           tabs={stockPageViews.map((view) => ({ isSelected: pageView === view, key: view, label: view }))}

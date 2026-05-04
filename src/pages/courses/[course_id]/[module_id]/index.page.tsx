@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { lessonTypeInfoMapper } from '@/_base/utils';
-import { useCustomRouter, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { IHubModule, IHubModuleLesson } from '@/_base/interfaces/module';
 import { getCourseActivity, listModuleLessons } from '@/_base/services/course';
@@ -76,7 +76,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" flex="1" overflow="hidden" gap="1.5rem" pb="2rem">
+    <Flex direction="column" flex="1" gap="1.5rem" pb="2rem">
       {/* 1. HEADER - Informações Simples com Botão de Voltar */}
       <Flex direction="column" gap="0.25rem">
         <Flex align="center" gap="1rem">
@@ -100,7 +100,9 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
         <Flex align="center" gap="1rem" color="gray.500" fontSize="13px" ml="2.5rem">
           <Text>{hubModule?.course.title || `...`}</Text>
           <Text>·</Text>
-          <Text>{lessons.length} aula{lessons.length !== 1 ? 's' : ''}</Text>
+          <Text>
+            {lessons.length} aula{lessons.length !== 1 ? 's' : ''}
+          </Text>
           <Text>·</Text>
           <Text>{progressPercent}%</Text>
         </Flex>
@@ -109,13 +111,13 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
       {/* 2. LISTA DE AULAS (Grid de Cards) */}
       <Flex direction="column" flex="1" overflowY="auto" pr="0.5rem">
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8 pt-2 w-full max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} h="56" borderRadius="xl" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8 pt-2 w-full max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4 ">
             {lessons
               .sort((a, b) => (a?.position || 1) - (b?.position || 1))
               .map((lesson, i, arr) => {
@@ -211,27 +213,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
                         )}
 
                         {/* Tempo do Vídeo - Bottom Right */}
-                        {lesson.lesson_type === 'video' && (
-                          <Box position="absolute" bottom="3" right="3" zIndex={10}>
-                            <Badge
-                              bg="gray.900/80"
-                              backdropFilter="blur(10px)"
-                              border="1px solid"
-                              borderColor="gray.700"
-                              color="white"
-                              borderRadius="md"
-                              px="2"
-                              py="1"
-                              fontSize="10px"
-                              fontWeight="700"
-                              display="flex"
-                              alignItems="center"
-                              gap="1"
-                            >
-                              ⏱ {lesson.duration || '0:00'}
-                            </Badge>
-                          </Box>
-                        )}
+                        {lesson.lesson_type === 'video' && <VideoDuration urlS3={lesson.video?.file} />}
                       </Box>
 
                       {/* Título da Aula */}
@@ -265,4 +247,77 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
       pageTitle: `${query._p || 'Módulo'}`,
     },
   };
+};
+
+const formatTime = (segundos: number) => {
+  if (!segundos) return '00:00';
+
+  const horas = Math.floor(segundos / 3600);
+  const minutos = Math.floor((segundos % 3600) / 60);
+  const segsRestantes = Math.floor(segundos % 60);
+
+  const minutosFormatados = minutos.toString().padStart(2, '0');
+  const segundosFormatados = segsRestantes.toString().padStart(2, '0');
+
+  if (horas > 0) {
+    return `${horas}:${minutosFormatados}:${segundosFormatados}`;
+  }
+  return `${minutosFormatados}:${segundosFormatados}`;
+};
+
+interface IVideoDurationProps {
+  urlS3?: string;
+}
+
+const VideoDuration: React.FC<IVideoDurationProps> = ({ urlS3 }) => {
+  const [duration, setDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!urlS3) return;
+
+    // Cria um elemento de vídeo em memória (não aparece na tela)
+    const videoElement = document.createElement('video');
+
+    // Adiciona o crossOrigin para evitar bloqueios de CORS ao ler os metadados
+    videoElement.crossOrigin = 'anonymous';
+    videoElement.src = urlS3;
+
+    // Dispara assim que os metadados (como a duração) estiverem disponíveis
+    videoElement.onloadedmetadata = () => {
+      setDuration(videoElement.duration);
+    };
+
+    // Tratamento de erro caso o link seja inválido ou o S3 bloqueie o acesso
+    videoElement.onerror = () => {
+      console.error('Erro ao carregar os metadados do vídeo.');
+    };
+
+    // Limpeza de memória quando o componente for desmontado
+    return () => {
+      videoElement.removeAttribute('src');
+      videoElement.load();
+    };
+  }, [urlS3]);
+
+  return (
+    <Box position="absolute" bottom="3" right="3" zIndex={10}>
+      <Badge
+        bg="gray.900/80"
+        backdropFilter="blur(10px)"
+        border="1px solid"
+        borderColor="gray.700"
+        color="white"
+        borderRadius="md"
+        px="2"
+        py="1"
+        fontSize="10px"
+        fontWeight="700"
+        display="flex"
+        alignItems="center"
+        gap="1"
+      >
+        ⏱ {duration ? formatTime(duration) : 'Calculando...'}
+      </Badge>
+    </Box>
+  );
 };

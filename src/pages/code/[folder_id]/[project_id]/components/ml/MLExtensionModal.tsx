@@ -37,7 +37,14 @@ async function loadDefaultModels(): Promise<DisplayModel[]> {
     DEFAULT_MODEL_DEFS.map(async (m) => {
       try {
         const meta = await fetch(m.metadataUrl).then((r) => r.json());
-        return { id: m.id, name: m.name, modelJsonUrl: m.modelJsonUrl, modelBinUrl: m.modelBinUrl, labels: meta.labels ?? [], folderName: 'Modelos Padrão' };
+        return {
+          id: m.id,
+          name: m.name,
+          modelJsonUrl: m.modelJsonUrl,
+          modelBinUrl: m.modelBinUrl,
+          labels: meta.labels ?? [],
+          folderName: 'Modelos Padrão',
+        };
       } catch {
         return { id: m.id, name: m.name, modelJsonUrl: m.modelJsonUrl, modelBinUrl: m.modelBinUrl, labels: [], folderName: 'Modelos Padrão' };
       }
@@ -216,9 +223,9 @@ export const MLExtensionModal: React.FC<MLExtensionModalProps> = ({ isOpen, onCl
                     </div>
 
                     <div className="flex-1 flex flex-col items-center justify-center w-full my-2 gap-1">
-                      <h3 className="text-sm font-bold leading-tight wrap-break-word line-clamp-2 w-full" style={{ color: '#64748b' }}>
+                      <p className="text-lg font-bold leading-tight wrap-break-word line-clamp-2 w-full" style={{ color: '#64748b' }}>
                         {model.name}
-                      </h3>
+                      </p>
                       <span className="text-[10px] text-gray-400 truncate w-full">{model.folderName}</span>
                     </div>
 

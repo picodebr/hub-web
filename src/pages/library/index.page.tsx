@@ -201,7 +201,7 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
   );
 
   return (
-    <Flex w="100%" h="100%" direction="column" gap="1.5rem" overflow="hidden">
+    <Flex w="100%" h="100%" direction="column" gap="1.5rem">
       {/* Abas Superiores */}
       <Box flexShrink={0}>
         <TabSwitch
@@ -215,7 +215,7 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
       </Box>
 
       {/* Conteúdo com Scroll */}
-      <Flex direction="column" flex="1" overflowY="auto" pb="2rem" pr="0.5rem">
+      <Flex direction="column" flex="1" pb="2rem" pr="0.5rem">
         {!allGrades.length ? (
           <Flex direction="column" align="center" justify="center" h="100%" color="gray400" gap="1rem">
             <Icon as={FiBook} boxSize="3rem" opacity={0.5} />
