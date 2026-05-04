@@ -8,6 +8,42 @@
   --font-heading: 'Poppins', sans-serif;
   --font-outfit: 'Outfit', sans-serif;
 
+  /* ============================================
+     SPACING SYSTEM - Múltiplos de 8px (Base)
+     ============================================ */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px - Base unit */
+  --spacing-md: 1rem;      /* 16px - 2 units */
+  --spacing-lg: 1.5rem;    /* 24px - 3 units */
+  --spacing-xl: 2rem;      /* 32px - 4 units */
+  --spacing-2xl: 3rem;     /* 48px - 6 units */
+  --spacing-3xl: 4rem;     /* 64px - 8 units */
+
+  /* ============================================
+     BORDER RADIUS - Suave e Orgânico
+     ============================================ */
+  --radius-xs: 0.25rem;    /* 4px */
+  --radius-sm: 0.5rem;     /* 8px */
+  --radius-md: 0.75rem;    /* 12px */
+  --radius-lg: 1rem;       /* 16px - Padrão */
+  --radius-xl: 1.5rem;     /* 24px - Moderno */
+  --radius-2xl: 2rem;      /* 32px - Extra suave */
+  --radius-full: 9999px;   /* Circular */
+
+  /* ============================================
+     BOX SHADOW - Elevação e Profundidade
+     ============================================ */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-elevation: 0 8px 16px rgba(0, 0, 0, 0.08);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  /* ============================================
+     COLORS - Base
+     ============================================ */
   --color-rocket-red: #FF6B6B;
   --color-rocket-yellow: #FFD93D;
   --color-rocket-blue: #4D96FF;
@@ -29,7 +65,8 @@
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
   --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));--color-border: hsl(var(--border));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   
@@ -143,6 +180,91 @@ p {
   .vision-lab {
     --font-sans: 'Nunito', 'Poppins', sans-serif;
     font-family: var(--font-sans);
+  }
+
+  /* ============================================
+     SCROLLBAR STYLING - Discreto e Suave
+     ============================================ */
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d0d5dd transparent;
+  }
+
+  /* ============================================
+     LAYOUT E RESPIRO
+     ============================================ */
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--font-sans);
+    background-color: var(--rocket-bg);
+  }
+
+  body {
+    background: #fff;
+    font-size: 15px;
+    color: #3f3f3f;
+  }
+
+  a:hover {
+    text-decoration: none !important;
+  }
+
+  /* ============================================
+     MEDIA QUERIES - Breakpoints Customizados
+     ============================================ */
+  .only-mobile {
+    @media (min-width: 1019px) {
+      display: none;
+    }
+  }
+
+  .only-desktop {
+    @media (max-width: 1020px) {
+      display: none;
+    }
+  }
+
+  /* ============================================
+     TRANSIÇÕES SUAVES GLOBAIS
+     ============================================ */
+  * {
+    @apply transition-colors duration-200;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    @apply transition-all duration-200;
+  }
+
+  .vision-lab {
     color: var(--vlab-foreground);
     overflow-x: hidden;
   }

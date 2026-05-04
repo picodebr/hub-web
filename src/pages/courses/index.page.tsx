@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { Flex, Grid, Progress, Skeleton, Text, Box, Icon, Badge, useColorMode } from '@chakra-ui/react';
-import { FiPlayCircle, FiCheckCircle, FiClock } from 'react-icons/fi';
+import { FiPlayCircle, FiCheckCircle, FiClock, FiBook } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
 import { useCustomRouter } from '@/_base/hooks/CustomRouter';
@@ -9,7 +9,6 @@ import { IHubCourse, IHubCourseActivity } from '@/_base/interfaces/course';
 import { listCourses } from '@/_base/services/course';
 import { useCustomToast } from '@/_base/hooks';
 import { useDarkMode } from '@/_base/hooks/useDarkMode';
-import { InternalCard } from '@/components/InternalCard';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
 
 // --- Variáveis de Animação (Framer Motion) ---
@@ -55,10 +54,13 @@ const Courses: React.FC = () => {
         .flatMap((c) => (c.metadata || []).flatMap((m) => m.lessons))
         .filter((lesson) => !!lesson.finished_at).length;
 
-      return Math.min(Math.ceil((finished / (total || 1)) * 100), 100);
+      return { finished, total, percentage: Math.min(Math.ceil((finished / (total || 1)) * 100), 100) };
     },
     [coursesActivity],
   );
+
+  const getModuleCount = (course: IHubCourse) => course.modules.length;
+  const getLessonCount = (course: IHubCourse) => course.modules.flatMap((m) => m.lessons).length;
 
   const handleCourseClick = (course: IHubCourse) => {
     router.push(`/courses/${course.id}?_p=${course.title}`);
@@ -90,68 +92,104 @@ const Courses: React.FC = () => {
           ))}
         </Grid>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 overflow-y-auto pb-8 px-2 content-start h-full pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8 pt-2 w-full max-w-6xl mx-auto">
           {courses.length ? (
             courses.map((course, index) => {
-              const progress = getProgress(course);
-              const isFinished = progress === 100;
-              const isStarted = progress > 0;
+              const { finished, total, percentage } = getProgress(course);
+              const isFinished = percentage === 100;
+              const isStarted = percentage > 0;
+              const moduleCount = getModuleCount(course);
+              const lessonCount = getLessonCount(course);
+              const gradients = [
+                'from-sky-400 to-blue-600',
+                'from-violet-400 to-purple-600',
+                'from-emerald-400 to-teal-600',
+                'from-amber-400 to-orange-600',
+                'from-pink-400 to-rose-600',
+                'from-cyan-400 to-sky-600',
+              ];
+              const gradient = gradients[index % gradients.length];
 
               return (
-                <InternalCard
+                <motion.div
                   key={course.id}
-                  index={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -4 }}
                   onClick={() => handleCourseClick(course)}
-                  title={course.title}
-                  Icon={FiPlayCircle}
-                  content={
-                    course.thumbnail ? (
-                      <Flex height="160px" p="1rem" marginBottom="-1rem" zIndex="999">
-                        <Box
-                          backgroundImage={`url(${course.thumbnail || '/logo/pi-logo-dark.svg'})`}
-                          backgroundSize="contain"
-                          backgroundPosition="center"
-                          backgroundRepeat="no-repeat"
-                          h="100%"
-                          w="100%"
-                          border="1px solid"
-                          borderRadius="1rem"
-                          borderColor={borderColor}
-                        />
-                      </Flex>
-                    ) : undefined
-                  }
-                  footer={
-                    <Flex direction="column" gap="0.5rem" w="100%">
-                      <Flex justify="space-between" align="center">
-                        {isFinished ? (
-                          <Badge colorScheme="green" variant="subtle" borderRadius="full" px="2" display="flex" alignItems="center" gap="1">
-                            <Icon as={FiCheckCircle} /> Concluído
-                          </Badge>
-                        ) : isStarted ? (
-                          <Text fontSize="12px" fontWeight="600" color="primary.600">
-                            {progress}% Concluído
-                          </Text>
-                        ) : (
-                          <Badge colorScheme="gray" variant="subtle" borderRadius="full" px="2" display="flex" alignItems="center" gap="1">
-                            <Icon as={FiClock} /> Não iniciado
-                          </Badge>
-                        )}
-                      </Flex>
-
-                      <Progress
-                        value={progress}
-                        min={0}
-                        max={100}
-                        size="sm"
-                        borderRadius="full"
-                        colorScheme={isFinished ? 'green' : 'blue'}
-                        bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                  className="group relative rounded-2xl hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col h-fit p-4"
+                >
+                  {/* Gradiente Superior com Imagem */}
+                  <div
+                    className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}
+                  >
+                    {course.thumbnail && (
+                      <Box
+                        backgroundImage={`url(${course.thumbnail})`}
+                        backgroundSize="cover"
+                        backgroundPosition="center"
+                        h="100%"
+                        w="100%"
+                        position="absolute"
                       />
+                    )}
+                    {/* Padrão decorativo de linhas */}
+                    <div
+                      className="absolute inset-0 opacity-20"
+                      style={{
+                        backgroundImage:
+                          'linear-gradient(rgba(255,255,255,0.8) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,0.8) 2px, transparent 2px)',
+                        backgroundSize: '16px 16px',
+                        zIndex: 1,
+                      }}
+                    />
+                    {/* Ícone de Livro */}
+                    <Flex position="absolute" inset="0" align="center" justify="center" zIndex={2}>
+                      <FiBook className="w-16 h-16 text-white/50" strokeWidth={1.5} />
                     </Flex>
-                  }
-                  showFooterIcon
-                />
+
+                    {/* Status Badge - Top Right */}
+                    <Box position="absolute" top="3" right="3">
+                      {isFinished ? (
+                        <Badge colorScheme="green" variant="solid" borderRadius="full" px="3" py="1" display="flex" alignItems="center" gap="1" fontSize="11px" fontWeight="700">
+                          <Icon as={FiCheckCircle} w="3" h="3" />
+                          CONCLUÍDO
+                        </Badge>
+                      ) : isStarted ? (
+                        <Badge colorScheme="blue" variant="solid" borderRadius="full" px="3" py="1" fontSize="11px" fontWeight="700">
+                          {percentage}%
+                        </Badge>
+                      ) : (
+                        <Badge colorScheme="gray" variant="solid" borderRadius="full" px="3" py="1" display="flex" alignItems="center" gap="1" fontSize="11px" fontWeight="700">
+                          <Icon as={FiClock} w="3" h="3" />
+                          NÃO INICIADO
+                        </Badge>
+                      )}
+                    </Box>
+                  </div>
+
+                  {/* Conteúdo do Card */}
+                  <Flex direction="column" gap="0.75rem" flex="1" mt="0.5rem">
+                    {/* Título */}
+                    <Text fontSize="14px" fontWeight="700" color={colorMode === 'light' ? 'gray.800' : 'gray.100'} noOfLines={2}>
+                      {course.title}
+                    </Text>
+
+                    {/* Módulos e Aulas */}
+                    <Text fontSize="12px" color={colorMode === 'light' ? 'gray.600' : 'gray.400'} fontWeight="500">
+                      {moduleCount} módulo{moduleCount !== 1 ? 's' : ''} · {lessonCount} aula{lessonCount !== 1 ? 's' : ''}
+                    </Text>
+
+                    {/* Barra de Progresso */}
+                    <Progress value={percentage} min={0} max={100} size="sm" borderRadius="full" colorScheme={isFinished ? 'green' : 'blue'} bg={colorMode === 'light' ? 'gray.200' : 'gray.700'} mt="0.25rem" />
+
+                    {/* Aulas Concluídas */}
+                    <Text fontSize="11px" color={colorMode === 'light' ? 'gray.600' : 'gray.400'} fontWeight="500">
+                      {finished}/{total} aulas concluídas
+                    </Text>
+                  </Flex>
+                </motion.div>
               );
             })
           ) : (

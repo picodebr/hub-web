@@ -20,6 +20,8 @@ import '../styles/panels.css';
 import '../styles/theme.css';
 //@ts-ignore
 import '../styles/globals.css';
+//@ts-ignore
+import '../styles/design-system.css';
 
 import { api } from '@/_base/classes/api';
 import { CustomRouterProvider } from '@/_base/hooks/CustomRouter';
