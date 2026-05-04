@@ -9,3 +9,4 @@ catControlBoard.addBlock(new BlockBuilder('if_block'));
 catControlBoard.addBlock(new BlockBuilder('if_else_block'));
 catControlBoard.addBlock(new BlockBuilder('repeat_block').withShadowValue('TIMES', shadowNum(10)));
 catControlBoard.addBlock(new BlockBuilder('while_block'));
+catControlBoard.addBlock(new BlockBuilder('forever_block'));

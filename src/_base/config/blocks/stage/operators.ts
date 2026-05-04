@@ -267,5 +267,21 @@ export const blockOperators = [
         "output": "Number",
         "colour": "#59C059",
         "extensions": ["force_round_shape"]
+    },
+    {
+        "type": "operator_map",
+        "message0": "mapear %1 de %2 – %3 para %4 – %5",
+        "args0": [
+            { "type": "input_value", "name": "VALUE", "check": "Number" },
+            { "type": "input_value", "name": "FROM_LOW", "check": "Number" },
+            { "type": "input_value", "name": "FROM_HIGH", "check": "Number" },
+            { "type": "input_value", "name": "TO_LOW", "check": "Number" },
+            { "type": "input_value", "name": "TO_HIGH", "check": "Number" }
+        ],
+        "inputsInline": true,
+        "output": "Number",
+        "colour": "#59C059",
+        "tooltip": "Mapeia um valor de uma faixa para outra (equivalente ao map() do Arduino)",
+        "extensions": ["force_round_shape"]
     }
 ];

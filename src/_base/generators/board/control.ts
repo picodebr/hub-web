@@ -42,3 +42,9 @@ arduinoGenerator.forBlock["while_block"] = function (block: Blockly.Block) {
     const statements = arduinoGenerator.statementToCode(block, "DO");
     return `while (${condition}) {\n${statements}  }\n`;
 };
+
+// PARA SEMPRE
+arduinoGenerator.forBlock["forever_block"] = function (block: Blockly.Block) {
+    const statements = arduinoGenerator.statementToCode(block, "DO");
+    return `while (true) {\n${statements}  }\n`;
+};

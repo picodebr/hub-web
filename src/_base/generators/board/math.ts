@@ -106,3 +106,8 @@ arduinoGenerator.forBlock["math_angle"] = function (block: Blockly.Block) {
     const code = String(block.getFieldValue('NUM'));
     return [code, arduinoGenerator.ORDER_ATOMIC];
 };
+
+arduinoGenerator.forBlock["logic_boolean"] = function (block: Blockly.Block) {
+    const code = (block.getFieldValue('BOOL') === 'TRUE') ? 'true' : 'false';
+    return [code, arduinoGenerator.ORDER_ATOMIC];
+};

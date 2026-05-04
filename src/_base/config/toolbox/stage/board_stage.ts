@@ -18,7 +18,10 @@ export const getBoardCategory = () => {
         .addBlock(new BlockBuilder('board_read_digital_pin_stage').withField('PIN', '2'))
         .addBlock(new BlockBuilder('board_read_analog_pin_stage').withField('PIN', '0'))
         .addBlock(new BlockBuilder('board_button_read_stage'))
-        .addBlock(new BlockBuilder('board_servo_move_stage').withField('PIN', '9').withShadowValue('DEGREE', shadowBlock('board_angle_stage', 'NUM', 90)));
+        .addBlock(new BlockBuilder('board_servo_move_stage').withField('PIN', '9').withShadowValue('DEGREE', shadowBlock('board_angle_stage', 'NUM', 90)))
+        .addBlock(new BlockBuilder('motor_control_stage').withField('MOTOR', 'MOTOR_A').withField('DIRECAO', 'HORARIO'))
+        .addBlock(new BlockBuilder('motor_control_pwm_stage').withField('MOTOR', 'MOTOR_A').withField('DIRECAO', 'HORARIO').withShadowValue('VELOCIDADE', shadowBlock('math_number', 'NUM', 50)))
+        .addBlock(new BlockBuilder('motor_stop_stage').withField('MOTOR', 'MOTOR_A'));
 
     return cat;
 };

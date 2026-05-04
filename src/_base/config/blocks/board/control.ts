@@ -118,5 +118,20 @@ export const blockControl = [
         "colour": "#FFBF00",
         "tooltip": "Repete os comandos enquanto a condição for verdadeira",
         "helpUrl": ""
+    },
+    {
+        "type": "forever_block",
+        "message0": "para sempre",
+        "message1": "faça %1",
+        "args1": [
+            {
+                "type": "input_statement",
+                "name": "DO"
+            }
+        ],
+        "previousStatement": true,
+        "colour": "#FFBF00",
+        "tooltip": "Executa os comandos em um loop infinito",
+        "helpUrl": ""
     }
 ];
