@@ -3,6 +3,7 @@ import { GetServerSideProps } from 'next';
 import { Flex, Skeleton, Text, Box, CircularProgress, CircularProgressLabel, Badge, Icon, Button } from '@chakra-ui/react';
 import { PiSealCheckFill } from 'react-icons/pi';
 import { FiLock, FiPlayCircle, FiRotateCcw } from 'react-icons/fi';
+import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { lessonTypeInfoMapper } from '@/_base/utils';
@@ -76,194 +77,177 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
 
   return (
     <Flex direction="column" flex="1" overflow="hidden" gap="1.5rem" pb="2rem">
-      {/* 1. HEADER (Hero do Módulo) */}
-      <Flex
-        bg={bgCard}
-        p="1.5rem"
-        borderRadius="2xl"
-        border="1px solid"
-        borderColor={borderColor}
-        boxShadow="sm"
-        gap="1.5rem"
-        align="center"
-        direction={{ base: 'column', md: 'row' }}
-      >
-        <Skeleton isLoaded={!isLoading} borderRadius="xl" overflow="hidden" flexShrink={0}>
+      {/* 1. HEADER - Informações Simples com Botão de Voltar */}
+      <Flex direction="column" gap="0.25rem">
+        <Flex align="center" gap="1rem">
           <Flex
-            backgroundImage={`url(${hubModule?.course.thumbnail || '/logo/pi-logo-dark.svg'})`}
-            backgroundSize="cover"
-            backgroundPosition="center"
-            h={{ base: '180px', md: '140px' }}
-            w={{ base: '100%', md: '140px' }}
-            borderRadius="xl"
-            border="1px solid"
-            borderColor={borderColor}
-          />
-        </Skeleton>
-
-        <Flex direction="column" gap="0.75rem" flex="1" w="100%">
-          <Skeleton isLoaded={!isLoading} maxW={{ base: '100%', md: '60%' }}>
-            <Text fontWeight="800" fontSize={{ base: '20px', md: '24px' }} color={colorMode === 'dark' ? 'white' : 'gray.800'} lineHeight="1.2">
-              {hubModule?.title || `Carregando módulo...`}
-            </Text>
-          </Skeleton>
-
-          <Skeleton isLoaded={!isLoading} maxW="100%">
-            <Text noOfLines={3} color="gray.500" fontSize="14px">
-              {hubModule?.description || 'Nenhuma descrição fornecida para este módulo.'}
-            </Text>
-          </Skeleton>
-
-          <Skeleton isLoaded={!isLoading} maxW={{ base: '80%', md: '40%' }} mt="auto">
-            <Flex
-              align="center"
-              gap="0.5rem"
-              bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
-              w="fit-content"
-              px="0.75rem"
-              py="0.25rem"
-              borderRadius="full"
-              border="1px solid"
-              borderColor={borderColor}
-            >
-              <Text color="gray.500" fontSize="13px" fontWeight="600">
-                Curso:{' '}
-                <Text as="span" color="primary.500">
-                  {hubModule?.course.title || `...`}
-                </Text>
-              </Text>
-            </Flex>
-          </Skeleton>
+            userSelect="none"
+            cursor="pointer"
+            fontWeight="600"
+            onClick={() => router.back()}
+            pb="0.5rem"
+            w="fit-content"
+            pt="10px"
+            transition="all 0.2s"
+            _hover={{ transform: `scale(1.2)` }}
+          >
+            <ArrowLeft size={20} color={colorMode === 'dark' ? 'white' : 'black'} />
+          </Flex>
+          <Text fontWeight="700" fontSize="24px" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+            {hubModule?.title || `Carregando módulo...`}
+          </Text>
         </Flex>
-
-        {/* Progresso (Chakra UI Nativo) */}
-        <Flex display={{ base: 'none', lg: 'flex' }} align="center" justify="center" p="1rem" flexShrink={0}>
-          <Skeleton isLoaded={!isLoading} borderRadius="full">
-            <CircularProgress value={progressPercent} size="90px" thickness="8px">
-              <CircularProgressLabel fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
-                {isLoading ? '...' : `${finishedLessons.length}/${lessons.length}`}
-              </CircularProgressLabel>
-            </CircularProgress>
-          </Skeleton>
+        <Flex align="center" gap="1rem" color="gray.500" fontSize="13px" ml="2.5rem">
+          <Text>{hubModule?.course.title || `...`}</Text>
+          <Text>·</Text>
+          <Text>{lessons.length} aula{lessons.length !== 1 ? 's' : ''}</Text>
+          <Text>·</Text>
+          <Text>{progressPercent}%</Text>
         </Flex>
       </Flex>
 
-      {/* 2. LISTA DE AULAS (A Jornada) */}
+      {/* 2. LISTA DE AULAS (Grid de Cards) */}
       <Flex direction="column" flex="1" overflowY="auto" pr="0.5rem">
         {isLoading ? (
-          <Flex direction="column" gap="1rem">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8 pt-2 w-full max-w-6xl mx-auto">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} h="5.5rem" borderRadius="xl" />
+              <Skeleton key={i} h="56" borderRadius="xl" />
             ))}
-          </Flex>
+          </div>
         ) : (
-          <motion.div variants={containerVariants} initial="hidden" animate="show">
-            <Flex direction="column" gap="1rem">
-              {lessons
-                .sort((a, b) => (a?.position || 1) - (b?.position || 1))
-                .map((lesson, i, arr) => {
-                  const isLocked = hubModule?.metadata?.respect_hierarchy && !!i && !arr[i - 1].finished;
-                  const isFinished = !!lesson.finished;
-                  const LessonIcon = lessonTypeInfoMapper[lesson.lesson_type]?.icon;
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8 pt-2 w-full max-w-6xl mx-auto">
+            {lessons
+              .sort((a, b) => (a?.position || 1) - (b?.position || 1))
+              .map((lesson, i, arr) => {
+                const isLocked = hubModule?.metadata?.respect_hierarchy && !!i && !arr[i - 1].finished;
+                const isFinished = !!lesson.finished;
 
-                  return (
-                    <motion.div key={lesson.id} variants={itemVariants}>
-                      <Flex
-                        bg={bgCard}
-                        p={{ base: '1rem', md: '1.25rem' }}
-                        borderRadius="xl"
+                return (
+                  <motion.div
+                    key={lesson.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    whileHover={!isLocked ? { y: -4 } : {}}
+                    onClick={() => !isLocked && router.push(`/courses/${courseId}/${moduleId}/${lesson.id}?_p=${lesson.title}`)}
+                    className={`group relative transition-all duration-300 ${!isLocked ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'}`}
+                  >
+                    {/* Card da Aula */}
+                    <Flex
+                      direction="column"
+                      gap="0.5rem"
+                      h="fit-content"
+                      bg={bgCard}
+                      borderRadius="xl"
+                      p="0.75rem"
+                      border="1px solid"
+                      borderColor={borderColor}
+                      boxShadow="sm"
+                      _hover={!isLocked ? { boxShadow: 'md', borderColor: 'primary.300' } : {}}
+                    >
+                      {/* Imagem/Fundo Escuro */}
+                      <Box
+                        position="relative"
+                        h="36"
+                        bg="gray.900"
+                        borderRadius="lg"
+                        overflow="hidden"
                         border="1px solid"
-                        borderColor={isFinished ? 'green.200' : borderColor}
-                        align={{ base: 'flex-start', md: 'center' }}
-                        justify="space-between"
-                        direction={{ base: 'column', md: 'row' }}
-                        gap="1rem"
-                        opacity={isLocked ? 0.65 : 1}
-                        cursor={isLocked ? 'not-allowed' : 'pointer'}
-                        transition="all 0.2s"
-                        boxShadow="sm"
-                        _hover={isLocked ? {} : { transform: 'translateX(4px)', borderColor: 'primary.300', boxShadow: 'md' }}
-                        onClick={() => !isLocked && router.push(`/courses/${courseId}/${moduleId}/${lesson.id}?_p=${lesson.title}`)}
+                        borderColor="gray.700"
+                        boxShadow="md"
+                        _hover={!isLocked ? { boxShadow: 'lg' } : {}}
                       >
-                        <Flex align="center" gap="1.25rem" flex="1" w="100%">
-                          {/* Indicador de Status/Índice */}
-                          <Flex
-                            w="44px"
-                            h="44px"
-                            borderRadius="full"
-                            flexShrink={0}
-                            bg={isFinished ? 'green.50' : isLocked ? 'gray.100' : 'primary.50'}
-                            color={isFinished ? 'green.500' : isLocked ? 'gray.400' : 'primary.500'}
-                            align="center"
-                            justify="center"
-                            border="1px solid"
-                            borderColor={isFinished ? 'green.200' : isLocked ? 'gray.200' : 'primary.200'}
-                          >
-                            {isFinished ? (
-                              <Icon as={PiSealCheckFill} fontSize="1.5rem" />
-                            ) : (
-                              <Text fontWeight="800" fontSize="16px">
-                                {i + 1}
-                              </Text>
-                            )}
-                          </Flex>
+                        {/* Padrão decorativo de linhas */}
+                        <div
+                          className="absolute inset-0 opacity-10"
+                          style={{
+                            backgroundImage:
+                              'linear-gradient(rgba(255,255,255,0.8) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,0.8) 2px, transparent 2px)',
+                            backgroundSize: '16px 16px',
+                            zIndex: 1,
+                          }}
+                        />
 
-                          {/* Informações da Aula */}
-                          <Flex direction="column" gap="0.25rem">
-                            <Text fontWeight="700" fontSize="16px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1}>
-                              {lesson.title}
-                            </Text>
-                            <Flex align="center" gap="0.5rem">
-                              <Badge
-                                colorScheme={isLocked ? 'gray' : 'blue'}
-                                variant="subtle"
-                                borderRadius="md"
-                                px="2"
-                                py="0.5"
-                                display="flex"
-                                alignItems="center"
-                                gap="1"
-                              >
-                                {LessonIcon && <LessonIcon fontSize="12px" />}
-                                <Text mt="1px">{lessonTypeInfoMapper[lesson.lesson_type]?.label}</Text>
-                              </Badge>
+                        {/* Número/Ícone Centralizado */}
+                        <Flex position="absolute" inset="0" align="center" justify="center" zIndex={2}>
+                          {isFinished ? (
+                            <Flex
+                              w="12"
+                              h="12"
+                              borderRadius="xl"
+                              bg="blue.500/30"
+                              align="center"
+                              justify="center"
+                              backdropFilter="blur(10px)"
+                              border="2px solid"
+                              borderColor="blue.400"
+                            >
+                              <Icon as={PiSealCheckFill} fontSize="lg" color="blue.300" />
                             </Flex>
-                          </Flex>
+                          ) : (
+                            <Flex
+                              w="12"
+                              h="12"
+                              borderRadius="xl"
+                              bg="blue.500/30"
+                              align="center"
+                              justify="center"
+                              backdropFilter="blur(10px)"
+                              border="2px solid"
+                              borderColor="blue.400"
+                            >
+                              <FiPlayCircle className="w-6 h-6 text-blue.300" />
+                            </Flex>
+                          )}
                         </Flex>
 
-                        {/* Botão de Ação */}
-                        <Flex w={{ base: '100%', md: 'auto' }} justify="flex-end">
-                          <Button
-                            isDisabled={isLocked}
-                            colorScheme={isFinished ? 'gray' : 'blue'}
-                            variant={isFinished ? 'outline' : 'solid'}
-                            bg={!isFinished && !isLocked ? 'primary600' : undefined}
-                            color={!isFinished && !isLocked ? 'white' : undefined}
-                            leftIcon={
-                              isLocked ? (
-                                <Icon as={FiLock} />
-                              ) : isFinished ? (
-                                lesson.lesson_type === 'video' ? (
-                                  <Icon as={FiPlayCircle} />
-                                ) : (
-                                  <Icon as={FiRotateCcw} />
-                                )
-                              ) : (
-                                <Icon as={FiPlayCircle} />
-                              )
-                            }
-                            w={{ base: '100%', md: 'auto' }}
-                            borderRadius="lg"
-                          >
-                            {isLocked ? 'Bloqueado' : isFinished ? (lesson.lesson_type === 'video' ? 'Rever' : 'Refazer') : 'Iniciar'}
-                          </Button>
-                        </Flex>
+                        {/* Flag VISTO - Top Right */}
+                        {isFinished && (
+                          <Box position="absolute" top="3" right="3" zIndex={10}>
+                            <Badge colorScheme="blue" variant="solid" borderRadius="full" px="2" py="1" fontSize="10px" fontWeight="700">
+                              VISTO
+                            </Badge>
+                          </Box>
+                        )}
+
+                        {/* Tempo do Vídeo - Bottom Right */}
+                        {lesson.lesson_type === 'video' && (
+                          <Box position="absolute" bottom="3" right="3" zIndex={10}>
+                            <Badge
+                              bg="gray.900/80"
+                              backdropFilter="blur(10px)"
+                              border="1px solid"
+                              borderColor="gray.700"
+                              color="white"
+                              borderRadius="md"
+                              px="2"
+                              py="1"
+                              fontSize="10px"
+                              fontWeight="700"
+                              display="flex"
+                              alignItems="center"
+                              gap="1"
+                            >
+                              ⏱ {lesson.duration || '0:00'}
+                            </Badge>
+                          </Box>
+                        )}
+                      </Box>
+
+                      {/* Título da Aula */}
+                      <Flex direction="column" gap="0.25rem" mt="0.25rem">
+                        <Text fontSize="11px" color="gray.500" fontWeight="600">
+                          {i + 1}. {lessonTypeInfoMapper[lesson.lesson_type]?.label}
+                        </Text>
+                        <Text fontSize="13px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={2} lineHeight="1.3">
+                          {lesson.title}
+                        </Text>
                       </Flex>
-                    </motion.div>
-                  );
-                })}
-            </Flex>
-          </motion.div>
+                    </Flex>
+                  </motion.div>
+                );
+              })}
+          </div>
         )}
       </Flex>
     </Flex>

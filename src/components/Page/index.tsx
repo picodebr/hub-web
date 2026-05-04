@@ -1,10 +1,8 @@
-import { cloneElement, PropsWithChildren, useState } from 'react';
-import { useRouter } from 'next/router';
+import { PropsWithChildren, useState } from 'react';
 import { FiFileText, FiHeadphones, FiInbox, FiUsers } from 'react-icons/fi';
 import { FaRegSmile, FaRegStar } from 'react-icons/fa';
 import { RiHome2Line } from 'react-icons/ri';
 import { BsMotherboard } from 'react-icons/bs';
-import { motion } from 'framer-motion';
 
 import { IPageProps } from '@/_base/hooks/Page/interfaces';
 import { Flex } from '@chakra-ui/react';
@@ -15,7 +13,6 @@ import { RedefinePass } from './components/RedefinePass';
 import { MenuItemType } from './interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { IHubUserSchool } from '@/_base/interfaces/school';
-import { PiExamLight } from 'react-icons/pi';
 import { TbCircuitResistor } from 'react-icons/tb';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
@@ -31,7 +28,6 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   const [school, setSchool] = useState<IHubUserSchool | null>(null);
 
   const { colorMode } = useDarkMode();
-  const { isSidebarOpen } = useNavbar();
 
   const menuItems = (user?.role === 'student' ? studentMenuItems : teacherMenuItems).filter(
     (e) => user?.role === `master` || e.page !== `vision_lab`,
@@ -65,7 +61,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
             onUpdateSchool={setSchool}
             onUpdateUser={setUser}
           />
-          <Flex flex="1" overflow="hidden">
+          <Flex flex="1" overflow="hidden" gap={{ base: '1rem', md: '1.5rem', lg: '2rem' }} maxW="100vw">
             <Navbar page={selectedPage} user={user} menuItems={menuItems} stockItems={stockItems} school={school} />
             <RedefinePass user={user} />
             <Flex
@@ -74,11 +70,14 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               overflow="hidden"
               direction="column"
               position="relative"
-              p={{ base: fullScreenOnMobile ? undefined : `1rem`, lg: '0 0.5rem 0 1rem' }}
+              maxW="100%"
+              p={{ base: fullScreenOnMobile ? '0' : '1rem 1.5rem 1rem 1rem', md: '1.5rem 2.5rem 1.5rem 1.5rem', lg: '2rem 4rem 2rem 1.5rem' }}
               sx={{
                 '& > :last-child': {
-                  padding: '1rem 0.5rem 1rem 0',
-                  // Se a sua página tiver scroll próprio, você pode precisar garantir a altura dela aqui
+                  padding: '0',
+                  maxW: '1440px',
+                  margin: '0 auto',
+                  width: '100%',
                 },
               }}
             >

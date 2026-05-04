@@ -144,18 +144,16 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
             direction="column"
             minW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
             maxW={{ base: `calc(${dimensions.navbar.width} - 3rem)`, xl: dimensions.navbar.width }}
-            bg="white" // Fundo único para unificar a barra lateral
-            borderRadius="0 16px 16px 0"
-            border="1px solid"
-            borderTop="0"
-            borderColor="gray200"
-            boxShadow="0px 4px 12px rgba(0,0,0,0.03)" // Sombra leve para destacar do fundo da página
+            bg="white"
+            borderRadius="0 24px 0 0"
+            border="none"
+            boxShadow="0px 8px 24px rgba(0, 0, 0, 0.08)"
             overflow="hidden"
             userSelect="none"
             h="100%"
           >
             {/* 1. SEÇÃO DE PERFIL */}
-            <Flex direction="column" p="0.75rem" position="relative" gap="0.5rem" flexShrink={0}>
+            <Flex direction="column" p="1rem" position="relative" gap="0.75rem" flexShrink={0}>
               {/* Botão de Fechar Menu */}
               <Tooltip label="Recolher menu" placement="right" hasArrow>
                 <Flex
@@ -203,21 +201,21 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                     toggleAs={(e) => (
                       <Flex
                         border="1px solid"
-                        borderColor="gray200"
+                        borderColor="gray100"
                         borderRadius="50%"
-                        p="0.2rem"
+                        p="0.3rem"
                         bg="white"
                         position="absolute"
                         bottom="-2px"
                         right="-2px"
                         cursor="pointer"
-                        boxShadow="sm"
+                        boxShadow="0 2px 8px rgba(0,0,0,0.1)"
                         transition="all 0.2s"
-                        _hover={{ transform: 'scale(1.1)', color: 'primary500' }}
+                        _hover={{ transform: 'scale(1.15)', color: 'primary500', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
                         color="gray500"
                         onClick={() => e.onClick(e)}
                       >
-                        <FiCamera size="0.65rem" />
+                        <FiCamera size="0.7rem" />
                       </Flex>
                     )}
                   />
@@ -277,14 +275,14 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
               </Flex>
             </Flex>
 
-            <Divider borderColor="gray200" opacity={0.6} />
+            <Divider borderColor="gray100" opacity={0.5} />
 
             {/* 2. MENU DE NAVEGAÇÃO */}
             <MotionFlex
               direction="column"
               flex="1"
-              p="0.5rem 0.5rem"
-              gap="0.1rem"
+              p="0.5rem"
+              gap="0.25rem"
               overflowY="auto"
               overflowX="hidden"
               animate={isOpen ? 'open' : 'closed'}
@@ -295,7 +293,7 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
               css={{
                 '&::-webkit-scrollbar': { width: '4px' },
                 '&::-webkit-scrollbar-track': { background: 'transparent' },
-                '&::-webkit-scrollbar-thumb': { background: '#D0D5DD', borderRadius: '4px' },
+                '&::-webkit-scrollbar-thumb': { background: '#d0d5dd', borderRadius: '12px' },
               }}
             >
               {menuItems.map((item) => {
@@ -346,8 +344,8 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
 
                     <Flex
                       align="center"
-                      padding="8px 10px"
-                      borderRadius="8px"
+                      padding="10px 12px"
+                      borderRadius="12px"
                       cursor="pointer"
                       whiteSpace="nowrap"
                       transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
@@ -373,8 +371,8 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
             {/* 3. AÇÕES CUSTOMIZADAS (WIDGETS INFERIORES) */}
             {!!actions.length && (
               <>
-                <Divider borderColor="gray200" opacity={0.6} />
-                <Flex p="1rem" gap="0.75rem" justify="space-between" align="center" wrap="wrap" flexShrink={0}>
+                <Divider borderColor="gray100" opacity={0.5} />
+                <Flex p="1rem 0.5rem" gap="0.75rem" justify="space-between" align="center" wrap="wrap" flexShrink={0}>
                   {actions.map((action, i) => (
                     <motion.a
                       key={action.type + i}
@@ -388,16 +386,16 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                         alignItems: `center`,
                         justifyContent: `center`,
                         flex: 1,
-                        border: `1px solid`,
-                        borderColor: `#EAECF0`, // gray200
+                        border: `none`,
                         height: `4.5rem`,
                         minWidth: `4rem`,
-                        padding: `0.5rem`,
-                        gap: `0.3rem`,
-                        borderRadius: `12px`,
+                        padding: `0.75rem`,
+                        gap: `0.35rem`,
+                        borderRadius: `16px`,
                         cursor: `pointer`,
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                        background: '#F9FAFB', // gray50 para destacar suavemente na barra branca
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                        background: '#f8fafc',
+                        transition: 'all 0.2s ease',
                       }}
                     >
                       <Icon fontSize="22px" as={iconList[action.data.icon]} color="primary700" />

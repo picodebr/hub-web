@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 
-import { Button, Flex, Grid, Progress, Skeleton, Text, useColorMode } from '@chakra-ui/react';
+import { Button, Flex, Grid, Progress, Skeleton, Text, useColorMode, Badge, Icon, Box } from '@chakra-ui/react';
 import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { useCallback, useEffect, useState } from 'react';
 import { IHubModule } from '@/_base/interfaces/module';
@@ -18,8 +18,9 @@ import { ICertificateTemplate } from '@/_base/interfaces/certificate/ICertificat
 import { IHubCertificate } from '@/_base/interfaces/certificate';
 import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
-import { InternalCard } from '@/components/InternalCard';
 import { FaChalkboardTeacher } from 'react-icons/fa';
+import { FiBook } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 interface IProps {
   courseId: string;
@@ -219,30 +220,102 @@ const Course: React.FC<IProps> = ({ courseId }) => {
           ))}
         </Grid>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 overflow-y-auto pb-8 px-2 content-start h-full pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8 pt-2 w-full max-w-6xl mx-auto">
           {modules.length ? (
             modules.map((mod, index) => {
+              const gradients = [
+                'from-sky-400 to-blue-600',
+                'from-violet-400 to-purple-600',
+                'from-emerald-400 to-teal-600',
+                'from-amber-400 to-orange-600',
+                'from-pink-400 to-rose-600',
+                'from-cyan-400 to-sky-600',
+              ];
+              const gradient = gradients[index % gradients.length];
+              const percentage = mod.lessons.length > 0 ? Math.ceil((mod.finished_lessons / mod.lessons.length) * 100) : 0;
+              const isFinished = percentage === 100 && mod.lessons.length > 0;
+              const isStarted = percentage > 0;
+
               return (
-                <InternalCard
+                <motion.div
                   key={mod.id}
-                  index={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={mod.is_available ? { y: -4 } : {}}
                   onClick={() => mod.is_available && router.push(`/courses/${mod.hub_course_id}/${mod.id}?_p=${mod.title}`)}
-                  title={mod.title}
-                  Icon={FaChalkboardTeacher}
-                  footer={
-                    mod.is_available ? (
+                  className={`group relative rounded-2xl hover:shadow-lg transition-all duration-300 ${mod.is_available ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'} border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col h-fit p-4`}
+                >
+                  {/* Gradiente Superior com Número do Módulo */}
+                  <div
+                    className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}
+                  >
+                    {/* Padrão decorativo de linhas */}
+                    <div
+                      className="absolute inset-0 opacity-20"
+                      style={{
+                        backgroundImage:
+                          'linear-gradient(rgba(255,255,255,0.8) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,0.8) 2px, transparent 2px)',
+                        backgroundSize: '16px 16px',
+                        zIndex: 1,
+                      }}
+                    />
+                    {/* Número do Módulo */}
+                    <Flex position="absolute" inset="0" align="center" justify="center" zIndex={2}>
+                      <Text fontSize="4xl" fontWeight="900" color="white" opacity={0.8}>
+                        {index + 1}
+                      </Text>
+                    </Flex>
+
+                    {/* Status Badge - Top Right */}
+                    <Box position="absolute" top="2" right="2" zIndex={10}>
+                      {mod.is_available ? (
+                        isFinished ? (
+                          <Badge colorScheme="green" variant="solid" borderRadius="full" px="2" py="1" fontSize="10px" fontWeight="700">
+                            NOVO
+                          </Badge>
+                        ) : isStarted ? (
+                          <Badge colorScheme="blue" variant="solid" borderRadius="full" px="2" py="1" fontSize="10px" fontWeight="700">
+                            {percentage}%
+                          </Badge>
+                        ) : (
+                          <Badge colorScheme="blue" variant="solid" borderRadius="full" px="2" py="1" fontSize="10px" fontWeight="700">
+                            NOVO
+                          </Badge>
+                        )
+                      ) : (
+                        <Badge colorScheme="red" variant="solid" borderRadius="full" px="2" py="1" fontSize="10px" fontWeight="700">
+                          BLOQUEADO
+                        </Badge>
+                      )}
+                    </Box>
+                  </div>
+
+                  {/* Conteúdo do Módulo */}
+                  <Flex direction="column" gap="0.75rem" flex="1" mt="0.5rem">
+                    {/* Título */}
+                    <Text fontSize="14px" fontWeight="700" color={colorMode === 'light' ? 'gray.800' : 'gray.100'} noOfLines={2}>
+                      {mod.title}
+                    </Text>
+
+                    {/* Quantidade de Aulas */}
+                    <Text fontSize="12px" color={colorMode === 'light' ? 'gray.600' : 'gray.400'} fontWeight="500">
+                      {mod.lessons.length} aula{mod.lessons.length !== 1 ? 's' : ''}
+                    </Text>
+
+                    {/* Barra de Progresso */}
+                    {mod.is_available && (
                       <>
-                        <Progress value={mod.finished_lessons} rounded={8} flex="1" min={0} max={mod.lessons.length || 1} size="md" />
-                        <Text fontWeight="500" align="center" fontSize="14px">
-                          {`${mod.finished_lessons}/${mod.lessons.length}`}
+                        <Progress value={percentage} min={0} max={100} size="sm" borderRadius="full" colorScheme={isFinished ? 'green' : 'blue'} bg={colorMode === 'light' ? 'gray.200' : 'gray.700'} mt="0.25rem" />
+
+                        {/* Aulas Concluídas */}
+                        <Text fontSize="11px" color={colorMode === 'light' ? 'gray.600' : 'gray.400'} fontWeight="500">
+                          {mod.finished_lessons}/{mod.lessons.length} aulas concluídas
                         </Text>
                       </>
-                    ) : (
-                      <MdBlock fontSize="20px" />
-                    )
-                  }
-                  showFooterIcon={mod.is_available}
-                />
+                    )}
+                  </Flex>
+                </motion.div>
               );
             })
           ) : (

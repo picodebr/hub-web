@@ -1,48 +1,77 @@
-import { Flex, Skeleton, Text } from '@chakra-ui/react';
+import { Flex, Skeleton, Text, Badge, Icon, Button } from '@chakra-ui/react';
 import { PiSealCheckFill } from 'react-icons/pi';
+import { ArrowLeft } from 'lucide-react';
+import { useCustomRouter } from '@/_base/hooks';
+import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { ILessonPageProps } from './props';
 
 export const VideoLesson: React.FC<ILessonPageProps> = ({ handleSubmitLesson, isLoading, lesson, lessonIsFinished }) => {
+  const router = useCustomRouter();
+  const { colorMode } = useDarkMode();
+
+  const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
+  const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
+
   return (
-    <Flex direction="column" bgColor="white" borderRadius="md" flex="1" border="1px" borderColor="gray300" overflow="hidden" >
-      <Flex p="1rem" gap="0.75rem" borderBottom="1px" borderColor="gray300" justify="center">
-        <Flex direction="column" gap="0.75rem" flex="1">
-          <Skeleton isLoaded={!isLoading} maxW="30%" display="flex" alignItems="center" gap="0.25rem">
-            <Text noOfLines={1} fontWeight="500" fontSize="1rem" color="gray800">
-              {lesson?.title || `Aula vazia`}
-            </Text>
-            {lessonIsFinished && (
-              <Flex color="primary300">
-                <PiSealCheckFill fontSize="1.2rem" filter="brightness(0.93)" />
-              </Flex>
-            )}
-          </Skeleton>
-          <Skeleton isLoaded={!isLoading} maxW="30%">
-            {lesson?.description && (
-              <Text noOfLines={1} color="gray500">
-                {lesson.description}
+    <Flex direction="column" h="100%" gap="1.5rem" pb="2rem">
+      {/* HEADER com Botão de Voltar e Status */}
+      <Flex direction="column" gap="0.5rem">
+        <Flex align="center" justify="space-between" gap="1rem">
+          <Flex align="center" gap="1rem">
+            <Flex
+              userSelect="none"
+              cursor="pointer"
+              fontWeight="600"
+              onClick={() => router.back()}
+              pb="0.5rem"
+              w="fit-content"
+              pt="10px"
+              transition="all 0.2s"
+              _hover={{ transform: `scale(1.2)` }}
+            >
+              <ArrowLeft size={20} color={colorMode === 'dark' ? 'white' : 'black'} />
+            </Flex>
+            <Skeleton isLoaded={!isLoading} display="flex" alignItems="center" gap="0.5rem">
+              <Text fontWeight="700" fontSize="22px" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+                {lesson?.title || `Aula vazia`}
               </Text>
-            )}
-          </Skeleton>
+            </Skeleton>
+          </Flex>
+          
+          {/* Badge de Status */}
+          {lessonIsFinished && (
+            <Skeleton isLoaded={!isLoading}>
+              <Badge colorScheme="blue" variant="solid" borderRadius="full" px="3" py="1" display="flex" alignItems="center" gap="1" fontSize="12px" fontWeight="700">
+                <Icon as={PiSealCheckFill} w="4" h="4" />
+                Concluído
+              </Badge>
+            </Skeleton>
+          )}
         </Flex>
-        <Flex gap="0.5rem" align="center" h="fit-content">
-          <Skeleton isLoaded={!isLoading} h="1.35rem">
-            <Text noOfLines={1} color="gray800" fontSize="14px">
-              {lesson?.module.title}
-            </Text>
-          </Skeleton>
-        </Flex>
+
+        {/* Breadcrumb */}
+        <Skeleton isLoaded={!isLoading} maxW="50%">
+          <Flex align="center" gap="0.5rem" color="gray.500" fontSize="13px" ml="2.5rem">
+            <Text>{lesson?.module.hub_course?.title || lesson?.module.title || `...`}</Text>
+            <Text>·</Text>
+            <Text>{lesson?.module.title || `...`}</Text>
+          </Flex>
+        </Skeleton>
       </Flex>
-      <Flex direction="column" flex="1" p={{ base: `1rem`, xl: '1rem' }} gap={{ base: `1rem`, xl: '1rem' }} overflow="hidden">
-        <Flex direction="column" gap="0.5rem">
-          {/* <Skeleton isLoaded={!isLoading} minH="1.35rem">
-            <Text fontSize="1rem">{lesson?.video?.title}</Text>
-          </Skeleton> */}
-          <Skeleton isLoaded={!isLoading} minH="1.35rem">
-            <Text color="gray400">{lesson?.video?.description}</Text>
-          </Skeleton>
-        </Flex>
-        <Flex flex="1" border="1px" borderColor="gray200" borderRadius="10px" overflow="hidden" justify="center">
+
+      {/* VIDEO PLAYER - Grande e Responsivo */}
+      <Flex
+        flex="1"
+        direction="column"
+        gap="1rem"
+        bg={bgCard}
+        p="1.5rem"
+        borderRadius="2xl"
+        border="1px solid"
+        borderColor={borderColor}
+        overflow="hidden"
+      >
+        <Flex flex="1" borderRadius="xl" overflow="hidden" justify="center" align="center" bg="gray.900">
           {!!lesson?.video && (
             <video
               controls
@@ -53,6 +82,7 @@ export const VideoLesson: React.FC<ILessonPageProps> = ({ handleSubmitLesson, is
               onTimeUpdate={(e) =>
                 ((e.target as any).currentTime / (e.target as any).duration) * 100 > 90 && !lessonIsFinished && handleSubmitLesson()
               }
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             >
               <source src={lesson.video.file} type="video/mp4" />
             </video>
