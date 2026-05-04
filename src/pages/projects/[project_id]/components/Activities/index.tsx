@@ -37,7 +37,6 @@ interface IProps {
   setProject: Dispatch<SetStateAction<IProject>>;
   canEdit: boolean;
   handleSave: (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward[]>) => Promise<void>;
-  setButtonCustomLabel: (value: SetStateAction<{ label?: string; isDisabled: boolean }>) => void;
 }
 type ModalStep = 'hidden' | 'missing_students' | 'taxed_students' | 'students_rewarded';
 
@@ -65,8 +64,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
   }, []);
 
   useUpdateEffect(() => {
-    const haveCashbackStep = !!targetRewards.find((e) => Number(e.cashback || `0`) > 0);
-    setButtonCustomLabel({ isDisabled: !targetRewards.length, label: haveCashbackStep ? `Distribuir cashback` : `Finalizar atividades` });
+    // Atualizar UI se necessário
   }, [targetRewards]);
 
   const onConfirmAcitivity = useAsyncCallback(async () => {
@@ -147,9 +145,9 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave, set
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -10, opacity: 0 }}
       transition={{ duration: 0.2 }}
-      style={{ display: `flex`, overflow: `auto`, flexDirection: `column`, gap: `24px` }}
+      style={{ display: `flex`, overflow: `auto`, flexDirection: `column`, gap: `24px`, width: `100%` }}
     >
-      <Flex direction="column" gap="24px" w="100%">
+      <Flex direction="column" gap="24px" w="100%" h="auto" p="20px" display="flex" bg="white" borderRadius="10px" border="1px" borderColor="gray300">
         <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300">
           <Accordion allowMultiple w="100%" fontWeight="500" color="gray700" border="none" h="100%" display="flex" flexDirection="column">
             {(

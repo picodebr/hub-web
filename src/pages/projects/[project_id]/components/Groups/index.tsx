@@ -16,7 +16,6 @@ import {
   CloseButton,
   Badge,
 } from '@chakra-ui/react';
-import moment from 'moment';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { IProject } from '@/_base/interfaces/project';
@@ -111,95 +110,110 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
   const isFormValid = !!data.hub_project_class_id && !!data.display_name && isUserCountValid && areAllRolesAssigned;
 
   return (
-    <motion.div
-      key="Groups"
-      initial={{ y: 10, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: -10, opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      style={{ display: 'flex', height: '100%', overflow: 'hidden auto', flexDirection: 'column', gap: '24px', width: '100%', margin: 'auto' }}
-    >
-      <Flex justify="flex-end" align="center">
-        <GenericButton
-          label="Cadastrar grupo"
-          size="sm"
+    <>
+      <Flex w="100%" h="auto" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300" overflow="hidden">
+        <Flex
+          w="100%"
+          h="42px"
+          bg="primary500"
+          p="12px 20px"
           color="white"
-          isDisabled={!canEdit}
-          _hover={{ filter: 'brightness(0.9)' }}
-          onClick={() => setData((e) => ({ ...(e || ({} as any)), hub_project_class_id: project.id }))}
-        />
+          fontWeight="500"
+          align="center"
+          justify="space-between"
+        >
+          Grupos
+          <GenericButton
+            label="Cadastrar grupo"
+            size="sm"
+            color="white"
+            h="28px"
+            fontSize="12px"
+            isDisabled={!canEdit}
+            _hover={{ filter: 'brightness(0.9)' }}
+            onClick={() => setData((e) => ({ ...(e || ({} as any)), hub_project_class_id: project.id }))}
+          />
+        </Flex>
+
+        <Flex direction="column" gap="8px" p="12px" flex="1" overflowY="auto" maxH="400px">
+          {/* Renderização de grupos pendentes... */}
+          {project.groups
+            .filter((group) => !group.approved_at)
+            .map((group) => (
+              <Flex key={group.id} w="100%" direction="column" gap="8px" bgColor="warning25" borderRadius="8px" position="relative" p="12px">
+                <Flex direction="column" gap="4px">
+                  <Text color="warning700" fontWeight="600" fontSize="13px">
+                    {group.display_name}
+                  </Text>
+                  <AvatarList users={group.students || []} />
+                </Flex>
+                <Flex direction="row" gap="6px" pt="4px">
+                  <GenericButton
+                    label="Aprovar"
+                    size="xs"
+                    bg="success600"
+                    color="white"
+                    h="24px"
+                    fontSize="11px"
+                    isDisabled={!canEdit}
+                    _hover={{ filter: 'brightness(0.9)' }}
+                    onClick={() => setTargetGroup({ ...(group as any), accept: true })}
+                  />
+                  <GenericButton
+                    label="Recusar"
+                    size="xs"
+                    bg="white"
+                    color="gray700"
+                    border="1px"
+                    h="24px"
+                    fontSize="11px"
+                    isDisabled={!canEdit}
+                    borderColor="gray300"
+                    _hover={{ filter: 'brightness(0.9)' }}
+                    onClick={() => setTargetGroup({ ...(group as any), accept: false })}
+                  />
+                </Flex>
+              </Flex>
+            ))}
+
+          {/* Renderização de grupos aprovados... */}
+          {project.groups
+            .filter((group) => !!group.approved_at)
+            .map((group) => (
+              <Flex
+                key={group.id}
+                onClick={() => router.push(`/groups/${group.id}`)}
+                w="100%"
+                h="auto"
+                bg="gray50"
+                borderRadius="8px"
+                border="1px"
+                borderColor="gray300"
+                p="12px"
+                gap="8px"
+                cursor="pointer"
+                transition="0.2s"
+                _hover={{ boxShadow: 'sm', bg: 'gray100' }}
+              >
+                <Flex flexShrink={0}>
+                  <FiUsers size="24px" color="#21E080" />
+                </Flex>
+                <Flex direction="column" gap="2px" flex="1" minW="0">
+                  <Text id="display_name" color="primary700" fontSize="13px" fontWeight="600" isTruncated>
+                    {group.display_name}
+                  </Text>
+                  <AvatarList users={group.students || []} />
+                </Flex>
+              </Flex>
+            ))}
+
+          {project.groups.length === 0 && (
+            <Flex align="center" justify="center" py="20px" color="gray400">
+              <Text fontSize="13px">Nenhum grupo criado</Text>
+            </Flex>
+          )}
+        </Flex>
       </Flex>
-
-      {/* Renderização de grupos pendentes... */}
-      {project.groups
-        .filter((group) => !group.approved_at)
-        .map((group) => (
-          <Flex key={group.id} w="100%" direction="column" gap="24px" bgColor="warning25" borderRadius="10px" position="relative">
-            {/* Conteúdo existente mantido... */}
-            <Flex w="100%" h="108px" p="12px 32px" justify="space-between" align="center">
-              <Flex direction="column">
-                <Text color="warning700" fontWeight="500">
-                  {group.display_name}
-                </Text>
-                <AvatarList users={group.students || []} />
-              </Flex>
-              <Flex color="warning500" fontSize="14px" position="absolute" top="50%" left="50%" transform="translate(-50%, -50%)">
-                {moment(group.updated_at).format('DD/MM/YYYY')}
-              </Flex>
-              <Flex direction="column" gap="12px">
-                <GenericButton
-                  label="Aprovar"
-                  size="sm"
-                  bg="success600"
-                  color="white"
-                  isDisabled={!canEdit}
-                  _hover={{ filter: 'brightness(0.9)' }}
-                  onClick={() => setTargetGroup({ ...(group as any), accept: true })}
-                />
-                <GenericButton
-                  label="Recusar"
-                  size="sm"
-                  bg="white"
-                  color="gray700"
-                  border="1px"
-                  isDisabled={!canEdit}
-                  borderColor="gray300"
-                  _hover={{ filter: 'brightness(0.9)' }}
-                  onClick={() => setTargetGroup({ ...(group as any), accept: false })}
-                />
-              </Flex>
-            </Flex>
-          </Flex>
-        ))}
-
-      {/* Renderização de grupos aprovados... */}
-      {project.groups
-        .filter((group) => !!group.approved_at)
-        .map((group) => (
-          <Flex
-            key={group.id}
-            onClick={() => router.push(`/groups/${group.id}`)}
-            w="100%"
-            h="auto"
-            bg="white"
-            borderRadius="10px"
-            border="1px"
-            borderColor="gray300"
-            p="20px"
-            gap="1rem"
-            cursor="pointer"
-            transition="0.2s"
-            _hover={{ boxShadow: 'md', '#display_name': { transform: 'scale(1.05)' } }}
-          >
-            <FiUsers size="50px" color="#21E080" />
-            <Flex direction="column">
-              <Text id="display_name" color="primary700" fontSize="18px" fontWeight="700" gap="4px" transition="transform 0.2s">
-                {group.display_name}
-              </Text>
-              <AvatarList users={group.students || []} />
-            </Flex>
-          </Flex>
-        ))}
 
       <SmallModal
         show={!!targetGroup}
@@ -342,6 +356,6 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
           </VStack>
         </Flex>
       </SmallModal>
-    </motion.div>
+    </>
   );
 };

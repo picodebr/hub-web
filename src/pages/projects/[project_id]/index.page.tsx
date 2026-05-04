@@ -1,23 +1,21 @@
 import { GetServerSideProps } from 'next';
-import { MdWarning } from 'react-icons/md';
-import { Flex } from '@chakra-ui/react';
-import { ReactNode, useMemo, useState } from 'react';
+import { MdWarning, MdArrowBack } from 'react-icons/md';
+import { Flex, Text, Badge } from '@chakra-ui/react';
+import { useMemo, useState } from 'react';
 import axios from 'axios';
-import { AnimatePresence } from 'framer-motion';
 
 import { logError, cookieManager } from '@/_base/utils';
-import { ProjectPageView, projectPageViews } from './interfaces';
-import { TabSwitch } from '@/components/TabSwitch';
 import { addProjectAnnotation, getProject, removeProjectAnnotation, updateProject } from '@/_base/services/project';
 import { IAddProjectAnnotationParams, IProject } from '@/_base/interfaces/project';
 import { getBnccSkills } from '@/_base/services/user';
 import { IBnccSkill } from '@/_base/interfaces/shared/IBnccSkill';
 import { About } from './components/About';
-import { Materials } from './components/Materials';
 import { Annotations } from './components/Annotations';
 import { Groups } from './components/Groups';
+import { BnccSkills } from './components/BnccSkills';
+import { ProjectPhotos } from './components/ProjectPhotos';
 import { GenericButton } from '@/components/Buttons/Generic';
-import { useAsyncCallback, useAuth, useCustomToast } from '@/_base/hooks';
+import { useAsyncCallback, useAuth, useCustomToast, useCustomRouter } from '@/_base/hooks';
 import { getPresignedUrl } from '@/_base/services/upload';
 import { IUpdateProjectParams } from '@/_base/interfaces/project';
 import { ICreateHubGroupParams, IHubGroup } from '@/_base/interfaces/group';
@@ -25,26 +23,31 @@ import { acceptGroup, addGroupToProject, removeGroup } from '@/_base/services/gr
 import { Activities } from './components/Activities';
 import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
 import { giveCashback } from '@/_base/services/project/giveCashback';
-import { customEvents } from '@/_base/classes/events';
-import { eventsConfig } from '@/_base/config/events';
 
 interface IProps {
   project: IProject;
   bnccSkills: IBnccSkill[];
 }
 
+const statusLabels: Record<string, { label: string; color: string }> = {
+  stopped: { label: 'Não iniciado', color: 'gray' },
+  running: { label: 'Em andamento', color: 'blue' },
+  finished: { label: 'Finalizado', color: 'green' },
+};
+
 const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const [savedProject, setSavedProject] = useState<IProject>(hubProject);
-  const [pageView, setPageView] = useState<ProjectPageView>('Sobre');
-  const [buttonCustomLabel, setButtonCustomLabel] = useState<{ label?: string; isDisabled: boolean }>({ isDisabled: true });
   const [project, setProject] = useState<IProject>(hubProject);
   const [files, setFiles] = useState<File[]>([]);
 
   const toast = useCustomToast();
   const { user } = useAuth();
+  const router = useCustomRouter();
 
   const canEdit = user.id === hubProject.user_id;
   const needSave = useMemo<boolean>(() => JSON.stringify(project) !== JSON.stringify(savedProject) || !!files.length, [project, savedProject, files]);
+
+  const statusInfo = statusLabels[project.status] || statusLabels.stopped;
 
   const handleSave = useAsyncCallback(async (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward[]>) => {
     const _project = newProject || project;
@@ -78,7 +81,6 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   }, []);
 
   const handleAddAnnotation = useAsyncCallback(async (dto: IAddProjectAnnotationParams) => {
-    //TODO: add attachments
     const annotation = await addProjectAnnotation(dto);
 
     setProject((e) => ({ ...e, annotations: [annotation, ...e.annotations] }));
@@ -111,47 +113,82 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
     toast({ status: `success`, description: `Grupo adicionado` });
   }, []);
 
-  const PageViewComponent: Record<ProjectPageView, ReactNode> = {
-    Sobre: <About project={project} setProject={setProject} bnccSkills={bnccSkills} onChangeFiles={(e) => setFiles(e)} canEdit={canEdit} />,
-    Materiais: <Materials project={project} setProject={setProject} canEdit={canEdit} />,
-    Atividades: (
-      <Activities project={project} setProject={setProject} canEdit={canEdit} handleSave={handleSave} setButtonCustomLabel={setButtonCustomLabel} />
-    ),
-    Anotações: <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} />,
-    Grupos: <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} />,
-  };
   return (
-    <Flex direction="column" w="100%" h="100%" gap="2rem" overflow="hidden">
-      <Flex justify="space-between">
-        <TabSwitch
-          tabs={projectPageViews
-            .filter((e) => (project.project?.book_id ? e : e !== `Atividades`))
-            .map((view) => ({ isSelected: pageView === view, key: view, label: view }))}
-          onSwitch={(view) => {
-            setPageView(view as any);
-            setButtonCustomLabel((e) => (view === `Atividades` ? { ...e, label: `Finalizar atividades` } : { isDisabled: true }));
-          }}
-          currentTabColor="primary700"
-        />
-
+    <Flex direction="column" w="100%" h="100%" gap="24px" pb="40px" overflow="auto" px="20px" pt="20px">
+      {/* Header com botão de volta, nome, status e turma */}
+      <Flex justify="space-between" align="flex-start" pb="16px" borderBottom="1px" borderColor="gray300" gap="16px">
+        <Flex direction="column" gap="8px" flex="1">
+          <Flex align="center" gap="12px">
+            <GenericButton
+              label=""
+              w="32px"
+              h="32px"
+              p="0"
+              bg="white"
+              color="gray700"
+              border="1px"
+              borderColor="gray300"
+              leftIcon={<MdArrowBack size="20px" />}
+              onClick={() => router.back()}
+              _hover={{ bg: 'gray100', borderColor: 'gray400' }}
+            />
+            <Text fontSize="24px" fontWeight="700" color="gray900">
+              {project.title}
+            </Text>
+          </Flex>
+          <Flex align="center" gap="12px">
+            <Badge colorScheme={statusInfo.color} fontSize="12px">
+              {statusInfo.label}
+            </Badge>
+            <Text fontSize="13px" color="gray600" fontWeight="500">
+              {project.hub_class?.name}
+            </Text>
+          </Flex>
+        </Flex>
         <GenericButton
-          label={buttonCustomLabel.label || 'Salvar'}
-          onClick={() => {
-            if (pageView === `Atividades`) {
-              customEvents.emit(eventsConfig.CASHBACK_MODAL);
-            } else handleSave();
-          }}
+          label="Salvar"
+          onClick={() => handleSave()}
           border="1px"
           borderColor="gray300"
           bg={needSave ? 'primary500' : 'primary700'}
           color="white"
-          
-          isDisabled={!canEdit || (pageView === `Atividades` && buttonCustomLabel.isDisabled)}
+          isDisabled={!canEdit}
           _hover={{ filter: 'brightness(0.9)' }}
           rightIcon={needSave ? <MdWarning /> : undefined}
         />
       </Flex>
-      <AnimatePresence mode="wait">{PageViewComponent[pageView]}</AnimatePresence>
+
+      {/* Dois cards lado a lado: Sobre e Habilidades BNCC */}
+      <Flex gap="24px" w="100%">
+        <Flex flex="1" minW="0">
+          <About project={project} setProject={setProject} canEdit={canEdit} />
+        </Flex>
+        <Flex flex="1" minW="0">
+          <BnccSkills project={project} setProject={setProject} bnccSkills={bnccSkills} canEdit={canEdit} />
+        </Flex>
+      </Flex>
+
+      {/* Card de Atividades - Full Width */}
+      {project.project?.book_id && (
+        <Flex w="100%">
+          <Activities project={project} setProject={setProject} canEdit={canEdit} handleSave={handleSave} />
+        </Flex>
+      )}
+
+      {/* Dois cards lado a lado: Anotações e Grupos */}
+      <Flex gap="24px" w="100%">
+        <Flex flex="1" minW="0" direction="column">
+          <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} />
+        </Flex>
+        <Flex flex="1" minW="0" direction="column">
+          <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} />
+        </Flex>
+      </Flex>
+
+      {/* Card de Fotos - Full Width */}
+      <Flex w="100%">
+        <ProjectPhotos project={project} onChangeFiles={(e) => setFiles(e)} canEdit={canEdit} />
+      </Flex>
     </Flex>
   );
 };

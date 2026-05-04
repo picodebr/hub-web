@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { FiSend, FiTrash } from 'react-icons/fi';
 import { Flex, Img, Text } from '@chakra-ui/react';
 import moment from 'moment';
-import { motion } from 'framer-motion';
 
 import { IAddProjectAnnotationParams, IProject } from '@/_base/interfaces/project';
 import { TextAreaInput } from '@/components/Inputs/TextArea';
@@ -30,83 +29,81 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
   };
 
   return (
-    <motion.div
-      key={'Annotations'}
-      initial={{ y: 10, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: -10, opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      style={{ display: `flex`, overflow: `auto`, flexDirection: `column`, gap: `24px`, width: `100%`, paddingRight: `0.25rem` }}
-    >
-      <Flex direction="column">
-        <TextAreaInput
-          isDisabled={!canEdit}
-          value={newAnnotation}
-          onInputChange={setNewAnnotation}
-          rows={8}
-          bg="white"
-          color="gray800"
-          placeholder="Faça uma anotação"
-        />
-        <Flex w="100%" justify="flex-end" marginTop="4px" gap="8px" pt="8px">
-          {/* <GenericButton
-            label="Anexar arquivo"
-            w="fit-content"
-            h="44px"
-            bg="primary600"
-            color="white"
-            gap="8px"
-            isDisabled={!canEdit}
-            leftIcon={<FaPaperclip size="20px" />}
-            _hover={{
-              filter: 'brightness(0.9)',
-            }}
-          /> */}
-
-          <GenericButton
-            label="Enviar"
-            w="113px"
-            h="44px"
-            bg="primary300"
-            color="white"
-            gap="8px"
-            isDisabled={!canEdit}
-            onClick={handleSend}
-            leftIcon={<FiSend size="20px" />}
-            _hover={{
-              filter: 'brightness(0.9)',
-            }}
-          />
+    <>
+      <Flex w="100%" h="auto" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300" overflow="hidden">
+        <Flex
+          w="100%"
+          h="42px"
+          bg="primary500"
+          p="12px 20px"
+          color="white"
+          fontWeight="500"
+          align="center"
+          justify="space-between"
+        >
+          Anotações
         </Flex>
-      </Flex>
-      {project.annotations.map((annotation) => (
-        <Flex key={annotation.id} direction="column" gap="24px" w="100%">
-          <Flex w="100%" h="auto" p="1rem" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300">
-            <Flex pb={4} gap="6px" w="100%" justify="space-between">
-              <Flex fontSize="14px" fontWeight="500" align="center" direction="column">
-                <Flex gap="10px" direction="row" align="center">
-                  <Img src={annotation.user?.avatar || '/avatars/default.jpeg'} w="32px" h="32px" borderRadius="100%"></Img>
-                  <Flex color="primary700" fontWeight="600" fontSize="17px" direction="column">
-                    {formatShortName(annotation.user?.name || user.name, true)}
-                    <Flex color="gray400" fontSize="14px">
-                      @{annotation.user?.username || user.username}
-                    </Flex>
-                  </Flex>
-                </Flex>
-              </Flex>
-              <Flex color="primary500" _hover={{ filter: 'brightness(0.8)' }} cursor="pointer" onClick={() => setAnnotationIdToRemove(annotation.id)}>
-                <FiTrash />
-              </Flex>
-            </Flex>
-            <Flex px="20px" gap="6px" fontSize="14px" fontWeight="500" justify="space-between">
-              {annotation.metadata.message}
-            </Flex>
-            <Flex p="1rem 1rem 0 1rem" fontSize="13px" color="gray400" direction="column">
-              {`${moment(annotation.created_at).format('DD/MM/YYYY')} às ${moment(annotation.created_at).format('HH:mm')}`}
+        <Flex direction="column" gap="12px" p="16px" flex="1" overflowY="auto" maxH="400px">
+          <Flex direction="column">
+            <TextAreaInput
+              isDisabled={!canEdit}
+              value={newAnnotation}
+              onInputChange={setNewAnnotation}
+              rows={4}
+              bg="white"
+              color="gray800"
+              placeholder="Faça uma anotação"
+            />
+            <Flex w="100%" justify="flex-end" marginTop="8px" gap="8px" pt="4px">
+              <GenericButton
+                label="Enviar"
+                w="113px"
+                h="36px"
+                bg="primary300"
+                color="white"
+                gap="8px"
+                fontSize="13px"
+                isDisabled={!canEdit}
+                onClick={handleSend}
+                leftIcon={<FiSend size="16px" />}
+                _hover={{
+                  filter: 'brightness(0.9)',
+                }}
+              />
             </Flex>
           </Flex>
+          {project.annotations.length > 0 && (
+            <Flex direction="column" gap="12px" pt="12px" borderTop="1px" borderColor="gray300">
+              {project.annotations.map((annotation) => (
+                <Flex key={annotation.id} direction="column" gap="8px" w="100%" p="12px" bg="gray50" borderRadius="8px">
+                  <Flex pb={2} gap="6px" w="100%" justify="space-between">
+                    <Flex gap="8px" direction="row" align="flex-start">
+                      <Img src={annotation.user?.avatar || '/avatars/default.jpeg'} w="24px" h="24px" borderRadius="100%" flexShrink={0}></Img>
+                      <Flex direction="column" gap="2px">
+                        <Flex color="primary700" fontWeight="600" fontSize="13px">
+                          {formatShortName(annotation.user?.name || user.name, true)}
+                        </Flex>
+                        <Flex color="gray400" fontSize="12px">
+                          @{annotation.user?.username || user.username}
+                        </Flex>
+                      </Flex>
+                    </Flex>
+                    <Flex color="primary500" _hover={{ filter: 'brightness(0.8)' }} cursor="pointer" onClick={() => setAnnotationIdToRemove(annotation.id)} flexShrink={0}>
+                      <FiTrash size="16px" />
+                    </Flex>
+                  </Flex>
+                  <Flex px="0" gap="6px" fontSize="13px" fontWeight="400" color="gray700">
+                    {annotation.metadata.message}
+                  </Flex>
+                  <Flex fontSize="11px" color="gray400">
+                    {`${moment(annotation.created_at).format('DD/MM')} às ${moment(annotation.created_at).format('HH:mm')}`}
+                  </Flex>
+                </Flex>
+              ))}
+            </Flex>
+          )}
         </Flex>
-      ))}
+      </Flex>
       <SmallModal
         title="Excluir anotação"
         show={!!annotationIdToRemove}
@@ -124,6 +121,6 @@ export const Annotations: React.FC<IProps> = ({ project, onAddAnnotation, onRemo
           </Text>
         </Flex>
       </SmallModal>
-    </motion.div>
+    </>
   );
 };
