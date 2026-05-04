@@ -436,9 +436,7 @@ export function registerCustomBlockFromSpec(spec: CustomBlockSpec) {
       colour: '#ff4d6a',
       inputsInline: true,
       output: null,
-      nextStatement: '__PROTOTYPE_BLOCK__',
-      previousStatement: true,
-      extensions: ['force_square_shape', 'visual_only_connections'],
+      extensions: ['force_square_shape'],
     },
     {
       type: defBlockType,

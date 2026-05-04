@@ -87,6 +87,16 @@ export class VariableService {
     }
   }
 
+  public setStageVariables(vars: SpriteVariable[]): void {
+    this.stageVariables = [...vars];
+    this.emitVariablesChange('stage');
+  }
+
+  public setUploadVariables(vars: SpriteVariable[]): void {
+    this.uploadVariables = [...vars];
+    this.emitVariablesChange('upload');
+  }
+
   public forceSyncVariables(): void {
     this.emitter.emit('stageVariablesChange', [...this.stageVariables]);
     this.emitter.emit('uploadVariablesChange', [...this.uploadVariables]);

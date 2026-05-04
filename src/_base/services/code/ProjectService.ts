@@ -400,6 +400,14 @@ export class ProjectService extends EventEmitter<ProjectEvents> {
     this.variableService.updateVariableInBlocks(name, value, mode);
   }
 
+  public setStageVariables(vars: SpriteVariable[]): void {
+    this.variableService.setStageVariables(vars);
+  }
+
+  public setUploadVariables(vars: SpriteVariable[]): void {
+    this.variableService.setUploadVariables(vars);
+  }
+
   public forceSyncVariables(): void {
     this.variableService.forceSyncVariables();
   }

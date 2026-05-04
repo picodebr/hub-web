@@ -5,6 +5,7 @@
 import { registerCustomBlockFromSpec } from '../../config/custom_definitions';
 import {
   SpriteData,
+  SpriteVariable,
   CostumeData,
   BackdropData,
   IBlocklyBlock,
@@ -138,6 +139,36 @@ export const SerializationService = {
       // 3. DOWNLOAD: Gera o Blob do DTO para permitir que o usuário salve o arquivo físico.
       const dto = ProjectMapper.entityToDto(projectEntity);
 
+      // Salva specs de custom procedures para registro confiável ao reabrir.
+      // O método de varredura de blocos (fallback) pode falhar dependendo do formato do JSON.
+      if (currentWorkspace) {
+        const seenProcIds = new Set<string>();
+        const customProcedures: CustomBlockSpec[] = [];
+        currentWorkspace.getAllBlocks(false).forEach((block) => {
+          if (!block.type.startsWith('custom_def_')) return;
+          const procId = block.type.replace('custom_def_', '');
+          if (seenProcIds.has(procId)) return;
+          seenProcIds.add(procId);
+          const protoBlock = block.getInputTargetBlock('PROTOTYPE');
+          if (!protoBlock) return;
+          const name = protoBlock.getFieldValue('NAME') || procId;
+          const args: CustomBlockArg[] = [];
+          let i = 0;
+          while (true) {
+            const argInput = protoBlock.getInput('ARG_' + i);
+            if (!argInput) break;
+            const argBlock = argInput.connection?.targetBlock();
+            let type: CustomBlockArg['type'] = 'input';
+            if (argBlock?.type === 'argument_reporter_number') type = 'number';
+            else if (argBlock?.type === 'argument_reporter_boolean') type = 'bool';
+            args.push({ type, value: argBlock?.getFieldValue('VALUE') || `arg${i + 1}` });
+            i++;
+          }
+          customProcedures.push({ id: procId, name, args });
+        });
+        dto.customProcedures = customProcedures;
+      }
+
       // 4. MIGRAÇÃO DE ASSETS: Antes de enviar para a API, garante que nenhum base64 pesado
       // esteja no JSON, enviando-os para o S3.
       await uploadBase64Assets(dto);
@@ -219,9 +250,12 @@ export const SerializationService = {
               const id = block.type.replace('custom_def_', '');
               if (!registeredIDs.has(id)) {
                 let protoBlock: IBlocklyBlock | null = null;
-                const inputs = block.inputs as unknown as Record<string, { block: IBlocklyBlock }>;
+                const inputs = block.inputs as unknown as Record<string, { block?: IBlocklyBlock; shadow?: IBlocklyBlock }>;
+                // Blockly serializes shadow blocks (which prototype IS) under "shadow", not "block"
                 if (inputs?.PROTOTYPE?.block) {
                   protoBlock = inputs.PROTOTYPE.block;
+                } else if (inputs?.PROTOTYPE?.shadow) {
+                  protoBlock = inputs.PROTOTYPE.shadow;
                 }
 
                 if (protoBlock) {
@@ -279,6 +313,30 @@ export const SerializationService = {
       }
 
       projectService.setSprites(newSprites);
+
+      // Restore VariableService from saved sprite data so the toolbox callback
+      // sees the correct variable names after the workspace is loaded.
+      // Without this, the service keeps its default {id:'var1', name:'minha variável'}
+      // while the workspace loads the renamed variable, causing an ID collision crash.
+      const restoredVarMap = new Map<string, SpriteVariable>();
+      for (const sprite of newSprites) {
+        for (const v of (sprite.variables || [])) {
+          if (v?.id) restoredVarMap.set(v.id, v);
+        }
+      }
+      if (restoredVarMap.size > 0) {
+        projectService.setStageVariables(Array.from(restoredVarMap.values()));
+      }
+
+      // Restore upload variables from the blocks JSON (only Blockly format available)
+      const uploadVarsRaw = json.uploadMode?.blocks?.variables as Array<{ name: string; id: string; type: string }> | undefined;
+      if (uploadVarsRaw && uploadVarsRaw.length > 0) {
+        const uploadVars: SpriteVariable[] = uploadVarsRaw
+          .filter((v) => v.type && v.type !== '')
+          .map((v) => ({ id: v.id, name: v.name, type: v.type, value: v.type === 'Number' ? 0 : '', isGlobal: true }));
+        if (uploadVars.length > 0) projectService.setUploadVariables(uploadVars);
+      }
+
       if (json.stage?.backdrops) {
         projectService.setBackdrops(
           json.stage.backdrops.map((b: BackdropData & { sounds?: unknown; currentSoundId?: unknown }) => ({

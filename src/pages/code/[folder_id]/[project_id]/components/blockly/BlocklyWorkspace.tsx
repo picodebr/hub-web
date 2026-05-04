@@ -220,12 +220,10 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
           const procId = (deletedBlockJson.type as string).replace('custom_def_', '');
           const callBlockType = 'custom_call_' + procId;
 
-          const allBlocks = workspaceRef.current.getAllBlocks(false);
-          allBlocks.forEach((block) => {
-            if (block.type === callBlockType) {
-              block.dispose(false);
-            }
-          });
+          const callBlocks = workspaceRef.current.getAllBlocks(false).filter((b) => b.type === callBlockType);
+          setTimeout(() => {
+            callBlocks.forEach((block) => block.dispose(false));
+          }, 0);
         }
       }
 
@@ -824,7 +822,7 @@ const BlocklyWorkspace = React.forwardRef<BlocklyWorkspaceRef, BlocklyWorkspaceP
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
-      {!isUploadMode && <BlocklyTabHeader activeTab={activeTab} onTabChange={setActiveTab} isStage={activeSpriteId === 'stage'} />}
+      {!isUploadMode && <BlocklyTabHeader activeTab={activeTab} onTabChange={(tab) => { workspaceRef.current?.hideChaff(); setActiveTab(tab); }} isStage={activeSpriteId === 'stage'} />}
 
       <div style={{ flex: 1, width: '100%', height: '100%', position: 'relative', overflow: 'hidden', minHeight: 0, backgroundColor: '#e9eef2' }}>
         <div
