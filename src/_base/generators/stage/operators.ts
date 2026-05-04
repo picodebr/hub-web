@@ -139,6 +139,16 @@ export const initOperatorsGenerators = () => {
         return [`Math.round(Number(${num}))`, Order.ATOMIC];
     };
 
+    javascriptGenerator.forBlock['operator_map'] = function (block: Blockly.Block) {
+        const value    = javascriptGenerator.valueToCode(block, 'VALUE',     Order.COMMA) || '0';
+        const fromLow  = javascriptGenerator.valueToCode(block, 'FROM_LOW',  Order.COMMA) || '0';
+        const fromHigh = javascriptGenerator.valueToCode(block, 'FROM_HIGH', Order.COMMA) || '1023';
+        const toLow    = javascriptGenerator.valueToCode(block, 'TO_LOW',    Order.COMMA) || '0';
+        const toHigh   = javascriptGenerator.valueToCode(block, 'TO_HIGH',   Order.COMMA) || '100';
+        const code = `((${value} - ${fromLow}) * (${toHigh} - ${toLow}) / (${fromHigh} - ${fromLow}) + ${toLow})`;
+        return [code, Order.ADDITION];
+    };
+
     javascriptGenerator.forBlock['operator_mathop'] = function (block: Blockly.Block) {
         const op = block.getFieldValue('OPERATOR');
         const num = javascriptGenerator.valueToCode(block, 'NUM', Order.COMMA) || '0';

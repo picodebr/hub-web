@@ -395,6 +395,8 @@ export function registerCustomExtensions() {
   }
 }
 export function registerCustomBlockFromSpec(spec: CustomBlockSpec) {
+  registerCustomExtensions();
+
   const uniqueID = spec.id;
   const validName = spec.name;
   const defBlockType = 'custom_def_' + uniqueID;
@@ -436,7 +438,9 @@ export function registerCustomBlockFromSpec(spec: CustomBlockSpec) {
       colour: '#ff4d6a',
       inputsInline: true,
       output: null,
-      extensions: ['force_square_shape'],
+      previousStatement: true,
+      nextStatement: '__PROTOTYPE_BLOCK__',
+      extensions: ['force_square_shape', 'visual_only_connections'],
     },
     {
       type: defBlockType,

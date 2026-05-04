@@ -71,5 +71,23 @@ export const blockMath = [
         "colour": "#00C896",
         "tooltip": "Um ângulo selecionado (0-360)",
         "helpUrl": ""
+    },
+    {
+        "type": "logic_boolean",
+        "message0": "%1",
+        "args0": [
+            {
+                "type": "field_dropdown",
+                "name": "BOOL",
+                "options": [
+                    ["verdadeiro", "TRUE"],
+                    ["falso", "FALSE"]
+                ]
+            }
+        ],
+        "output": "Boolean",
+        "colour": "#59C059",
+        "tooltip": "Retorna verdadeiro ou falso",
+        "helpUrl": ""
     }
 ];
