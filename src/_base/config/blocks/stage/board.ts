@@ -132,7 +132,7 @@ export const blockBoard = [
                 "options": [
                     ["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"],
                     ["5", "5"], ["6", "6"], ["7", "7"], ["8", "8"],
-                    ["9", "9"], ["10", "10"], ["11", "11"], ["12", "12"], ["13", "13"]
+                    ["9", "9"], ["10", "10"], ["11", "11"], ["12", "12"], ["13", "13"], ["A0", "A0"], ["A1", "A1"], ["A2", "A2"], ["A3", "A3"], ["A4", "A4"], ["A5", "A5"], ["A6", "A6"], ["A7", "A7"]
                 ]
             },
             {
@@ -175,5 +175,82 @@ export const blockBoard = [
         "colour": "#00C896",
         "tooltip": "Move o servo motor para o ângulo especificado (0-180)",
         "helpUrl": ""
+    },
+    {
+        "type": "motor_control_stage",
+        "message0": "acionar motor %1 no sentido %2",
+        "args0": [
+            {
+                "type": "field_dropdown",
+                "name": "MOTOR",
+                "options": [
+                    ["A", "MOTOR_A"],
+                    ["B", "MOTOR_B"]
+                ]
+            },
+            {
+                "type": "field_dropdown",
+                "name": "DIRECAO",
+                "options": [
+                    ["↻ horário", "HORARIO"],
+                    ["↺ anti-horário", "ANTIHORARIO"]
+                ]
+            }
+        ],
+        "previousStatement": true,
+        "nextStatement": true,
+        "colour": "#00C896",
+        "tooltip": "Gira o motor A (pinos 5 e 10) ou B (pinos 9 e 6) no sentido escolhido via Firmata"
+    },
+    {
+        "type": "motor_control_pwm_stage",
+        "message0": "acionar motor %1 no sentido %2 com velocidade %3",
+        "args0": [
+            {
+                "type": "field_dropdown",
+                "name": "MOTOR",
+                "options": [
+                    ["A", "MOTOR_A"],
+                    ["B", "MOTOR_B"]
+                ]
+            },
+            {
+                "type": "field_dropdown",
+                "name": "DIRECAO",
+                "options": [
+                    ["↻ horário", "HORARIO"],
+                    ["↺ anti-horário", "ANTIHORARIO"]
+                ]
+            },
+            {
+                "type": "input_value",
+                "name": "VELOCIDADE",
+                "check": "Number"
+            }
+        ],
+        "inputsInline": true,
+        "previousStatement": true,
+        "nextStatement": true,
+        "colour": "#00C896",
+        "tooltip": "Gira o motor com velocidade de 0 a 100 (mapeado para PWM 0-255). Motor A: pinos 9/6, Motor B: pinos 10/5"
+    },
+    {
+        "type": "motor_stop_stage",
+        "message0": "parar motor %1",
+        "args0": [
+            {
+                "type": "field_dropdown",
+                "name": "MOTOR",
+                "options": [
+                    ["A", "MOTOR_A"],
+                    ["B", "MOTOR_B"],
+                    ["A e B", "MOTOR_ALL"]
+                ]
+            }
+        ],
+        "previousStatement": true,
+        "nextStatement": true,
+        "colour": "#00C896",
+        "tooltip": "Para o motor desligando os dois pinos de controle (LOW/LOW)"
     }
 ];

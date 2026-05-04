@@ -124,6 +124,52 @@ export const initBoardGenerators = () => {
         return [code, Order.ATOMIC];
     };
 
+    // ── MOTORES (Ponte H / L298N) ──────────────────────────────────────
+    // Motor A: pino1=5, pino2=10 | Motor B: pino1=9, pino2=6
+
+    const motorPins: Record<string, [string, string]> = {
+        MOTOR_A: ['9', '6'],
+        MOTOR_B: ['10', '5'],
+    };
+
+    const motorControlGen = function (block: Blockly.Block): string {
+        const motor = block.getFieldValue('MOTOR');
+        const direcao = block.getFieldValue('DIRECAO');
+        const [p1, p2] = motorPins[motor];
+        if (direcao === 'HORARIO') {
+            return `await stage.board.setDigital('${p1}', true);\nawait stage.board.setDigital('${p2}', false);\n`;
+        }
+        return `await stage.board.setDigital('${p1}', false);\nawait stage.board.setDigital('${p2}', true);\n`;
+    };
+    javascriptGenerator.forBlock['motor_control_stage'] = motorControlGen;
+    javascriptGenerator.forBlock['motor_control'] = motorControlGen;
+
+    const motorPwmGen = function (block: Blockly.Block): string {
+        const motor = block.getFieldValue('MOTOR');
+        const direcao = block.getFieldValue('DIRECAO');
+        const velocidade = javascriptGenerator.valueToCode(block, 'VELOCIDADE', Order.ATOMIC) || '0';
+        const [p1, p2] = motorPins[motor];
+        const pwm = `(${velocidade} === 0 ? 0 : Math.round(102 + (${velocidade} / 100) * 153))`;
+        if (direcao === 'HORARIO') {
+            return `await stage.board.setPwm('${p1}', ${pwm});\nawait stage.board.setDigital('${p2}', false);\n`;
+        }
+        return `await stage.board.setDigital('${p1}', false);\nawait stage.board.setPwm('${p2}', ${pwm});\n`;
+    };
+    javascriptGenerator.forBlock['motor_control_pwm_stage'] = motorPwmGen;
+    javascriptGenerator.forBlock['motor_control_pwm'] = motorPwmGen;
+
+    javascriptGenerator.forBlock['motor_stop_stage'] = function (block: Blockly.Block): string {
+        const motor = block.getFieldValue('MOTOR');
+        if (motor === 'MOTOR_ALL') {
+            return (
+                `await stage.board.setDigital('9', false);\nawait stage.board.setDigital('6', false);\n` +
+                `await stage.board.setDigital('10', false);\nawait stage.board.setDigital('5', false);\n`
+            );
+        }
+        const [p1, p2] = motorPins[motor];
+        return `await stage.board.setDigital('${p1}', false);\nawait stage.board.setDigital('${p2}', false);\n`;
+    };
+
     // Serial Print (Monitor Serial Virtual)
     javascriptGenerator.forBlock['board_serial_print'] = function (block: Blockly.Block) {
         const content = javascriptGenerator.valueToCode(block, 'CONTENT', Order.ATOMIC) || '""';

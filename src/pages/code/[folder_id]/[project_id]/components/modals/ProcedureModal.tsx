@@ -290,12 +290,9 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
         if (arg.type === 'bool') reporterType = 'argument_reporter_boolean';
         if (arg.type === 'number') reporterType = 'argument_reporter_number';
         definitionInputs['ARG_' + i] = {
-          block: {
+          shadow: {
             type: reporterType,
             fields: { VALUE: arg.value },
-            movable: false,
-            deletable: false,
-            shadow: true,
           },
         };
       }
@@ -303,11 +300,10 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
     const prototypeStructure = {
       block: {
         type: protoBlockType,
-        inputs: definitionInputs as Record<string, { block: unknown }>,
+        inputs: definitionInputs as Record<string, { shadow: unknown }>,
         movable: false,
         deletable: false,
         editable: false,
-        shadow: true,
       },
     };
     const blockDefJson = {
@@ -419,7 +415,7 @@ export default function ProcedureModal({ isOpen, onClose, workspace }: Procedure
             {/* Options Cards */}
             <div className="d-flex flex-wrap justify-content-center justify-content-sm-between gap-2 gap-sm-3 mb-4">
               {/* Number */}
-              <div className="card-option" style={cardStyle} onClick={() => addArg('number', 'Numero')}>
+              <div className="card-option" style={cardStyle} onClick={() => addArg('number', 'Número')}>
                 <div style={iconBoxStyle}>
                   <div
                     style={{

@@ -20,3 +20,4 @@ catOperators.addBlock(new BlockBuilder('operator_contains').withShadowValue('STR
 catOperators.addBlock(new BlockBuilder('operator_mod').withShadowValue('NUM1', shadowNum(0)).withShadowValue('NUM2', shadowNum(0)));
 catOperators.addBlock(new BlockBuilder('operator_round').withShadowValue('NUM', shadowNum(0)));
 catOperators.addBlock(new BlockBuilder('operator_mathop').withShadowValue('NUM', shadowNum(10)));
+catOperators.addBlock(new BlockBuilder('operator_map').withShadowValue('VALUE', shadowNum(0)).withShadowValue('FROM_LOW', shadowNum(0)).withShadowValue('FROM_HIGH', shadowNum(1023)).withShadowValue('TO_LOW', shadowNum(0)).withShadowValue('TO_HIGH', shadowNum(100)));
