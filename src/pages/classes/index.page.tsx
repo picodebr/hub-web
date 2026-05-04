@@ -1,22 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { FaPlus, FaTrash } from 'react-icons/fa';
-import { FiMoreVertical, FiUsers, FiBookOpen } from 'react-icons/fi';
+import { FaPlus } from 'react-icons/fa';
+import { FiUsers, FiBookOpen, FiArrowUpRight } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import {
-  Badge,
   Checkbox,
-  SimpleGrid,
   Skeleton,
   Flex,
   Text,
   Icon,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  IconButton,
-  Divider,
   Box,
   Button,
 } from '@chakra-ui/react';
@@ -42,6 +34,24 @@ const containerVariants = {
 const itemVariants = {
   hidden: { opacity: 0, y: 15 },
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+};
+
+// Mapa de cores para a barra lateral baseado na série
+const getColorByGrade = (grade: string): string => {
+  const colorMap: { [key: string]: string } = {
+    'G3': '#D946EF', // Magenta
+    '6': '#8B5CF6', // Purple
+    '7': '#06B6D4', // Cyan
+    '8': '#10B981', // Emerald
+    '9': '#F59E0B', // Amber
+    'MakersPro Mini': '#EC4899', // Pink
+    'MakersPro Explorers': '#3B82F6', // Blue
+    'MakersPro Creators': '#8B5CF6', // Violet
+    'MakersPro Innovators': '#06B6D4', // Cyan
+    'MakersPro Experts': '#F59E0B', // Amber
+    'CulturaTech': '#EF4444', // Red
+  };
+  return colorMap[grade] || '#6366F1'; // Indigo como padrão
 };
 
 const Classes: React.FC = () => {
@@ -119,34 +129,46 @@ const Classes: React.FC = () => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" w="100%" h="100%" gap="1.5rem" overflowY="auto" overflowX="hidden" pb="2rem">
-      {/* Header com Call to Action */}
-      <Flex align="center" direction={{ base: 'column', sm: 'row' }} pt="2px" gap="1rem" mb="0.5rem">
-        <Flex bg="primary.100" color="primary600" p="0.5rem" borderRadius="lg">
-          <Icon as={FiBookOpen} boxSize="1.5rem" />
+    <Flex direction="column" w="100%" h="100%" overflowY="auto" overflowX="hidden" pb="2rem">
+      <Flex direction="column" w="100%" maxW="7xl" mx="auto" px="2rem" gap="2rem">
+        {/* Header com Call to Action */}
+        <Flex align="center" justify="space-between" direction={{ base: 'column', sm: 'row' }} gap="2rem" mb="1rem">
+          <Flex align="flex-start" gap="1rem">
+            <Flex bg="primary.100" color="primary600" p="0.625rem" borderRadius="lg" flexShrink={0}>
+              <Icon as={FiBookOpen} boxSize="1.5rem" />
+            </Flex>
+            <Flex direction="column" gap="0.25rem">
+              <Text fontSize="24px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+                Turmas
+              </Text>
+              <Text fontSize="14px" color="gray.500">
+                Gerencie suas turmas e alunos
+              </Text>
+            </Flex>
+          </Flex>
+
+          <Button
+            bg="primary600"
+            color="white"
+            leftIcon={<FaPlus />}
+            borderRadius="lg"
+            px="1.5rem"
+            h="44px"
+            flexShrink={0}
+            _hover={{ bg: 'primary.700', transform: 'translateY(-2px)', boxShadow: 'md' }}
+            transition="all 0.2s"
+            onClick={() => setOpenOpt({ class_code: true })}
+          >
+            Adicionar Turma
+          </Button>
         </Flex>
 
-        <Button
-          bg="primary600"
-          color="white"
-          leftIcon={<FaPlus />}
-          borderRadius="lg"
-          px="1.5rem"
-          h="44px"
-          _hover={{ bg: 'primary.700', transform: 'translateY(-2px)', boxShadow: 'md' }}
-          transition="all 0.2s"
-          onClick={() => setOpenOpt({ class_code: true })}
-        >
-          Adicionar Turma
-        </Button>
-      </Flex>
-
-      {/* Grid de Turmas */}
-      {!classes.data.length && !classes._isLoading ? (
-        <EmptyPageData />
-      ) : (
-        <motion.div variants={containerVariants} initial="hidden" animate="show">
-          <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing="1.5rem" alignItems="stretch">
+        {/* Grid de Turmas */}
+        {!classes.data.length && !classes._isLoading ? (
+          <EmptyPageData />
+        ) : (
+          <motion.div variants={containerVariants} initial="hidden" animate="show">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {sortedClasses.map((hubClass) => {
               const showBadge = [
                 '6',
@@ -161,93 +183,97 @@ const Classes: React.FC = () => {
                 'CulturaTech',
               ].includes(hubClass.grade);
 
+              const sidebarColor = getColorByGrade(hubClass.grade);
+
               return (
-                <Skeleton key={hubClass.id} rounded="2xl" isLoaded={!classes._isLoading}>
-                  <motion.div variants={itemVariants} style={{ height: '100%' }}>
+                <Skeleton key={hubClass.id} rounded="1.5rem" isLoaded={!classes._isLoading}>
+                  <motion.div variants={itemVariants}>
                     <Flex
                       w="100%"
-                      h="100%"
                       direction="column"
+                      position="relative"
+                      borderRadius="1.5rem"
+                      cursor="pointer"
+                      onClick={() => navigateToClass(hubClass)}
                       bg={bgCard}
-                      borderRadius="2xl"
                       border="1px solid"
                       borderColor={borderColor}
                       boxShadow="sm"
                       transition="all 0.2s"
-                      cursor="pointer"
+                      overflow="hidden"
                       _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
-                      onClick={() => navigateToClass(hubClass)}
                     >
-                      {/* Topo do Card: Ícone + Título + Menu */}
-                      <Flex p="1.25rem" gap="1rem" align="flex-start" justify="space-between">
-                        <Flex gap="1rem" align="flex-start" flex="1" minW={0}>
-                          <Flex bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'} color="primary.500" p="0.75rem" borderRadius="xl">
-                            <Icon as={FiUsers} boxSize="1.5rem" />
-                          </Flex>
-
-                          <Flex direction="column" gap="0.25rem" minW={0} mt="2px">
-                            <Text fontWeight="700" fontSize="18px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1}>
-                              {hubClass.display_name}
-                            </Text>
-                            {showBadge && (
-                              <Badge w="fit-content" colorScheme="purple" variant="subtle" borderRadius="md" px="2" py="0.5">
-                                #{hubClass.code}
-                              </Badge>
-                            )}
-                          </Flex>
+                      {/* Topo: Ícone + Código */}
+                      <Flex 
+                        justify="space-between" 
+                        align="flex-start" 
+                        pl="0.875rem"
+                        pr="0.875rem"
+                        pt="1.125rem"
+                        pb="0.75rem"
+                      >
+                        <Flex 
+                          bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'} 
+                          color="primary.500" 
+                          p="0.375rem" 
+                          borderRadius="md"
+                          w="fit-content"
+                        >
+                          <Icon as={FiUsers} boxSize="0.875rem" />
                         </Flex>
 
-                        {/* Menu de Ações (Substitui o Popover antigo) */}
-                        <Menu placement="bottom-end">
-                          <MenuButton
-                            as={IconButton}
-                            icon={<FiMoreVertical />}
-                            variant="ghost"
-                            size="sm"
-                            color="gray.400"
-                            borderRadius="full"
-                            onClick={(e) => e.stopPropagation()} // Impede o clique de abrir a turma
-                          />
-                          <MenuList borderColor={borderColor} zIndex={10} minW="150px" p="1">
-                            <MenuItem
-                              borderRadius="md"
-                              color="red.500"
-                              icon={<FaTrash />}
-                              _hover={{ bg: 'red.50' }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenOpt({ confirm_remove: true, classCodeToRemove: hubClass.code });
-                              }}
-                            >
-                              Remover Turma
-                            </MenuItem>
-                          </MenuList>
-                        </Menu>
+                        {showBadge && (
+                          <Text 
+                            fontSize="14px" 
+                            fontWeight="700" 
+                            color={colorMode === 'light' ? 'gray.400' : 'gray.500'}
+                          >
+                            #{hubClass.code}
+                          </Text>
+                        )}
                       </Flex>
 
-                      <Divider borderColor={borderColor} opacity={0.6} />
-
-                      {/* Rodapé do Card: Avatares dos Alunos */}
+                      {/* Seção com Barra Lateral: Nome + Alunos + Seta */}
                       <Flex
-                        p="1rem 1.25rem"
-                        align="center"
-                        justify="space-between"
-                        bg={colorMode === 'light' ? 'gray.50' : 'whiteAlpha.50'}
-                        borderRadius="0 0 16px 16px"
+                        direction="column"
+                        pl="1rem"
+                        pr="0.875rem"
+                        py="1rem"
+                        pb="1.125rem"
+                        borderLeft="4px solid"
+                        borderColor={sidebarColor}
+                        transition="border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                        _hover={{ borderLeftWidth: '6px' }}
+                        gap="1rem"
                       >
-                        <Text fontSize="13px" fontWeight="600" color="gray.500">
-                          {hubClass.students?.length || 0} Alunos
+                        {/* Nome da Turma */}
+                        <Text 
+                          fontWeight="700" 
+                          fontSize="14px" 
+                          color={colorMode === 'dark' ? 'white' : 'gray.800'} 
+                          noOfLines={1}
+                          lineHeight="1.2"
+                        >
+                          {hubClass.display_name}
                         </Text>
-                        <Box onClick={(e) => e.stopPropagation()}>
-                          <AvatarList users={hubClass.students} max={6} />
-                        </Box>
+
+                        {/* Alunos + Seta */}
+                        <Flex
+                          align="center"
+                          justify="space-between"
+                        >
+                          <Text fontSize="11px" fontWeight="600" color="gray.500">
+                            {hubClass.students?.length || 0} Alunos
+                          </Text>
+                          <Icon as={FiArrowUpRight} boxSize="0.8rem" color="gray.400" />
+                        </Flex>
                       </Flex>
                     </Flex>
                   </motion.div>
                 </Skeleton>
               );
             })}
-          </SimpleGrid>
+          </div>
         </motion.div>
       )}
 
@@ -360,6 +386,7 @@ const Classes: React.FC = () => {
           </Text>
         </Flex>
       </SmallModal>
+      </Flex>
     </Flex>
   );
 };
