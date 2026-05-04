@@ -41,29 +41,37 @@ export function registerToolboxCallbacks(workspace: Blockly.WorkspaceSvg, handle
 
   // --- Button Callbacks ---
   workspace.registerButtonCallback('OPEN_VARIABLE_MODAL', () => {
+    workspace.hideChaff();
     setIsVarModalOpen(true);
   });
   workspace.registerButtonCallback('OPEN_VARIABLE_DELETE_MODAL', () => {
+    workspace.hideChaff();
     setIsVarDeleteModalOpen(true);
   });
   workspace.registerButtonCallback('OPEN_LIST_MODAL', () => {
+    workspace.hideChaff();
     setIsListModalOpen(true);
   });
   workspace.registerButtonCallback('OPEN_LIST_DELETE_MODAL', () => {
+    workspace.hideChaff();
     setIsListDeleteModalOpen(true);
   });
   workspace.registerButtonCallback('CREATE_MY_BLOCK_BTN', () => {
+    workspace.hideChaff();
     setIsProcModalOpen(true);
   });
 
   // --- ML Callbacks ---
   workspace.registerButtonCallback('OPEN_ML_ENV', () => {
+    workspace.hideChaff();
     setIsMLModalOpen(true);
   });
   workspace.registerButtonCallback('EDIT_ML_TRAIN', () => {
+    workspace.hideChaff();
     setIsMLModalOpen(true);
   });
   workspace.registerButtonCallback('CHANGE_UPLOAD_ML_MODEL', () => {
+    workspace.hideChaff();
     setIsMLModalOpen(true);
   });
 

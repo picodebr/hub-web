@@ -103,6 +103,7 @@ export function useBlocklyModeSwitch(params: UseBlocklyModeSwitchParams) {
         if (!ws || (ws as unknown as { disposed: boolean }).disposed || !ws.rendered) return;
 
         try {
+          ws.hideChaff();
           // Bloqueia eventos para evitar loops e erros de sincronização durante a troca
           Blockly.Events.disable();
 
