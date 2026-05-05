@@ -184,7 +184,14 @@ export const Navbar: React.FC<INavbarProps> = ({ page, user: _user, menuItems, s
                     width={54}
                     height={54}
                     alt=""
-                    style={{ opacity: isUpdating ? `0.4` : `1`, borderRadius: `50%` }}
+                    style={{
+                      opacity: isUpdating ? `0.4` : `1`,
+                      borderRadius: `50%`,
+                      maxWidth: `54px`,
+                      minWidth: `54px`,
+                      maxHeight: `54px`,
+                      minHeight: `54px`,
+                    }}
                     priority
                   />
                   {isUpdating && (
