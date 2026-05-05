@@ -99,7 +99,7 @@ const VisionLabFolders: React.FC = () => {
   };
 
   return (
-    <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
+    <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap">
       <InternalPageHeader
         title="Meus Projetos"
         description="Organize seus projetos em pastas"
@@ -111,7 +111,6 @@ const VisionLabFolders: React.FC = () => {
       <Skeleton
         isLoaded={!isLoading}
         display="grid"
-        overflow="hidden auto"
         gap="1rem"
         gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(150px, 1fr))', sm: 'repeat(auto-fill, minmax(290px, 1fr))' }}
         gridTemplateRows="minmax(min-content, max-content)"

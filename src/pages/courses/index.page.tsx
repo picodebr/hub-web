@@ -71,7 +71,7 @@ const Courses: React.FC = () => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex flex="1" direction="column" h="100%" pb="24rem !important" pr="0.5rem">
+    <Flex flex="1" direction="column" pr="0.5rem">
       {/* Cabeçalho da Página */}
       <InternalPageHeader
         title="Meus Cursos e Trilhas"
@@ -92,7 +92,16 @@ const Courses: React.FC = () => {
           ))}
         </Grid>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+        <Skeleton
+          isLoaded
+          display="grid"
+          gap="1rem"
+          gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(150px, 1fr))', sm: 'repeat(auto-fill, minmax(290px, 1fr))' }}
+          gridTemplateRows="minmax(min-content, max-content)"
+          borderRadius="md"
+          flex="1"
+          h="100%"
+        >
           {courses.length ? (
             courses.map((course, index) => {
               const { finished, total, percentage } = getProgress(course);
@@ -227,7 +236,7 @@ const Courses: React.FC = () => {
               <p className="text-lg font-medium text-foreground/70">Lista vazia</p>
             </div>
           )}
-        </div>
+        </Skeleton>
       )}
     </Flex>
   );

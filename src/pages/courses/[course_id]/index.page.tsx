@@ -185,7 +185,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex flex="1" direction="column" h="100%" pb="12rem" pr="0.5rem">
+    <Flex flex="1" direction="column" pb="12rem" pr="0.5rem">
       {/* Cabeçalho da Página */}
       <InternalPageHeader
         title={course?.title || `Curso`}

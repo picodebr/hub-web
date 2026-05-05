@@ -117,7 +117,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
   );
 
   return (
-    <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
+    <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap">
       <InternalPageHeader
         title={targetFolder?.name || `Projetos`}
         description={`${targetFolder?.projects.length || `0`} ${targetFolder?.projects.length === 1 ? 'projeto' : 'projetos'}`}
@@ -126,7 +126,6 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
 
       <Skeleton
         display={{ base: `grid`, sm: 'grid' }}
-        overflow="auto"
         minH="calc(100% - 2rem)"
         isLoaded={!isLoading}
         gap="1rem"

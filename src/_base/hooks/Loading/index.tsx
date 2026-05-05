@@ -46,7 +46,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         width="100vw"
         height="100vh"
         zIndex="9999"
-        bg={loadingConfig.type === `darken-spinner` ? '#00000055' : ''}
+        bg={loadingConfig.type === `darken-spinner` ? '#00000055' : ``}
         transition="all 0.35s, background 0.5s"
         opacity={loadingConfig.isLoading ? '1' : '0'}
         pointerEvents={loadingConfig.isLoading ? 'auto' : 'none'}
@@ -80,7 +80,7 @@ export const LoadingProvider: React.FC<PropsWithChildren<ILoadingProviderProps>>
         )}
 
         {loadingConfig.type === 'fullscreen-with-info' && (
-          <Flex h="100%" width="100%" justifyContent="center" alignItems="center"  p={{ base: '1rem' }}>
+          <Flex h="100%" width="100%" justifyContent="center" alignItems="center" p={{ base: '1rem' }} bg={'#fff'}>
             <Flex
               bgColor="white"
               display="flex"

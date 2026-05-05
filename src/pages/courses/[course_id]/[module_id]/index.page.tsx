@@ -109,7 +109,7 @@ const Module: React.FC<IProps> = ({ courseId, moduleId }) => {
       </Flex>
 
       {/* 2. LISTA DE AULAS (Grid de Cards) */}
-      <Flex direction="column" flex="1" overflowY="auto" pr="0.5rem">
+      <Flex direction="column" flex="1" pr="0.5rem">
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
             {[1, 2, 3, 4].map((i) => (

@@ -14,6 +14,7 @@ import { IHubVideo, IHubVideoCategory } from '@/_base/interfaces/video';
 import { listVideoCategories } from '@/_base/services/video';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
 import { BookOpen, Search } from 'lucide-react';
+import { PageLoading } from '@/components/PageLoading';
 
 type BookByGrade = Record<string, IHubBook[]>;
 type VideoByGrade = Record<string, IHubVideo[]>;
@@ -204,6 +205,19 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
 
   return (
     <Flex w="100%" h="100%" direction="column" gap="1.5rem">
+      <PageLoading
+        content={
+          <Text fontSize="15px" textAlign="center" maxW="350px">
+            Aguarde enquanto a{' '}
+            <Text as="span" fontWeight="700" color="primary500">
+              biblioteca
+            </Text>{' '}
+            é carregada.
+          </Text>
+        }
+        isLoading={isLoading}
+        CustomIcon={BookOpen}
+      />
       <InternalPageHeader
         title="Biblioteca"
         description="Acesse seus livros, guias e materiais didáticos"

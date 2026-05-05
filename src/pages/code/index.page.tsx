@@ -1,11 +1,8 @@
 import { GetServerSideProps } from 'next';
-import { FaPlus, FaRegFolder } from 'react-icons/fa';
-import { FiEdit3, FiMoreVertical, FiTrash } from 'react-icons/fi';
-import { motion } from 'framer-motion';
+import { FaPlus } from 'react-icons/fa';
 
-import { Flex, Menu, MenuButton, MenuItem, MenuList, Skeleton, Text } from '@chakra-ui/react';
+import { Flex, Skeleton, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useCustomRouter, useCustomToast, useInputHandler } from '@/_base/hooks';
-import { PlusButton } from '@/components/Buttons/Plus';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
@@ -19,7 +16,7 @@ import { createCodeProjectFolderSchema } from '@/_base/interfaces/codeFolder/ICr
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { RiFolderSharedFill } from 'react-icons/ri';
-import { Code2, FolderOpen, Layers, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Code2, FolderOpen, Layers, Pencil, Trash2 } from 'lucide-react';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
 import { InternalCard } from '@/components/InternalCard';
 
@@ -102,7 +99,7 @@ const CodeFolders: React.FC = () => {
   };
 
   return (
-    <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap" overflow="hidden">
+    <Flex flex="1" direction="column" gap="20px" textAlign="left" whiteSpace="nowrap">
       <InternalPageHeader
         title="Meus Códigos"
         description="Organize seus projetos em pastas"
@@ -115,9 +112,8 @@ const CodeFolders: React.FC = () => {
 
       {/* Grid de Pastas */}
       <Skeleton
-        isLoaded={!isLoading}
+        isLoaded
         display="grid"
-        overflow="hidden auto"
         gap="1rem"
         gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(150px, 1fr))', sm: 'repeat(auto-fill, minmax(290px, 1fr))' }}
         gridTemplateRows="minmax(min-content, max-content)"

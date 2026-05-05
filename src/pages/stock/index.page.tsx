@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import { Flex, useDisclosure } from '@chakra-ui/react';
+import { Flex, Text, useDisclosure } from '@chakra-ui/react';
 import { FaSave } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
 
@@ -21,6 +21,7 @@ import { Orders } from '../groups/[group_id]/components/Pedidos/components/Order
 import { InternalPageHeader } from '@/components/InternalPageHeader';
 import { Package } from 'lucide-react';
 import { FaPlus } from 'react-icons/fa6';
+import { PageLoading } from '@/components/PageLoading';
 
 const Stock: React.FC = () => {
   const [unSavedstock, setUnsavedStock] = useState<IStockMaker[]>([]);
@@ -120,6 +121,19 @@ const Stock: React.FC = () => {
 
   return (
     <Flex direction="column">
+      <PageLoading
+        content={
+          <Text fontSize="15px" textAlign="center" maxW="350px">
+            Aguarde enquanto o{' '}
+            <Text as="span" fontWeight="700" color="primary500">
+              items do estoque
+            </Text>{' '}
+            são carregados.
+          </Text>
+        }
+        isLoading={isLoading}
+        CustomIcon={Package}
+      />
       <InternalPageHeader
         title="Estoque Maker"
         description="Gerencie os itens do seu estoque"

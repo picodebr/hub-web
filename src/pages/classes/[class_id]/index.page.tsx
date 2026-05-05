@@ -23,7 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { FaPlus } from 'react-icons/fa6';
+import { FaGraduationCap, FaPlus } from 'react-icons/fa6';
 import { FiCalendar, FiFileText } from 'react-icons/fi';
 import { CiUser } from 'react-icons/ci';
 import moment from 'moment';
@@ -51,6 +51,7 @@ import { AttendanceList } from './components/AttendanceList';
 import { Exam } from './components/Exam';
 import { ClassLoading } from './components/ClassLoading';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
+import { PageLoading } from '@/components/PageLoading';
 
 export type StudentTableType = { id: string; avatar: ReactNode; name: ReactNode; groups: ReactNode; coins: ReactNode };
 const StudentTable = HubTable<StudentTableType>;
@@ -436,10 +437,21 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
     Avaliações: <Exam hub_class={hubClass} />,
   };
 
-  return isLoading ? (
-    <ClassLoading className={pageTitle} />
-  ) : (
-    <Flex direction="column" w="100%" h="100%" gap="1.5rem">
+  return (
+    <Flex direction="column" gap="1.5rem">
+      <PageLoading
+        content={
+          <Text fontSize="15px" textAlign="center" maxW="350px">
+            Aguarde enquanto os dados da turma{' '}
+            <Text as="span" fontWeight="700" color="primary500">
+              {hubClass?.display_name}
+            </Text>{' '}
+            são carregados.
+          </Text>
+        }
+        isLoading={isLoading}
+        CustomIcon={FaGraduationCap}
+      />
       {/* HEADER DE ABAS E BOTÃO PRINCIPAL */}
       <InternalPageHeader
         title={hubClass?.display_name || ``}
