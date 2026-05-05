@@ -70,7 +70,7 @@ export const GroupRequests: React.FC<IProps> = ({
         <Tabs bg="#fff" borderColor="primary200" borderRadius="md">
           <TabList>
             {groupOrdersPageViews.map((v) => (
-              <Tab isDisabled={!canEdit} key={v} onClick={() => setPageView(v)}>
+              <Tab isDisabled={!canEdit} key={v} onClick={() => setPageView(v)} borderRadius="none">
                 {v}
               </Tab>
             ))}

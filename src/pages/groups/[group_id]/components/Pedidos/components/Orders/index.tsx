@@ -72,15 +72,7 @@ export const Orders: React.FC<IProps> = ({ groups, onApproveOrder, onRejectOrder
     show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
   };
 
-  const OrderColumn = ({
-    title,
-    color,
-    orders,
-  }: {
-    title: string;
-    color: 'orange' | 'green' | 'red';
-    orders: IHubGroupOrder[];
-  }) => {
+  const OrderColumn = ({ title, color, orders }: { title: string; color: 'orange' | 'green' | 'red'; orders: IHubGroupOrder[] }) => {
     const colorMap = {
       orange: { border: '#F59E0B', text: '#D97706', bg: '#FFFBF0' },
       green: { border: '#10B981', text: '#059669', bg: '#F0FDF4' },
@@ -112,15 +104,7 @@ export const Orders: React.FC<IProps> = ({ groups, onApproveOrder, onRejectOrder
           <Text fontSize="16px" fontWeight="700" color={colors.text}>
             {title}
           </Text>
-          <Badge
-            colorScheme={color}
-            bg={colors.border}
-            color="white"
-            fontSize="12px"
-            px="0.75rem"
-            py="0.25rem"
-            borderRadius="full"
-          >
+          <Badge colorScheme={color} bg={colors.border} color="white" fontSize="12px" px="0.75rem" py="0.25rem" borderRadius="full">
             {orders.length}
           </Badge>
         </Flex>
@@ -166,14 +150,7 @@ export const Orders: React.FC<IProps> = ({ groups, onApproveOrder, onRejectOrder
                     <Flex gap="1rem" direction="column">
                       {order.items.slice(0, 2).map((item) => (
                         <Flex key={item.id} gap="0.75rem" align="flex-start">
-                          <Image
-                            src={item.store_item.picture}
-                            w="40px"
-                            h="40px"
-                            borderRadius="6px"
-                            objectFit="cover"
-                            flexShrink={0}
-                          />
+                          <Image src={item.store_item.picture} w="40px" h="40px" borderRadius="6px" objectFit="cover" flexShrink={0} />
                           <Flex direction="column" flex="1" gap="0.25rem" minW="0">
                             <Text fontSize="12px" fontWeight="600" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1}>
                               {item.store_item.name}
@@ -229,9 +206,9 @@ export const Orders: React.FC<IProps> = ({ groups, onApproveOrder, onRejectOrder
         <OrderColumn
           title="Pendentes"
           color="orange"
-          orders={groups
-            .flatMap((e) => e.orders.map((o) => ({ ...o, group: e })))
-            .filter((data) => !data.approved_at && !data.metadata.denied_at) as any}
+          orders={
+            groups.flatMap((e) => e.orders.map((o) => ({ ...o, group: e }))).filter((data) => !data.approved_at && !data.metadata.denied_at) as any
+          }
         />
 
         {/* Aprovados */}
@@ -245,9 +222,7 @@ export const Orders: React.FC<IProps> = ({ groups, onApproveOrder, onRejectOrder
         <OrderColumn
           title="Negados"
           color="red"
-          orders={groups
-            .flatMap((e) => e.orders.map((o) => ({ ...o, group: e })))
-            .filter((data) => !!data.metadata.denied_at) as any}
+          orders={groups.flatMap((e) => e.orders.map((o) => ({ ...o, group: e }))).filter((data) => !!data.metadata.denied_at) as any}
         />
       </Flex>
 
@@ -265,7 +240,7 @@ export const Orders: React.FC<IProps> = ({ groups, onApproveOrder, onRejectOrder
         }`}
         show={!!order}
         disableOkButton={
-          !order?.approved_at && !order?.metadata?.denied_at && (user.role !== `teacher` || order?.group?.project?.user_id !== user.id)
+          !!order?.approved_at && !!order?.metadata?.denied_at && (user.role !== `teacher` || order?.group?.project?.user_id !== user.id)
         }
         onConfirm={() => (!order?.approved_at && !order?.metadata?.denied_at ? handleApprove() : status ? handleStatusChange() : setOrder(null))}
         okText={!order?.approved_at && !order?.metadata?.denied_at && user.id === order?.group?.project?.user_id ? 'Aprovar' : 'OK'}
@@ -312,38 +287,38 @@ export const Orders: React.FC<IProps> = ({ groups, onApproveOrder, onRejectOrder
     </motion.div>
   );
 };
-        <Flex direction="column">
-          {(order as any)?.student?.name && <Text mb="1rem">Feito por {(order as any).student?.name}</Text>}
-          {order?.items.map((item) => (
-            <Flex key={item.id} align="center" gap="0.35rem" borderBottom="1px" borderColor="gray200">
-              <Text>{item.quantity}</Text>
-              <Text flex="1">{item.store_item.name}</Text>
-              <Text>R$ {order.metadata?.is_resale ? order.total : item.store_item.price}</Text>
-            </Flex>
-          ))}
-          {/* Se for pedido aprovado, e o professor pertencer ao grupo, mostra o select de status */}
-          {order?.approved_at && !order?.metadata?.denied_at && user.id === order?.group?.project?.user_id && (
-            <Flex mt="1.5rem" direction="column" gap="0.5rem" minH="15rem">
-              <Text fontWeight="500">Status do pedido:</Text>
-              <SelectInput
-                instanceId="order-status-select"
-                options={hubOrderStatusTypes.map((status) => ({ value: status, label: LABEL_STATUSES[status] }))}
-                initialValue={[
-                  {
-                    value: order.metadata?.status || 'in_separation',
-                    label: LABEL_STATUSES[order.metadata?.status as HubOrderStatusType] || LABEL_STATUSES['in_separation'],
-                  },
-                ]}
-                onSelectChange={([value]) => setStatus(value as HubOrderStatusType)}
-                placeholder="Selecione o status"
-                isMultiSelect={false}
-                maxMenuHeight={200}
-                styles={{ menu: (provided: any) => ({ ...provided, zIndex: 9999 }) }}
-              />
-            </Flex>
-          )}
-        </Flex>
-      </SmallModal>
-    </motion.div>
-  );
-};
+//         <Flex direction="column">
+//           {(order as any)?.student?.name && <Text mb="1rem">Feito por {(order as any).student?.name}</Text>}
+//           {order?.items.map((item) => (
+//             <Flex key={item.id} align="center" gap="0.35rem" borderBottom="1px" borderColor="gray200">
+//               <Text>{item.quantity}</Text>
+//               <Text flex="1">{item.store_item.name}</Text>
+//               <Text>R$ {order.metadata?.is_resale ? order.total : item.store_item.price}</Text>
+//             </Flex>
+//           ))}
+//           {/* Se for pedido aprovado, e o professor pertencer ao grupo, mostra o select de status */}
+//           {order?.approved_at && !order?.metadata?.denied_at && user.id === order?.group?.project?.user_id && (
+//             <Flex mt="1.5rem" direction="column" gap="0.5rem" minH="15rem">
+//               <Text fontWeight="500">Status do pedido:</Text>
+//               <SelectInput
+//                 instanceId="order-status-select"
+//                 options={hubOrderStatusTypes.map((status) => ({ value: status, label: LABEL_STATUSES[status] }))}
+//                 initialValue={[
+//                   {
+//                     value: order.metadata?.status || 'in_separation',
+//                     label: LABEL_STATUSES[order.metadata?.status as HubOrderStatusType] || LABEL_STATUSES['in_separation'],
+//                   },
+//                 ]}
+//                 onSelectChange={([value]) => setStatus(value as HubOrderStatusType)}
+//                 placeholder="Selecione o status"
+//                 isMultiSelect={false}
+//                 maxMenuHeight={200}
+//                 styles={{ menu: (provided: any) => ({ ...provided, zIndex: 9999 }) }}
+//               />
+//             </Flex>
+//           )}
+//         </Flex>
+//       </SmallModal>
+//     </motion.div>
+//   );
+// };

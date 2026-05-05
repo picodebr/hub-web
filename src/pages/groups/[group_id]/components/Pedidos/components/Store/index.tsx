@@ -274,14 +274,7 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
                       </Flex>
 
                       {/* Imagem do Produto */}
-                      <Flex
-                        w="100%"
-                        h="180px"
-                        bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-                        align="center"
-                        justify="center"
-                        overflow="hidden"
-                      >
+                      <Flex w="100%" h="180px" bg={colorMode === 'light' ? 'gray.100' : 'gray.700'} align="center" justify="center" overflow="hidden">
                         <Image src={item.picture} maxH="100%" maxW="100%" objectFit="cover" />
                       </Flex>
 

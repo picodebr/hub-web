@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Flex,
-  Text,
-  CloseButton,
-  Badge,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverBody,
-} from '@chakra-ui/react';
+import { Flex, Text, CloseButton, Badge, Popover, PopoverTrigger, PopoverContent, PopoverBody } from '@chakra-ui/react';
 
 import { IProject } from '@/_base/interfaces/project';
 import { FiUsers } from 'react-icons/fi';
@@ -45,7 +36,7 @@ const ROLES = Object.keys(ROLE_LIMITS);
 
 export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup }) => {
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
-  const [memberRoles, setMemberRoles] = useState<Record<string, string>>({}); 
+  const [memberRoles, setMemberRoles] = useState<Record<string, string>>({});
   const { colorMode } = useDarkMode();
   const router = useCustomRouter();
 
@@ -108,16 +99,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
   return (
     <>
       <Flex w="100%" h="auto" display="flex" direction="column" bg="white" borderRadius="10px" border="1px" borderColor="gray300" overflow="hidden">
-        <Flex
-          w="100%"
-          h="42px"
-          bg="primary500"
-          p="12px 20px"
-          color="white"
-          fontWeight="500"
-          align="center"
-          justify="space-between"
-        >
+        <Flex w="100%" h="42px" bg="primary500" p="12px 20px" color="white" fontWeight="500" align="center" justify="space-between">
           Grupos
           <GenericButton
             label="Cadastrar grupo"
@@ -258,7 +240,12 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                 <Text fontSize="14px" fontWeight="600" color="gray700">
                   👥 Adicionar membros
                 </Text>
-                <Badge colorScheme={selectedStudents.length >= 5 ? 'blue' : 'gray'} fontSize="12px" color={selectedStudents.length >= 5 ? 'white' : 'gray700'} bg={selectedStudents.length >= 5 ? '#007aff' : '#e8e8e8'}>
+                <Badge
+                  colorScheme={selectedStudents.length >= 5 ? 'blue' : 'gray'}
+                  fontSize="12px"
+                  color={selectedStudents.length >= 5 ? 'white' : 'gray700'}
+                  bg={selectedStudents.length >= 5 ? '#007aff' : '#e8e8e8'}
+                >
                   {selectedStudents.length} / 8
                 </Badge>
               </Flex>
@@ -266,32 +253,13 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
 
             {/* Barra de Progresso */}
             <Flex direction="column" gap="0.25rem">
-              <Flex
-                h="4px"
-                bg="#e8e8e8"
-                borderRadius="2px"
-                overflow="hidden"
-              >
-                <Flex
-                  h="100%"
-                  bg="#007aff"
-                  w={`${(selectedStudents.length / 8) * 100}%`}
-                  transition="width 0.3s ease"
-                />
+              <Flex h="4px" bg="#e8e8e8" borderRadius="2px" overflow="hidden">
+                <Flex h="100%" bg="#007aff" w={`${(selectedStudents.length / 8) * 100}%`} transition="width 0.3s ease" />
               </Flex>
             </Flex>
 
             {/* Campo de Busca */}
-            <Flex
-              align="center"
-              gap="0.75rem"
-              px="1rem"
-              py="0.75rem"
-              bg="#f5f5f5"
-              borderRadius="10px"
-              border="1px solid #e8e8e8"
-              w="100%"
-            >
+            <Flex align="center" gap="0.75rem" px="1rem" py="0.75rem" bg="#f5f5f5" borderRadius="10px" border="1px solid #e8e8e8" w="100%">
               <Text fontSize="16px">🔍</Text>
               <TextInput
                 placeholder="Buscar aluno..."
@@ -367,15 +335,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                         w="100%"
                         overflow="hidden"
                       >
-                        <Flex
-                          w="32px"
-                          h="32px"
-                          borderRadius="50%"
-                          bg={colors[colorIndex]}
-                          align="center"
-                          justify="center"
-                          flexShrink={0}
-                        >
+                        <Flex w="32px" h="32px" borderRadius="50%" bg={colors[colorIndex]} align="center" justify="center" flexShrink={0}>
                           <Text fontSize="12px" fontWeight="600" color="white">
                             {initials}
                           </Text>
@@ -394,7 +354,11 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                           justify="center"
                           flexShrink={0}
                         >
-                          {isSelected && <Text fontSize="11px" color="white" fontWeight="700">✓</Text>}
+                          {isSelected && (
+                            <Text fontSize="11px" color="white" fontWeight="700">
+                              ✓
+                            </Text>
+                          )}
                         </Flex>
                       </Flex>
                     );
@@ -413,18 +377,25 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
               Membros e cargos
             </Text>
 
-            <Flex direction="column" gap="0.5rem" maxH="180px" overflowY="auto" overflowX="hidden" css={{
-              '&::-webkit-scrollbar': {
-                width: '6px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'transparent',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: '#ccc',
-                borderRadius: '3px',
-              },
-            }}>
+            <Flex
+              direction="column"
+              gap="0.5rem"
+              maxH="180px"
+              overflowY="auto"
+              overflowX="hidden"
+              css={{
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#ccc',
+                  borderRadius: '3px',
+                },
+              }}
+            >
               {selectedStudents.length === 0 ? (
                 <Text fontSize="13px" color="gray500" fontStyle="italic">
                   Nenhum membro selecionado (mín. 5, máx. 8)
@@ -455,15 +426,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                       overflow="hidden"
                     >
                       <Flex align="center" gap="0.75rem" flex="1" minW="0" overflow="hidden">
-                        <Flex
-                          w="32px"
-                          h="32px"
-                          borderRadius="50%"
-                          bg={colors[colorIndex]}
-                          align="center"
-                          justify="center"
-                          flexShrink={0}
-                        >
+                        <Flex w="32px" h="32px" borderRadius="50%" bg={colors[colorIndex]} align="center" justify="center" flexShrink={0}>
                           <Text fontSize="12px" fontWeight="600" color="white">
                             {initials}
                           </Text>
@@ -528,7 +491,13 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                                             {role}
                                           </Text>
                                         </Flex>
-                                        <Badge colorScheme="gray" fontSize="11px" bg="white" border={`1px solid ${config.borderColor}`} color={config.color}>
+                                        <Badge
+                                          colorScheme="gray"
+                                          fontSize="11px"
+                                          bg="white"
+                                          border={`1px solid ${config.borderColor}`}
+                                          color={config.color}
+                                        >
                                           {currentCount}/{limit}
                                         </Badge>
                                       </Flex>
@@ -594,7 +563,13 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                                             {role}
                                           </Text>
                                         </Flex>
-                                        <Badge colorScheme="gray" fontSize="11px" bg="white" border={`1px solid ${config.borderColor}`} color={config.color}>
+                                        <Badge
+                                          colorScheme="gray"
+                                          fontSize="11px"
+                                          bg="white"
+                                          border={`1px solid ${config.borderColor}`}
+                                          color={config.color}
+                                        >
                                           {currentCount}/{limit}
                                         </Badge>
                                       </Flex>
