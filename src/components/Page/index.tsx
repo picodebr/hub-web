@@ -16,7 +16,15 @@ import { IHubUserSchool } from '@/_base/interfaces/school';
 import { TbCircuitResistor } from 'react-icons/tb';
 import { dimensions } from '@/styles/global';
 
-export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedPage, user, children, headerLabel, hideHeaderOnMobile, setUser }) => {
+export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
+  selectedPage,
+  user,
+  children,
+  headerLabel,
+  hideHeaderOnMobile,
+  setUser,
+  fullScreen,
+}) => {
   const [stockItems, setStockItems] = useState<IStoreMakerSchool[]>([]);
   const [school, setSchool] = useState<IHubUserSchool | null>(null);
 
@@ -66,7 +74,10 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({ selectedP
               maxW="100%"
               sx={{
                 '& > :last-child': {
-                  padding: { base: '1rem', lg: isSidebarOpen ? '2rem 10rem 2rem 10rem' : '1rem 16rem 2rem 16rem' },
+                  padding: {
+                    base: fullScreen ? `0` : '1rem',
+                    xl: fullScreen ? `0` : isSidebarOpen ? '2rem 10rem 2rem 10rem' : '1rem 16rem 2rem 16rem',
+                  },
                   w: '100%',
                 },
               }}

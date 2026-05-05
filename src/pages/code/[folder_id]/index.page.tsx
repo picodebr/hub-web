@@ -289,7 +289,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
   const folderId = query.folder_id || ``;
   const pageTitle = query._p || 'Meus projetos';
 
-  return { props: { selectedPage, pageTitle, folderId } };
+  return { props: { selectedPage, pageTitle, folderId, fullscreen: true } };
 };
 
 interface CodeThumbnailProps {

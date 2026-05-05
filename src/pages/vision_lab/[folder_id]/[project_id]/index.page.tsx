@@ -219,7 +219,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res, query }
     const pageTitle = query._p || 'Vision Lab';
     const projectId = query.project_id || ``;
 
-    return { props: { selectedPage, pageTitle, projectId } };
+    return { props: { selectedPage, pageTitle, projectId, fullscreen: true } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
 
