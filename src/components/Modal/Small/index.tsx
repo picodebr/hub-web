@@ -38,8 +38,8 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps & { overflow?: s
   return (
     <ChakraModal {...rest} isOpen={show} onClose={() => (onCloseModal ? onCloseModal() : onCancel && onCancel())} scrollBehavior="inside">
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(2px)" {...overlay} />
-      <ModalContent w={!rest.size ? 'fit-content' : undefined} zIndex="9998">
-        <ModalHeader fontSize="1rem" p="0.5rem" color="gray800" display="flex" alignItems="center" gap="0.5rem">
+      <ModalContent w={!rest.size ? 'fit-content' : undefined} maxW="calc(100vw - 32px)" zIndex="9998" borderRadius="20px" overflowX="hidden">
+        <ModalHeader fontSize="1rem" p="1.5rem 1.5rem 0 1.5rem" color="gray800" display="flex" alignItems="center" gap="0.5rem" overflow="hidden">
           {typeof topIcon === 'string' ? (
             <Box>
               <Image src={`/icons/${topIcon}.svg`} h="48px" />
@@ -47,12 +47,14 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps & { overflow?: s
           ) : (
             topIcon || null
           )}
-          <Text color="gray700">{title}</Text>
+          <Text color="gray700" noOfLines={1}>{title}</Text>
         </ModalHeader>
         {(!!onCancel || !!onCloseModal) && showCloseButton && <ModalCloseButton isDisabled={disableCloseButton} mt="0.25rem" />}
-        <ModalBody overflow={rest.overflow}> {children}</ModalBody>
+        <ModalBody overflow="auto" overflowX="hidden" p="1.5rem">
+          {children}
+        </ModalBody>
 
-        <ModalFooter p="1rem" justifyContent="center" gap="1rem">
+        <ModalFooter p="1.5rem" justifyContent="center" gap="1rem">
           {!!onCancel && (
             <motion.button className="btn" whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.9 }}>
               <GenericButton

@@ -16,12 +16,14 @@ import {
   useColorMode,
   useToast,
   VStack,
+  Icon,
 } from '@chakra-ui/react';
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
-import { FiUsers } from 'react-icons/fi';
+import { FiUsers, FiArrowUpRight } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import { Users } from 'lucide-react';
 
 import { logError, cookieManager, formatShortName } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
@@ -31,6 +33,7 @@ import { EmptyPageData } from '@/components/EmptyPageData';
 import { SmallModal } from '@/components/Modal/Small';
 import { TextInput } from '@/components/Inputs/Text';
 import { AvatarList } from '@/components/AvatarList';
+import { InternalPageHeader } from '@/components/InternalPageHeader';
 import { createGroup, listAvailableUsersForGroupByProject, listStudentGroups } from '@/_base/services/group';
 import { EMPTY_HUB_GROUP_DATA, ICreateHubGroupParams, IHubGroup, createHubGroupSchema } from '@/_base/interfaces/group';
 import { listAvailableProjectsForStudent } from '@/_base/services/project';
@@ -47,6 +50,35 @@ const ROLE_LIMITS: Record<string, number> = {
 };
 
 const ROLES = Object.keys(ROLE_LIMITS);
+
+// Variáveis de Animação
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+};
+
+// Mapa de cores para a barra lateral baseado na série
+const getColorByGrade = (grade: string): string => {
+  const colorMap: { [key: string]: string } = {
+    G3: '#D946EF', // Magenta
+    '6': '#8B5CF6', // Purple
+    '7': '#06B6D4', // Cyan
+    '8': '#10B981', // Emerald
+    '9': '#F59E0B', // Amber
+    'MakersPro Mini': '#EC4899', // Pink
+    'MakersPro Explorers': '#3B82F6', // Blue
+    'MakersPro Creators': '#8B5CF6', // Violet
+    'MakersPro Innovators': '#06B6D4', // Cyan
+    'MakersPro Experts': '#F59E0B', // Amber
+    CulturaTech: '#EF4444', // Red
+  };
+  return colorMap[grade] || '#6366F1'; // Indigo como padrão
+};
 
 const Groups: React.FC = () => {
   const [groups, setGroups] = useState<PageDataType<IHubGroup>>({ data: [] });
@@ -155,64 +187,116 @@ const Groups: React.FC = () => {
   const areAllRolesAssigned = data.users.every((s) => !!memberRoles[s]);
   const isFormValid = isUserCountValid && areAllRolesAssigned;
 
+  // Cores dinâmicas
+  const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
+  const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
+
   return (
-    <Flex direction="column" w="100%" h="69px" padding="20px 0" gap="20px" textAlign="left" whiteSpace="nowrap">
-      <Flex align="center" justify="flex-end" h="fit-content">
-        <Flex
-          bgColor="white"
-          w="fit-content"
-          h="fit-content"
-          border="1px"
-          borderColor="gray300"
-          padding="8px 14px"
-          align="center"
-          gap="8px"
-          borderRadius="8px"
-          fontSize="16px"
-          fontWeight="600"
-          color="gray700"
-          cursor="pointer"
-          onClick={() => setOpenModal(true)}
-        >
-          <FaPlus />
-          Adicionar Grupo
-        </Flex>
+    <Flex direction="column" w="100%" h="100%" overflowY="auto" overflowX="hidden" pb="2rem">
+      <Flex direction="column" w="100%" maxW="7xl" mx="auto" px="2rem" gap="2rem">
+        {/* Header com Call to Action */}
+        <InternalPageHeader
+          title="Meus Grupos"
+          description="Grupos dos quais você faz parte"
+          icon={<Users className="w-6 h-6 text-primary" />}
+          buttons={[{ label: `Adicionar Grupo`, leftIcon: <FaPlus />, onClick: () => setOpenModal(true) }]}
+        />
+
+        {/* Grid de Grupos */}
+        {!groups.data.length && !groups._isLoading ? (
+          <EmptyPageData />
+        ) : (
+          <motion.div variants={containerVariants} initial="hidden" animate="show">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {groups.data.map((group) => {
+                const sidebarColor = group.project?.hub_class?.grade ? getColorByGrade(group.project.hub_class.grade) : '#6366F1';
+
+                return (
+                  <Skeleton key={group.id} rounded="1.5rem" isLoaded={!groups._isLoading}>
+                    <motion.div variants={itemVariants}>
+                      <Link href={`/groups/${group.id}`} _hover={{ textDecoration: 'none' }}>
+                        <Flex
+                          w="100%"
+                          direction="column"
+                          position="relative"
+                          borderRadius="1.5rem"
+                          cursor="pointer"
+                          bg={bgCard}
+                          border="1px solid"
+                          borderColor={borderColor}
+                          boxShadow="sm"
+                          transition="all 0.2s"
+                          overflow="hidden"
+                          _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
+                        >
+                          {/* Topo: Ícone + Nome do Projeto */}
+                          <Flex justify="space-between" align="flex-start" pl="0.875rem" pr="0.875rem" pt="1.125rem" pb="0.75rem">
+                            <Flex
+                              bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'}
+                              color="primary.500"
+                              p="0.375rem"
+                              borderRadius="md"
+                              w="fit-content"
+                            >
+                              <Icon as={FiUsers} boxSize="0.875rem" />
+                            </Flex>
+
+                            {group.project && (
+                              <Text fontSize="12px" fontWeight="700" color={colorMode === 'light' ? 'gray.400' : 'gray.500'} textAlign="right" maxW="120px" noOfLines={1}>
+                                {group.project.title}
+                              </Text>
+                            )}
+                          </Flex>
+
+                          {/* Seção com Barra Lateral: Conteúdo do Card */}
+                          <Flex
+                            direction="column"
+                            pl="1rem"
+                            pr="0.875rem"
+                            py="1rem"
+                            pb="1.125rem"
+                            borderLeft="4px solid"
+                            borderColor={sidebarColor}
+                            transition="border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                            _hover={{ borderLeftWidth: '6px' }}
+                            gap="1rem"
+                            justify="space-between"
+                            flex="1"
+                          >
+                            {/* Nome do Grupo + Turma + Membros alinhados à direita */}
+                            <Flex direction="column" align="flex-end" gap="0.5rem">
+                              <Text fontWeight="700" fontSize="14px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1} lineHeight="1.2">
+                                {group.display_name}
+                              </Text>
+
+                              {group.project?.hub_class && (
+                                <Text fontSize="11px" fontWeight="600" color="gray.500">
+                                  Turma {group.project.hub_class.grade}
+                                </Text>
+                              )}
+
+                              <Text fontSize="11px" fontWeight="600" color="gray.500">
+                                {group.students?.length || 0} Membro{group.students?.length !== 1 ? 's' : ''}
+                              </Text>
+                            </Flex>
+
+                            {/* Avatares dos Membros */}
+                            <Flex justify="flex-end" w="100%">
+                              <AvatarList users={group.students} max={4} />
+                            </Flex>
+                          </Flex>
+                        </Flex>
+                      </Link>
+                    </motion.div>
+                  </Skeleton>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
       </Flex>
-      {!groups.data.length && !groups._isLoading ? (
-        <EmptyPageData />
-      ) : (
-        groups.data.map((group) => (
-          <Skeleton key={group.id} rounded="lg" isLoaded={!groups._isLoading}>
-            <Flex
-              h="fit-content"
-              bgColor="white"
-              borderRadius="10px"
-              align="center"
-              padding="20px 24px"
-              color="primary700"
-              gap="16px"
-              fontSize="18px"
-              minH="5.5rem"
-              maxH="5.5rem"
-              overflowY="hidden"
-            >
-              <Flex flex="1" gap="1rem">
-                <Link href={`/groups/${group.id}`} transition="color 0.1s" color="#21E080" _hover={{ color: '#36c27c' }}>
-                  <FiUsers fontSize="40px" />
-                </Link>
-                <Flex display="column" justify="space-between">
-                  <Link href={`/groups/${group.id}`}>
-                    <Text fontWeight="700" transition="color 0.1s" _hover={{ color: 'indigo600' }}>
-                      {group.display_name}
-                    </Text>
-                  </Link>
-                  <AvatarList users={group.students} max={10} />
-                </Flex>
-              </Flex>
-            </Flex>
-          </Skeleton>
-        ))
-      )}
+
+      {/* Modal */}
       <SmallModal
         title="Cadastrar Grupo"
         show={openModal}

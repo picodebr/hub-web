@@ -14,7 +14,7 @@ import {
   Switch,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
-import { FaMinus, FaPlus } from 'react-icons/fa';
+import { FaMinus, FaPlus, FaSearch } from 'react-icons/fa';
 import { UploadOutlined } from '@ant-design/icons';
 import { Upload, Image } from 'antd'; // Adicionei o Upload do Ant Design
 import type { UploadFile } from 'antd';
@@ -43,6 +43,7 @@ interface IProps {
 export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsLoading, setUnsavedStock, onCloseModal, modalIsOpen }) => {
   const [fileToUpload, setFileToUpload] = useState<UploadFile | null>(null);
   const [stockToView, setStockToView] = useState<IStockMaker | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const { data, onInputChange, submit, errors } = useInputHandler<IAddStockMakerParams>({
     schema: addStockMakerSchema,
@@ -78,6 +79,12 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
     true,
     () => setIsLoading(false),
   );
+
+  const filteredStock = stock.filter((item) => {
+    const name = item.hub_user_id ? item.metadata.name : item.store_item.name;
+    return name?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   return (
     <motion.div
       key={'Stock'}
@@ -87,132 +94,216 @@ export const StockPage: React.FC<IProps> = ({ isLoading, stock, setStock, setIsL
       transition={{ duration: 0.2 }}
       style={{ display: `flex`, width: `100%`, height: `100%`, overflow: `hidden` }}
     >
-      <Skeleton
-        display="grid"
-        overflow="hidden auto"
-        isLoaded={!isLoading}
-        gap="1rem"
-        gridTemplateColumns="repeat(auto-fill, minmax(240px, 1fr))"
-        gridTemplateRows="minmax(min-content, max-content)"
-        borderRadius="md"
-        p="1rem 1rem 1rem 0"
-        flex="1"
-      >
-        {stock
+      <Flex direction="column" w="100%" h="100%">
+        <Flex px="2rem" pt="1.5rem" pb="1rem" align="center" w="100%">
+          <Flex
+            align="center"
+            gap="0.75rem"
+            px="1rem"
+            py="0.75rem"
+            bg="#f5f5f5"
+            borderRadius="10px"
+            border="1px solid #e8e8e8"
+            maxW="300px"
+            w="100%"
+          >
+            <FaSearch color="#999" fontSize="16px" />
+            <TextInput
+              placeholder="Buscar item..."
+              value={searchQuery}
+              onInputChange={setSearchQuery}
+              fontSize="14px"
+              w="100%"
+              border="none"
+              bg="transparent"
+              p="0"
+              _focus={{ outline: 'none', boxShadow: 'none' }}
+              _placeholder={{ color: '#999' }}
+            />
+          </Flex>
+        </Flex>
+
+        <Skeleton
+          display="grid"
+          overflow="hidden auto"
+          isLoaded={!isLoading}
+          gap="1.5rem"
+          gridTemplateColumns="repeat(5, 1fr)"
+          gridTemplateRows="minmax(min-content, max-content)"
+          borderRadius="lg"
+          p="2rem"
+          flex="1"
+        >
+        {filteredStock
           .sort((a, b) => a.store_item.name?.localeCompare(b.store_item.name, undefined, { sensitivity: 'base' }))
           .map((stock) => (
             <motion.div
               key={stock.id}
-              initial={{ scale: 0 }}
-              animate={{ rotate: 360, scale: 1 }}
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
               transition={{
                 type: 'spring',
-                stiffness: 260,
-                damping: 20,
+                stiffness: 300,
+                damping: 25,
               }}
               style={{
                 display: `flex`,
-                borderRadius: '8px',
-                backgroundColor: `${stock.quantity <= 3 && !(stock.store_item?.metadata?.is_service || stock.metadata.is_service) ? '#ffe8e8' : 'white'}`,
-                boxShadow: 'md',
+                borderRadius: '16px',
+                backgroundColor: `white`,
                 flexDirection: 'column',
                 padding: '20px',
                 justifyContent: 'space-between',
-                gap: '0.5rem',
-                border: `1px solid ${stock.quantity <= 3 && !(stock.store_item?.metadata?.is_service || stock.metadata.is_service) ? '#f32a2a66' : '#cccccc66'}`,
+                gap: '1rem',
+                border: `1px solid #e8e8e8`,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => {
+                if (e.currentTarget) {
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (e.currentTarget) {
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
               }}
             >
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.75 }}
-                style={{
-                  display: `flex`,
-                  position: 'absolute',
-                  top: '-0.4rem',
-                  right: '-0.4rem',
-                  width: '28px',
-                  height: '28px',
-                  backgroundColor: `#529dff`,
-                  borderRadius: '6px',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: '1',
-                  color: 'white',
-                  cursor: 'pointer',
-                  padding: '1px 1px 0 0 ',
-                }}
-                onClick={() => setStockToView(stock)}
-              >
-                <TbChartInfographic fontSize="19px" />
-                <Flex
-                  position="absolute"
-                  top="-0.5rem"
-                  right="-0.5rem"
-                  zIndex="20"
-                  border="1px"
-                  w="1.1rem"
-                  h="1.1rem"
-                  justify="center"
-                  align="center"
-                  borderColor={`#529dff`}
-                  color={`#529dff`}
-                  borderRadius="50%"
-                  bg="white"
-                >
-                  {stock.interested_users?.length + stock.cart_additions?.length}
-                </Flex>
-              </motion.button>
-              <Image
-                src={stock.hub_user_id ? stock.metadata.image : stock.store_item.picture}
-                height="180"
-                width="180"
-                alt="test"
-                style={{ alignSelf: 'center', justifySelf: 'center', maxHeight: `280px` }}
-              />
-              <Flex direction="column" gap="0.75rem" w="100%">
-                <Text color="gray600">{stock.hub_user_id ? stock.metadata.name : stock.store_item.name}</Text>
-                <Divider />
-                {stock.store_item?.metadata?.is_service || stock.metadata.is_service ? (
-                  <Flex>
-                    <Text>•➤ Serviço</Text>
-                  </Flex>
-                ) : (
-                  <Flex justify="space-between" align="center" w="100%" color="gray500">
-                    <Flex
-                      fontSize="12px"
-                      cursor="pointer"
-                      onClick={() => onChangeQuantity({ ...stock, quantity: stock.quantity - 1 })}
-                      transition="all 0.1s"
-                      _hover={{ transform: `scale(1.15)` }}
-                    >
-                      <FaMinus />
-                    </Flex>
-                    <Flex w="50px">
-                      <TextInput
-                        value={stock.quantity?.toString() || ''}
-                        onInputChange={(value) => onChangeQuantity({ ...stock, quantity: Number(value.replace(/\D/g, '')) })}
-                        fontSize="14px"
-                        fontWeight="500"
-                        color="gray500"
-                        p="0"
-                        textAlign="center"
-                      />
-                    </Flex>
-                    <Flex
-                      fontSize="12px"
-                      cursor="pointer"
-                      onClick={() => onChangeQuantity({ ...stock, quantity: stock.quantity + 1 })}
-                      transition="all 0.1s"
-                      _hover={{ transform: `scale(1.15)` }}
-                    >
-                      <FaPlus />
-                    </Flex>
-                  </Flex>
-                )}
+              <Flex justify="center" align="center" h="160px" w="100%" bg="#f9f9f9" borderRadius="12px">
+                <Image
+                  src={stock.hub_user_id ? stock.metadata.image : stock.store_item.picture}
+                  height="140"
+                  width="140"
+                  alt="test"
+                  style={{ objectFit: 'contain', maxHeight: `140px` }}
+                />
               </Flex>
+              
+              <Flex direction="column" gap="0.75rem" w="100%">
+                <Text 
+                  color="#1a1a1a" 
+                  fontSize="15px" 
+                  fontWeight="600"
+                  lineHeight="1.4"
+                  noOfLines={2}
+                >
+                  {stock.hub_user_id ? stock.metadata.name : stock.store_item.name}
+                </Text>
+              </Flex>
+              
+              {stock.store_item?.metadata?.is_service || stock.metadata.is_service ? (
+                <Flex
+                  px="12px"
+                  py="8px"
+                  bg="#f0f0f0"
+                  borderRadius="8px"
+                  align="center"
+                  justify="center"
+                >
+                  <Text fontSize="12px" color="#666" fontWeight="500">
+                    Serviço
+                  </Text>
+                </Flex>
+              ) : (
+                <Flex 
+                  justify="space-between" 
+                  align="center" 
+                  w="100%" 
+                  bg="#f9f9f9"
+                  borderRadius="10px"
+                  p="8px"
+                  gap="0.5rem"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onChangeQuantity({ ...stock, quantity: Math.max(0, stock.quantity - 1) })}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px',
+                      backgroundColor: 'white',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      color: '#666',
+                      fontSize: '14px',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (e.currentTarget) {
+                        e.currentTarget.style.backgroundColor = '#f0f0f0';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (e.currentTarget) {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }
+                    }}
+                  >
+                    <FaMinus />
+                  </motion.button>
+                  
+                  <Flex 
+                    flex="1" 
+                    justify="center"
+                  >
+                    <TextInput
+                      value={stock.quantity?.toString() || '0'}
+                      onInputChange={(value) => onChangeQuantity({ ...stock, quantity: Math.max(0, Number(value.replace(/\D/g, ''))) })}
+                      fontSize="14px"
+                      fontWeight="600"
+                      color="#1a1a1a"
+                      p="0"
+                      textAlign="center"
+                      border="none"
+                      bg="transparent"
+                      _focus={{ outline: 'none', boxShadow: 'none' }}
+                    />
+                  </Flex>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onChangeQuantity({ ...stock, quantity: stock.quantity + 1 })}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px',
+                      backgroundColor: 'white',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      color: '#666',
+                      fontSize: '14px',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (e.currentTarget) {
+                        e.currentTarget.style.backgroundColor = '#f0f0f0';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (e.currentTarget) {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }
+                    }}
+                  >
+                    <FaPlus />
+                  </motion.button>
+                </Flex>
+              )}
             </motion.div>
           ))}
       </Skeleton>
+      </Flex>
 
       {/* Modal */}
       <Modal isOpen={modalIsOpen} onClose={onCloseModal}>

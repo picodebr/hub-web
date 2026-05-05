@@ -2,7 +2,6 @@ import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 import {
   Box,
-  Img,
   Switch,
   Flex,
   Text,
@@ -36,6 +35,7 @@ import { getPresignedUrl, uploadFile } from '@/_base/services/upload';
 import { useAvatar } from '@/components/Page/hooks';
 import moment from 'moment';
 import { FaRocket } from 'react-icons/fa6';
+import { StudentProfilePage } from './components/StudentProfilePage';
 
 interface IProps {
   user: IHubUser;
@@ -155,6 +155,15 @@ const Profile: React.FC<IProps> = ({ user }) => {
   const toggleDiscipline = (discipline: string) => {
     setSelectedDisciplines((prev) => (prev.includes(discipline) ? prev.filter((d) => d !== discipline) : [...prev, discipline]));
   };
+
+  // Se for student, renderiza o novo layout
+  if (user.role === 'student') {
+    return (
+      <Flex direction="column" flex="1" gap="1.5rem" overflowY="auto" overflowX="hidden" py="1.5rem">
+        <StudentProfilePage user={user} certificates={certificates} />
+      </Flex>
+    );
+  }
 
   return (
     <Flex direction="column" flex="1" gap="1.5rem" overflowY="auto" overflowX="hidden">

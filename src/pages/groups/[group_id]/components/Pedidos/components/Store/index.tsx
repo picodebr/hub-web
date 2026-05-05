@@ -18,6 +18,9 @@ import {
   useDisclosure,
   useUpdateEffect,
   Tooltip,
+  Badge,
+  Button,
+  useColorMode,
 } from '@chakra-ui/react';
 import { FiTrash } from 'react-icons/fi';
 import { FaMinus, FaPlus } from 'react-icons/fa';
@@ -134,6 +137,23 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
     // onChangeView(`Pedidos`);
   }, []);
 
+  const { colorMode } = useColorMode();
+
+  // Variáveis de Animação
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+  };
+
+  // Cores dinâmicas
+  const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
+  const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
+
   return (
     <motion.div
       key={'Store'}
@@ -159,125 +179,161 @@ export const Store: React.FC<IProps> = ({ onChangeView, onFinishOrder, storeMake
           transition="ease-in-out 0.3s"
           marginRight={{ base: 0, lg: isOpen ? '20rem' : 0 }}
         >
-          <Grid
-            gap="1rem"
-            gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(10rem, 1fr))', lg: 'repeat(auto-fill, minmax(12rem, 1fr))' }}
-            gridTemplateRows="minmax(min-content, max-content)"
-            padding="2rem"
-            borderRadius="md"
-            flex="1"
-            overflow="hidden auto"
-          >
-            {storeMakerList.map((item, i) => {
-              const targetItemInStore = storeList.find((e) => e.store_maker_item_id === item.id);
-              const alreadyInterest = interests?.find((e) => e === item.id);
-              return (
-                <Flex key={`${item.id} - ${i}`} position="relative" w="fit-content" h="fit-content">
-                  {user.role === `student` && (
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.75 }}
-                      style={{
-                        display: `flex`,
-                        position: 'absolute',
-                        top: '-0.4rem',
-                        right: '-0.4rem',
-                        width: '28px',
-                        height: '28px',
-                        backgroundColor: targetItemInStore?.quantity
-                          ? cart.find((e) => e.id === item.id)
-                            ? `#32D583`
-                            : `#FF525C`
-                          : alreadyInterest
-                            ? `#32D583`
-                            : `#529dff`,
-                        borderRadius: '6px',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: '1',
-                        color: 'white',
-                        cursor: 'pointer',
-                        padding: '1px 1px 0 0 ',
-                      }}
-                      onClick={() => (targetItemInStore?.quantity ? addItemInCart(item) : showInterestInItem(item))}
-                    >
-                      {targetItemInStore?.quantity ? (
-                        <MdAddTask fontSize="19px" />
-                      ) : alreadyInterest ? (
-                        <Tooltip label="Remover da lista de desejos" hasArrow>
-                          <span>
-                            <IoHeartDislikeOutline fontSize="19px" />
-                          </span>
-                        </Tooltip>
-                      ) : (
-                        <Tooltip label="Adicionar à lista de desejos" hasArrow>
-                          <span>
-                            <IoHeartOutline fontSize="19px" />
-                          </span>
-                        </Tooltip>
-                      )}
-                      {/* <TiPin  fontSize="19px" /> */}
-                      {!!targetItemInStore?.quantity && (
-                        <Flex
-                          position="absolute"
-                          top="-0.5rem"
-                          right="-0.5rem"
-                          zIndex="20"
-                          border="1px"
-                          w="1.1rem"
-                          h="1.1rem"
-                          justify="center"
-                          align="center"
-                          borderColor={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
-                          color={cart.find((e) => e.id === item.id) ? `success400` : `primary500`}
-                          borderRadius="50%"
-                          bg="white"
-                        >
-                          {cart.find((e) => e.id === item.id)?.quantity || 0}
-                        </Flex>
-                      )}
-                    </motion.button>
-                  )}
+          <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', width: '100%' }}>
+            <Grid
+              gap="2rem"
+              gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(220px, 1fr))', lg: 'repeat(3, 1fr)' }}
+              gridTemplateRows="minmax(min-content, max-content)"
+              padding="2rem"
+              borderRadius="md"
+              flex="1"
+              overflow="hidden auto"
+              w="100%"
+            >
+              {storeMakerList.map((item, i) => {
+                const targetItemInStore = storeList.find((e) => e.store_maker_item_id === item.id);
+                const alreadyInterest = interests?.find((e) => e === item.id);
+                const isService = item.metadata?.is_service;
 
-                  <Flex
-                    direction="column"
-                    gap="0.5rem"
-                    cursor="pointer"
-                    fontWeight="500"
-                    color="gray700"
-                    fontSize="14px"
-                    align="center"
-                    justify="space-between"
-                    height={{ base: `12.5rem`, lg: '14.5rem' }}
-                    width={{ base: `10rem`, lg: '12rem' }}
-                    border="1px"
-                    borderColor={itemsWithoutStock.includes(item.id) || !targetItemInStore?.quantity ? `#f8acb0` : 'gray300'}
-                    borderRadius="md"
-                    filter={targetItemInStore?.quantity ? `` : `grayscale(0.9)`}
-                    overflow="hidden"
-                  >
-                    {!targetItemInStore?.quantity && (
-                      <Text px="0.5rem" fontSize="13px" flex="1" color="gray400">
-                        Item em falta
-                      </Text>
-                    )}
-                    <Image src={item.picture} maxHeight={targetItemInStore?.quantity ? { base: `8rem`, lg: `10rem` } : `6rem`} />
-                    <Flex display="flex" justify="space-between" align="center" gap="9px" minH="3.5rem" maxH="3.5rem" w="100%">
-                      <Text noOfLines={2} px="0.5rem" flex="1">
-                        {item.name}
-                      </Text>
-                      <Flex display="flex" align="center" justify="center" gap="0.25rem" pr="0.5rem">
-                        <Image src="/icons/coin.svg" />
-                        <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
-                          R$ {item.price}
+                return (
+                  <motion.div key={`${item.id} - ${i}`} variants={itemVariants}>
+                    <Flex
+                      direction="column"
+                      borderRadius="1.5rem"
+                      border="1px solid"
+                      borderColor={borderColor}
+                      bg={bgCard}
+                      overflow="hidden"
+                      transition="all 0.3s"
+                      boxShadow="sm"
+                      _hover={{
+                        transform: 'translateY(-8px)',
+                        boxShadow: 'lg',
+                        borderColor: 'primary.300',
+                      }}
+                      h="100%"
+                      justify="space-between"
+                    >
+                      {/* Topo: Badge + Botão de Interesse/Adicionar */}
+                      <Flex position="relative" justify="space-between" align="flex-start" p="1rem" bg={isService ? 'purple.50' : 'blue.50'}>
+                        <Badge
+                          colorScheme={isService ? 'purple' : 'blue'}
+                          variant="subtle"
+                          borderRadius="md"
+                          fontSize="11px"
+                          fontWeight="700"
+                          px="0.75rem"
+                          py="0.375rem"
+                        >
+                          {isService ? 'Serviço' : 'Consumível'}
+                        </Badge>
+
+                        {user.role === `student` && (
+                          <motion.button
+                            whileHover={{ scale: 1.15 }}
+                            whileTap={{ scale: 0.85 }}
+                            style={{
+                              display: 'flex',
+                              width: '36px',
+                              height: '36px',
+                              backgroundColor: targetItemInStore?.quantity
+                                ? cart.find((e) => e.id === item.id)
+                                  ? `#32D583`
+                                  : `#FF525C`
+                                : alreadyInterest
+                                  ? `#32D583`
+                                  : `#529dff`,
+                              borderRadius: '10px',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              zIndex: '1',
+                              color: 'white',
+                              cursor: 'pointer',
+                              border: 'none',
+                              fontSize: '18px',
+                            }}
+                            onClick={() => (targetItemInStore?.quantity ? addItemInCart(item) : showInterestInItem(item))}
+                          >
+                            {targetItemInStore?.quantity ? (
+                              <MdAddTask fontSize="20px" />
+                            ) : alreadyInterest ? (
+                              <Tooltip label="Remover da lista de desejos" hasArrow>
+                                <span>
+                                  <IoHeartDislikeOutline fontSize="20px" />
+                                </span>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip label="Adicionar à lista de desejos" hasArrow>
+                                <span>
+                                  <IoHeartOutline fontSize="20px" />
+                                </span>
+                              </Tooltip>
+                            )}
+                          </motion.button>
+                        )}
+                      </Flex>
+
+                      {/* Imagem do Produto */}
+                      <Flex
+                        w="100%"
+                        h="180px"
+                        bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                        align="center"
+                        justify="center"
+                        overflow="hidden"
+                      >
+                        <Image src={item.picture} maxH="100%" maxW="100%" objectFit="cover" />
+                      </Flex>
+
+                      {/* Conteúdo */}
+                      <Flex direction="column" p="1.25rem" gap="0.75rem" flex="1" justify="space-between">
+                        {/* Nome */}
+                        <Text fontWeight="700" fontSize="14px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={2} lineHeight="1.3">
+                          {item.name}
                         </Text>
+
+                        {/* Descrição */}
+                        {item.description && (
+                          <Text fontSize="12px" color="gray.500" noOfLines={2} lineHeight="1.4">
+                            {item.description}
+                          </Text>
+                        )}
+
+                        {/* Preço + Botão Adicionar */}
+                        <Flex align="center" justify="space-between" gap="0.75rem" mt="auto" pt="0.75rem">
+                          <Flex align="center" gap="0.375rem">
+                            <Text fontSize="14px" fontWeight="700" color="primary600">
+                              R$ {item.price}
+                            </Text>
+                          </Flex>
+
+                          {user.role === `student` && targetItemInStore?.quantity && (
+                            <Button
+                              size="sm"
+                              colorScheme="blue"
+                              fontWeight="600"
+                              fontSize="13px"
+                              onClick={() => addItemInCart(item)}
+                              isDisabled={!targetItemInStore?.quantity}
+                              _disabled={{ opacity: 0.5, cursor: 'not-allowed' }}
+                            >
+                              Adicionar
+                            </Button>
+                          )}
+                        </Flex>
+
+                        {!targetItemInStore?.quantity && (
+                          <Text fontSize="11px" color="gray.400" fontStyle="italic" textAlign="center">
+                            Item em falta
+                          </Text>
+                        )}
                       </Flex>
                     </Flex>
-                  </Flex>
-                </Flex>
-              );
-            })}
-          </Grid>
+                  </motion.div>
+                );
+              })}
+            </Grid>
+          </motion.div>
         </Flex>
 
         <Drawer isOpen={isOpen && user.role === `student`} placement="right" onClose={onClose}>

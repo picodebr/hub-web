@@ -1,22 +1,14 @@
 import React, { useState } from 'react';
 import {
-  Button,
   Flex,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItemOption,
-  MenuList,
-  MenuOptionGroup,
   Text,
-  VStack,
-  HStack,
-  Select,
-  Avatar,
   CloseButton,
   Badge,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverBody,
 } from '@chakra-ui/react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 import { IProject } from '@/_base/interfaces/project';
 import { FiUsers } from 'react-icons/fi';
@@ -27,7 +19,6 @@ import { SmallModal } from '@/components/Modal/Small';
 import { useCustomRouter, useInputHandler } from '@/_base/hooks';
 import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { TextInput } from '@/components/Inputs/Text';
-import { IoChevronDownCircleOutline } from 'react-icons/io5';
 
 interface IProps {
   project: IProject;
@@ -43,11 +34,18 @@ const ROLE_LIMITS: Record<string, number> = {
   Construtor: 5,
 };
 
+const ROLE_CONFIG: Record<string, { color: string; icon: string; bgColor: string; borderColor: string }> = {
+  'Líder de Grupo': { color: '#f59e0b', icon: '👑', bgColor: '#fffbeb', borderColor: '#fcd34d' },
+  'Gestor de Projetos': { color: '#007aff', icon: '📊', bgColor: '#eff6ff', borderColor: '#bfdbfe' },
+  'Social Media': { color: '#ec4899', icon: '💕', bgColor: '#fdf2f8', borderColor: '#fbcfe8' },
+  Construtor: { color: '#10b981', icon: '🌱', bgColor: '#f0fdf4', borderColor: '#86efac' },
+};
+
 const ROLES = Object.keys(ROLE_LIMITS);
 
 export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup }) => {
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
-  const [memberRoles, setMemberRoles] = useState<Record<string, string>>({}); // Novo estado para os cargos
+  const [memberRoles, setMemberRoles] = useState<Record<string, string>>({}); 
   const { colorMode } = useDarkMode();
   const router = useCustomRouter();
 
@@ -63,7 +61,6 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
   };
 
   const onAddGroup = () => {
-    // Adicionamos os cargos ao payload (você precisará garantir que sua interface e schema aceitem isso)
     handleAddGroup({ ...data, user_roles: memberRoles });
     setData(EMPTY_HUB_GROUP_DATA);
     setMemberRoles({});
@@ -84,7 +81,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
       delete newRoles[studentId];
       setMemberRoles(newRoles);
     } else {
-      if (newUsers.length >= 8) return; // Trava o máximo de 8 no clique
+      if (newUsers.length >= 8) return;
       newUsers = [...newUsers, studentId];
     }
     onInputChange('users', newUsers);
@@ -94,7 +91,6 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
     setMemberRoles((prev) => ({ ...prev, [studentId]: role }));
   };
 
-  // Cálculos de validação
   const selectedStudents = project.hub_class?.students?.filter((e) => data.users?.includes(e.id)) || [];
 
   const roleCounts = Object.values(memberRoles).reduce(
@@ -105,7 +101,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
     {} as Record<string, number>,
   );
 
-  const isUserCountValid = selectedStudents.length >= 3 && selectedStudents.length <= 8;
+  const isUserCountValid = selectedStudents.length >= 5 && selectedStudents.length <= 8;
   const areAllRolesAssigned = selectedStudents.every((s) => !!memberRoles[s.id]);
   const isFormValid = !!data.hub_project_class_id && !!data.display_name && isUserCountValid && areAllRolesAssigned;
 
@@ -232,128 +228,391 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
         title="Cadastrar Grupo"
         show={!!data.hub_project_class_id}
         onConfirm={() => submit(onAddGroup)}
-        okText="Criar"
+        okText="Criar grupo"
         onCancel={handleCloseModal}
         disableOkButton={!isFormValid}
         topIcon="checked"
       >
-        <Flex direction="column" minW="380px" gap="1rem">
-          <TextInput
-            placeholder="Informe o nome do grupo"
-            color={colorMode === 'dark' ? '#FFF' : '#1D2939'}
-            _placeholder={{ fontSize: '14px' }}
-            value={data?.display_name}
-            onInputChange={(v) => onInputChange('display_name', v)}
-            error={errors.display_name}
-          />
-
-          <Menu closeOnSelect={false} placement="bottom" preventOverflow={true}>
-            <MenuButton
-              as={Button}
-              rightIcon={<IoChevronDownCircleOutline />}
-              border="1px"
-              borderColor="gray300"
-              bg="white"
-              w="100%"
-              textAlign="left"
-              fontWeight="normal"
-              color="gray.600"
-            >
-              {selectedStudents.length === 8 ? 'Limite de 8 membros atingido' : 'Selecione os membros do grupo'}
-            </MenuButton>
-            <MenuList borderColor="gray300" maxH="250px" overflow="auto" zIndex={10}>
-              <MenuOptionGroup type="checkbox">
-                {project.hub_class?.students?.length ? (
-                  project.hub_class.students
-                    .filter((student) => {
-                      const approvedGroups = project.groups?.filter((group) => group.approved_at !== null) || [];
-                      return !approvedGroups.some((group) => group.students?.some((s) => s.id === student.id));
-                    })
-                    .map((student) => (
-                      <MenuItemOption
-                        key={student.id}
-                        value={student.id}
-                        isChecked={data.users?.includes(student.id)}
-                        isDisabled={!data.users?.includes(student.id) && selectedStudents.length >= 8}
-                        onClick={() => toggleUser(student.id)}
-                      >
-                        {student.name}
-                      </MenuItemOption>
-                    ))
-                ) : (
-                  <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
-                )}
-              </MenuOptionGroup>
-            </MenuList>
-          </Menu>
-
-          {/* Lista de Membros Selecionados com Atribuição de Cargos */}
-          <VStack w="100%" align="stretch" spacing={2} mt={2}>
-            <Flex justify="space-between" align="center">
-              <Text fontSize="14px" fontWeight="600" color={colorMode === 'dark' ? 'gray.300' : 'gray.700'}>
-                Membros Selecionados
+        <Flex direction="column" w="100%" maxW="480px" gap="1.25rem" maxH="80vh" display="flex" flexDirection="column" overflow="hidden">
+          {/* Nome do Grupo */}
+          <Flex direction="column" gap="0.5rem">
+            <Flex align="center" gap="0.5rem">
+              <Text fontSize="14px" fontWeight="600" color="gray700">
+                ✨ Nome do grupo
               </Text>
-              <Badge colorScheme={isUserCountValid ? 'green' : 'orange'}>{selectedStudents.length} / 8</Badge>
+            </Flex>
+            <TextInput
+              placeholder="Ex: Equipe Inovação"
+              color={colorMode === 'dark' ? '#FFF' : '#1D2939'}
+              _placeholder={{ fontSize: '14px', color: '#999' }}
+              value={data?.display_name}
+              onInputChange={(v) => onInputChange('display_name', v)}
+              error={errors.display_name}
+            />
+          </Flex>
+
+          {/* Seção de Seleção de Membros */}
+          <Flex direction="column" gap="0.75rem" flex="1" overflow="hidden" display="flex" flexDirection="column">
+            <Flex justify="space-between" align="center">
+              <Flex align="center" gap="0.5rem">
+                <Text fontSize="14px" fontWeight="600" color="gray700">
+                  👥 Adicionar membros
+                </Text>
+                <Badge colorScheme={selectedStudents.length >= 5 ? 'blue' : 'gray'} fontSize="12px" color={selectedStudents.length >= 5 ? 'white' : 'gray700'} bg={selectedStudents.length >= 5 ? '#007aff' : '#e8e8e8'}>
+                  {selectedStudents.length} / 8
+                </Badge>
+              </Flex>
             </Flex>
 
-            {selectedStudents.length === 0 && (
-              <Text fontSize="13px" color="gray.500" fontStyle="italic">
-                Nenhum membro adicionado (mín. 3, recomendado 5, máx. 8).
-              </Text>
-            )}
+            {/* Barra de Progresso */}
+            <Flex direction="column" gap="0.25rem">
+              <Flex
+                h="4px"
+                bg="#e8e8e8"
+                borderRadius="2px"
+                overflow="hidden"
+              >
+                <Flex
+                  h="100%"
+                  bg="#007aff"
+                  w={`${(selectedStudents.length / 8) * 100}%`}
+                  transition="width 0.3s ease"
+                />
+              </Flex>
+            </Flex>
 
-            <AnimatePresence>
-              {selectedStudents.map((student) => (
-                <motion.div
-                  key={student.id}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <HStack
-                    bg={colorMode === 'dark' ? 'gray.700' : 'gray.50'}
-                    p={2}
-                    borderRadius="md"
-                    border="1px solid"
-                    borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
-                    justify="space-between"
-                  >
-                    <HStack overflow="hidden">
-                      <Avatar size="xs" name={student.name} src={student.avatar || ''} />
-                      <Text fontSize="14px" fontWeight="500" isTruncated maxW="110px">
-                        {student.name}
-                      </Text>
-                    </HStack>
+            {/* Campo de Busca */}
+            <Flex
+              align="center"
+              gap="0.75rem"
+              px="1rem"
+              py="0.75rem"
+              bg="#f5f5f5"
+              borderRadius="10px"
+              border="1px solid #e8e8e8"
+              w="100%"
+            >
+              <Text fontSize="16px">🔍</Text>
+              <TextInput
+                placeholder="Buscar aluno..."
+                fontSize="14px"
+                w="100%"
+                border="none"
+                bg="transparent"
+                p="0"
+                _focus={{ outline: 'none', boxShadow: 'none' }}
+                _placeholder={{ color: '#999' }}
+              />
+            </Flex>
 
-                    <HStack>
-                      <Select
-                        size="xs"
-                        w="130px"
-                        placeholder="Cargo"
-                        bg="white"
-                        color="gray.700"
-                        value={memberRoles[student.id] || ''}
-                        onChange={(e) => handleRoleChange(student.id, e.target.value)}
+            {/* Lista de Alunos Disponíveis com Scroll */}
+            <Flex
+              direction="column"
+              gap="0.5rem"
+              maxH="200px"
+              overflowY="auto"
+              overflowX="hidden"
+              borderRadius="10px"
+              bg="white"
+              border="1px solid #e8e8e8"
+              p="0.75rem"
+              flex="1"
+              css={{
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#ccc',
+                  borderRadius: '3px',
+                },
+              }}
+            >
+              {project.hub_class?.students?.length ? (
+                project.hub_class.students
+                  .filter((student) => {
+                    const approvedGroups = project.groups?.filter((group) => group.approved_at !== null) || [];
+                    return !approvedGroups.some((group) => group.students?.some((s) => s.id === student.id));
+                  })
+                  .map((student) => {
+                    const isSelected = data.users?.includes(student.id);
+                    const initials = student.name
+                      .split(' ')
+                      .slice(0, 2)
+                      .map((n) => n[0].toUpperCase())
+                      .join('');
+                    const colors = ['#7c3aed', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
+                    const colorIndex = student.name.charCodeAt(0) % colors.length;
+
+                    return (
+                      <Flex
+                        key={student.id}
+                        align="center"
+                        gap="0.75rem"
+                        p="0.75rem"
+                        bg={isSelected ? '#f0f0f0' : 'white'}
+                        borderRadius="8px"
+                        cursor={selectedStudents.length >= 8 && !isSelected ? 'not-allowed' : 'pointer'}
+                        opacity={selectedStudents.length >= 8 && !isSelected ? 0.6 : 1}
+                        onClick={() => {
+                          if (selectedStudents.length >= 8 && !isSelected) return;
+                          toggleUser(student.id);
+                        }}
+                        transition="all 0.2s"
+                        _hover={selectedStudents.length >= 8 && !isSelected ? {} : { bg: '#f5f5f5' }}
+                        border="1px solid"
+                        borderColor={isSelected ? '#007aff' : '#e8e8e8'}
+                        w="100%"
+                        overflow="hidden"
                       >
-                        {ROLES.map((role) => {
-                          const currentCount = roleCounts[role] || 0;
-                          // Desabilita a opção se o limite já foi atingido E o usuário não possui esse cargo atualmente
-                          const isFull = currentCount >= ROLE_LIMITS[role] && memberRoles[student.id] !== role;
-                          return (
-                            <option key={role} value={role} disabled={isFull}>
-                              {role} {isFull ? '(Cheio)' : ''}
-                            </option>
-                          );
-                        })}
-                      </Select>
-                      <CloseButton size="sm" onClick={() => toggleUser(student.id)} color="red.400" />
-                    </HStack>
-                  </HStack>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </VStack>
+                        <Flex
+                          w="32px"
+                          h="32px"
+                          borderRadius="50%"
+                          bg={colors[colorIndex]}
+                          align="center"
+                          justify="center"
+                          flexShrink={0}
+                        >
+                          <Text fontSize="12px" fontWeight="600" color="white">
+                            {initials}
+                          </Text>
+                        </Flex>
+                        <Text fontSize="14px" fontWeight="500" color="gray700" flex="1" noOfLines={1}>
+                          {student.name}
+                        </Text>
+                        <Flex
+                          w="18px"
+                          h="18px"
+                          borderRadius="3px"
+                          border="2px solid"
+                          borderColor={isSelected ? '#007aff' : '#e8e8e8'}
+                          bg={isSelected ? '#007aff' : 'white'}
+                          align="center"
+                          justify="center"
+                          flexShrink={0}
+                        >
+                          {isSelected && <Text fontSize="11px" color="white" fontWeight="700">✓</Text>}
+                        </Flex>
+                      </Flex>
+                    );
+                  })
+              ) : (
+                <Text fontSize="13px" color="gray500" textAlign="center" py="1rem">
+                  Nenhum membro disponível
+                </Text>
+              )}
+            </Flex>
+          </Flex>
+
+          {/* Seção de Membros e Cargos */}
+          <Flex direction="column" gap="0.75rem">
+            <Text fontSize="14px" fontWeight="600" color="gray700">
+              Membros e cargos
+            </Text>
+
+            <Flex direction="column" gap="0.5rem" maxH="180px" overflowY="auto" overflowX="hidden" css={{
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'transparent',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#ccc',
+                borderRadius: '3px',
+              },
+            }}>
+              {selectedStudents.length === 0 ? (
+                <Text fontSize="13px" color="gray500" fontStyle="italic">
+                  Nenhum membro selecionado (mín. 5, máx. 8)
+                </Text>
+              ) : (
+                selectedStudents.map((student) => {
+                  const initials = student.name
+                    .split(' ')
+                    .slice(0, 2)
+                    .map((n) => n[0].toUpperCase())
+                    .join('');
+                  const colors = ['#7c3aed', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
+                  const colorIndex = student.name.charCodeAt(0) % colors.length;
+                  const assignedRole = memberRoles[student.id];
+                  const roleConfig = assignedRole ? ROLE_CONFIG[assignedRole] : null;
+
+                  return (
+                    <Flex
+                      key={student.id}
+                      align="center"
+                      gap="0.75rem"
+                      p="0.75rem"
+                      bg="gray50"
+                      borderRadius="8px"
+                      border="1px solid #e8e8e8"
+                      justify="space-between"
+                      w="100%"
+                      overflow="hidden"
+                    >
+                      <Flex align="center" gap="0.75rem" flex="1" minW="0" overflow="hidden">
+                        <Flex
+                          w="32px"
+                          h="32px"
+                          borderRadius="50%"
+                          bg={colors[colorIndex]}
+                          align="center"
+                          justify="center"
+                          flexShrink={0}
+                        >
+                          <Text fontSize="12px" fontWeight="600" color="white">
+                            {initials}
+                          </Text>
+                        </Flex>
+                        <Text fontSize="13px" fontWeight="500" color="gray700" flex="1" noOfLines={1}>
+                          {student.name}
+                        </Text>
+                      </Flex>
+
+                      <Flex align="center" gap="0.5rem" flexShrink={0}>
+                        {assignedRole && roleConfig ? (
+                          <Popover placement="top">
+                            <PopoverTrigger>
+                              <Flex
+                                px="0.75rem"
+                                py="0.5rem"
+                                bg={roleConfig.bgColor}
+                                border={`1.5px solid ${roleConfig.borderColor}`}
+                                borderRadius="6px"
+                                align="center"
+                                gap="0.5rem"
+                                cursor="pointer"
+                                transition="all 0.2s"
+                                _hover={{ opacity: 0.8 }}
+                              >
+                                <Text fontSize="14px">{roleConfig.icon}</Text>
+                                <Text fontSize="12px" fontWeight="600" color={roleConfig.color}>
+                                  {assignedRole}
+                                </Text>
+                              </Flex>
+                            </PopoverTrigger>
+                            <PopoverContent w="fit-content" border="1px solid #e8e8e8" boxShadow="lg">
+                              <PopoverBody p="0.75rem">
+                                <Flex direction="column" gap="0.75rem">
+                                  {ROLES.map((role) => {
+                                    const currentCount = roleCounts[role] || 0;
+                                    const limit = ROLE_LIMITS[role];
+                                    const isFull = currentCount >= limit && memberRoles[student.id] !== role;
+                                    const config = ROLE_CONFIG[role];
+
+                                    return (
+                                      <Flex
+                                        key={role}
+                                        px="1rem"
+                                        py="0.75rem"
+                                        bg={config.bgColor}
+                                        border={`1px solid ${config.borderColor}`}
+                                        borderRadius="6px"
+                                        align="center"
+                                        gap="0.75rem"
+                                        cursor={isFull ? 'not-allowed' : 'pointer'}
+                                        opacity={isFull ? 0.5 : 1}
+                                        onClick={() => {
+                                          if (!isFull) handleRoleChange(student.id, role);
+                                        }}
+                                        transition="all 0.2s"
+                                        _hover={isFull ? {} : { opacity: 0.8 }}
+                                      >
+                                        <Text fontSize="16px">{config.icon}</Text>
+                                        <Flex direction="column" gap="0" flex="1">
+                                          <Text fontSize="12px" fontWeight="600" color={config.color}>
+                                            {role}
+                                          </Text>
+                                        </Flex>
+                                        <Badge colorScheme="gray" fontSize="11px" bg="white" border={`1px solid ${config.borderColor}`} color={config.color}>
+                                          {currentCount}/{limit}
+                                        </Badge>
+                                      </Flex>
+                                    );
+                                  })}
+                                </Flex>
+                              </PopoverBody>
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <Popover placement="top">
+                            <PopoverTrigger>
+                              <Flex
+                                px="0.75rem"
+                                py="0.5rem"
+                                bg="white"
+                                border="1px solid #e0e0e0"
+                                borderRadius="6px"
+                                align="center"
+                                gap="0.5rem"
+                                cursor="pointer"
+                                transition="all 0.2s"
+                                _hover={{ bg: 'gray50' }}
+                              >
+                                <Text fontSize="12px" color="#999">
+                                  ⚙️
+                                </Text>
+                                <Text fontSize="12px" fontWeight="500" color="#666">
+                                  Cargo
+                                </Text>
+                              </Flex>
+                            </PopoverTrigger>
+                            <PopoverContent w="fit-content" border="1px solid #e8e8e8" boxShadow="lg">
+                              <PopoverBody p="0.75rem">
+                                <Flex direction="column" gap="0.75rem">
+                                  {ROLES.map((role) => {
+                                    const currentCount = roleCounts[role] || 0;
+                                    const limit = ROLE_LIMITS[role];
+                                    const isFull = currentCount >= limit;
+                                    const config = ROLE_CONFIG[role];
+
+                                    return (
+                                      <Flex
+                                        key={role}
+                                        px="1rem"
+                                        py="0.75rem"
+                                        bg={config.bgColor}
+                                        border={`1px solid ${config.borderColor}`}
+                                        borderRadius="6px"
+                                        align="center"
+                                        gap="0.75rem"
+                                        cursor={isFull ? 'not-allowed' : 'pointer'}
+                                        opacity={isFull ? 0.5 : 1}
+                                        onClick={() => {
+                                          if (!isFull) handleRoleChange(student.id, role);
+                                        }}
+                                        transition="all 0.2s"
+                                        _hover={isFull ? {} : { opacity: 0.8 }}
+                                      >
+                                        <Text fontSize="16px">{config.icon}</Text>
+                                        <Flex direction="column" gap="0" flex="1">
+                                          <Text fontSize="12px" fontWeight="600" color={config.color}>
+                                            {role}
+                                          </Text>
+                                        </Flex>
+                                        <Badge colorScheme="gray" fontSize="11px" bg="white" border={`1px solid ${config.borderColor}`} color={config.color}>
+                                          {currentCount}/{limit}
+                                        </Badge>
+                                      </Flex>
+                                    );
+                                  })}
+                                </Flex>
+                              </PopoverBody>
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                        <CloseButton size="sm" onClick={() => toggleUser(student.id)} color="red.400" />
+                      </Flex>
+                    </Flex>
+                  );
+                })
+              )}
+            </Flex>
+          </Flex>
         </Flex>
       </SmallModal>
     </>

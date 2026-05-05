@@ -87,7 +87,7 @@ const studentMenuItems: Array<MenuItemType> = [
   // { name: 'Loja', page: 'store', icon: FiShoppingBag,  },
   // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },
-  { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
+  // { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText }
   { name: 'Code Lab', page: 'code', icon: BsMotherboard },
   { name: 'Vision Lab', page: 'vision_lab', icon: TbCircuitResistor },
 
