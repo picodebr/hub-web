@@ -101,7 +101,7 @@ const VisionLabProjects: React.FC<IProps> = ({ folderId }) => {
         minH="calc(100% - 2rem)"
         isLoaded={!isLoading}
         gap="1rem"
-        gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(150px, 1fr))', sm: 'repeat(auto-fill, minmax(240px, 1fr))' }}
+        gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(150px, 1fr))', sm: 'repeat(auto-fill, minmax(290px, 1fr))' }}
         gridTemplateRows={{ base: undefined, sm: 'minmax(min-content, max-content)' }}
         gridAutoRows={{ base: '200px', sm: `max-content` }}
         rowGap={{ base: `1rem`, sm: `3rem`, md: `1rem` }}
