@@ -74,7 +74,7 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
               maxW="100%"
               sx={{
                 '& > :last-child': {
-                  padding: `1rem`,
+                  padding: fullScreen ? `0` : '1rem',
                   w: '100%',
                   maxW: { base: `100%`, xl: `1440px` },
                   margin: `auto`,
