@@ -169,12 +169,12 @@ export function ClassCard({ classData, index }: ClassCardProps) {
       position="relative"
       transition="all 0.2s"
       boxShadow="sm"
-      minH={{ base: '140px', sm: '160px' }}
-      h="auto"
+      // minH={{ base: '140px', sm: '160px' }}
+      h="fit-content"
       _hover={{ borderWidth: '4px', boxShadow: 'md', p: { base: '6px', sm: '10px' } }} // Ajuste de padding para não quebrar o layout quando a borda engrossa
     >
       {/* Header do Card */}
-      <Flex justify="space-between" align="center" mb={2}>
+      <Flex justify="space-between" align="center">
         <Box
           flex={1}
           mr={2}

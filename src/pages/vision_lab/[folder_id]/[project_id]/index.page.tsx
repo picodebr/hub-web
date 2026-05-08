@@ -48,7 +48,7 @@ const customScrollbar = {
 // ==========================================
 export default function VisionLab({ projectId }: { projectId: string }) {
   const [targetProject, setTargetProject] = useState<IVisionLabProject | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const { isLoaded, error } = useTensorFlow();
   const { classes, isTrained, initFromProject } = useVisionLabStore();
@@ -59,7 +59,6 @@ export default function VisionLab({ projectId }: { projectId: string }) {
       setIsLoading(true);
       try {
         const project = await getVisionLabProject(projectId);
-        console.log('project: ', project);
         setTargetProject(project);
       } catch {
         toast({ status: `error`, description: `Não foi possível obter o projeto no momento` });
@@ -70,14 +69,14 @@ export default function VisionLab({ projectId }: { projectId: string }) {
   }, []);
 
   useEffect(() => {
-    if (!isLoaded || !targetProject?.model_path || !targetProject?.bin_path || !targetProject.labels?.length) return;
+    if (!targetProject?.model_path || !targetProject?.bin_path || !targetProject.labels?.length) return;
     (async () => {
       try {
         await loadModelFromUrls(targetProject.model_path!, targetProject.bin_path!);
         initFromProject(targetProject.labels);
       } catch {}
     })();
-  }, [isLoaded, targetProject]);
+  }, [targetProject]);
 
   const handleSave = useAsyncCallback(
     async () => {
