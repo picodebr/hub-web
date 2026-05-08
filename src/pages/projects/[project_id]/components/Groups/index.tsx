@@ -92,9 +92,10 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
     {} as Record<string, number>,
   );
 
-  const isUserCountValid = selectedStudents.length >= 5 && selectedStudents.length <= 8;
+  const isUserCountValid = selectedStudents.length >= 3 && selectedStudents.length <= 8;
   const areAllRolesAssigned = selectedStudents.every((s) => !!memberRoles[s.id]);
-  const isFormValid = !!data.hub_project_class_id && !!data.display_name && isUserCountValid && areAllRolesAssigned;
+  const hasLeader = Object.values(memberRoles).includes('Líder de Grupo');
+  const isFormValid = !!data.hub_project_class_id && !!data.display_name && isUserCountValid && areAllRolesAssigned && hasLeader;
 
   return (
     <>
@@ -241,10 +242,10 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                   👥 Adicionar membros
                 </Text>
                 <Badge
-                  colorScheme={selectedStudents.length >= 5 ? 'blue' : 'gray'}
+                  colorScheme={selectedStudents.length >= 3 ? 'blue' : 'gray'}
                   fontSize="12px"
-                  color={selectedStudents.length >= 5 ? 'white' : 'gray700'}
-                  bg={selectedStudents.length >= 5 ? '#007aff' : '#e8e8e8'}
+                  color={selectedStudents.length >= 3 ? 'white' : 'gray700'}
+                  bg={selectedStudents.length >= 3 ? '#007aff' : '#e8e8e8'}
                 >
                   {selectedStudents.length} / 8
                 </Badge>
@@ -398,7 +399,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
             >
               {selectedStudents.length === 0 ? (
                 <Text fontSize="13px" color="gray500" fontStyle="italic">
-                  Nenhum membro selecionado (mín. 5, máx. 8)
+                  Nenhum membro selecionado (mín. 3, máx. 8)
                 </Text>
               ) : (
                 selectedStudents.map((student) => {
