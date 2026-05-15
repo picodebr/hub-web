@@ -141,7 +141,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
               {statusInfo.label}
             </Badge>
             <Text fontSize="13px" color="gray600" fontWeight="500">
-              {project.hub_class?.name}
+              {project.hub_class?.display_name}
             </Text>
           </Flex>
         </Flex>

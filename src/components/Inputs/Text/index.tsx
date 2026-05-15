@@ -9,7 +9,7 @@ export const TextInput: React.FC<IInputProps> = ({ onInputChange, value = '', pl
           {label}
         </Text>
       )}
-      <Flex border="1px" borderColor="gray300" borderRadius="6px">
+      <Flex border={rest.border || '1px'} borderColor="gray300" borderRadius="6px">
         {!!leftElement && (
           <Flex align="center" fontSize="1.2rem" p="0 2px 0 12px">
             {leftElement}

@@ -120,7 +120,7 @@ const Stock: React.FC = () => {
   };
 
   return (
-    <Flex direction="column">
+    <Flex direction="column" h="100%">
       <PageLoading
         content={
           <Text fontSize="15px" textAlign="center" maxW="350px">
@@ -152,7 +152,9 @@ const Stock: React.FC = () => {
         onSwitch={(view) => setPageView(view as any)}
         currentTabColor="primary700"
       />
-      <AnimatePresence mode="wait">{PageViewComponent[pageView]}</AnimatePresence>
+      <Flex flex="1" direction="column" mt="1rem">
+        <AnimatePresence mode="wait">{PageViewComponent[pageView]}</AnimatePresence>
+      </Flex>
     </Flex>
   );
 };

@@ -35,6 +35,7 @@ const ROLE_CONFIG: Record<string, { color: string; icon: string; bgColor: string
 const ROLES = Object.keys(ROLE_LIMITS);
 
 export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup }) => {
+  console.log('project: ', project.groups);
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
   const [memberRoles, setMemberRoles] = useState<Record<string, string>>({});
   const { colorMode } = useDarkMode();

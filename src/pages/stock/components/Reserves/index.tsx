@@ -103,7 +103,7 @@ export const Reserves: React.FC<IProps> = ({ groups, refreshStock }) => {
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -10, opacity: 0 }}
       transition={{ duration: 0.2 }}
-      style={{ display: `flex`, width: `100%`, height: `100%`, overflow: `hidden` }}
+      style={{ display: `flex`, width: `100%`, height: `100%` }}
     >
       <Flex direction="column" gap="1.5rem" flex="1">
         <Flex gap="1rem" flex="1" direction={{ base: `column-reverse`, lg: `row` }}>
@@ -115,7 +115,6 @@ export const Reserves: React.FC<IProps> = ({ groups, refreshStock }) => {
             p="0.5rem"
             textAlign="left"
             display="flex"
-            overflow="hidden auto"
             border="1px"
             gap="0.5rem"
             borderColor="gray200"
@@ -133,104 +132,113 @@ export const Reserves: React.FC<IProps> = ({ groups, refreshStock }) => {
               textAlign="left"
               display="flex"
               p="1rem"
-              overflow="hidden auto"
               borderTop="1px"
               borderColor="gray200"
               transition="ease-in-out 0.3s"
             >
-              <Grid
-                gap="1rem"
-                gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(12rem, 1fr))', lg: 'repeat(auto-fill, minmax(14rem, 1fr))' }}
-                gridTemplateRows="minmax(min-content, max-content)"
-                borderRadius="md"
-                flex="1"
-                overflow="hidden auto"
-              >
-                {(tab === 'consumables' ? consumableItems : serviceItems).map((item, i) => (
-                  <Flex
-                    key={`${item.id} - ${i}`}
-                    direction="column"
-                    gap="0.5rem"
-                    cursor="pointer"
-                    fontWeight="500"
-                    color="gray700"
-                    fontSize="14px"
-                    align="center"
-                    justify="space-between"
-                    height={{ base: `15.5rem`, lg: '17.5rem' }}
-                    width={{ base: `13rem`, lg: '15rem' }}
-                    border="1px"
-                    borderColor="gray300"
-                    pb="0.5rem"
-                    borderRadius="md"
-                    overflow="hidden"
-                    position="relative"
-                  >
-                    {!((item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0)) && (
-                      <Flex position="absolute" top="0.5rem" right="0.5rem" color="primary300">
-                        <FaCheckDouble fontSize="20px" />
-                      </Flex>
-                    )}
-                    <Tooltip label={item.name}>
-                      <Image src={item.picture} maxHeight={{ base: `8rem`, lg: `10rem` }} />
-                    </Tooltip>
-                    <Flex display="flex" align="center" w="100%" h="4.35rem">
-                      <Flex direction="column" gap="0.75rem" justify="space-between" h="100%" overflow="hidden" flex="1">
-                        <Text noOfLines={2} px="0.5rem" flex="1" fontSize="13px">
-                          {item.name}
-                        </Text>
-                        <Text noOfLines={1} px="0.5rem" h="min-content" py="0" fontWeight="400" fontSize="11px">
-                          {`${item.quantity || 0} ${item.store_item?.metadata?.is_service ? 'reserva' : 'unidade'}`.concat(
-                            item.quantity === 1 ? `` : `s`,
-                          )}
-                        </Text>
-                      </Flex>
-                      <Flex direction="column" justify="space-between" align="flex-end" h="100%" flex="1">
-                        <Text px="0.5rem" fontSize="12px" fontWeight="400" whiteSpace="nowrap" textAlign="right">
-                          {item.group.display_name}
-                        </Text>
-                        <Flex align="center" gap="0.5rem" flex="1">
-                          <Image src="/icons/coin.svg" />
-                          <Text noOfLines={1} px="0.5rem" flex="1" fontWeight="400">
-                            {formatCurrency(item.quantity * Number(item.price))}
+              {tab === 'consumables' && !consumableItems.length ? (
+                <Flex w="100%" textAlign="center" justify="center" h="100%" pt="2rem">
+                  <Text>Nenhum item encontrado.</Text>
+                </Flex>
+              ) : tab === 'services' && !serviceItems.length ? (
+                <Flex w="100%" textAlign="center" justify="center" h="100%" pt="2rem">
+                  <Text>Nenhum item encontrado.</Text>
+                </Flex>
+              ) : (
+                <Grid
+                  gap="1rem"
+                  gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(12rem, 1fr))', lg: 'repeat(auto-fill, minmax(14rem, 1fr))' }}
+                  gridTemplateRows="minmax(min-content, max-content)"
+                  borderRadius="md"
+                  flex="1"
+                  overflow="hidden auto"
+                >
+                  {(tab === 'consumables' ? consumableItems : serviceItems).map((item, i) => (
+                    <Flex
+                      key={`${item.id} - ${i}`}
+                      direction="column"
+                      gap="0.5rem"
+                      cursor="pointer"
+                      fontWeight="500"
+                      color="gray700"
+                      fontSize="14px"
+                      align="center"
+                      justify="space-between"
+                      height={{ base: `15.5rem`, lg: '17.5rem' }}
+                      width={{ base: `13rem`, lg: '15rem' }}
+                      border="1px"
+                      borderColor="gray300"
+                      pb="0.5rem"
+                      borderRadius="md"
+                      overflow="hidden"
+                      position="relative"
+                    >
+                      {!((item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0)) && (
+                        <Flex position="absolute" top="0.5rem" right="0.5rem" color="primary300">
+                          <FaCheckDouble fontSize="20px" />
+                        </Flex>
+                      )}
+                      <Tooltip label={item.name}>
+                        <Image src={item.picture} maxHeight={{ base: `8rem`, lg: `10rem` }} />
+                      </Tooltip>
+                      <Flex display="flex" align="center" w="100%" h="4.35rem">
+                        <Flex direction="column" gap="0.75rem" justify="space-between" h="100%" overflow="hidden" flex="1">
+                          <Text noOfLines={2} px="0.5rem" flex="1" fontSize="13px">
+                            {item.name}
+                          </Text>
+                          <Text noOfLines={1} px="0.5rem" h="min-content" py="0" fontWeight="400" fontSize="11px">
+                            {`${item.quantity || 0} ${item.store_item?.metadata?.is_service ? 'reserva' : 'unidade'}`.concat(
+                              item.quantity === 1 ? `` : `s`,
+                            )}
                           </Text>
                         </Flex>
-                        <Text noOfLines={1} px="0.5rem" fontWeight="400" fontSize="10px">
-                          {`${formatCurrency(item.price)} / ${item.store_item?.metadata?.is_service ? 'reserva' : 'unidade'}`}
-                        </Text>
+                        <Flex direction="column" justify="space-between" align="flex-end" h="100%" flex="1">
+                          <Text px="0.5rem" fontSize="12px" fontWeight="400" whiteSpace="nowrap" textAlign="right">
+                            {item.group.display_name}
+                          </Text>
+                          <Flex align="center" gap="0.5rem" flex="1">
+                            <Image src="/icons/coin.svg" />
+                            <Text noOfLines={1} px="0.5rem" flex="1" fontWeight="400">
+                              {formatCurrency(item.quantity * Number(item.price))}
+                            </Text>
+                          </Flex>
+                          <Text noOfLines={1} px="0.5rem" fontWeight="400" fontSize="10px">
+                            {`${formatCurrency(item.price)} / ${item.store_item?.metadata?.is_service ? 'reserva' : 'unidade'}`}
+                          </Text>
+                        </Flex>
                       </Flex>
-                    </Flex>
-                    {!!item.store_item?.metadata?.is_service && (
-                      <Flex>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.75 }}
-                          style={{
-                            display: `flex`,
-                            background: (item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0) ? `#3356B7` : `#05AD7D`,
-                            color: `#fff`,
-                            borderRadius: `6px`,
-                            padding: `0.15rem 0.75rem`,
-                            alignItems: `center`,
-                            gap: `0.15rem`,
-                          }}
-                          onClick={() => {
-                            setItemToUpdate(item);
-                          }}
-                        >
-                          {item.store_item?.metadata?.is_service ? <FaCheckDouble fontSize="16px" /> : <MdOutlineShoppingCart fontSize="16px" />}
+                      {!!item.store_item?.metadata?.is_service && (
+                        <Flex>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.75 }}
+                            style={{
+                              display: `flex`,
+                              background: (item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0) ? `#3356B7` : `#05AD7D`,
+                              color: `#fff`,
+                              borderRadius: `6px`,
+                              padding: `0.15rem 0.75rem`,
+                              alignItems: `center`,
+                              gap: `0.15rem`,
+                            }}
+                            onClick={() => {
+                              setItemToUpdate(item);
+                            }}
+                          >
+                            {item.store_item?.metadata?.is_service ? <FaCheckDouble fontSize="16px" /> : <MdOutlineShoppingCart fontSize="16px" />}
 
-                          {item.store_item?.metadata?.is_service
-                            ? !!((item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0))
-                              ? `Atualizar`
-                              : `Finalizado`
-                            : `Vender`}
-                        </motion.button>
-                      </Flex>
-                    )}
-                  </Flex>
-                ))}
-              </Grid>
+                            {item.store_item?.metadata?.is_service
+                              ? !!((item?.quantity || 0) - (item?.order_item_metadata?.service_consumed_quantity || 0))
+                                ? `Atualizar`
+                                : `Finalizado`
+                              : `Vender`}
+                          </motion.button>
+                        </Flex>
+                      )}
+                    </Flex>
+                  ))}
+                </Grid>
+              )}
             </Flex>
           </Flex>
 

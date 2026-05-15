@@ -46,24 +46,22 @@ export const ResaleOrders: React.FC<IProps> = () => {
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -10, opacity: 0 }}
       transition={{ duration: 0.2 }}
-      style={{ display: `flex`, width: `100%`, height: `100%`, overflow: `hidden` }}
+      style={{ display: `flex`, width: `100%`, height: `100%` }}
     >
       <Flex gap="1rem" flex="1" direction={{ base: `column-reverse`, lg: `row` }}>
-        <Flex
-          flex="1"
-          bgColor="white"
-          flexDirection="row"
-          borderRadius="12px"
-          padding="20px"
-          gap="20px"
-          textAlign="left"
-          display="flex"
-          overflow="hidden auto"
-          border="1px"
-          borderColor="gray200"
-          transition="ease-in-out 0.3s"
-        >
-          {storeMakerList.length ? (
+        {storeMakerList.length ? (
+          <Flex
+            flex="1"
+            flexDirection="row"
+            borderRadius="12px"
+            padding="20px"
+            gap="20px"
+            textAlign="left"
+            display="flex"
+            bgColor="white"
+            borderColor="gray200"
+            transition="ease-in-out 0.3s"
+          >
             <Grid
               gap="1rem"
               gridTemplateColumns={{ base: 'repeat(auto-fill, minmax(10rem, 1fr))', lg: 'repeat(auto-fill, minmax(12rem, 1fr))' }}
@@ -71,7 +69,6 @@ export const ResaleOrders: React.FC<IProps> = () => {
               padding="2rem"
               borderRadius="md"
               flex="1"
-              overflow="hidden auto"
             >
               {storeMakerList.map((item, i) => (
                 <Flex key={`${item.id} - ${i}`} position="relative" w="fit-content" h="fit-content">
@@ -111,7 +108,7 @@ export const ResaleOrders: React.FC<IProps> = () => {
                           <Flex align="center" justify="center" gap="0.25rem" pr="0.5rem">
                             <Image src="/icons/coin.svg" />
                             <Text w="fit-content" fontSize="14px" display="flex" color="primary700" fontWeight="500">
-                               R$ {item.price}
+                              R$ {item.price}
                             </Text>
                           </Flex>
                         </Flex>
@@ -121,14 +118,12 @@ export const ResaleOrders: React.FC<IProps> = () => {
                 </Flex>
               ))}
             </Grid>
-          ) : (
-            <Flex h="100%" w="100%">
-              <Text margin="auto" fontSize="16px" fontWeight="500">
-                Nenhuma solicitação encontrada
-              </Text>
-            </Flex>
-          )}
-        </Flex>
+          </Flex>
+        ) : (
+          <Text fontSize="16px" fontWeight="500" w="100%" textAlign="center" pt="2rem">
+            Nenhuma solicitação encontrada
+          </Text>
+        )}
 
         <SmallModal
           title={selectedStoreItem?.store_maker_item.name}
