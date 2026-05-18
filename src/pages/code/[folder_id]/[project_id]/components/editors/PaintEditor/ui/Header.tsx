@@ -199,7 +199,7 @@ export const Header: React.FC<HeaderProps> = ({
             />
 
             <button
-              onClick={() => onChangeState({ fillTransparent: true })}
+              onClick={() => onChangeState({ fillTransparent: !fillTransparent })}
               className={`w-10 h-10 !rounded-full border-2 outline-none focus:outline-none transition-all flex items-center justify-center shadow-sm ${
                 fillTransparent 
                   ? 'bg-white border-blue-400 ring-4 ring-blue-50/50 scale-105' 

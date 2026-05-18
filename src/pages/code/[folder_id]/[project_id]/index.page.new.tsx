@@ -37,13 +37,17 @@ interface IProps {
 }
 
 const NewCode: React.FC<IProps> = ({ project }) => {
-  const { isUploadMode, activeExtensions, isStageFullScreen, setIsStageFullScreen, setShowRestoreConfirmModal } = useUI();
+  const { isUploadMode, activeExtensions, isStageFullScreen, setIsStageFullScreen, setShowRestoreConfirmModal, setActiveTab } = useUI();
 
   const { isSerialConnected, restoreBoard } = useFirmware();
   const { isRecognitionWindowOpen, setIsRecognitionWindowOpen } = useProject();
   const runnerContext = useExecutionRunner();
 
   const blocklyRef = useRef<BlocklyWorkspaceRef | null>(null);
+
+  useEffect(() => {
+    setActiveTab('code');
+  }, []);
 
   const { setBlocklyWorkspaceRef } = runnerContext;
   useEffect(() => {
