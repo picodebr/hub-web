@@ -72,35 +72,34 @@ export default function HsbColorPicker({
     isActive = false
 }: Props) {
     const [open, setOpen] = useState(false);
-    
-    // Initialize HSB state directly from initialColor to avoid first-render mismatch
-    const [initialH, initialS, initialB] = hex2hsb(initialColor);
-    const [hue, setHue] = useState(initialH);
-    const [sat, setSat] = useState(initialS);
-    const [bri, setBri] = useState(initialB);
-    
+
+    const [hue, setHue] = useState(() => hex2hsb(initialColor)[0]);
+    const [sat, setSat] = useState(() => hex2hsb(initialColor)[1]);
+    const [bri, setBri] = useState(() => hex2hsb(initialColor)[2]);
+
     const [transparent, setTransparent] = useState(isTransparent);
     const [eyedropperSupported, setEyedropperSupported] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
 
+    // Track last initialColor seen from parent to avoid running on every slider move
+    const prevInitialColorRef = useRef(initialColor);
+
     useEffect(() => { setEyedropperSupported('EyeDropper' in window); }, []);
 
-    // Keep track of the hex version of our current HSB to compare with initialColor
     const currentHex = hsb2hex(hue, sat, bri);
 
+    // Sync HSB state only when the parent changes initialColor (not when sliders move)
     useEffect(() => {
+        if (prevInitialColorRef.current === initialColor) return;
+        prevInitialColorRef.current = initialColor;
         if (!initialColor || !initialColor.startsWith('#') || initialColor.length < 7) return;
-        
-        // Prevent feedback loops: only update local HSB if initialColor is different from currentHex
-        if (initialColor.toLowerCase() === currentHex.toLowerCase()) return;
-
         try {
             const [h, s, b] = hex2hsb(initialColor);
             setHue(h);
             setSat(Math.max(s, 0));
             setBri(Math.max(b, 0));
         } catch { /* ignore */ }
-    }, [initialColor, currentHex]);
+    }, [initialColor]);
 
     useEffect(() => { setTransparent(isTransparent); }, [isTransparent]);
 

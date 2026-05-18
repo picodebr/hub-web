@@ -11,7 +11,8 @@ import { BsMotherboard } from 'react-icons/bs';
 import { useEffect, useMemo, useState } from 'react';
 import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
 import { getCodeProjectFolder } from '@/_base/services/codeProjectFolder';
-import { createCodeProject, removeCodeProject, shareCodeProject } from '@/_base/services/codeProject';
+import { createCodeProject, removeCodeProject, shareCodeProject, updateCodeProject } from '@/_base/services/codeProject';
+import { ProjectFile } from '@/_base/services/code';
 import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
 import { SmallModal } from '@/components/Modal/Small';
 import { LuSquareDashedBottomCode } from 'react-icons/lu';
@@ -101,6 +102,42 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
         folder_id: folderId,
         name: newProjectName || 'Novo projeto',
       });
+
+      const initialMetadata: ProjectFile = {
+        metadata: { version: '1.0', timestamp: new Date().toISOString() },
+        settings: { mode: 'stage' },
+        stage: { activeSpriteId: 'sprite1' },
+        sprites: [
+          {
+            id: 'sprite1',
+            name: 'Tobi',
+            x: 0,
+            y: 0,
+            angle: 90,
+            size: 100,
+            visible: true,
+            rotationStyle: 'all around',
+            costume: '/svg/spriteLibrary/Tobi/tobi_costume1.svg',
+            currentCostumeId: 'c1',
+            costumes: [
+              { id: 'c1', name: 'tobi_costume1', url: '/svg/spriteLibrary/Tobi/tobi_costume1.svg' },
+              { id: 'c2', name: 'tobi_costume2', url: '/svg/spriteLibrary/Tobi/tobi_costume2.svg' },
+            ],
+            sounds: [{ id: 'sound1', name: 'Latido', url: '/song/tobi_sound.mp3', format: 'mp3' }],
+            currentSoundId: 'sound1',
+            volume: 100,
+            bubbleText: '',
+            bubbleType: null,
+            draggable: false,
+            blocks: { blocks: { languageVersion: 0, blocks: [] }, variables: [] },
+            code: '',
+          },
+        ],
+        uploadMode: { blocks: null, code: '' },
+        updatedAt: Date.now(),
+      };
+      await updateCodeProject({ id: newProject.id, metadata: initialMetadata });
+
       router.push(`/code/${folderId}/${newProject.id}?_p=${newProject.name}&allow-new-code=true`);
       setNewProjectName(null);
       toast({
