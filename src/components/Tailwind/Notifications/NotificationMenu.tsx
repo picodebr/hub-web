@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import NotificationCard from './NotificationCard';
 import { isToday, isYesterday } from 'date-fns';
-import { IHubNotification } from '@/_base/interfaces/notification';
-import { FiBell, FiCheck } from 'react-icons/fi';
 import moment from 'moment';
+import { useRouter } from 'next/router';
 import { AlertDialog, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Button } from '@chakra-ui/react';
+
+// Icons: Lucide React
+import { Bell, BellOff, CheckCheck, Trash2, Calendar, KanbanSquare, Box } from 'lucide-react';
+
+import { hubNotificationLabels, IHubNotification } from '@/_base/interfaces/notification';
 import { IHubUser } from '@/_base/interfaces/user';
 import { KanbanColumnData, kanbanColumnLabel, KanbanItemType } from '@/components/Kanban/interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
-import { useRouter } from 'next/router';
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
 
@@ -48,14 +50,15 @@ const NotificationMenu = ({
   const cancelRef = useRef<any>();
   const router = useRouter();
 
+  // 2. Lógica de Negócio Mantida (Kanban)
   useEffect(() => {
     if (!user) return;
     try {
-      const kanban: (Omit<KanbanColumnData, `items`> & { items: IKanbanNotification[] })[] = JSON.parse(user.metadata?.kanban || `[]`);
+      const kanban: (Omit<KanbanColumnData, 'items'> & { items: IKanbanNotification[] })[] = JSON.parse(user.metadata?.kanban || '[]');
       const dueItems = kanban
         .flatMap((e) => e.items.filter((k) => k.end_date && new Date(k.end_date).getTime() < Date.now() + ONE_WEEK))
         .map((e) => {
-          let dateMessage = ``;
+          let dateMessage = '';
           if (e.end_date && isToday(new Date(e.end_date))) {
             dateMessage = 'Atividade vencendo hoje';
           } else if (e.end_date && isYesterday(new Date(e.end_date))) {
@@ -70,11 +73,11 @@ const NotificationMenu = ({
 
       if (kanban?.length) setKanbanItemsDue(dueItems);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(`Individual kanban parse error`, err);
+      console.error('Individual kanban parse error', err);
     }
   }, [user]);
 
+  // Click outside listener
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -89,8 +92,9 @@ const NotificationMenu = ({
   const handleRemoveItem = useCallback(() => {
     if (onRemoveAll) onRemoveAll();
     setAlertModalIsOpen(false);
-  }, [alertModalIsOpen]);
+  }, [onRemoveAll, alertModalIsOpen]);
 
+  // Agrupamento por data mantido
   const groupedNotifications = useMemo<NotificationGroup[]>(() => {
     const groups: { [key: string]: IHubNotification[] } = {};
 
@@ -113,55 +117,30 @@ const NotificationMenu = ({
         groups[dateKey].push(notification);
       });
 
-    return Object.entries(groups).map(([date, notifications]) => ({
+    return Object.entries(groups).map(([date, notifs]) => ({
       date,
-      notifications: notifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+      notifications: notifs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
     }));
   }, [notifications]);
 
-  const dropdownVariants = {
-    hidden: {
-      opacity: 0,
-      y: -10,
-      scale: 0.95,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        staggerChildren: 0.05,
-      },
-    },
-    exit: {
-      opacity: 0,
-      y: -10,
-      scale: 0.95,
-      transition: {
-        duration: 0.2,
-      },
-    },
-  };
-
-  const notificationCount = stockItems.length + notifications.filter((n) => !n.opened_by.includes(user?.id || ``)).length + kanbanItemsDue.length;
+  const unreadNotifications = notifications.filter((n) => !n.opened_by?.includes(user?.id || ''));
+  const notificationCount = stockItems.length + unreadNotifications.length + kanbanItemsDue.length;
 
   return (
     <div className="relative" ref={menuRef}>
+      {/* Gatilho (Trigger) */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2.5 text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-xl transition-colors"
       >
-        <FiBell />
+        <Bell className="w-5 h-5" />
         {!!notificationCount && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium"
+            className="absolute bottom-3 right-2 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-sm"
           >
             {notificationCount > 9 ? '9+' : notificationCount}
           </motion.div>
@@ -171,132 +150,212 @@ const NotificationMenu = ({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            variants={dropdownVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden"
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute right-0 top-12 w-[22rem] sm:w-[26rem] max-h-[75vh] rounded-3xl border border-border bg-white shadow-2xl shadow-foreground/20 overflow-hidden flex flex-col z-50"
           >
-            <div className="p-4 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Notificações</h3>
-                {notifications.filter((n) => !n.opened_by.includes(user?.id || ``)).length > 0 && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+            {/* Gradiente de Fundo do Header */}
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-primary/8 via-primary/3 to-transparent pointer-events-none" />
+
+            {/* Header */}
+            <div className="relative flex items-center justify-between px-5 pt-4 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
+                  <Bell className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground leading-tight">Notificações</h3>
+                  <p className="text-[11px] text-muted-foreground leading-tight">
+                    {notificationCount > 0 ? `${notificationCount} não ${notificationCount === 1 ? 'lida' : 'lidas'}` : 'Tudo em dia'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Botões de Ação Dinâmicos */}
+              <div className="flex items-center gap-1">
+                {unreadNotifications.length > 0 && (
+                  <button
                     onClick={onMarkAllAsRead}
-                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="flex items-center gap-1.5 text-[11px] font-medium text-primary px-2.5 py-1.5 rounded-xl hover:bg-primary/10 transition-colors"
                   >
-                    <FiCheck className="w-4 h-4" />
-                    Marcar todas como lidas
-                  </motion.button>
+                    <CheckCheck className="w-3.5 h-3.5" />
+                    Marcar todas
+                  </button>
                 )}
-                {!notifications.filter((n) => !n.opened_by.includes(user?.id || ``)).length && !!notifications.length && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                {!unreadNotifications.length && !!notifications.length && (
+                  <button
                     onClick={() => setAlertModalIsOpen(true)}
-                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="flex items-center gap-1.5 text-[11px] font-medium text-red-600 px-2.5 py-1.5 rounded-xl hover:bg-red-500/10 transition-colors"
                   >
-                    <FiCheck className="w-4 h-4" />
-                    Remover todas notificações
-                  </motion.button>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Limpar
+                  </button>
                 )}
               </div>
             </div>
 
-            <div className="max-h-80 overflow-y-auto">
+            <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent shrink-0" />
+
+            {/* Conteúdo Scrollável */}
+            <div className="overflow-y-auto flex-1 px-2 py-2 space-y-3">
               {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                 </div>
               ) : !notifications.length && !kanbanItemsDue.length && !stockItems.length ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FiBell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p style={{ fontSize: `16px` }}>Nenhuma notificação disponível</p>
+                <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-accent/50 flex items-center justify-center mb-3">
+                    <BellOff className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">Nenhuma notificação</p>
+                  <p className="text-xs text-muted-foreground mt-1">Você está em dia com tudo</p>
                 </div>
               ) : (
-                <div>
+                <>
+                  {/* Seção Kanban */}
                   {!!kanbanItemsDue.length && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                      <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Kanban</h4>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 px-3 pt-1 pb-1.5">
+                        <KanbanSquare className="w-3.5 h-3.5 text-purple-500" />
+                        <span className="text-[10px] font-bold text-muted-foreground tracking-[0.12em] uppercase">Kanban</span>
+                        <div className="flex-1 h-px bg-border/40" />
+                        <span className="text-[10px] font-medium text-muted-foreground/70">{kanbanItemsDue.length}</span>
                       </div>
-                      {kanbanItemsDue.map((kanban) => (
-                        <NotificationCard
-                          key={kanban.id}
-                          notification={
-                            {
-                              id: kanban.id,
-                              created_at: new Date(kanban.end_date || ``),
-                              message: `${kanban.title} - ${kanbanColumnLabel[kanban.column]}`,
-                              metadata: { title: kanban.message },
-                              target_type: `alert`,
-                            } as unknown as IHubNotification
-                          }
-                          currentUserId={user?.id || ``}
+
+                      {kanbanItemsDue.map((kanban, idx) => (
+                        <motion.div
+                          key={`kanban-${kanban.id}`}
+                          initial={{ opacity: 0, x: -6 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.025, duration: 0.2 }}
                           onClick={() => {
                             onKanbanClick?.(kanban);
                             setIsOpen(false);
                           }}
-                        />
+                          className="relative flex items-start gap-3 px-3 py-3 mx-1 rounded-2xl transition-all duration-200 group cursor-pointer bg-primary/5 hover:bg-primary/10"
+                        >
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-primary" />
+                          <div className="mt-0.5 w-9 h-9 rounded-xl bg-purple-500/10 ring-1 ring-purple-500/20 flex items-center justify-center shrink-0">
+                            <KanbanSquare className="w-4 h-4 text-purple-500" />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-0.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm leading-snug font-semibold text-foreground">
+                                {kanban.title} - {kanbanColumnLabel[kanban.column]}
+                              </p>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{kanban.message}</p>
+                          </div>
+                        </motion.div>
                       ))}
-                    </motion.div>
+                    </div>
                   )}
+
+                  {/* Seção Estoque Maker */}
                   {!!stockItems.length && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                      <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Estoque Maker</h4>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 px-3 pt-1 pb-1.5 mt-2">
+                        <Box className="w-3.5 h-3.5 text-orange-500" />
+                        <span className="text-[10px] font-bold text-muted-foreground tracking-[0.12em] uppercase">Estoque Maker</span>
+                        <div className="flex-1 h-px bg-border/40" />
+                        <span className="text-[10px] font-medium text-muted-foreground/70">{stockItems.length}</span>
                       </div>
-                      {stockItems.map((stock) => (
-                        <NotificationCard
-                          key={stock.id}
-                          notification={
-                            {
-                              id: stock.id,
-                              message: `${stock.metadata?.name || stock.store_item.name} - ${stock.quantity} un`,
-                              metadata: { title: !stock.quantity ? `Item em falta no estoque` : `Item acabando no estoque` },
-                              target_type: `alert`,
-                            } as unknown as IHubNotification
-                          }
-                          currentUserId={user?.id || ``}
+
+                      {stockItems.map((stock, idx) => (
+                        <motion.div
+                          key={`stock-${stock.id}`}
+                          initial={{ opacity: 0, x: -6 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.025, duration: 0.2 }}
                           onClick={() => {
-                            router.push(`/stock`);
+                            router.push('/stock');
                             setIsOpen(false);
                           }}
-                        />
+                          className="relative flex items-start gap-3 px-3 py-3 mx-1 rounded-2xl transition-all duration-200 group cursor-pointer bg-primary/5 hover:bg-primary/10"
+                        >
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-primary" />
+                          <div className="mt-0.5 w-9 h-9 rounded-xl bg-orange-500/10 ring-1 ring-orange-500/20 flex items-center justify-center shrink-0">
+                            <Box className="w-4 h-4 text-orange-500" />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-0.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm leading-snug font-semibold text-foreground">
+                                {!stock.quantity ? 'Item em falta no estoque' : 'Item acabando no estoque'}
+                              </p>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-snug line-clamp-2">
+                              {stock.metadata?.name || stock.store_item?.name} - {stock.quantity} un
+                            </p>
+                          </div>
+                        </motion.div>
                       ))}
-                    </motion.div>
+                    </div>
                   )}
-                  {groupedNotifications.map((group, groupIndex) => (
-                    <motion.div
-                      key={group.date}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: groupIndex * 0.1 }}
-                    >
-                      <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">{group.date}</h4>
+
+                  {/* Agrupamentos de Notificações Padrão (Por Data) */}
+                  {groupedNotifications.map((group) => (
+                    <div key={group.date} className="space-y-1">
+                      <div className="flex items-center gap-2 px-3 pt-1 pb-1.5 mt-2">
+                        <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-[10px] font-bold text-muted-foreground tracking-[0.12em] uppercase">{group.date}</span>
+                        <div className="flex-1 h-px bg-border/40" />
+                        <span className="text-[10px] font-medium text-muted-foreground/70">{group.notifications.length}</span>
                       </div>
-                      {group.notifications.map((notification) => (
-                        <NotificationCard
-                          key={notification.id}
-                          notification={notification}
-                          currentUserId={user?.id || ``}
-                          onClick={() => {
-                            onNotificationClick?.(notification);
-                            setIsOpen(false);
-                          }}
-                        />
-                      ))}
-                    </motion.div>
+
+                      {group.notifications.map((n, idx) => {
+                        const isRead = n.opened_by?.includes(user?.id || '') ?? false;
+                        const conf = hubNotificationLabels[n.target_type] || {
+                          Icon: Bell,
+                          color: 'text-primary',
+                          bg: 'bg-primary/10',
+                          ring: 'ring-primary/20',
+                        };
+                        const NIcon = conf.Icon;
+
+                        return (
+                          <motion.div
+                            key={n.id}
+                            initial={{ opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.025, duration: 0.2 }}
+                            onClick={() => {
+                              onNotificationClick?.(n);
+                              setIsOpen(false);
+                            }}
+                            className={`relative flex items-start gap-3 px-3 py-3 mx-1 rounded-2xl transition-all duration-200 group cursor-pointer ${
+                              !isRead ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-accent/50'
+                            }`}
+                          >
+                            {!isRead && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-primary" />}
+                            <div className={`mt-0.5 w-9 h-9 rounded-xl ${conf.bg} ring-1 ${conf.ring} flex items-center justify-center shrink-0`}>
+                              <NIcon className={`w-4 h-4 ${conf.color}`} />
+                            </div>
+                            <div className="flex-1 min-w-0 space-y-0.5">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className={`text-sm leading-snug ${!isRead ? 'font-semibold text-foreground' : 'font-medium text-foreground/85'}`}>
+                                  {n.message}
+                                </p>
+                                <span className="text-[10px] font-medium text-muted-foreground/80 shrink-0 mt-0.5">
+                                  {moment(n.created_at).format('HH:mm')}
+                                </span>
+                              </div>
+                              {n.metadata?.title && <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{n.metadata.title}</p>}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
                   ))}
-                </div>
+                </>
               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modal de Alerta de Remoção Mantido Intacto */}
       <AlertDialog isOpen={alertModalIsOpen} leastDestructiveRef={cancelRef} onClose={() => setAlertModalIsOpen(false)}>
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -304,7 +363,7 @@ const NotificationMenu = ({
               Remover notificações
             </AlertDialogHeader>
 
-            <AlertDialogBody>Todas notificações serão excluídas permanentemente, você tem certeza disso?</AlertDialogBody>
+            <AlertDialogBody>Todas as notificações serão excluídas permanentemente, você tem certeza disso?</AlertDialogBody>
 
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={() => setAlertModalIsOpen(false)}>
