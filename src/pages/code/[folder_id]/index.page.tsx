@@ -304,7 +304,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
         onConfirm={handleCreateProject}
         title="Defina um nome para esse projeto"
         okText="Confirmar"
-        size="md"
+        size="lg"
         isLoading={isLoading}
       >
         <Flex direction="column" gap="1rem" mt="1rem">

@@ -192,109 +192,114 @@ const Groups: React.FC = () => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" w="100%" h="100%" overflowY="auto" overflowX="hidden" pb="2rem">
-      <Flex direction="column" w="100%" maxW="7xl" mx="auto" px="2rem" gap="2rem">
-        {/* Header com Call to Action */}
-        <InternalPageHeader
-          title="Meus Grupos"
-          description="Grupos dos quais você faz parte"
-          icon={<Users className="w-6 h-6 text-primary" />}
-          buttons={[{ label: `Adicionar Grupo`, leftIcon: <FaPlus />, onClick: () => setOpenModal(true) }]}
-        />
+    <Flex direction="column" w="100%" h="100%" gap="1rem">
+      {/* Header com Call to Action */}
+      <InternalPageHeader
+        title="Meus Grupos"
+        description="Grupos dos quais você faz parte"
+        icon={<Users className="w-6 h-6 text-primary" />}
+        buttons={[{ label: `Adicionar Grupo`, leftIcon: <FaPlus />, onClick: () => setOpenModal(true) }]}
+      />
 
-        {/* Grid de Grupos */}
-        {!groups.data.length && !groups._isLoading ? (
-          <EmptyPageData />
-        ) : (
-          <motion.div variants={containerVariants} initial="hidden" animate="show">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {groups.data.map((group) => {
-                const sidebarColor = group.project?.hub_class?.grade ? getColorByGrade(group.project.hub_class.grade) : '#6366F1';
+      {/* Grid de Grupos */}
+      {!groups.data.length && !groups._isLoading ? (
+        <EmptyPageData />
+      ) : (
+        <motion.div variants={containerVariants} initial="hidden" animate="show">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {groups.data.map((group) => {
+              const sidebarColor = group.project?.hub_class?.grade ? getColorByGrade(group.project.hub_class.grade) : '#6366F1';
 
-                return (
-                  <Skeleton key={group.id} rounded="1.5rem" isLoaded={!groups._isLoading}>
-                    <motion.div variants={itemVariants}>
-                      <Link href={`/groups/${group.id}`} _hover={{ textDecoration: 'none' }}>
-                        <Flex
-                          w="100%"
-                          direction="column"
-                          position="relative"
-                          borderRadius="1.5rem"
-                          cursor="pointer"
-                          bg={bgCard}
-                          border="1px solid"
-                          borderColor={borderColor}
-                          boxShadow="sm"
-                          transition="all 0.2s"
-                          overflow="hidden"
-                          _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
-                        >
-                          {/* Topo: Ícone + Nome do Projeto */}
-                          <Flex justify="space-between" align="flex-start" pl="0.875rem" pr="0.875rem" pt="1.125rem" pb="0.75rem">
-                            <Flex
-                              bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'}
-                              color="primary.500"
-                              p="0.375rem"
-                              borderRadius="md"
-                              w="fit-content"
+              return (
+                <Skeleton key={group.id} rounded="1.5rem" isLoaded={!groups._isLoading}>
+                  <motion.div variants={itemVariants}>
+                    <Link href={`/groups/${group.id}`} _hover={{ textDecoration: 'none' }}>
+                      <Flex
+                        w="100%"
+                        direction="column"
+                        position="relative"
+                        borderRadius="1.5rem"
+                        cursor="pointer"
+                        bg={bgCard}
+                        border="1px solid"
+                        borderColor={borderColor}
+                        boxShadow="sm"
+                        transition="all 0.2s"
+                        overflow="hidden"
+                        _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
+                      >
+                        {/* Topo: Ícone + Nome do Projeto */}
+                        <Flex justify="space-between" align="flex-start" pl="0.875rem" pr="0.875rem" pt="1.125rem" pb="0.75rem">
+                          <Flex
+                            bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'}
+                            color="primary.500"
+                            p="0.375rem"
+                            borderRadius="md"
+                            w="fit-content"
+                          >
+                            <Icon as={FiUsers} boxSize="0.875rem" />
+                          </Flex>
+
+                          {group.project && (
+                            <Text
+                              fontSize="12px"
+                              fontWeight="700"
+                              color={colorMode === 'light' ? 'gray.400' : 'gray.500'}
+                              textAlign="right"
+                              maxW="120px"
+                              noOfLines={1}
                             >
-                              <Icon as={FiUsers} boxSize="0.875rem" />
-                            </Flex>
+                              {group.project.title}
+                            </Text>
+                          )}
+                        </Flex>
 
-                            {group.project && (
-                              <Text fontSize="12px" fontWeight="700" color={colorMode === 'light' ? 'gray.400' : 'gray.500'} textAlign="right" maxW="120px" noOfLines={1}>
-                                {group.project.title}
+                        {/* Seção com Barra Lateral: Conteúdo do Card */}
+                        <Flex
+                          direction="column"
+                          pl="1rem"
+                          pr="0.875rem"
+                          py="1rem"
+                          pb="1.125rem"
+                          borderLeft="4px solid"
+                          borderColor={sidebarColor}
+                          transition="border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                          _hover={{ borderLeftWidth: '6px' }}
+                          gap="1rem"
+                          justify="space-between"
+                          flex="1"
+                        >
+                          {/* Nome do Grupo + Turma + Membros alinhados à direita */}
+                          <Flex direction="column" align="flex-end" gap="0.5rem">
+                            <Text fontWeight="700" fontSize="14px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1} lineHeight="1.2">
+                              {group.display_name}
+                            </Text>
+
+                            {group.project?.hub_class && (
+                              <Text fontSize="11px" fontWeight="600" color="gray.500">
+                                Turma {group.project.hub_class.grade}
                               </Text>
                             )}
+
+                            <Text fontSize="11px" fontWeight="600" color="gray.500">
+                              {group.students?.length || 0} Membro{group.students?.length !== 1 ? 's' : ''}
+                            </Text>
                           </Flex>
 
-                          {/* Seção com Barra Lateral: Conteúdo do Card */}
-                          <Flex
-                            direction="column"
-                            pl="1rem"
-                            pr="0.875rem"
-                            py="1rem"
-                            pb="1.125rem"
-                            borderLeft="4px solid"
-                            borderColor={sidebarColor}
-                            transition="border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-                            _hover={{ borderLeftWidth: '6px' }}
-                            gap="1rem"
-                            justify="space-between"
-                            flex="1"
-                          >
-                            {/* Nome do Grupo + Turma + Membros alinhados à direita */}
-                            <Flex direction="column" align="flex-end" gap="0.5rem">
-                              <Text fontWeight="700" fontSize="14px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1} lineHeight="1.2">
-                                {group.display_name}
-                              </Text>
-
-                              {group.project?.hub_class && (
-                                <Text fontSize="11px" fontWeight="600" color="gray.500">
-                                  Turma {group.project.hub_class.grade}
-                                </Text>
-                              )}
-
-                              <Text fontSize="11px" fontWeight="600" color="gray.500">
-                                {group.students?.length || 0} Membro{group.students?.length !== 1 ? 's' : ''}
-                              </Text>
-                            </Flex>
-
-                            {/* Avatares dos Membros */}
-                            <Flex justify="flex-end" w="100%">
-                              <AvatarList users={group.students} max={4} />
-                            </Flex>
+                          {/* Avatares dos Membros */}
+                          <Flex justify="flex-end" w="100%">
+                            <AvatarList users={group.students} max={4} />
                           </Flex>
                         </Flex>
-                      </Link>
-                    </motion.div>
-                  </Skeleton>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </Flex>
+                      </Flex>
+                    </Link>
+                  </motion.div>
+                </Skeleton>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
 
       {/* Modal */}
       <SmallModal
