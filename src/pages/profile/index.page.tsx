@@ -158,11 +158,7 @@ const Profile: React.FC<IProps> = ({ user }) => {
 
   // Se for student, renderiza o novo layout
   if (user.role === 'student') {
-    return (
-      <Flex direction="column" flex="1" gap="1.5rem" overflowY="auto" overflowX="hidden" py="1.5rem">
-        <StudentProfilePage user={user} certificates={certificates} />
-      </Flex>
-    );
+    return <StudentProfilePage user={user} certificates={certificates} />;
   }
 
   return (

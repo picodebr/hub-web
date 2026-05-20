@@ -8,13 +8,12 @@ import { IPageProps } from '@/_base/hooks/Page/interfaces';
 import { Flex } from '@chakra-ui/react';
 import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { Header } from './components/Header';
-import { Navbar, useNavbar } from './components/Navbar';
+import { Navbar } from './components/Navbar';
 import { RedefinePass } from './components/RedefinePass';
 import { MenuItemType } from './interfaces';
 import { IStoreMakerSchool } from '@/_base/interfaces/storeMaker';
 import { IHubUserSchool } from '@/_base/interfaces/school';
 import { TbCircuitResistor } from 'react-icons/tb';
-import { dimensions } from '@/styles/global';
 
 export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   selectedPage,
@@ -29,11 +28,8 @@ export const PageWrapper: React.FC<PropsWithChildren<IPageProps>> = ({
   const [school, setSchool] = useState<IHubUserSchool | null>(null);
 
   const { colorMode } = useDarkMode();
-  const { isSidebarOpen } = useNavbar();
 
-  const menuItems = (user?.role === 'student' ? studentMenuItems : teacherMenuItems).filter(
-    (e) => user?.role === `master` || e.page !== `vision_lab`,
-  );
+  const menuItems = user?.role === 'student' ? studentMenuItems : teacherMenuItems;
 
   return (
     <Flex
@@ -98,29 +94,28 @@ const NAKED_PAGES = ['login', 'signup', 'help', 'recover_password'];
 const studentMenuItems: Array<MenuItemType> = [
   { name: 'Home', page: 'profile', icon: RiHome2Line },
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
-  // { name: 'Loja', page: 'store', icon: FiShoppingBag,  },
-  // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },
-  // { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText }
+  { name: 'Meus Planejamentos', page: 'planner', icon: FiFileText },
   { name: 'Code Lab', page: 'code', icon: BsMotherboard },
   { name: 'Vision Lab', page: 'vision_lab', icon: TbCircuitResistor },
-
   { name: 'Meus Grupos', page: 'groups', icon: FiUsers },
+  // { name: 'Loja', page: 'store', icon: FiShoppingBag,  },
+  // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   // { name: 'Desafio Bônus', page: 'challenge', icon: FiCheckCircle },
 ];
 
 const teacherMenuItems: Array<MenuItemType> = [
   { name: 'Home', page: 'profile', icon: RiHome2Line },
   { name: 'Cursos', page: 'courses', icon: FaRegStar },
-  // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   { name: 'Turmas', page: 'classes', icon: FiUsers },
   { name: 'Code Lab', page: 'code', icon: BsMotherboard },
   { name: 'Vision Lab', page: 'vision_lab', icon: TbCircuitResistor },
 
   { name: 'Estoque Maker', page: 'stock', icon: FiInbox },
-  // { name: 'Loja', page: 'store', icon: FiShoppingBag },
   { name: 'Biblioteca', page: 'library', icon: FiFileText },
   { name: 'Comunidade', page: 'community', icon: FaRegSmile },
   { name: 'Suporte', page: 'appointments', icon: FiHeadphones },
+  // { name: 'Loja', page: 'store', icon: FiShoppingBag },
+  // { name: 'Avaliações', page: 'exam', icon: PiExamLight },
   // { name: 'Eventos', page: 'events', icon: FiList, },
 ];
