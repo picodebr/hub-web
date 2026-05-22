@@ -59,5 +59,24 @@ export const blockMotors = [
         "nextStatement": true,
         "colour": "#4C97FF",
         "tooltip": "Gira o objeto"
+    },
+    {
+        "type": "motor_stop_ab",
+        "message0": "Desligar motor %1",
+        "args0": [
+            {
+                "type": "field_dropdown",
+                "name": "MOTOR",
+                "options": [
+                    ["A", "MOTOR_A"],
+                    ["B", "MOTOR_B"],
+                    ["A e B", "MOTOR_AB"]
+                ]
+            }
+        ],
+        "previousStatement": true,
+        "nextStatement": true,
+        "colour": "#4C97FF",
+        "tooltip": "Para o motor selecionado imediatamente"
     }
 ];
