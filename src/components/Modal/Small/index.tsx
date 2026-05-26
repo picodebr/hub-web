@@ -16,7 +16,7 @@ import { motion } from 'framer-motion';
 import { GenericButton } from '../../Buttons/Generic';
 import { IModalProps } from './interfaces';
 
-export const SmallModal: React.FC<PropsWithChildren<IModalProps & { overflow?: string }>> = ({
+export const SmallModal: React.FC<PropsWithChildren<IModalProps & { overflow?: string; modalMaxW?: string }>> = ({
   show,
   title,
   onConfirm,
@@ -33,12 +33,13 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps & { overflow?: s
   onCloseModal,
   showCloseButton = true,
   bgOkButton,
+  modalMaxW,
   ...rest
 }) => {
   return (
     <ChakraModal {...rest} isOpen={show} onClose={() => (onCloseModal ? onCloseModal() : onCancel && onCancel())} scrollBehavior="inside">
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(2px)" {...overlay} />
-      <ModalContent w={!rest.size ? 'fit-content' : undefined} maxW="calc(100vw - 32px)" zIndex="9998" borderRadius="20px" overflowX="hidden">
+      <ModalContent w={!rest.size ? 'fit-content' : undefined} maxW={modalMaxW || "min(450px, calc(100vw - 32px))"} zIndex="9998" borderRadius="20px" overflowX="hidden">
         <ModalHeader fontSize="1rem" p="1.5rem 1.5rem 0 1.5rem" color="gray800" display="flex" alignItems="center" gap="0.5rem" overflow="hidden">
           {typeof topIcon === 'string' ? (
             <Box>
