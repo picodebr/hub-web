@@ -11,7 +11,6 @@ import {
   MenuItemOption,
   MenuList,
   MenuOptionGroup,
-  Select,
   Skeleton,
   useColorMode,
   useToast,
@@ -21,11 +20,11 @@ import {
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
-import { FiUsers, FiArrowUpRight } from 'react-icons/fi';
+import { FiUsers, FiStar, FiBarChart, FiMessageCircle, FiBox } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
 
-import { logError, cookieManager, formatShortName } from '@/_base/utils';
+import { logError, cookieManager } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useAuth, useInputHandler, useLoading } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
@@ -42,14 +41,25 @@ import { IHubUser } from '@/_base/interfaces/user';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 import { AnimatePresence } from 'framer-motion';
 
-const ROLE_LIMITS: Record<string, number> = {
-  'Líder de Grupo': 1,
-  'Gestor de Projetos': 1,
-  'Social Media': 1,
-  Construtor: 5,
+const ROLE_CONFIG: Record<string, { min: number; max: number }> = {
+  'Líder de Grupo': { min: 1, max: 1 },
+  'Gestor de Projetos': { min: 1, max: 1 },
+  'Social Media': { min: 1, max: 1 },
+  'Construtor': { min: 0, max: 5 },
 };
 
-const ROLES = Object.keys(ROLE_LIMITS);
+const ROLES = Object.keys(ROLE_CONFIG);
+
+// Mapa de ícones para cada cargo
+const getRoleIcon = (role: string) => {
+  const iconMap: { [key: string]: React.ReactNode } = {
+    'Líder de Grupo': <FiStar size={16} />,
+    'Gestor de Projetos': <FiBarChart size={16} />,
+    'Social Media': <FiMessageCircle size={16} />,
+    Construtor: <FiBox size={16} />,
+  };
+  return iconMap[role] || <FiUsers size={16} />;
+};
 
 // Variáveis de Animação
 const containerVariants = {
@@ -183,9 +193,14 @@ const Groups: React.FC = () => {
     {} as Record<string, number>,
   );
 
+  // Validações de cargos
+  const requiredRoles = ['Líder de Grupo', 'Gestor de Projetos', 'Social Media'];
+  const hasAllRequiredRoles = requiredRoles.every((role) => (roleCounts[role] || 0) === 1);
+  const constructorCount = roleCounts['Construtor'] || 0;
+  const isConstructorCountValid = constructorCount <= 5;
   const isUserCountValid = data.users.length >= 3 && data.users.length <= 8;
   const areAllRolesAssigned = data.users.every((s) => !!memberRoles[s]);
-  const isFormValid = isUserCountValid && areAllRolesAssigned;
+  const isFormValid = isUserCountValid && areAllRolesAssigned && hasAllRequiredRoles && isConstructorCountValid;
 
   // Cores dinâmicas
   const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
@@ -310,8 +325,10 @@ const Groups: React.FC = () => {
         onCancel={handleCloseModal}
         disableOkButton={!data.users?.length || !data.hub_project_class_id || !data.display_name || !selectedProject?.educator || !isFormValid}
         topIcon="checked"
+        modalMaxW="600px"
       >
-        <Flex direction="column" minW="380px" gap="1rem">
+        <Flex direction="column" gap="1rem">
+          {/* 1. Nome do Grupo */}
           <TextInput
             placeholder="Informe o nome do grupo"
             color={colorMode === 'dark' ? '#FFF' : '#1D2939'}
@@ -321,11 +338,12 @@ const Groups: React.FC = () => {
             error={errors.display_name}
           />
 
-          <Menu placement="right">
-            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
+          {/* 2. Projeto */}
+          <Menu placement="bottom-start">
+            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white" w="100%">
               {availableProjects.find((e) => data.hub_project_class_id === e.id)?.title || `Selecione o projeto`}
             </MenuButton>
-            <MenuList borderColor="gray300">
+            <MenuList borderColor="gray300" zIndex={10} maxH="200px" overflow="auto">
               {availableProjects.length ? (
                 availableProjects.map((project) => (
                   <MenuItem key={project.id} onClick={() => handleChangeProject(project.id)}>
@@ -338,6 +356,37 @@ const Groups: React.FC = () => {
             </MenuList>
           </Menu>
 
+          {/* Professor do Projeto */}
+          {selectedProject && (
+            <Flex
+              bg={colorMode === 'light' ? 'blue.50' : 'whiteAlpha.50'}
+              p="0.75rem"
+              borderRadius="md"
+              border="1px solid"
+              borderColor={colorMode === 'light' ? 'blue.200' : 'whiteAlpha.200'}
+              direction="column"
+              gap="0.5rem"
+            >
+              <Text fontSize="12px" fontWeight="600" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
+                Professor Responsável
+              </Text>
+              <HStack>
+                <Avatar size="sm" name={selectedProject.educator?.name} src={selectedProject.educator?.avatar || ''} />
+                <VStack align="flex-start" spacing={0}>
+                  <Text fontSize="14px" fontWeight="600" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+                    {selectedProject.educator?.name || 'Sem professor'}
+                  </Text>
+                  {selectedProject.educator?.email && (
+                    <Text fontSize="12px" color="gray.500">
+                      {selectedProject.educator.email}
+                    </Text>
+                  )}
+                </VStack>
+              </HStack>
+            </Flex>
+          )}
+
+          {/* 3. Alunos */}
           <Menu closeOnSelect={false} placement="bottom" preventOverflow={true}>
             <MenuButton
               as={Button}
@@ -352,7 +401,7 @@ const Groups: React.FC = () => {
             >
               {data.users.length === 8 ? 'Limite de 8 membros atingido' : 'Selecione os membros do grupo'}
             </MenuButton>
-            <MenuList borderColor="gray300" maxH="250px" overflow="auto" zIndex={10}>
+            <MenuList borderColor="gray300" maxH="200px" overflow="auto" zIndex={10}>
               <MenuOptionGroup type="checkbox">
                 {availableStudents?.length ? (
                   availableStudents.map((student) => (
@@ -373,7 +422,7 @@ const Groups: React.FC = () => {
             </MenuList>
           </Menu>
 
-          {/* Lista de Membros Selecionados com Atribuição de Cargos */}
+          {/* 4. Lista de Membros Selecionados com Atribuição de Cargos */}
           <VStack w="100%" align="stretch" spacing={2} mt={2}>
             <Flex justify="space-between" align="center">
               <Text fontSize="14px" fontWeight="600" color={colorMode === 'dark' ? 'gray.300' : 'gray.700'}>
@@ -386,6 +435,31 @@ const Groups: React.FC = () => {
               <Text fontSize="13px" color="gray.500" fontStyle="italic">
                 Nenhum membro adicionado (mín. 3, recomendado 5, máx. 8).
               </Text>
+            )}
+
+            {/* Resumo de validação de cargos */}
+            {data.users.length > 0 && (
+              <VStack align="flex-start" w="100%" spacing={1}>
+                <Text fontSize="12px" fontWeight="600" color={colorMode === 'dark' ? 'gray.300' : 'gray.700'}>
+                  Requisitos de Cargos:
+                </Text>
+                <HStack fontSize="12px" color={roleCounts['Líder de Grupo'] === 1 ? 'green.500' : 'orange.500'}>
+                  <span>{roleCounts['Líder de Grupo'] === 1 ? '✓' : '○'}</span>
+                  <span>Líder de Grupo: {roleCounts['Líder de Grupo'] || 0} / 1</span>
+                </HStack>
+                <HStack fontSize="12px" color={roleCounts['Gestor de Projetos'] === 1 ? 'green.500' : 'orange.500'}>
+                  <span>{roleCounts['Gestor de Projetos'] === 1 ? '✓' : '○'}</span>
+                  <span>Gestor de Projetos: {roleCounts['Gestor de Projetos'] || 0} / 1</span>
+                </HStack>
+                <HStack fontSize="12px" color={roleCounts['Social Media'] === 1 ? 'green.500' : 'orange.500'}>
+                  <span>{roleCounts['Social Media'] === 1 ? '✓' : '○'}</span>
+                  <span>Social Media: {roleCounts['Social Media'] || 0} / 1</span>
+                </HStack>
+                <HStack fontSize="12px" color={constructorCount <= 5 ? 'green.500' : 'red.500'}>
+                  <span>{constructorCount <= 5 ? '✓' : '✕'}</span>
+                  <span>Construtores: {constructorCount} / 5</span>
+                </HStack>
+              </VStack>
             )}
 
             <AnimatePresence>
@@ -416,26 +490,44 @@ const Groups: React.FC = () => {
                       </HStack>
 
                       <HStack>
-                        <Select
-                          size="xs"
-                          w="130px"
-                          placeholder="Cargo"
-                          bg="white"
-                          color="gray.700"
-                          value={memberRoles[student.id] || ''}
-                          onChange={(e) => handleRoleChange(student.id, e.target.value)}
-                        >
-                          {ROLES.map((role) => {
-                            const currentCount = roleCounts[role] || 0;
-                            // Desabilita a opção se o limite já foi atingido E o usuário não possui esse cargo atualmente
-                            const isFull = currentCount >= ROLE_LIMITS[role] && memberRoles[student.id] !== role;
-                            return (
-                              <option key={role} value={role} disabled={isFull}>
-                                {role} {isFull ? '(Cheio)' : ''}
-                              </option>
-                            );
-                          })}
-                        </Select>
+                        <Menu placement="left">
+                          <MenuButton as={Button} size="xs" bg="blue.50" color="blue.700" border="1px" borderColor="blue.200" fontWeight="500" _hover={{ bg: 'blue.100' }}>
+                            <HStack spacing={1}>
+                              {memberRoles[student.id] ? (
+                                <>
+                                  {getRoleIcon(memberRoles[student.id])}
+                                  <span>{memberRoles[student.id]}</span>
+                                </>
+                              ) : (
+                                <span>Cargo</span>
+                              )}
+                            </HStack>
+                          </MenuButton>
+                          <MenuList fontSize="13px" zIndex={15}>
+                            {ROLES.map((role) => {
+                              const currentCount = roleCounts[role] || 0;
+                              const roleConfig = ROLE_CONFIG[role];
+                              const isAlreadyAssigned = memberRoles[student.id] === role;
+                              const isAtMaxLimit = currentCount >= roleConfig.max && !isAlreadyAssigned;
+                              
+                              return (
+                                <MenuItem
+                                  key={role}
+                                  isDisabled={isAtMaxLimit}
+                                  onClick={() => handleRoleChange(student.id, role)}
+                                  bg={isAlreadyAssigned ? 'blue.100' : 'transparent'}
+                                  _hover={{ bg: isAlreadyAssigned ? 'blue.200' : 'gray.100' }}
+                                >
+                                  <HStack spacing={2}>
+                                    <span>{getRoleIcon(role)}</span>
+                                    <span>{role}</span>
+                                    {isAtMaxLimit && <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#999' }}>(Cheio)</span>}
+                                  </HStack>
+                                </MenuItem>
+                              );
+                            })}
+                          </MenuList>
+                        </Menu>
                         <CloseButton size="sm" onClick={() => toggleUser(student.id)} color="red.400" />
                       </HStack>
                     </HStack>

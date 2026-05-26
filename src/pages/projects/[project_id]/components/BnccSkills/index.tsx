@@ -1,8 +1,7 @@
-import { Flex, Text } from '@chakra-ui/react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
+import { BookOpen, Target, Edit2 } from 'lucide-react';
 import { Table } from 'antd';
 import { ColumnsType } from 'antd/es/table';
-import { Dispatch, SetStateAction, useState } from 'react';
-import { FiEdit2 } from 'react-icons/fi';
 
 import { IProject } from '@/_base/interfaces/project';
 import { IBnccSkill } from '@/_base/interfaces/shared/IBnccSkill';
@@ -27,75 +26,63 @@ export const BnccSkills: React.FC<IProps> = ({ project, setProject, bnccSkills, 
   const [showModal, setShowModal] = useState(false);
 
   const columns: ColumnsType<DataType> = [
-    {
-      title: 'Habilidade',
-      dataIndex: 'tag',
-      render: (text: string) => <a>{text}</a>,
-    },
-    {
-      title: 'Matéria',
-      dataIndex: 'subject',
-    },
-    {
-      title: 'Ano/Faixa',
-      dataIndex: 'grade',
-    },
-    {
-      title: 'Descrição',
-      dataIndex: 'description',
-    },
+    { title: 'Habilidade', dataIndex: 'tag', render: (text: string) => <a className="text-primary font-medium">{text}</a> },
+    { title: 'Matéria', dataIndex: 'subject' },
+    { title: 'Ano/Faixa', dataIndex: 'grade' },
+    { title: 'Descrição', dataIndex: 'description' },
   ];
 
   const dataSource: DataType[] = bnccSkills.map((bncc) => ({ ...bncc, key: bncc.tag, description: `${bncc.title} - ${bncc.description || ''}` }));
+  const canEditSkills = canEdit && !project.project_id;
 
   return (
     <>
-      <Flex gap="0px" direction="column" w="100%" h="auto" borderRadius="10px" border="1px" borderColor="gray300" overflow="hidden">
-        <Flex
-          w="100%"
-          h="42px"
-          bg="primary500"
-          p="12px 20px"
-          color="white"
-          fontWeight="500"
-          align="center"
-          justify="space-between"
-        >
-          Habilidades BNCC
-          <Flex
-            onClick={() => canEdit && !project.project_id && setShowModal(true)}
-            border={canEdit && !project.project_id ? '1px' : undefined}
-            borderColor="white"
-            borderRadius="4px"
-            p="2px"
-            cursor={canEdit && !project.project_id ? 'pointer' : undefined}
-            _hover={{ filter: 'brightness(0.8)' }}
-          >
-            {canEdit && !project.project_id && <FiEdit2 color="white" fontSize="16px" />}
-          </Flex>
-        </Flex>
-        <Flex w="100%" h="auto" p="20px" display="flex" direction="column" bg="white" gap="12px">
+      <div className="glass-card p-5 space-y-4 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-md h-full">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5 text-base font-semibold text-foreground">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-emerald-500" />
+            </div>
+            Habilidades BNCC
+          </div>
+          
+          {canEditSkills && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="p-2 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-2 overflow-y-auto max-h-[300px] pr-1">
           {project.metadata.bncc && project.metadata.bncc.length > 0 ? (
             project.metadata.bncc.map((bncc) => {
               const skill = bnccSkills.find((e) => e.tag === bncc);
               return (
-                <Flex key={bncc} direction="column" gap="4px" pb="12px" borderBottom="1px" borderColor="gray300" _last={{ borderBottom: 'none', pb: '0px' }}>
-                  <Text fontSize="14px" fontWeight="600" color="gray800">
-                    {bncc}
-                  </Text>
-                  <Text fontSize="13px" color="gray600">
-                    {skill?.title || ''} {skill?.description ? `- ${skill.description}` : ''}
-                  </Text>
-                </Flex>
+                <div key={bncc} className="group relative flex items-start gap-3 overflow-hidden rounded-xl border border-border/40 bg-card/60 p-3 transition-all duration-300 hover:border-border hover:bg-card hover:shadow-sm">
+                  <span className="absolute left-0 top-1/2 h-8 w-[3px] -translate-y-1/2 rounded-r-full bg-emerald-500 opacity-60 transition-all duration-300 group-hover:h-10 group-hover:opacity-100" />
+                  <div className="w-7 h-7 shrink-0 rounded-lg bg-emerald-500/10 flex items-center justify-center transition-transform duration-300 group-hover:scale-105 mt-0.5">
+                    <Target className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-foreground tracking-tight leading-snug">{bncc}</span>
+                    <span className="text-xs text-muted-foreground mt-0.5">
+                      {skill?.title || ''} {skill?.description ? `- ${skill.description}` : ''}
+                    </span>
+                  </div>
+                </div>
               );
             })
           ) : (
-            <Text fontSize="14px" color="gray500">
-              Nenhuma habilidade BNCC selecionada
-            </Text>
+            <div className="text-sm text-muted-foreground italic text-center py-4">
+              Nenhuma habilidade selecionada
+            </div>
           )}
-        </Flex>
-      </Flex>
+        </div>
+      </div>
+
       <SmallModal
         size="6xl"
         title="Habilidades BNCC"
@@ -107,15 +94,14 @@ export const BnccSkills: React.FC<IProps> = ({ project, setProject, bnccSkills, 
       >
         <Table
           rowSelection={{
-            type: `checkbox`,
-            selectedRowKeys: (project.metadata.bncc || ([] as any)).map((e: any) => e),
-            onChange: (keys) =>
-              setProject((e) => ({ ...e, metadata: { ...e.metadata, bncc: keys as string[] } })),
+            type: 'checkbox',
+            selectedRowKeys: (project.metadata.bncc || []).map((e: any) => e),
+            onChange: (keys) => setProject((e) => ({ ...e, metadata: { ...e.metadata, bncc: keys as string[] } })),
           }}
           columns={columns}
           dataSource={dataSource}
-          style={{ fontFamily: `'Inter' - sans-serif`, height: 'fit-content' }}
           pagination={{ pageSize: 25 }}
+          className="font-sans"
         />
       </SmallModal>
     </>
