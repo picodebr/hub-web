@@ -343,7 +343,7 @@ export const Header: React.FC<IProps> = ({
             onRemoveAll={handleDeleteAllNotifications}
           />
 
-          <Tooltip label="Sair do sistema" placement="bottom-end">
+          <Tooltip label={'Sair do sistema'} placement="bottom-end" display={{ base: 'none', xl: 'flex' }}>
             <Flex
               className="only-desktop"
               cursor="pointer"

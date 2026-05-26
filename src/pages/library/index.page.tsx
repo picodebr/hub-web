@@ -237,16 +237,18 @@ const Books: React.FC<IProps> = ({ selectedItemId }) => {
         ]}
       />
       {/* Abas Superiores */}
-      <Box flexShrink={0}>
-        <TabSwitch
-          tabs={bookCategories.map((cat) => ({
-            isSelected: bookCategory?.id === cat.id,
-            key: cat.id,
-            label: cat.display_name,
-          }))}
-          onSwitch={handleCategoryView}
-        />
-      </Box>
+      {bookCategories?.length > 1 && (
+        <Box flexShrink={0}>
+          <TabSwitch
+            tabs={bookCategories.map((cat) => ({
+              isSelected: bookCategory?.id === cat.id,
+              key: cat.id,
+              label: cat.display_name,
+            }))}
+            onSwitch={handleCategoryView}
+          />
+        </Box>
+      )}
 
       {/* Conteúdo com Scroll */}
       <Flex direction="column" flex="1" pb="2rem" pr="0.5rem">

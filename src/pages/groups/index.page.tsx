@@ -11,7 +11,6 @@ import {
   MenuItemOption,
   MenuList,
   MenuOptionGroup,
-  Select,
   Skeleton,
   useColorMode,
   useToast,
@@ -21,11 +20,11 @@ import {
 import { GetServerSideProps } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
-import { FiUsers, FiArrowUpRight } from 'react-icons/fi';
+import { FiUsers, FiStar, FiBarChart, FiMessageCircle, FiBox } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
 
-import { logError, cookieManager, formatShortName } from '@/_base/utils';
+import { logError, cookieManager } from '@/_base/utils';
 import { Flex, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useAuth, useInputHandler, useLoading } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
@@ -42,14 +41,25 @@ import { IHubUser } from '@/_base/interfaces/user';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 import { AnimatePresence } from 'framer-motion';
 
-const ROLE_LIMITS: Record<string, number> = {
-  'Líder de Grupo': 1,
-  'Gestor de Projetos': 1,
-  'Social Media': 1,
-  Construtor: 5,
+const ROLE_CONFIG: Record<string, { min: number; max: number }> = {
+  'Líder de Grupo': { min: 1, max: 1 },
+  'Gestor de Projetos': { min: 1, max: 1 },
+  'Social Media': { min: 1, max: 1 },
+  'Construtor': { min: 0, max: 5 },
 };
 
-const ROLES = Object.keys(ROLE_LIMITS);
+const ROLES = Object.keys(ROLE_CONFIG);
+
+// Mapa de ícones para cada cargo
+const getRoleIcon = (role: string) => {
+  const iconMap: { [key: string]: React.ReactNode } = {
+    'Líder de Grupo': <FiStar size={16} />,
+    'Gestor de Projetos': <FiBarChart size={16} />,
+    'Social Media': <FiMessageCircle size={16} />,
+    Construtor: <FiBox size={16} />,
+  };
+  return iconMap[role] || <FiUsers size={16} />;
+};
 
 // Variáveis de Animação
 const containerVariants = {
@@ -183,118 +193,128 @@ const Groups: React.FC = () => {
     {} as Record<string, number>,
   );
 
+  // Validações de cargos
+  const requiredRoles = ['Líder de Grupo', 'Gestor de Projetos', 'Social Media'];
+  const hasAllRequiredRoles = requiredRoles.every((role) => (roleCounts[role] || 0) === 1);
+  const constructorCount = roleCounts['Construtor'] || 0;
+  const isConstructorCountValid = constructorCount <= 5;
   const isUserCountValid = data.users.length >= 3 && data.users.length <= 8;
   const areAllRolesAssigned = data.users.every((s) => !!memberRoles[s]);
-  const isFormValid = isUserCountValid && areAllRolesAssigned;
+  const isFormValid = isUserCountValid && areAllRolesAssigned && hasAllRequiredRoles && isConstructorCountValid;
 
   // Cores dinâmicas
   const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" w="100%" h="100%" overflowY="auto" overflowX="hidden" pb="2rem">
-      <Flex direction="column" w="100%" maxW="7xl" mx="auto" px="2rem" gap="2rem">
-        {/* Header com Call to Action */}
-        <InternalPageHeader
-          title="Meus Grupos"
-          description="Grupos dos quais você faz parte"
-          icon={<Users className="w-6 h-6 text-primary" />}
-          buttons={[{ label: `Adicionar Grupo`, leftIcon: <FaPlus />, onClick: () => setOpenModal(true) }]}
-        />
+    <Flex direction="column" w="100%" h="100%" gap="1rem">
+      {/* Header com Call to Action */}
+      <InternalPageHeader
+        title="Meus Grupos"
+        description="Grupos dos quais você faz parte"
+        icon={<Users className="w-6 h-6 text-primary" />}
+        buttons={[{ label: `Adicionar Grupo`, leftIcon: <FaPlus />, onClick: () => setOpenModal(true) }]}
+      />
 
-        {/* Grid de Grupos */}
-        {!groups.data.length && !groups._isLoading ? (
-          <EmptyPageData />
-        ) : (
-          <motion.div variants={containerVariants} initial="hidden" animate="show">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {groups.data.map((group) => {
-                const sidebarColor = group.project?.hub_class?.grade ? getColorByGrade(group.project.hub_class.grade) : '#6366F1';
+      {/* Grid de Grupos */}
+      {!groups.data.length && !groups._isLoading ? (
+        <EmptyPageData />
+      ) : (
+        <motion.div variants={containerVariants} initial="hidden" animate="show">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {groups.data.map((group) => {
+              const sidebarColor = group.project?.hub_class?.grade ? getColorByGrade(group.project.hub_class.grade) : '#6366F1';
 
-                return (
-                  <Skeleton key={group.id} rounded="1.5rem" isLoaded={!groups._isLoading}>
-                    <motion.div variants={itemVariants}>
-                      <Link href={`/groups/${group.id}`} _hover={{ textDecoration: 'none' }}>
-                        <Flex
-                          w="100%"
-                          direction="column"
-                          position="relative"
-                          borderRadius="1.5rem"
-                          cursor="pointer"
-                          bg={bgCard}
-                          border="1px solid"
-                          borderColor={borderColor}
-                          boxShadow="sm"
-                          transition="all 0.2s"
-                          overflow="hidden"
-                          _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
-                        >
-                          {/* Topo: Ícone + Nome do Projeto */}
-                          <Flex justify="space-between" align="flex-start" pl="0.875rem" pr="0.875rem" pt="1.125rem" pb="0.75rem">
-                            <Flex
-                              bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'}
-                              color="primary.500"
-                              p="0.375rem"
-                              borderRadius="md"
-                              w="fit-content"
+              return (
+                <Skeleton key={group.id} rounded="1.5rem" isLoaded={!groups._isLoading}>
+                  <motion.div variants={itemVariants}>
+                    <Link href={`/groups/${group.id}`} _hover={{ textDecoration: 'none' }}>
+                      <Flex
+                        w="100%"
+                        direction="column"
+                        position="relative"
+                        borderRadius="1.5rem"
+                        cursor="pointer"
+                        bg={bgCard}
+                        border="1px solid"
+                        borderColor={borderColor}
+                        boxShadow="sm"
+                        transition="all 0.2s"
+                        overflow="hidden"
+                        _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
+                      >
+                        {/* Topo: Ícone + Nome do Projeto */}
+                        <Flex justify="space-between" align="flex-start" pl="0.875rem" pr="0.875rem" pt="1.125rem" pb="0.75rem">
+                          <Flex
+                            bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'}
+                            color="primary.500"
+                            p="0.375rem"
+                            borderRadius="md"
+                            w="fit-content"
+                          >
+                            <Icon as={FiUsers} boxSize="0.875rem" />
+                          </Flex>
+
+                          {group.project && (
+                            <Text
+                              fontSize="12px"
+                              fontWeight="700"
+                              color={colorMode === 'light' ? 'gray.400' : 'gray.500'}
+                              textAlign="right"
+                              maxW="120px"
+                              noOfLines={1}
                             >
-                              <Icon as={FiUsers} boxSize="0.875rem" />
-                            </Flex>
+                              {group.project.title}
+                            </Text>
+                          )}
+                        </Flex>
 
-                            {group.project && (
-                              <Text fontSize="12px" fontWeight="700" color={colorMode === 'light' ? 'gray.400' : 'gray.500'} textAlign="right" maxW="120px" noOfLines={1}>
-                                {group.project.title}
+                        {/* Seção com Barra Lateral: Conteúdo do Card */}
+                        <Flex
+                          direction="column"
+                          pl="1rem"
+                          pr="0.875rem"
+                          py="1rem"
+                          pb="1.125rem"
+                          borderLeft="4px solid"
+                          borderColor={sidebarColor}
+                          transition="border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                          _hover={{ borderLeftWidth: '6px' }}
+                          gap="1rem"
+                          justify="space-between"
+                          flex="1"
+                        >
+                          {/* Nome do Grupo + Turma + Membros alinhados à direita */}
+                          <Flex direction="column" align="flex-end" gap="0.5rem">
+                            <Text fontWeight="700" fontSize="14px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1} lineHeight="1.2">
+                              {group.display_name}
+                            </Text>
+
+                            {group.project?.hub_class && (
+                              <Text fontSize="11px" fontWeight="600" color="gray.500">
+                                Turma {group.project.hub_class.grade}
                               </Text>
                             )}
+
+                            <Text fontSize="11px" fontWeight="600" color="gray.500">
+                              {group.students?.length || 0} Membro{group.students?.length !== 1 ? 's' : ''}
+                            </Text>
                           </Flex>
 
-                          {/* Seção com Barra Lateral: Conteúdo do Card */}
-                          <Flex
-                            direction="column"
-                            pl="1rem"
-                            pr="0.875rem"
-                            py="1rem"
-                            pb="1.125rem"
-                            borderLeft="4px solid"
-                            borderColor={sidebarColor}
-                            transition="border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-                            _hover={{ borderLeftWidth: '6px' }}
-                            gap="1rem"
-                            justify="space-between"
-                            flex="1"
-                          >
-                            {/* Nome do Grupo + Turma + Membros alinhados à direita */}
-                            <Flex direction="column" align="flex-end" gap="0.5rem">
-                              <Text fontWeight="700" fontSize="14px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1} lineHeight="1.2">
-                                {group.display_name}
-                              </Text>
-
-                              {group.project?.hub_class && (
-                                <Text fontSize="11px" fontWeight="600" color="gray.500">
-                                  Turma {group.project.hub_class.grade}
-                                </Text>
-                              )}
-
-                              <Text fontSize="11px" fontWeight="600" color="gray.500">
-                                {group.students?.length || 0} Membro{group.students?.length !== 1 ? 's' : ''}
-                              </Text>
-                            </Flex>
-
-                            {/* Avatares dos Membros */}
-                            <Flex justify="flex-end" w="100%">
-                              <AvatarList users={group.students} max={4} />
-                            </Flex>
+                          {/* Avatares dos Membros */}
+                          <Flex justify="flex-end" w="100%">
+                            <AvatarList users={group.students} max={4} />
                           </Flex>
                         </Flex>
-                      </Link>
-                    </motion.div>
-                  </Skeleton>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </Flex>
+                      </Flex>
+                    </Link>
+                  </motion.div>
+                </Skeleton>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
 
       {/* Modal */}
       <SmallModal
@@ -305,8 +325,10 @@ const Groups: React.FC = () => {
         onCancel={handleCloseModal}
         disableOkButton={!data.users?.length || !data.hub_project_class_id || !data.display_name || !selectedProject?.educator || !isFormValid}
         topIcon="checked"
+        modalMaxW="600px"
       >
-        <Flex direction="column" minW="380px" gap="1rem">
+        <Flex direction="column" gap="1rem">
+          {/* 1. Nome do Grupo */}
           <TextInput
             placeholder="Informe o nome do grupo"
             color={colorMode === 'dark' ? '#FFF' : '#1D2939'}
@@ -316,11 +338,12 @@ const Groups: React.FC = () => {
             error={errors.display_name}
           />
 
-          <Menu placement="right">
-            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
+          {/* 2. Projeto */}
+          <Menu placement="bottom-start">
+            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white" w="100%">
               {availableProjects.find((e) => data.hub_project_class_id === e.id)?.title || `Selecione o projeto`}
             </MenuButton>
-            <MenuList borderColor="gray300">
+            <MenuList borderColor="gray300" zIndex={10} maxH="200px" overflow="auto">
               {availableProjects.length ? (
                 availableProjects.map((project) => (
                   <MenuItem key={project.id} onClick={() => handleChangeProject(project.id)}>
@@ -333,6 +356,37 @@ const Groups: React.FC = () => {
             </MenuList>
           </Menu>
 
+          {/* Professor do Projeto */}
+          {selectedProject && (
+            <Flex
+              bg={colorMode === 'light' ? 'blue.50' : 'whiteAlpha.50'}
+              p="0.75rem"
+              borderRadius="md"
+              border="1px solid"
+              borderColor={colorMode === 'light' ? 'blue.200' : 'whiteAlpha.200'}
+              direction="column"
+              gap="0.5rem"
+            >
+              <Text fontSize="12px" fontWeight="600" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
+                Professor Responsável
+              </Text>
+              <HStack>
+                <Avatar size="sm" name={selectedProject.educator?.name} src={selectedProject.educator?.avatar || ''} />
+                <VStack align="flex-start" spacing={0}>
+                  <Text fontSize="14px" fontWeight="600" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+                    {selectedProject.educator?.name || 'Sem professor'}
+                  </Text>
+                  {selectedProject.educator?.email && (
+                    <Text fontSize="12px" color="gray.500">
+                      {selectedProject.educator.email}
+                    </Text>
+                  )}
+                </VStack>
+              </HStack>
+            </Flex>
+          )}
+
+          {/* 3. Alunos */}
           <Menu closeOnSelect={false} placement="bottom" preventOverflow={true}>
             <MenuButton
               as={Button}
@@ -347,7 +401,7 @@ const Groups: React.FC = () => {
             >
               {data.users.length === 8 ? 'Limite de 8 membros atingido' : 'Selecione os membros do grupo'}
             </MenuButton>
-            <MenuList borderColor="gray300" maxH="250px" overflow="auto" zIndex={10}>
+            <MenuList borderColor="gray300" maxH="200px" overflow="auto" zIndex={10}>
               <MenuOptionGroup type="checkbox">
                 {availableStudents?.length ? (
                   availableStudents.map((student) => (
@@ -368,7 +422,7 @@ const Groups: React.FC = () => {
             </MenuList>
           </Menu>
 
-          {/* Lista de Membros Selecionados com Atribuição de Cargos */}
+          {/* 4. Lista de Membros Selecionados com Atribuição de Cargos */}
           <VStack w="100%" align="stretch" spacing={2} mt={2}>
             <Flex justify="space-between" align="center">
               <Text fontSize="14px" fontWeight="600" color={colorMode === 'dark' ? 'gray.300' : 'gray.700'}>
@@ -381,6 +435,31 @@ const Groups: React.FC = () => {
               <Text fontSize="13px" color="gray.500" fontStyle="italic">
                 Nenhum membro adicionado (mín. 3, recomendado 5, máx. 8).
               </Text>
+            )}
+
+            {/* Resumo de validação de cargos */}
+            {data.users.length > 0 && (
+              <VStack align="flex-start" w="100%" spacing={1}>
+                <Text fontSize="12px" fontWeight="600" color={colorMode === 'dark' ? 'gray.300' : 'gray.700'}>
+                  Requisitos de Cargos:
+                </Text>
+                <HStack fontSize="12px" color={roleCounts['Líder de Grupo'] === 1 ? 'green.500' : 'orange.500'}>
+                  <span>{roleCounts['Líder de Grupo'] === 1 ? '✓' : '○'}</span>
+                  <span>Líder de Grupo: {roleCounts['Líder de Grupo'] || 0} / 1</span>
+                </HStack>
+                <HStack fontSize="12px" color={roleCounts['Gestor de Projetos'] === 1 ? 'green.500' : 'orange.500'}>
+                  <span>{roleCounts['Gestor de Projetos'] === 1 ? '✓' : '○'}</span>
+                  <span>Gestor de Projetos: {roleCounts['Gestor de Projetos'] || 0} / 1</span>
+                </HStack>
+                <HStack fontSize="12px" color={roleCounts['Social Media'] === 1 ? 'green.500' : 'orange.500'}>
+                  <span>{roleCounts['Social Media'] === 1 ? '✓' : '○'}</span>
+                  <span>Social Media: {roleCounts['Social Media'] || 0} / 1</span>
+                </HStack>
+                <HStack fontSize="12px" color={constructorCount <= 5 ? 'green.500' : 'red.500'}>
+                  <span>{constructorCount <= 5 ? '✓' : '✕'}</span>
+                  <span>Construtores: {constructorCount} / 5</span>
+                </HStack>
+              </VStack>
             )}
 
             <AnimatePresence>
@@ -411,26 +490,44 @@ const Groups: React.FC = () => {
                       </HStack>
 
                       <HStack>
-                        <Select
-                          size="xs"
-                          w="130px"
-                          placeholder="Cargo"
-                          bg="white"
-                          color="gray.700"
-                          value={memberRoles[student.id] || ''}
-                          onChange={(e) => handleRoleChange(student.id, e.target.value)}
-                        >
-                          {ROLES.map((role) => {
-                            const currentCount = roleCounts[role] || 0;
-                            // Desabilita a opção se o limite já foi atingido E o usuário não possui esse cargo atualmente
-                            const isFull = currentCount >= ROLE_LIMITS[role] && memberRoles[student.id] !== role;
-                            return (
-                              <option key={role} value={role} disabled={isFull}>
-                                {role} {isFull ? '(Cheio)' : ''}
-                              </option>
-                            );
-                          })}
-                        </Select>
+                        <Menu placement="left">
+                          <MenuButton as={Button} size="xs" bg="blue.50" color="blue.700" border="1px" borderColor="blue.200" fontWeight="500" _hover={{ bg: 'blue.100' }}>
+                            <HStack spacing={1}>
+                              {memberRoles[student.id] ? (
+                                <>
+                                  {getRoleIcon(memberRoles[student.id])}
+                                  <span>{memberRoles[student.id]}</span>
+                                </>
+                              ) : (
+                                <span>Cargo</span>
+                              )}
+                            </HStack>
+                          </MenuButton>
+                          <MenuList fontSize="13px" zIndex={15}>
+                            {ROLES.map((role) => {
+                              const currentCount = roleCounts[role] || 0;
+                              const roleConfig = ROLE_CONFIG[role];
+                              const isAlreadyAssigned = memberRoles[student.id] === role;
+                              const isAtMaxLimit = currentCount >= roleConfig.max && !isAlreadyAssigned;
+                              
+                              return (
+                                <MenuItem
+                                  key={role}
+                                  isDisabled={isAtMaxLimit}
+                                  onClick={() => handleRoleChange(student.id, role)}
+                                  bg={isAlreadyAssigned ? 'blue.100' : 'transparent'}
+                                  _hover={{ bg: isAlreadyAssigned ? 'blue.200' : 'gray.100' }}
+                                >
+                                  <HStack spacing={2}>
+                                    <span>{getRoleIcon(role)}</span>
+                                    <span>{role}</span>
+                                    {isAtMaxLimit && <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#999' }}>(Cheio)</span>}
+                                  </HStack>
+                                </MenuItem>
+                              );
+                            })}
+                          </MenuList>
+                        </Menu>
                         <CloseButton size="sm" onClick={() => toggleUser(student.id)} color="red.400" />
                       </HStack>
                     </HStack>
