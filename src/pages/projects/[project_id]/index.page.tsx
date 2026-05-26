@@ -1,38 +1,38 @@
 import { GetServerSideProps } from 'next';
-import { MdWarning, MdArrowBack } from 'react-icons/md';
-import { Flex, Text, Badge } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Save, AlertTriangle } from 'lucide-react';
 
 import { logError, cookieManager } from '@/_base/utils';
 import { addProjectAnnotation, getProject, removeProjectAnnotation, updateProject } from '@/_base/services/project';
-import { IAddProjectAnnotationParams, IProject } from '@/_base/interfaces/project';
+import { IAddProjectAnnotationParams, IProject, IUpdateProjectParams } from '@/_base/interfaces/project';
 import { getBnccSkills } from '@/_base/services/user';
 import { IBnccSkill } from '@/_base/interfaces/shared/IBnccSkill';
-import { About } from './components/About';
-import { Annotations } from './components/Annotations';
-import { Groups } from './components/Groups';
-import { BnccSkills } from './components/BnccSkills';
-import { ProjectPhotos } from './components/ProjectPhotos';
-import { GenericButton } from '@/components/Buttons/Generic';
 import { useAsyncCallback, useAuth, useCustomToast, useCustomRouter } from '@/_base/hooks';
 import { getPresignedUrl } from '@/_base/services/upload';
-import { IUpdateProjectParams } from '@/_base/interfaces/project';
 import { ICreateHubGroupParams, IHubGroup } from '@/_base/interfaces/group';
 import { acceptGroup, addGroupToProject, removeGroup } from '@/_base/services/group';
-import { Activities } from './components/Activities';
 import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassProjectMetadata';
 import { giveCashback } from '@/_base/services/project/giveCashback';
+
+// Subcomponentes
+import { About } from './components/About';
+import { BnccSkills } from './components/BnccSkills';
+import { Activities } from './components/Activities';
+import { Annotations } from './components/Annotations';
+import { Groups } from './components/Groups';
+import { ProjectPhotos } from './components/ProjectPhotos';
 
 interface IProps {
   project: IProject;
   bnccSkills: IBnccSkill[];
 }
 
-const statusLabels: Record<string, { label: string; color: string }> = {
-  stopped: { label: 'Não iniciado', color: 'gray' },
-  running: { label: 'Em andamento', color: 'blue' },
-  finished: { label: 'Finalizado', color: 'green' },
+const statusLabels: Record<string, { label: string; colorClass: string }> = {
+  stopped: { label: 'Não iniciado', colorClass: 'bg-gray-100 text-gray-600 border-gray-200' },
+  running: { label: 'Em andamento', colorClass: 'bg-blue-100 text-blue-700 border-blue-200' },
+  finished: { label: 'Finalizado', colorClass: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
 };
 
 const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
@@ -45,10 +45,14 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
   const router = useCustomRouter();
 
   const canEdit = user.id === hubProject.user_id;
-  const needSave = useMemo<boolean>(() => JSON.stringify(project) !== JSON.stringify(savedProject) || !!files.length, [project, savedProject, files]);
+  const needSave = useMemo<boolean>(
+    () => JSON.stringify(project) !== JSON.stringify(savedProject) || !!files.length,
+    [project, savedProject, files]
+  );
 
   const statusInfo = statusLabels[project.status] || statusLabels.stopped;
 
+  // Preservando toda a Lógica de Salvamento e Upload
   const handleSave = useAsyncCallback(async (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward[]>) => {
     const _project = newProject || project;
     const dto: IUpdateProjectParams = {
@@ -57,6 +61,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
       description: _project.description || undefined,
       metadata: _project.metadata,
     };
+    
     if (files.length) {
       const fileData = await Promise.all(files.map((f) => getPresignedUrl(f.type || '', 'user_projects')));
 
@@ -77,19 +82,18 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
 
     setProject((p) => ({ ...p, ...updatedProject, hub_class: p.hub_class, educator: p.educator }));
     setSavedProject((p) => ({ ...p, ...updatedProject, hub_class: p.hub_class, educator: p.educator }));
+    setFiles([]); // Limpa os arquivos após o salvamento
     toast({ status: 'success', description: 'Projeto salvo' });
-  }, []);
+  }, [project, files, hubProject.id]);
 
   const handleAddAnnotation = useAsyncCallback(async (dto: IAddProjectAnnotationParams) => {
     const annotation = await addProjectAnnotation(dto);
-
     setProject((e) => ({ ...e, annotations: [annotation, ...e.annotations] }));
     setSavedProject((e) => ({ ...e, annotations: [annotation, ...e.annotations] }));
   }, []);
 
   const handleRemoveAnnotation = useAsyncCallback(async (id: string) => {
     await removeProjectAnnotation(id);
-
     setProject((e) => ({ ...e, annotations: e.annotations.filter((a) => a.id !== id) }));
     setSavedProject((e) => ({ ...e, annotations: e.annotations.filter((a) => a.id !== id) }));
   }, []);
@@ -113,83 +117,64 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
     toast({ status: `success`, description: `Grupo adicionado` });
   }, []);
 
+  // Variável utilitária de animação para os cards
+  const anim = (i: number) => ({
+    initial: { opacity: 0, y: 16 },
+    animate: { opacity: 1, y: 0 },
+    transition: { delay: i * 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const },
+  });
+
   return (
-    <Flex direction="column" w="100%" h="100%" gap="24px" pb="40px" overflow="auto" px="20px" pt="20px">
-      {/* Header com botão de volta, nome, status e turma */}
-      <Flex justify="space-between" align="flex-start" pb="16px" borderBottom="1px" borderColor="gray300" gap="16px">
-        <Flex direction="column" gap="8px" flex="1">
-          <Flex align="center" gap="12px">
-            <GenericButton
-              label=""
-              w="32px"
-              h="32px"
-              p="0"
-              bg="white"
-              color="gray700"
-              border="1px"
-              borderColor="gray300"
-              leftIcon={<MdArrowBack size="20px" />}
-              onClick={() => router.back()}
-              _hover={{ bg: 'gray100', borderColor: 'gray400' }}
-            />
-            <Text fontSize="24px" fontWeight="700" color="gray900">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="w-full h-full pb-10 overflow-y-auto px-5 pt-5 text-foreground font-sans">
+      {/* Header */}
+      <div className="flex items-start justify-between pb-4 mb-6 border-b border-border/50 gap-4">
+        <div className="flex flex-col gap-2 flex-1">
+          <div className="flex items-center gap-3">
+            <button onClick={() => router.back()} className="p-2 bg-background border border-border rounded-xl text-foreground hover:bg-accent transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {project.title}
-            </Text>
-          </Flex>
-          <Flex align="center" gap="12px">
-            <Badge colorScheme={statusInfo.color} fontSize="12px">
+            </h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusInfo.colorClass}`}>
               {statusInfo.label}
-            </Badge>
-            <Text fontSize="13px" color="gray600" fontWeight="500">
+            </span>
+            <span className="text-sm text-muted-foreground font-medium">
               {project.hub_class?.display_name}
-            </Text>
-          </Flex>
-        </Flex>
-        <GenericButton
-          label="Salvar"
+            </span>
+          </div>
+        </div>
+
+        <button
           onClick={() => handleSave()}
-          border="1px"
-          borderColor="gray300"
-          bg={needSave ? 'primary500' : 'primary700'}
-          color="white"
-          isDisabled={!canEdit}
-          _hover={{ filter: 'brightness(0.9)' }}
-          rightIcon={needSave ? <MdWarning /> : undefined}
-        />
-      </Flex>
+          disabled={!canEdit}
+          className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm
+            ${needSave ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'bg-primary/80 text-primary-foreground opacity-80'} 
+            ${!canEdit && 'opacity-50 cursor-not-allowed'}`}
+        >
+          Salvar
+          {needSave && <AlertTriangle className="w-4 h-4" />}
+        </button>
+      </div>
 
-      {/* Dois cards lado a lado: Sobre e Habilidades BNCC */}
-      <Flex gap="24px" w="100%">
-        <Flex flex="1" minW="0">
-          <About project={project} setProject={setProject} canEdit={canEdit} />
-        </Flex>
-        <Flex flex="1" minW="0">
-          <BnccSkills project={project} setProject={setProject} bnccSkills={bnccSkills} canEdit={canEdit} />
-        </Flex>
-      </Flex>
+      {/* Grid Principal do Layout de Referência */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <motion.div {...anim(0)}><About project={project} setProject={setProject} canEdit={canEdit} /></motion.div>
+        <motion.div {...anim(1)}><BnccSkills project={project} setProject={setProject} bnccSkills={bnccSkills} canEdit={canEdit} /></motion.div>
+        
+        {project.project?.book_id && (
+          <motion.div {...anim(2)} className="lg:col-span-2">
+            <Activities project={project} setProject={setProject} canEdit={canEdit} handleSave={handleSave} />
+          </motion.div>
+        )}
 
-      {/* Card de Atividades - Full Width */}
-      {project.project?.book_id && (
-        <Flex w="100%">
-          <Activities project={project} setProject={setProject} canEdit={canEdit} handleSave={handleSave} />
-        </Flex>
-      )}
-
-      {/* Dois cards lado a lado: Anotações e Grupos */}
-      <Flex gap="24px" w="100%">
-        <Flex flex="1" minW="0" direction="column">
-          <Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} />
-        </Flex>
-        <Flex flex="1" minW="0" direction="column">
-          <Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} />
-        </Flex>
-      </Flex>
-
-      {/* Card de Fotos - Full Width */}
-      <Flex w="100%">
-        <ProjectPhotos project={project} onChangeFiles={(e) => setFiles(e)} canEdit={canEdit} />
-      </Flex>
-    </Flex>
+        <motion.div {...anim(3)}><Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} /></motion.div>
+        <motion.div {...anim(4)}><Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} /></motion.div>
+        <motion.div {...anim(5)} className="lg:col-span-2"><ProjectPhotos project={project} onChangeFiles={(e) => setFiles((prev) => [...prev, ...e])} canEdit={canEdit} /></motion.div>
+      </div>
+    </motion.div>
   );
 };
 
@@ -197,18 +182,13 @@ export default ProjectPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res, query }) => {
   const selectedPage = 'project';
-
   try {
     cookieManager.updateToken(req);
-
-    // TODO: add in use effect
     const [project, bnccSkills] = await Promise.all([getProject(`${query.project_id}`), getBnccSkills()]);
-
     return { props: { selectedPage, headerLabel: project.title, pageTitle: project.title, project, bnccSkills } };
   } catch (err: any) {
     cookieManager.forceTokenExpires(res);
     logError(selectedPage, err);
-
     return { redirect: { destination: '/login', permanent: false } };
   }
 };
