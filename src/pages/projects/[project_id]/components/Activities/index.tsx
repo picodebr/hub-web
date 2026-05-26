@@ -275,8 +275,8 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
       {/* Modal 3: Resumo Cashback */}
       <SmallModal title="Resumo Cashback" show={modalStep === 'students_rewarded'} onConfirm={onConfirmActivity} onCancel={() => setModalStep('taxed_students')} okText="Concluir" size="md">
         <div className="flex flex-col gap-5">
-          <div className="p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5 rounded-2xl border border-amber-500/20">
-            <p className="text-sm text-amber-900 dark:text-amber-200 font-medium">✓ Revise os valores abaixo e clique em "Concluir" para distribuir as moedas.</p>
+          <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-2xl border border-blue-500/20">
+            <p className="text-sm font-bold" style={{ color: '#001a4d', backgroundColor: 'transparent' }}>✓ Revise os valores abaixo e clique em "Concluir" para distribuir as moedas.</p>
           </div>
           <div className="flex flex-col gap-3 max-h-96 overflow-y-auto pr-2">
             {project.hub_class?.students?.filter((s) => (!stepIsFinished(project, targetRewards[0]) || studentIsMissing(project, s, targetRewards[0])) && !missingStudents.includes(s.id)).map((student) => {

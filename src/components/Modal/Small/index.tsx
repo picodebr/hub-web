@@ -48,7 +48,9 @@ export const SmallModal: React.FC<PropsWithChildren<IModalProps & { overflow?: s
           ) : (
             topIcon || null
           )}
-          <Text color="gray700" noOfLines={1}>{title}</Text>
+          <Text color="gray700" noOfLines={1}>
+            {title}
+          </Text>
         </ModalHeader>
         {(!!onCancel || !!onCloseModal) && showCloseButton && <ModalCloseButton isDisabled={disableCloseButton} mt="0.25rem" />}
         <ModalBody overflow="auto" overflowX="hidden" p="1.5rem">

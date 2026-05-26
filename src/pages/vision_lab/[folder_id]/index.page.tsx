@@ -177,6 +177,7 @@ const VisionLabProjects: React.FC<IProps> = ({ folderId }) => {
         onConfirm={handleCreateProject}
         title="Defina um nome para esse projeto"
         okText="Confirmar"
+        size="md"
         isLoading={isLoading}
       >
         <Flex direction="column" gap="1rem" mt="1rem">
