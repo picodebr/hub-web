@@ -6,7 +6,7 @@ import { ClassProjectMetadataReward } from '@/_base/interfaces/project/IClassPro
 import { IHubUser } from '@/_base/interfaces/user';
 import { SmallModal } from '@/components/Modal/Small';
 import { formatShortName } from '@/_base/utils';
-import { useAsyncCallback, useCustomRouter } from '@/_base/hooks';
+import { useAsyncCallback } from '@/_base/hooks';
 import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { customEvents } from '@/_base/classes/events';
 import { eventsConfig } from '@/_base/config/events';
@@ -17,21 +17,23 @@ interface IProps {
   canEdit: boolean;
   handleSave: (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward[]>) => Promise<void>;
 }
-type ModalStep = 'hidden' | 'missing_students' | 'taxed_students' | 'students_rewarded';
+type ModalStep = 'hidden' | 'missing_students' | 'taxed_students' | 'students_rewarded' | 'retroactive_justification';
 
 export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) => {
   const [targetRewards, setTargetRewards] = useState<IHubProjectStep[]>([]);
   const [missingStudents, setMissingStudents] = useState<string[]>([]);
   const [taxedStudents, setTaxedStudents] = useState<Record<string, string>>({});
   const [modalStep, setModalStep] = useState<ModalStep>('hidden');
-  const [isOpen, setIsOpen] = useState(false);
-  const router = useCustomRouter();
+  const [retroactiveStudents, setRetroactiveStudents] = useState<string[]>([]);
+  const [retroactiveTargetStep, setRetroactiveTargetStep] = useState<IHubProjectStep | null>(null);
   const { colorMode } = useDarkMode();
 
   const onCloseModal = () => {
     setMissingStudents([]);
     setModalStep('hidden');
     setTargetRewards([]);
+    setRetroactiveStudents([]);
+    setRetroactiveTargetStep(null);
   };
 
   useEffect(() => {
@@ -98,6 +100,58 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
     await handleSave(newProjectData, newRewards);
     localStorage.setItem(`pending_forms::${project.id}`, JSON.stringify({ project: newProjectData, students: students.map((e) => ({ id: e.id, name: e.name })) }));
   }, [project, targetRewards, missingStudents, taxedStudents]);
+
+  const onConfirmRetroactiveJustification = useAsyncCallback(async () => {
+    if (!retroactiveTargetStep || !retroactiveStudents.length) return;
+
+    const newRewards: Record<string, ClassProjectMetadataReward[]> = {};
+    
+    project.hub_class?.students?.forEach((student) => {
+      newRewards[student.id] = project.metadata.rewards?.[student.id] ? [...project.metadata.rewards[student.id]] : [];
+    });
+
+    // Atualizar rewards para alunos selecionados
+    retroactiveStudents.forEach((studentId) => {
+      if (!newRewards[studentId]) newRewards[studentId] = [];
+      
+      // Encontrar o reward para essa atividade e marcar como não faltante
+      const rewardIndex = newRewards[studentId].findIndex(
+        (r) => r.activity_title === retroactiveTargetStep.title && r.is_missing
+      );
+
+      if (rewardIndex >= 0) {
+        // Atualizar o reward existente
+        newRewards[studentId][rewardIndex] = {
+          ...newRewards[studentId][rewardIndex],
+          is_missing: false,
+        };
+      } else {
+        // Criar novo reward se não existir
+        const baseCashback = Number(retroactiveTargetStep?.cashback || 0);
+        newRewards[studentId].push({
+          reward_value: `${baseCashback.toFixed(0)}`,
+          tax_value: '0',
+          activity_title: retroactiveTargetStep.title || '',
+          is_missing: false,
+        });
+      }
+    });
+
+    const newProjectData = {
+      ...project,
+      metadata: {
+        ...project.metadata,
+        rewards: newRewards,
+      },
+    };
+
+    onCloseModal();
+    await handleSave(newProjectData, newRewards);
+    localStorage.setItem(`pending_forms::${project.id}`, JSON.stringify({ 
+      project: newProjectData, 
+      students: project.hub_class?.students?.map((e) => ({ id: e.id, name: e.name })) || []
+    }));
+  }, [project, retroactiveTargetStep, retroactiveStudents]);
 
   const parents = project.project?.metadata?.steps?.reduce((acc, r) => (acc.includes(r.parent || '') ? acc : [...acc, r.parent || '']), [] as string[]) || [];
 
@@ -174,12 +228,16 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                             disabled={!canEdit}
                             onClick={() => {
                               const studentsMissing = project.hub_class?.students?.filter((s) => studentIsMissing(project, s, step)) || [];
-                              if (isFinished) {
+                              
+                              // Se a atividade já foi finalizada, abrir modal de retroativação
+                              if (stepIsFinished(project, step)) {
+                                setRetroactiveTargetStep(step);
+                                setModalStep('retroactive_justification');
+                              } else {
+                                // Comportamento original para atividades não finalizadas
                                 if (!studentsMissing.length) return;
                                 setTargetRewards([step]);
                                 setModalStep('missing_students');
-                              } else {
-                                setTargetRewards((e) => e.find((r) => JSON.stringify(r) === JSON.stringify(step)) ? e.filter((r) => JSON.stringify(r) !== JSON.stringify(step)) : [...e, step]);
                               }
                             }}
                             className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left
@@ -317,6 +375,91 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
               </span>
             </div>
           </div>
+        </div>
+      </SmallModal>
+
+      {/* Modal 4: Justificativa de Falta Retroativa */}
+      <SmallModal 
+        title="Justificativa de Falta" 
+        show={modalStep === 'retroactive_justification'} 
+        onConfirm={onConfirmRetroactiveJustification} 
+        onCancel={onCloseModal} 
+        okText="Conceder Moedas" 
+        size="md"
+      >
+        <div className="flex flex-col gap-5">
+          <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-2xl border border-blue-500/20">
+            <p className="text-sm font-medium text-foreground">
+              ✓ Selecione os alunos que apresentaram justificativa para a falta na atividade{' '}
+              <span className="font-bold">"{retroactiveTargetStep?.title}"</span> e conceda as moedas retroativamente.
+            </p>
+          </div>
+          
+          <div className="flex flex-col gap-3 max-h-96 overflow-y-auto pr-2">
+            {project.hub_class?.students
+              ?.filter((student) => {
+                // Mostrar apenas alunos que foram marcados como faltantes nesta atividade
+                const hasMissingReward = project.metadata?.rewards?.[student.id]?.find(
+                  (r) => r.activity_title === retroactiveTargetStep?.title && r.is_missing
+                );
+                return !!hasMissingReward;
+              })
+              .map((student) => (
+                <motion.div
+                  key={student.id}
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-between items-center p-4 bg-gradient-to-br from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/15 rounded-2xl border border-accent/20 transition-all duration-200 cursor-pointer group"
+                  onClick={() => 
+                    setRetroactiveStudents((s) => 
+                      s.includes(student.id) 
+                        ? s.filter((val) => val !== student.id) 
+                        : [...s, student.id]
+                    )
+                  }
+                >
+                  <div className="flex flex-col gap-1 flex-1">
+                    <span className="text-sm font-medium text-foreground">{formatShortName(student.name, true)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      +{retroactiveTargetStep?.cashback || 0}
+                      <Coins className="w-3 h-3 inline ml-1" />
+                    </span>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                    retroactiveStudents.includes(student.id)
+                      ? 'bg-emerald-500/20 border-emerald-500'
+                      : 'border-border/30 group-hover:border-border/60'
+                  }`}>
+                    {retroactiveStudents.includes(student.id) && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 bg-emerald-500 rounded-full" />
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            
+            {!project.hub_class?.students?.some((student) => {
+              const hasMissingReward = project.metadata?.rewards?.[student.id]?.find(
+                (r) => r.activity_title === retroactiveTargetStep?.title && r.is_missing
+              );
+              return !!hasMissingReward;
+            }) && (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">Nenhum aluno marcado como faltante nesta atividade.</p>
+              </div>
+            )}
+          </div>
+
+          {retroactiveStudents.length > 0 && (
+            <div className="pt-3 border-t border-border/30">
+              <div className="text-right">
+                <span className="text-xs text-muted-foreground">Moedas a conceder: </span>
+                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-2">
+                  +{(retroactiveStudents.length * Number(retroactiveTargetStep?.cashback || 0)).toFixed(0)}
+                  <Coins className="w-5 h-5" />
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </SmallModal>
     </>

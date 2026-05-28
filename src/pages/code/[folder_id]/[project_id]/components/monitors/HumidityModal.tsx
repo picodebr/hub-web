@@ -24,7 +24,7 @@ export default function HumidityModal({ isOpen, onClose, onBack }: HumidityModal
   const value = useMemo(() => {
     if (!lastLine) return 0;
     const parsed = parseInt(lastLine, 10);
-    return isNaN(parsed) ? 0 : Math.max(0, Math.min(1023, parsed));
+    return isNaN(parsed) ? 4 : Math.max(4, Math.min(980, parsed));
   }, [lastLine]);
 
   // Cleanup
@@ -32,7 +32,7 @@ export default function HumidityModal({ isOpen, onClose, onBack }: HumidityModal
     if (!isOpen && isConnected) disconnect();
   }, [isOpen, isConnected, disconnect]);
 
-  const percent = Math.round((value / 1023) * 100);
+  const percent = Math.round(((980 - value) / (980 - 4)) * 100);
   const waveTop = 100 - percent * 1.1;
   const borderColor = '#0dcaf0'; // Cyan/Info
 
