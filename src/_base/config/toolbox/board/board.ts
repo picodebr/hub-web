@@ -14,6 +14,7 @@ catOutput.addBlock(new BlockBuilder('set_digital_pin_pt').withField('PIN', '13')
 catOutput.addBlock(new BlockBuilder('set_pwm_pin_pt').withField('PIN', '3').withShadowValue('VALUE', shadowNum(255)));
 catOutput.addBlock(new BlockBuilder('motor_control').withField('MOTOR', 'MOTOR_A').withField('DIRECAO', 'HORARIO'));
 catOutput.addBlock(new BlockBuilder('motor_control_pwm').withField('MOTOR', 'MOTOR_A').withField('DIRECAO', 'HORARIO').withShadowValue('VELOCIDADE', shadowSlider(128)));
+catOutput.addBlock(new BlockBuilder('motor_stop_ab'));
 
 export const catInput = new CategoryBuilder("Entrada", "#9966FF");
 catInput.addBlock(new BlockBuilder('board_read_digital_pin').withField('PIN', '2'));

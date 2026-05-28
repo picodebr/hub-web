@@ -155,8 +155,7 @@ export const initBoardGenerators = () => {
         }
         return `await stage.board.setDigital('${p1}', false);\nawait stage.board.setPwm('${p2}', ${pwm});\n`;
     };
-    javascriptGenerator.forBlock['motor_control_pwm_stage'] = motorPwmGen;
-    javascriptGenerator.forBlock['motor_control_pwm'] = motorPwmGen;
+    javascriptGenerator.forBlock['motor_control_pwm_stage'] = motorPwmGen
 
     javascriptGenerator.forBlock['motor_stop_stage'] = function (block: Blockly.Block): string {
         const motor = block.getFieldValue('MOTOR');

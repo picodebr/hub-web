@@ -145,9 +145,13 @@ const Groups: React.FC = () => {
       newGroup.students = availableStudents.filter((s) => data.users.includes(s.id));
       setGroups((e) => ({ ...e, data: [newGroup, ...e.data] }));
       handleCloseModal();
-      toast({ status: `success`, description: `Grupo adicionado` });
+      
+      const isTeacher = user?.role === 'teacher' || user?.role === 'student';
+      const toastMessage = isTeacher ? 'Grupo adicionado' : 'Solicitação de criação de grupo enviada para o professor';
+      
+      toast({ status: `success`, description: toastMessage });
     },
-    [],
+    [user],
     undefined,
     () => {
       setGroups((e) => ({ ...e, _isLoading: false }));
@@ -490,7 +494,7 @@ const Groups: React.FC = () => {
                       </HStack>
 
                       <HStack>
-                        <Menu placement="left">
+                        <Menu placement="top-end">
                           <MenuButton as={Button} size="xs" bg="blue.50" color="blue.700" border="1px" borderColor="blue.200" fontWeight="500" _hover={{ bg: 'blue.100' }}>
                             <HStack spacing={1}>
                               {memberRoles[student.id] ? (

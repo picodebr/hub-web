@@ -157,7 +157,7 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                 <button
                   disabled={!canEdit}
                   onClick={() => setTargetGroup({ ...(group as any), accept: true })}
-                  className="flex-1 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                  className="flex-1 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-emerald-950 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Aprovar
                 </button>

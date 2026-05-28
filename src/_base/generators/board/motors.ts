@@ -82,3 +82,22 @@ arduinoGenerator.forBlock["motor_control_pwm"] = function (block: Blockly.Block)
 
     return code;
 };
+
+// DESLIGAR MOTOR(ES)
+arduinoGenerator.forBlock["motor_stop_ab"] = function (block: Blockly.Block) {
+    const motor = block.getFieldValue("MOTOR");
+    let code = "";
+
+    if (motor === "MOTOR_A" || motor === "MOTOR_AB") {
+        arduinoGenerator.definitions_['setup_pin_5']  = `pinMode(5, OUTPUT);`;
+        arduinoGenerator.definitions_['setup_pin_10'] = `pinMode(10, OUTPUT);`;
+        code += `digitalWrite(5, LOW);\ndigitalWrite(10, LOW);\n`;
+    }
+    if (motor === "MOTOR_B" || motor === "MOTOR_AB") {
+        arduinoGenerator.definitions_['setup_pin_9'] = `pinMode(9, OUTPUT);`;
+        arduinoGenerator.definitions_['setup_pin_6'] = `pinMode(6, OUTPUT);`;
+        code += `digitalWrite(9, LOW);\ndigitalWrite(6, LOW);\n`;
+    }
+
+    return code;
+};
