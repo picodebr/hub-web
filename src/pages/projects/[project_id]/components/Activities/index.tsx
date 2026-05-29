@@ -227,17 +227,11 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                             key={step.title + i}
                             disabled={!canEdit}
                             onClick={() => {
-                              const studentsMissing = project.hub_class?.students?.filter((s) => studentIsMissing(project, s, step)) || [];
-                              
-                              // Se a atividade já foi finalizada, abrir modal de retroativação
-                              if (stepIsFinished(project, step)) {
-                                setRetroactiveTargetStep(step);
-                                setModalStep('retroactive_justification');
+                              // Toggle seleção da atividade
+                              if (isSelected) {
+                                setTargetRewards(prev => prev.filter(e => JSON.stringify(e) !== JSON.stringify(step)));
                               } else {
-                                // Comportamento original para atividades não finalizadas
-                                if (!studentsMissing.length) return;
-                                setTargetRewards([step]);
-                                setModalStep('missing_students');
+                                setTargetRewards(prev => [...prev, step]);
                               }
                             }}
                             className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left
