@@ -17,7 +17,7 @@ interface IProps {
   canEdit: boolean;
   handleSave: (newProject?: IProject, newRewards?: Record<string, ClassProjectMetadataReward[]>) => Promise<void>;
 }
-type ModalStep = 'hidden' | 'missing_students' | 'taxed_students' | 'students_rewarded' | 'retroactive_justification';
+type ModalStep = 'hidden' | 'missing_students' | 'taxed_students' | 'students_rewarded' | 'retroactive_justification' | 'edit_activity';
 
 export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) => {
   const [targetRewards, setTargetRewards] = useState<IHubProjectStep[]>([]);
@@ -26,6 +26,9 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
   const [modalStep, setModalStep] = useState<ModalStep>('hidden');
   const [retroactiveStudents, setRetroactiveStudents] = useState<string[]>([]);
   const [retroactiveTargetStep, setRetroactiveTargetStep] = useState<IHubProjectStep | null>(null);
+  const [editingActivity, setEditingActivity] = useState<IHubProjectStep | null>(null);
+  const [editingMissingStudents, setEditingMissingStudents] = useState<string[]>([]);
+  const [editingTaxedStudents, setEditingTaxedStudents] = useState<Record<string, string>>({});
   const { colorMode } = useDarkMode();
 
   const onCloseModal = () => {
@@ -34,6 +37,9 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
     setTargetRewards([]);
     setRetroactiveStudents([]);
     setRetroactiveTargetStep(null);
+    setEditingActivity(null);
+    setEditingMissingStudents([]);
+    setEditingTaxedStudents({});
   };
 
   useEffect(() => {
@@ -50,6 +56,24 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
     setExpandedStages(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
   };
 
+  const toggleMissingStudent = (studentId: string) => {
+    setMissingStudents((prev) => 
+      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
+    );
+  };
+
+  const toggleRetroactiveStudent = (studentId: string) => {
+    setRetroactiveStudents((prev) =>
+      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
+    );
+  };
+
+  const toggleEditingMissingStudent = (studentId: string) => {
+    setEditingMissingStudents((prev) => 
+      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
+    );
+  };
+
   const onConfirmActivity = useAsyncCallback(async () => {
     if (!targetRewards.length) return;
     const students = project.hub_class?.students || [];
@@ -62,8 +86,18 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
         const oldRewards = (project.metadata.rewards || {})[student.id];
         if (oldRewards?.length) acc[student.id].push(...oldRewards);
 
-        // Se estudante está marcado como ausente, não recebe cashback
+        // Se estudante está marcado como ausente, registre com is_missing: true
         if (missingStudents.includes(student.id)) {
+          targetRewards.forEach((reward) => {
+            const missingReward = {
+              reward_value: '0',
+              tax_value: '0',
+              activity_title: reward.title || '',
+              is_missing: true,
+            };
+            acc[student.id].push(missingReward);
+            newRewards[student.id].push(missingReward);
+          });
           return acc;
         }
 
@@ -153,6 +187,65 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
     }));
   }, [project, retroactiveTargetStep, retroactiveStudents]);
 
+  const onConfirmEditActivity = useAsyncCallback(async () => {
+    if (!editingActivity) return;
+
+    const newRewards: Record<string, ClassProjectMetadataReward[]> = {};
+    
+    project.hub_class?.students?.forEach((student) => {
+      newRewards[student.id] = project.metadata.rewards?.[student.id] ? [...project.metadata.rewards[student.id]] : [];
+    });
+
+    // Remover rewards antigos para essa atividade
+    project.hub_class?.students?.forEach((student) => {
+      newRewards[student.id] = newRewards[student.id].filter(
+        (r) => r.activity_title !== editingActivity.title
+      );
+    });
+
+    // Recalcular e atribuir novos rewards
+    project.hub_class?.students?.forEach((student) => {
+      // Se estudante está marcado como ausente (novo), registre com is_missing: true
+      if (editingMissingStudents.includes(student.id)) {
+        const missingReward = {
+          reward_value: '0',
+          tax_value: '0',
+          activity_title: editingActivity.title || '',
+          is_missing: true,
+        };
+        newRewards[student.id].push(missingReward);
+      } else {
+        // Calcule o cashback
+        const baseCashback = Number(editingActivity?.cashback || 0);
+        const taxPercentage = Number(editingTaxedStudents[student.id] || 0);
+        const finalCashback = baseCashback * (1 - taxPercentage / 100);
+
+        const newReward = {
+          reward_value: `${finalCashback.toFixed(0)}`,
+          tax_value: `${taxPercentage}`,
+          activity_title: editingActivity.title || '',
+          is_missing: false,
+        };
+        newRewards[student.id].push(newReward);
+      }
+    });
+
+    const newProjectData = {
+      ...project,
+      metadata: {
+        ...project.metadata,
+        rewards: newRewards,
+      },
+    };
+
+    onCloseModal();
+    await handleSave(newProjectData, newRewards);
+    localStorage.setItem(`pending_forms::${project.id}`, JSON.stringify({ 
+      project: newProjectData, 
+      students: project.hub_class?.students?.map((e) => ({ id: e.id, name: e.name })) || []
+    }));
+  }, [project, editingActivity, editingMissingStudents, editingTaxedStudents]);
+
   const parents = project.project?.metadata?.steps?.reduce((acc, r) => (acc.includes(r.parent || '') ? acc : [...acc, r.parent || '']), [] as string[]) || [];
 
   return (
@@ -227,11 +320,32 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                             key={step.title + i}
                             disabled={!canEdit}
                             onClick={() => {
-                              // Toggle seleção da atividade
-                              if (isSelected) {
-                                setTargetRewards(prev => prev.filter(e => JSON.stringify(e) !== JSON.stringify(step)));
+                              // Se a atividade já foi finalizada, abrir modal de edição
+                              if (isFinished) {
+                                setEditingActivity(step);
+                                // Pré-carregar dados atuais
+                                const currentMissing: string[] = [];
+                                const currentTaxed: Record<string, string> = {};
+                                project.hub_class?.students?.forEach((student) => {
+                                  const studentRewards = project.metadata?.rewards?.[student.id] || [];
+                                  const activityReward = studentRewards.find((r) => r.activity_title === step.title);
+                                  if (activityReward?.is_missing) {
+                                    currentMissing.push(student.id);
+                                  }
+                                  if (activityReward?.tax_value) {
+                                    currentTaxed[student.id] = activityReward.tax_value;
+                                  }
+                                });
+                                setEditingMissingStudents(currentMissing);
+                                setEditingTaxedStudents(currentTaxed);
+                                setModalStep('edit_activity');
                               } else {
-                                setTargetRewards(prev => [...prev, step]);
+                                // Para atividades não finalizadas, fazer toggle
+                                if (isSelected) {
+                                  setTargetRewards(prev => prev.filter(e => JSON.stringify(e) !== JSON.stringify(step)));
+                                } else {
+                                  setTargetRewards(prev => [...prev, step]);
+                                }
                               }
                             }}
                             className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left
@@ -276,17 +390,18 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                 key={student.id}
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex justify-between items-center p-4 bg-gradient-to-br from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/15 rounded-2xl border border-accent/20 transition-all duration-200 cursor-pointer group"
-                onClick={() => setMissingStudents((s) => (s.includes(student.id) ? s.filter((val) => val !== student.id) : [...s, student.id]))}
+                className="flex justify-between items-center p-4 bg-gradient-to-br from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/15 rounded-2xl border border-accent/20 transition-all duration-200 cursor-pointer group active:scale-95"
+                onClick={() => toggleMissingStudent(student.id)}
+                style={{ userSelect: 'none' }}
               >
                 <span className="text-sm font-medium text-foreground">{formatShortName(student.name, true)}</span>
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 shrink-0 ${
                   missingStudents.includes(student.id)
                     ? 'bg-amber-500/20 border-amber-500'
                     : 'border-border/30 group-hover:border-border/60'
                 }`}>
                   {missingStudents.includes(student.id) && (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 bg-amber-500 rounded-full" />
+                    <div className="w-2 h-2 bg-amber-500 rounded-full" />
                   )}
                 </div>
               </motion.div>
@@ -403,14 +518,9 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                   key={student.id}
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex justify-between items-center p-4 bg-gradient-to-br from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/15 rounded-2xl border border-accent/20 transition-all duration-200 cursor-pointer group"
-                  onClick={() => 
-                    setRetroactiveStudents((s) => 
-                      s.includes(student.id) 
-                        ? s.filter((val) => val !== student.id) 
-                        : [...s, student.id]
-                    )
-                  }
+                  className="flex justify-between items-center p-4 bg-gradient-to-br from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/15 rounded-2xl border border-accent/20 transition-all duration-200 cursor-pointer group active:scale-95"
+                  onClick={() => toggleRetroactiveStudent(student.id)}
+                  style={{ userSelect: 'none' }}
                 >
                   <div className="flex flex-col gap-1 flex-1">
                     <span className="text-sm font-medium text-foreground">{formatShortName(student.name, true)}</span>
@@ -419,13 +529,13 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                       <Coins className="w-3 h-3 inline ml-1" />
                     </span>
                   </div>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 shrink-0 ${
                     retroactiveStudents.includes(student.id)
                       ? 'bg-emerald-500/20 border-emerald-500'
                       : 'border-border/30 group-hover:border-border/60'
                   }`}>
                     {retroactiveStudents.includes(student.id) && (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 bg-emerald-500 rounded-full" />
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full" />
                     )}
                   </div>
                 </motion.div>
@@ -454,6 +564,103 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
               </div>
             </div>
           )}
+        </div>
+      </SmallModal>
+
+      {/* Modal 5: Editar Atividade Já Processada */}
+      <SmallModal 
+        title={`Editar: ${editingActivity?.title}`}
+        show={modalStep === 'edit_activity'} 
+        onConfirm={onConfirmEditActivity} 
+        onCancel={onCloseModal} 
+        okText="Salvar Alterações" 
+        size="lg"
+      >
+        <div className="flex flex-col gap-5">
+          <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-2xl border border-blue-500/20">
+            <p className="text-sm font-medium text-foreground">
+              ✓ Você está editando a distribuição de cashback da atividade <span className="font-bold">"{editingActivity?.title}"</span>. Ajuste os ausentes e descontos conforme necessário.
+            </p>
+          </div>
+
+          <div className="space-y-5">
+            {/* Seção 1: Alunos Ausentes */}
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-3">Alunos Ausentes</h4>
+              <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
+                {project.hub_class?.students?.map((student) => (
+                  <motion.div
+                    key={`missing-${student.id}`}
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-between items-center p-3 bg-gradient-to-br from-accent/10 to-accent/5 hover:from-accent/20 hover:to-accent/10 rounded-xl border border-accent/10 transition-all duration-200 cursor-pointer group"
+                    onClick={() => toggleEditingMissingStudent(student.id)}
+                    style={{ userSelect: 'none' }}
+                  >
+                    <span className="text-sm font-medium text-foreground">{formatShortName(student.name, true)}</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 shrink-0 ${
+                      editingMissingStudents.includes(student.id)
+                        ? 'bg-amber-500/20 border-amber-500'
+                        : 'border-border/30 group-hover:border-border/60'
+                    }`}>
+                      {editingMissingStudents.includes(student.id) && (
+                        <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Seção 2: Descontos de Comportamento */}
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-3">Descontos de Comportamento (%)</h4>
+              <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
+                {project.hub_class?.students?.filter((s) => !editingMissingStudents.includes(s.id)).map((student) => (
+                  <motion.div
+                    key={`tax-${student.id}`}
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-between items-center p-3 bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl border border-accent/10 transition-all duration-200"
+                  >
+                    <span className="text-sm font-medium text-foreground">{formatShortName(student.name, true)}</span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0" max="100"
+                        value={editingTaxedStudents[student.id] || 0}
+                        onChange={(e) => setEditingTaxedStudents(t => ({ ...t, [student.id]: e.target.value }))}
+                        className="w-14 px-2 py-1.5 border border-border/30 bg-background/50 rounded-lg text-xs font-medium text-center outline-none focus:border-primary/50 focus:bg-background transition-all"
+                      />
+                      <span className="text-xs font-semibold text-muted-foreground w-4">%</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Resumo Final */}
+            <div className="pt-3 border-t border-border/30 space-y-2">
+              <h4 className="text-sm font-semibold text-foreground">Resumo</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                  <p className="text-xs text-muted-foreground">Ausentes</p>
+                  <p className="text-lg font-bold text-amber-600 dark:text-amber-400">{editingMissingStudents.length}</p>
+                </div>
+                <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                  <p className="text-xs text-muted-foreground">Receberão Moedas</p>
+                  <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{(project.hub_class?.students?.length || 0) - editingMissingStudents.length}</p>
+                </div>
+              </div>
+              <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                <p className="text-xs text-muted-foreground">Total a distribuir</p>
+                <p className="text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                  +{((project.hub_class?.students?.length || 0) - editingMissingStudents.length) * (Number(editingActivity?.cashback || 0))}
+                  <Coins className="w-4 h-4" />
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </SmallModal>
     </>
