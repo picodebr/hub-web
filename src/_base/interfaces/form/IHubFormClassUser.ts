@@ -7,8 +7,8 @@ export interface IHubFormClassUser {
   hub_user_id: string;
   questions: IHubFormClassAnswers[];
   metadata: IHubFormClassUserMetadata;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
   hub_form_class: IHubFormClass;
   user: IHubUser;
 }

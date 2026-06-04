@@ -1,5 +1,6 @@
 import { GetServerSideProps } from 'next';
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/router';
 import {
   Flex,
   Image,
@@ -31,6 +32,7 @@ import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { updateStudentData } from '@/_base/services/student/updateStudentData';
 import { PasswordInput } from '@/components/Inputs/Password';
 import { InputValueType } from '@/_base/interfaces/shared';
+import StudentEvaluationChart from '@/components/StudentEvaluationChart';
 
 interface IRedefineData {
   password: InputValueType<string>;
@@ -43,12 +45,15 @@ interface IProps {
 
 const StudentPage: React.FC<IProps> = ({ student: _student }) => {
   const { colorMode } = useDarkMode();
+  const router = useRouter();
   const [addCoinValue, setAddCoinValue] = useState<string | null>(null);
   const [removeCoinValue, setRemoveCoinValue] = useState<string | null>(null);
   const [student, setStudent] = useState<IHubUser>(_student);
   const [isLoading, setIsLoading] = useState(false);
 
   const [redefineData, setRedefineData] = useState<IRedefineData>({ password: { value: '' }, password_confirmation: { value: '' } });
+
+  const devModeEnabled = router.query.devmode === 'true';
 
   const toast = useCustomToast();
   const { onOpen, isOpen, onClose } = useDisclosure();
@@ -120,7 +125,7 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
         <Flex
           direction={{ base: 'column', md: 'row' }}
           px={{ base: '1.5rem', md: '2.5rem' }}
-          py="2rem"
+          py="1rem"
           gap="2rem"
           justify="space-between"
           align={{ base: 'center', md: 'flex-start' }}
@@ -128,7 +133,7 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
           {/* Avatar e Info Básica */}
           <Flex direction={{ base: 'column', md: 'row' }} gap="1.5rem" align={{ base: 'center', md: 'flex-end' }}>
             <Avatar
-              size="2xl"
+              size="xl"
               name={student.name}
               src={student.avatar || '/avatars/default.jpeg'}
               border="4px solid"
@@ -206,7 +211,7 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
           <Flex align="center" gap="0.5rem" mb="1.5rem">
             <Icon as={FiUsers} fontSize="20px" color="primary.500" />
             <Text fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
-              Grupos da Turma
+              Grupos
             </Text>
           </Flex>
 
@@ -365,11 +370,13 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
         </Flex>
       </Grid>
 
-      <Box bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflow="hidden" minH="400px">
-        {student.hub_forms?.map((formLink) => {
-          return <Flex>{JSON.stringify(formLink.questions)}</Flex>;
-        })}
-      </Box>
+      {student.hub_forms && student.hub_forms.length > 0 && (
+        <StudentEvaluationChart forms={student.hub_forms} bgCard={bgCard} borderColor={borderColor} enableDevMode={devModeEnabled} />
+      )}
+
+      {(!student.hub_forms || student.hub_forms.length === 0) && devModeEnabled && (
+        <StudentEvaluationChart forms={[]} bgCard={bgCard} borderColor={borderColor} enableDevMode={true} />
+      )}
 
       {/* 3. MODAIS */}
       <SmallModal
