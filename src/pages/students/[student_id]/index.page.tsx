@@ -92,7 +92,7 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
   const { difficulties, skills } =
     student.hub_forms?.reduce(
       (acc, form) => {
-        const goodQuestions = form.questions.filter((q) => q.score > 3).map((e) => e.question_id);
+        const goodQuestions = form.questions.filter((q) => q.score >= 3).map((e) => e.question_id);
         const badQuestions = form.questions.filter((q) => q.score < 3).map((e) => e.question_id);
 
         const formSkills: string[] = [];
@@ -112,9 +112,9 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
     ) || {};
 
   return (
-    <Flex direction="column" w="100%" h="100%" overflowY="auto" gap="1.5rem" pb="2rem">
+    <Flex direction="column" gap="1.5rem">
       {/* 1. PERFIL PRINCIPAL (Header Card) */}
-      <Box bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflow="hidden">
+      <Box bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm">
         {/* Banner Cover */}
 
         <Flex
@@ -200,7 +200,7 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
       </Box>
 
       {/* 2. CONTEÚDO EM GRID (Fim dos Accordions) */}
-      <Grid templateColumns={{ base: '1fr', lg: 'repeat(3, 1fr)' }} gap="1.5rem" maxH="50%">
+      <Grid templateColumns={{ base: '1fr', lg: 'repeat(3, 1fr)' }} gap="1.5rem" maxH="400px">
         {/* Coluna 1: Grupos */}
         <Flex direction="column" bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" p="1.5rem">
           <Flex align="center" gap="0.5rem" mb="1.5rem">
@@ -364,6 +364,12 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
           )}
         </Flex>
       </Grid>
+
+      <Box bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" overflow="hidden" minH="400px">
+        {student.hub_forms?.map((formLink) => {
+          return <Flex>{JSON.stringify(formLink.questions)}</Flex>;
+        })}
+      </Box>
 
       {/* 3. MODAIS */}
       <SmallModal

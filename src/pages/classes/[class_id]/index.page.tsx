@@ -326,12 +326,13 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
           align="center"
           gap="0.35rem"
           bg="warning50"
-          w="fit-content"
+          w="10rem"
           px="0.75rem"
           py="0.15rem"
           borderRadius="full"
           border="1px solid"
           borderColor="warning200"
+          justify="space-between"
         >
           <Text fontSize="14px" fontWeight="700" color="warning700">
             {formatCoin(student.metadata.coins || 0)}
@@ -438,7 +439,7 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
   };
 
   return (
-    <Flex direction="column" gap="1.5rem">
+    <Flex direction="column" gap="1.5rem" h="100%">
       <PageLoading
         content={
           <Text fontSize="15px" textAlign="center" maxW="350px">

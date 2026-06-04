@@ -123,7 +123,7 @@ const Classes: React.FC = () => {
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" w="100%" h="100%" overflowY="auto" overflowX="hidden" pb="2rem">
+    <Flex direction="column" w="100%" h="100%">
       <Flex direction="column" w="100%" maxW="7xl" mx="auto" px="2rem" gap="2rem">
         {/* Header com Call to Action */}
         <InternalPageHeader
