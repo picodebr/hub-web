@@ -67,7 +67,7 @@ export class WebSerialAdapter implements ISerialPortAdapter {
     }
 
     // Se não há navigator.serial, configurar listener para mensagens do lado nativo (fallback)
-    if (!('serial' in (navigator as any)) && this.isReactNative && this.postMessage) {
+    if (typeof navigator !== 'undefined' && !('serial' in (navigator as any)) && this.isReactNative && this.postMessage) {
       this.messageHandler = (event: MessageEvent) => {
         try {
           const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
@@ -116,7 +116,7 @@ export class WebSerialAdapter implements ISerialPortAdapter {
 
   public async connect(config: SerialConfig, explicitPort?: ISerialPort): Promise<void> {
     // PRIORIDADE 1: Tentar Web Serial API (funciona em web e React Native com navigator.serial injetado)
-    if ('serial' in navigator) {
+    if (typeof navigator !== 'undefined' && 'serial' in navigator) {
       return this.connectViaWebSerial(config, explicitPort);
     }
 
@@ -141,6 +141,11 @@ export class WebSerialAdapter implements ISerialPortAdapter {
         console.log('[WebSerialAdapter] Porta já conectada. Ignorando.');
         return;
       }
+    }
+
+    // Verificação de segurança para SSR/build
+    if (typeof navigator === 'undefined' || !('serial' in navigator)) {
+      throw new Error('Web Serial API não disponível neste ambiente.');
     }
 
     try {
