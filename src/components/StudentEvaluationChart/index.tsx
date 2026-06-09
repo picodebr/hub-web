@@ -9,6 +9,7 @@ interface StudentEvaluationChartProps {
   bgCard: string;
   borderColor: string;
   enableDevMode?: boolean;
+  showLegend?: boolean;
 }
 
 // Array de cores para as linhas
@@ -24,6 +25,30 @@ const COLORS = [
   '#F97316', // orange
   '#6366F1', // indigo
 ];
+
+// Componente customizado para o Tooltip
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length > 0) {
+    const data = payload[0]; // Mostra apenas a barra específica
+    return (
+      <Box
+        bg="#FFFFFF"
+        border="1px solid #E5E7EB"
+        borderRadius="8px"
+        p="0.5rem 0.75rem"
+        boxShadow="0 2px 8px rgba(0, 0, 0, 0.1)"
+      >
+        <Text fontSize="12px" fontWeight="600" color="#1F2937">
+          {data.name}
+        </Text>
+        <Text fontSize="13px" fontWeight="500" color="#1F2937" mt="0.25rem">
+          {data.value?.toFixed(1) ?? data.value}
+        </Text>
+      </Box>
+    );
+  }
+  return null;
+};
 
 // Função para gerar dados mockados
 const generateMockForms = (): IHubFormClassUser[] => {
@@ -79,7 +104,7 @@ const generateMockForms = (): IHubFormClassUser[] => {
 };
 
 // @ts-nocheck
-const StudentEvaluationChart: React.FC<StudentEvaluationChartProps> = ({ forms, bgCard, borderColor, enableDevMode }) => {
+const StudentEvaluationChart: React.FC<StudentEvaluationChartProps> = ({ forms, bgCard, borderColor, enableDevMode, showLegend = true }) => {
   const { colorMode } = useDarkMode();
   const [selectedQuestions, setSelectedQuestions] = useState<Set<string>>(new Set());
 
@@ -225,32 +250,23 @@ const StudentEvaluationChart: React.FC<StudentEvaluationChartProps> = ({ forms, 
 
         {/* Gráfico */}
         <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={chartData.data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <BarChart data={chartData.data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }} cursor={false}>
             <CartesianGrid strokeDasharray="3 3" stroke={colorMode === 'light' ? '#E5E7EB' : '#374151'} />
             <XAxis dataKey="date" stroke={colorMode === 'light' ? '#6B7280' : '#9CA3AF'} style={{ fontSize: '12px' }} />
             <YAxis stroke={colorMode === 'light' ? '#6B7280' : '#9CA3AF'} style={{ fontSize: '12px' }} domain={[0, 5]} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #E5E7EB',
-                borderRadius: '8px',
-                color: '#1F2937',
-              }}
-              labelStyle={{
-                color: '#1F2937',
-              }}
-              formatter={(value) => (typeof value === 'number' ? value.toFixed(1) : value)}
-            />
-            <Legend
-              wrapperStyle={{
-                paddingTop: '1rem',
-                color: colorMode === 'light' ? '#1F2937' : '#F3F4F6',
-              }}
-            />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }} />
+            {showLegend && (
+              <Legend
+                wrapperStyle={{
+                  paddingTop: '1rem',
+                  color: colorMode === 'light' ? '#1F2937' : '#F3F4F6',
+                }}
+              />
+            )}
 
             {Array.from(chartData.questionsMap.entries()).map(([questionId, questionData]) =>
               selectedQuestions.has(questionId) ? (
-                <Bar key={questionId} dataKey={questionId} fill={questionData.color} name={questionData.title} radius={[8, 8, 0, 0]} />
+                <Bar key={questionId} dataKey={questionId} fill={questionData.color} name={questionData.title} radius={[8, 8, 0, 0]} cursor="pointer" />
               ) : null,
             )}
           </BarChart>

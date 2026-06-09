@@ -6,6 +6,10 @@
  * alto nível da aplicação em pacotes de bytes trafegados via USB/Serial para
  * a placa controladora.
  *
+ * Suporta dois ambientes:
+ * 1. Web: Usa a Web Serial API nativa (navigator.serial)
+ * 2. React Native Webview: Usa postMessage para comunicar com o lado nativo
+ *
  * Operações Principais:
  * - requestPort: Interação com o navegador para seleção de hardware pelo usuário.
  * - getReader/getWriter: Gestão de fluxos assíncronos para comunicação não-bloqueante.
@@ -28,12 +32,30 @@ export class WebSerialAdapter implements ISerialPortAdapter {
   private statusCallbacks: ((status: SerialStatus) => void)[] = [];
   private reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   private writer: WritableStreamDefaultWriter<Uint8Array> | null = null;
+  private isReactNative: boolean = false;
+  private postMessage: ((data: string) => void) | null = null;
+  private messageHandler: ((event: MessageEvent) => void) | null = null;
 
   constructor() {
+    this.detectEnvironment();
     this.setupGlobalListeners();
   }
 
+  /**
+   * Detecta se está em React Native Webview
+   */
+  private detectEnvironment() {
+    if (typeof window !== 'undefined') {
+      const webview = (window as any).ReactNativeWebView;
+      if (webview && webview.postMessage) {
+        this.isReactNative = true;
+        this.postMessage = webview.postMessage.bind(webview);
+      }
+    }
+  }
+
   private setupGlobalListeners() {
+    // Setup padrão para Web Serial API (funciona em web e React Native se app injetou)
     if (typeof navigator !== 'undefined' && 'serial' in navigator) {
       const nav = navigator as unknown as NavigatorWithSerial;
       nav.serial.addEventListener('disconnect', (e: Event) => {
@@ -42,6 +64,38 @@ export class WebSerialAdapter implements ISerialPortAdapter {
           this.handleDisconnect();
         }
       });
+    }
+
+    // Se não há navigator.serial, configurar listener para mensagens do lado nativo (fallback)
+    if (!('serial' in (navigator as any)) && this.isReactNative && this.postMessage) {
+      this.messageHandler = (event: MessageEvent) => {
+        try {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+
+          if (data.type === 'SERIAL_PORT_SELECTED') {
+            // Resposta do React Native: porta serial foi selecionada
+            if (data.port) {
+              this._port = data.port;
+            }
+          } else if (data.type === 'SERIAL_DATA') {
+            // Dados recebidos da porta serial
+            if (data.data) {
+              const bytes = new Uint8Array(data.data);
+              this.dataCallbacks.forEach((cb) => cb(bytes));
+            }
+          } else if (data.type === 'SERIAL_DISCONNECTED') {
+            // Porta foi desconectada pelo lado nativo
+            this.handleDisconnect();
+          } else if (data.type === 'SERIAL_ERROR') {
+            // Erro na porta serial
+            const error = new Error(data.message || 'Erro serial do React Native');
+            this.errorCallbacks.forEach((cb) => cb(error));
+          }
+        } catch (e) {
+          console.error('[WebSerialAdapter] Erro processando mensagem:', e);
+        }
+      };
+      window.addEventListener('message', this.messageHandler);
     }
   }
 
@@ -61,10 +115,26 @@ export class WebSerialAdapter implements ISerialPortAdapter {
   }
 
   public async connect(config: SerialConfig, explicitPort?: ISerialPort): Promise<void> {
-    if (!('serial' in navigator)) {
-      throw new Error('Web Serial não suportado neste navegador.');
+    // PRIORIDADE 1: Tentar Web Serial API (funciona em web e React Native com navigator.serial injetado)
+    if ('serial' in navigator) {
+      return this.connectViaWebSerial(config, explicitPort);
     }
 
+    // PRIORIDADE 2: Se não há Web Serial API, tentar postMessage (fallback para React Native novo)
+    if (this.isReactNative && this.postMessage) {
+      return this.connectViaPostMessage(config);
+    }
+
+    // PRIORIDADE 3: Se nada funciona, erro
+    throw new Error(
+      'Nenhum método de conexão serial disponível. ' + 'Verifique se está em um navegador moderno ou em React Native com suporte serial.',
+    );
+  }
+
+  /**
+   * Conexão via Web Serial API (padrão em web e React Native antigo)
+   */
+  private async connectViaWebSerial(config: SerialConfig, explicitPort?: ISerialPort): Promise<void> {
     // Se já estiver conectado à mesma porta, não faz nada
     if (this.status === SerialStatus.CONNECTED && this._port) {
       if (!explicitPort || explicitPort === this._port) {
@@ -91,12 +161,8 @@ export class WebSerialAdapter implements ISerialPortAdapter {
         flowControl: config.flowControl,
       };
 
-      // No Web Serial, não há uma propriedade "isOpen", mas se writable está definido e não bloqueado,
-      // ou se tentarmos abrir e disparar erro "already open", podemos ignorar.
-      // No Web Serial, não há uma propriedade "isOpen" nativa e confiável.
-      // Para evitar erros de "Port already open" durante reconexões rápidas
-      // (comuns após um upload de firmware), capturamos a exceção específica
-      // ou verificamos se os streams (readable/writable) já estão vivos.
+      // Para evitar erros de "Port already open" durante reconexões rápidas,
+      // verificamos se os streams (readable/writable) já estão vivos.
       try {
         if (this._port?.readable || this._port?.writable) {
           console.log('[WebSerialAdapter] Porta detectada como já aberta.');
@@ -105,8 +171,6 @@ export class WebSerialAdapter implements ISerialPortAdapter {
         }
       } catch (openErr: unknown) {
         const msg = (openErr as Error).message || '';
-        // Se o erro for apenas que a porta já está aberta, podemos prosseguir
-        // silenciosamente para iniciar a leitura.
         if (msg.includes('already open')) {
           console.warn('[WebSerialAdapter] Porta já estava aberta (capturado no catch).');
         } else {
@@ -124,6 +188,59 @@ export class WebSerialAdapter implements ISerialPortAdapter {
       this.notifyStatusChange();
 
       this.startReading();
+    } catch (err) {
+      this.status = SerialStatus.ERROR;
+      this.notifyStatusChange();
+      this.errorCallbacks.forEach((cb) => cb(err as Error));
+      throw err;
+    }
+  }
+
+  /**
+   * Conexão via postMessage (fallback para React Native novo sem navigator.serial)
+   */
+  private async connectViaPostMessage(config: SerialConfig): Promise<void> {
+    try {
+      this.status = SerialStatus.CONNECTING;
+      this.notifyStatusChange();
+
+      // Envia mensagem para React Native solicitar seleção de porta
+      this.postMessage!(
+        JSON.stringify({
+          type: 'REQUEST_SERIAL_PORT',
+          config: {
+            baudRate: config.baudRate,
+            dataBits: config.dataBits,
+            stopBits: config.stopBits,
+            parity: config.parity,
+            flowControl: config.flowControl,
+          },
+        }),
+      );
+
+      // Aguarda resposta do React Native (máximo 30 segundos)
+      const portSelected = await new Promise<boolean>((resolve) => {
+        const timeout = setTimeout(() => {
+          resolve(false);
+        }, 30000);
+
+        const checkPort = () => {
+          if (this._port) {
+            clearTimeout(timeout);
+            resolve(true);
+          } else {
+            setTimeout(checkPort, 100);
+          }
+        };
+        checkPort();
+      });
+
+      if (!portSelected) {
+        throw new Error('Timeout ao aguardar seleção de porta no React Native');
+      }
+
+      this.status = SerialStatus.CONNECTED;
+      this.notifyStatusChange();
     } catch (err) {
       this.status = SerialStatus.ERROR;
       this.notifyStatusChange();
@@ -173,25 +290,81 @@ export class WebSerialAdapter implements ISerialPortAdapter {
   }
 
   public async disconnect(): Promise<void> {
+    // PRIORIDADE 1: Limpar Web Serial API (se estiver sendo usada)
     if (this.reader) {
-      await this.reader.cancel();
+      try {
+        await this.reader.cancel();
+      } catch (err) {
+        console.warn('[WebSerialAdapter] Erro ao cancelar reader:', err);
+      }
       this.reader = null;
     }
+
     if (this.writer) {
-      this.writer.releaseLock();
+      try {
+        this.writer.releaseLock();
+      } catch (err) {
+        console.warn('[WebSerialAdapter] Erro ao liberar writer:', err);
+      }
       this.writer = null;
     }
+
     if (this._port) {
-      await this._port.close();
+      try {
+        await this._port.close();
+      } catch (err) {
+        console.warn('[WebSerialAdapter] Erro ao fechar porta:', err);
+      }
       this._port = null;
     }
+
+    // PRIORIDADE 2: Se Web Serial não foi usada, enviar mensagem via postMessage (fallback)
+    if (!this.reader && !this.writer && this.isReactNative && this.postMessage) {
+      try {
+        this.postMessage(
+          JSON.stringify({
+            type: 'SERIAL_DISCONNECT',
+          }),
+        );
+      } catch (err) {
+        console.error('[WebSerialAdapter] Erro ao enviar desconexão via postMessage:', err);
+      }
+
+      // Remover listener de mensagens
+      if (this.messageHandler) {
+        window.removeEventListener('message', this.messageHandler);
+        this.messageHandler = null;
+      }
+    }
+
     this.handleDisconnect();
   }
 
   public async write(data: Uint8Array): Promise<void> {
-    if (!this.writer) throw new Error('Porta não disponível para escrita ou writer não bloqueado.');
-    // Escreve os dados. A fila de promessas é mantida pelo próprio stream interno do Web Serial
-    await this.writer.write(data);
+    // PRIORIDADE 1: Usar writer da Web Serial API (se disponível)
+    if (this.writer) {
+      await this.writer.write(data);
+      return;
+    }
+
+    // PRIORIDADE 2: Fallback para postMessage (React Native novo)
+    if (this.isReactNative && this.postMessage) {
+      try {
+        this.postMessage(
+          JSON.stringify({
+            type: 'SERIAL_WRITE',
+            data: Array.from(data),
+          }),
+        );
+        return;
+      } catch (err) {
+        const error = new Error('Erro ao escrever na porta serial via React Native');
+        this.errorCallbacks.forEach((cb) => cb(error));
+        throw error;
+      }
+    }
+
+    throw new Error('Porta não disponível para escrita.');
   }
 
   public async writeString(data: string): Promise<void> {

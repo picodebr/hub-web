@@ -154,6 +154,7 @@ export const SerializationService = {
           const name = protoBlock.getFieldValue('NAME') || procId;
           const args: CustomBlockArg[] = [];
           let i = 0;
+          // eslint-disable-next-line no-constant-condition
           while (true) {
             const argInput = protoBlock.getInput('ARG_' + i);
             if (!argInput) break;
@@ -320,7 +321,7 @@ export const SerializationService = {
       // while the workspace loads the renamed variable, causing an ID collision crash.
       const restoredVarMap = new Map<string, SpriteVariable>();
       for (const sprite of newSprites) {
-        for (const v of (sprite.variables || [])) {
+        for (const v of sprite.variables || []) {
           if (v?.id) restoredVarMap.set(v.id, v);
         }
       }
