@@ -524,10 +524,14 @@ export default Code;
 export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
   cookieManager.updateToken(req);
 
+  const userAgent = req.headers['user-agent'] || '';
   const projectId = query.project_id || ``;
   const folderId = query.folder_id || ``;
   const pageTitle = query._p || `Novo Projeto`;
+
   let project = null;
+
+  const isWebView = userAgent.includes('wv') || userAgent.includes('RNWebView');
 
   try {
     project = await getCodeProject(`${projectId}`);
@@ -546,9 +550,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
       iframeUrl: process.env.NEXT_PUBLIC_PHYSICAL_SIMULATOR_URL || '',
       hideHeaderOnMobile: true,
       fullScreenOnMobile: true,
-      openNewCode: !!query[`allow-new-code`],
-      fullScreen: true
-
+      openNewCode: !!query[`allow-new-code`] && !isWebView,
+      fullScreen: true,
     },
   };
 };
