@@ -165,10 +165,10 @@ const SignUp: React.FC = () => {
       <AuthBackground />
 
       {/* Container Glassmorphism Central */}
-      <div className="glass-card w-full max-w-[420px] md:max-w-[400px] p-8 relative z-10">
-        <div className="flex flex-col gap-6">
+      <div className="glass-card w-full max-w-[420px] md:max-w-[400px] p-8 relative z-10 max-h-[90vh] flex flex-col">
+        <div className="flex flex-col gap-6 min-h-0 overflow-y-auto">
           {/* Logo */}
-          <div className="flex justify-center">
+          <div className="flex justify-center flex-shrink-0">
             <Logo size="sm" />
           </div>
 
@@ -180,6 +180,7 @@ const SignUp: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
+              className="flex flex-col min-h-0"
             >
               {PageStepElement[step]}
             </motion.div>
