@@ -1,13 +1,9 @@
 import { GetServerSideProps } from 'next';
 import { FaPlus, FaRegShareSquare } from 'react-icons/fa';
-import { FiMoreVertical, FiTrash } from 'react-icons/fi';
-import { motion } from 'framer-motion';
 
 import { capitalizeString, cookieManager, formatShortName } from '@/_base/utils';
 import { Avatar, Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Skeleton, Text } from '@chakra-ui/react';
 import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
-import { PlusButton } from '@/components/Buttons/Plus';
-import { BsMotherboard } from 'react-icons/bs';
 import { useEffect, useMemo, useState } from 'react';
 import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
 import { getCodeProjectFolder } from '@/_base/services/codeProjectFolder';
@@ -15,24 +11,22 @@ import { createCodeProject, removeCodeProject, shareCodeProject, updateCodeProje
 import { ProjectFile } from '@/_base/services/code';
 import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
 import { SmallModal } from '@/components/Modal/Small';
-import { LuSquareDashedBottomCode } from 'react-icons/lu';
 import { IHubUser } from '@/_base/interfaces/user';
 import { listRelatedUsers } from '@/_base/services/user';
 import { IoChevronDownCircleOutline } from 'react-icons/io5';
 import { AvatarList } from '@/components/AvatarList';
-import { BiCode } from 'react-icons/bi';
 import { TextInput } from '@/components/Inputs/Text';
-import DropdownMenu from 'rsuite/esm/Dropdown/DropdownMenu';
-import { ArrowLeft, Code2, Globe, Lock, Plus, Trash2 } from 'lucide-react';
+import { Globe, Lock, Trash2 } from 'lucide-react';
 import moment from 'moment';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
 import { InternalCard } from '@/components/InternalCard';
 
 interface IProps {
   folderId: string;
+  isWebView: boolean;
 }
 
-const CodeProjects: React.FC<IProps> = ({ folderId }) => {
+const CodeProjects: React.FC<IProps> = ({ folderId, isWebView }) => {
   const [targetFolder, setTargetFolder] = useState<IProjectFolder | null>(null);
   const [targetProjectToRemove, setTargetProjectToRemove] = useState<ICodeProject | null>(null);
   const [targetProjectToShare, setTargetProjectToShare] = useState<ICodeProject | null>(null);
@@ -98,10 +92,6 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
         return;
       }
       setIsLoading(true);
-      const newProject = await createCodeProject({
-        folder_id: folderId,
-        name: newProjectName || 'Novo projeto',
-      });
 
       const initialMetadata: ProjectFile = {
         metadata: { version: '1.0', timestamp: new Date().toISOString() },
@@ -136,9 +126,15 @@ const CodeProjects: React.FC<IProps> = ({ folderId }) => {
         uploadMode: { blocks: null, code: '' },
         updatedAt: Date.now(),
       };
-      await updateCodeProject({ id: newProject.id, metadata: initialMetadata });
 
-      router.push(`/code/${folderId}/${newProject.id}?_p=${newProject.name}&allow-new-code=true`);
+      const newProject = await createCodeProject({
+        folder_id: folderId,
+        name: newProjectName || 'Novo projeto',
+        source_code: { code: '', mode: `block`, simulation_elements_layout: [], variables: [] },
+        metadata: initialMetadata,
+      });
+
+      router.push(`/code/${folderId}/${newProject.id}?_p=${newProject.name}&allow-new-code=${isWebView ? 'false' : 'true'}`);
       setNewProjectName(null);
       toast({
         status: 'success',
@@ -319,13 +315,15 @@ export default CodeProjects;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
   const selectedPage = 'code';
+  const userAgent = req.headers['user-agent'] || '';
+  const isWebView = userAgent.includes('wv') || userAgent.includes('RNWebView');
 
   cookieManager.updateToken(req);
 
   const folderId = query.folder_id || ``;
   const pageTitle = query._p || 'Meus projetos';
 
-  return { props: { selectedPage, pageTitle, folderId, fullscreen: true } };
+  return { props: { selectedPage, pageTitle, folderId, fullscreen: true, isWebView } };
 };
 
 interface CodeThumbnailProps {
