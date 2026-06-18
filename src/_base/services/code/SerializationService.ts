@@ -64,6 +64,7 @@ export interface ProjectFile {
   customProcedures?: CustomBlockSpec[];
   broadcastMessages?: string[];
   updatedAt: number;
+  codeVersion?: '1.0-webview' | '1.0';
 }
 
 // const repository = new LocalStorageProjectRepository();

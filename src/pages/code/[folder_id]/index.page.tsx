@@ -124,6 +124,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId, isWebView }) => {
           },
         ],
         uploadMode: { blocks: null, code: '' },
+
         updatedAt: Date.now(),
       };
 
@@ -131,7 +132,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId, isWebView }) => {
         folder_id: folderId,
         name: newProjectName || 'Novo projeto',
         source_code: { code: '', mode: `block`, simulation_elements_layout: [], variables: [] },
-        metadata: initialMetadata,
+        metadata: { ...initialMetadata, codeVersion: isWebView ? '1.0-webview' : '1.0' },
       });
 
       router.push(`/code/${folderId}/${newProject.id}?_p=${newProject.name}&allow-new-code=${isWebView ? 'false' : 'true'}`);
@@ -176,7 +177,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId, isWebView }) => {
             minH="200px"
             index={index}
             onClick={() =>
-              Object.keys(project.metadata || {}).length
+              project.metadata?.metadata && project.metadata?.codeVersion !== '1.0-webview'
                 ? router.push(`/code/${folderId}/${project.id}?_p=${project.name}&allow-new-code=true`)
                 : router.push(`/code/${folderId}/${project.id}?_p=${project.name}`)
             }
