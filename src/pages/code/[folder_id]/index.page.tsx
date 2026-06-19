@@ -2,7 +2,20 @@ import { GetServerSideProps } from 'next';
 import { FaPlus, FaRegShareSquare } from 'react-icons/fa';
 
 import { capitalizeString, cookieManager, formatShortName } from '@/_base/utils';
-import { Avatar, Button, Flex, Menu, MenuButton, MenuItem, MenuItemOption, MenuList, MenuOptionGroup, Skeleton, Text } from '@chakra-ui/react';
+import {
+  Avatar,
+  Button,
+  Flex,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItemOption,
+  MenuList,
+  MenuOptionGroup,
+  Skeleton,
+  Text,
+  Portal,
+} from '@chakra-ui/react';
 import { useAsyncCallback, useAuth, useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { IProjectFolder } from '@/_base/interfaces/codeFolder/IProjectFolder';
@@ -34,6 +47,7 @@ const CodeProjects: React.FC<IProps> = ({ folderId, isWebView }) => {
   const [relatedUsers, setRelatedUsers] = useState<IHubUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [newProjectName, setNewProjectName] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const toast = useCustomToast();
   const router = useCustomRouter();
@@ -52,12 +66,13 @@ const CodeProjects: React.FC<IProps> = ({ folderId, isWebView }) => {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [folderId]);
 
   const onCloseModal = () => {
     setTargetProjectToRemove(null);
     setTargetProjectToShare(null);
     setUsersToShare([]);
+    setSearchTerm('');
   };
 
   const handleRemoveProject = useAsyncCallback(
@@ -77,10 +92,18 @@ const CodeProjects: React.FC<IProps> = ({ folderId, isWebView }) => {
     async () => {
       if (!targetProjectToShare || !usersToShare) return;
       setIsLoading(true);
-      await Promise.all(usersToShare.map((u) => shareCodeProject({ hub_user_id: u.id, code_project_id: targetProjectToShare.id })));
+
+      // Filtrar apenas usuários que não têm acesso ainda
+      const newUsersToShare = usersToShare.filter((u) => !targetProjectToShare?.share_links?.find((s) => s.hub_user_id === u.id));
+
+      // Compartilhar apenas com os usuários novos
+      if (newUsersToShare.length > 0) {
+        await Promise.all(newUsersToShare.map((u) => shareCodeProject({ hub_user_id: u.id, code_project_id: targetProjectToShare.id })));
+      }
+
       onCloseModal();
     },
-    [targetProjectToRemove],
+    [targetProjectToShare],
     true,
     () => setIsLoading(false),
   );
@@ -246,51 +269,92 @@ const CodeProjects: React.FC<IProps> = ({ folderId, isWebView }) => {
         okText="Confirmar"
         isLoading={isLoading}
       >
-        <Flex direction="column" gap="1rem" mt="1rem">
-          <Menu closeOnSelect={false} placement="right">
-            <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white">
-              Selecionar
-            </MenuButton>
-            <MenuList borderColor="gray300" maxH="15rem" overflow="hidden auto">
-              <MenuOptionGroup type="checkbox">
-                {relatedUsers.length ? (
-                  relatedUsers.map((user) => (
-                    <MenuItemOption
-                      key={user.id}
-                      value={user.id}
-                      isChecked={!!targetProjectToShare?.share_links?.find((e) => e.hub_user_id === user.id)}
-                      _hover={{ filter: `brightness(0.9)` }}
-                      onClick={() =>
-                        setUsersToShare((data) => (data.find((u) => u.id === user.id) ? data.filter((u) => u.id !== user.id) : [...data, user]))
-                      }
-                    >
-                      <Flex align="center" gap="0.5rem">
-                        <Avatar
-                          name={formatShortName(user?.name || ``)}
-                          src={user?.avatar || ``}
-                          title={user?.name}
-                          h="35px"
-                          w="35px"
-                          border="1px"
-                          borderColor="gray200 !important"
-                        />
-                        <Text>{capitalizeString(user.name)}</Text>
-                      </Flex>
-                    </MenuItemOption>
-                  ))
-                ) : (
-                  <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
-                )}
-              </MenuOptionGroup>
-            </MenuList>
-          </Menu>
-          <AvatarList
-            users={relatedUsers.filter(
-              (e) => !!targetProjectToShare?.share_links.find((s) => s.hub_user_id === e.id) || usersToShare.find((u) => u.id === e.id),
-            )}
-            max={10}
-            emptyMessage="-"
-          />
+        <Flex direction="column" gap="1.5rem" mt="1rem">
+          <Flex direction="column" gap="0.75rem">
+            <Text fontSize="0.875rem" fontWeight="600" color="gray700">
+              Adicionar acesso:
+            </Text>
+            <Menu closeOnSelect={false} placement="bottom" offset={[0, 8]}>
+              <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white" w="100%">
+                Selecionar
+              </MenuButton>
+              <Portal>
+                <MenuList borderColor="gray300" maxH="30rem" overflowY="auto" zIndex={1400} p="0">
+                  <Flex direction="column">
+                    <Flex p="0.75rem" borderBottom="1px solid" borderBottomColor="gray300" bg="gray50">
+                      <input
+                        type="text"
+                        placeholder="Pesquisar usuário..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem 0.75rem',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          fontFamily: 'inherit',
+                        }}
+                      />
+                    </Flex>
+                    <MenuOptionGroup type="checkbox">
+                      {relatedUsers.length ? (
+                        relatedUsers
+                          .filter((user) => capitalizeString(user.name).toLowerCase().includes(searchTerm.toLowerCase()))
+                          .sort((a, b) => capitalizeString(a.name).localeCompare(capitalizeString(b.name)))
+                          .map((user) => (
+                            <MenuItemOption
+                              key={user.id}
+                              value={user.id}
+                              isChecked={
+                                !!targetProjectToShare?.share_links?.find((e) => e.hub_user_id === user.id) ||
+                                !!usersToShare.find((u) => u.id === user.id)
+                              }
+                              _hover={{ filter: `brightness(0.9)` }}
+                              onClick={() =>
+                                setUsersToShare((data) =>
+                                  data.find((u) => u.id === user.id) ? data.filter((u) => u.id !== user.id) : [...data, user],
+                                )
+                              }
+                            >
+                              <Flex align="center" gap="0.5rem">
+                                <Avatar
+                                  name={formatShortName(user?.name || ``)}
+                                  src={user?.avatar || ``}
+                                  title={user?.name}
+                                  h="35px"
+                                  w="35px"
+                                  border="1px"
+                                  borderColor="gray200 !important"
+                                />
+                                <Text>{capitalizeString(user.name)}</Text>
+                              </Flex>
+                            </MenuItemOption>
+                          ))
+                      ) : (
+                        <MenuItem isDisabled>Nenhum membro disponível</MenuItem>
+                      )}
+                    </MenuOptionGroup>
+                  </Flex>
+                </MenuList>
+              </Portal>
+            </Menu>
+          </Flex>
+
+          <Flex direction="column" gap="0.75rem">
+            <Text fontSize="0.875rem" fontWeight="600" color="gray700">
+              Selecionados para adicionar:
+            </Text>
+            <Flex direction="column" maxH="20vh" overflowY="auto" borderRadius="md" border="1px solid" borderColor="gray200" p="0.75rem">
+              {usersToShare.length > 0 ? (
+                <AvatarList users={usersToShare} max={10} emptyMessage="-" />
+              ) : (
+                <Text fontSize="0.875rem" color="gray500">
+                  Selecione usuários acima
+                </Text>
+              )}
+            </Flex>
+          </Flex>
         </Flex>
       </SmallModal>
 
