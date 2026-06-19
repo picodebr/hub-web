@@ -38,15 +38,14 @@ export const FormStep: React.FC<IProps> = ({
   submitLoading,
   userType,
 }) => {
-
   const handleUsernameChange = (value: string) => {
     // trim() se quiser remover espaços e toLowerCase() para normalizar
     onInputChange('username', value.toLowerCase());
   };
 
   return (
-    <Flex direction="column" h="100%" justify="space-between" align="center" gap="1.25rem" overflow="hidden">
-      <Flex direction="column" gap="8px" marginTop="2rem">
+    <Flex direction="column" w="100%" align="center" gap="1.25rem" overflow="visible" padding="1rem" minH="0" display="flex" flexDirection="column">
+      <Flex direction="column" gap="8px" marginTop="2rem" flexShrink={0}>
         <Text fontWeight="600" fontSize="20px" color="gray900">
           Informe os seus dados
         </Text>
@@ -56,7 +55,11 @@ export const FormStep: React.FC<IProps> = ({
         direction="column"
         width="100%"
         gap="12px"
-        overflow="hidden auto"
+        overflowY="auto"
+        overflowX="hidden"
+        flex="1"
+        minH="0"
+        pr="0.5rem"
       >
         <TextInput
           label="Nome Completo"
@@ -120,6 +123,7 @@ export const FormStep: React.FC<IProps> = ({
         marginTop="8px"
         w="100%"
         isDisabled={!canSubmit}
+        flexShrink={0}
       />
     </Flex>
   );

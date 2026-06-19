@@ -36,10 +36,10 @@ const LoginPage: React.FC = () => {
               password: data.password,
             });
 
-        if (user.schools.find((e) => !e.approved_at)) {
-          toast({ status: `error`, description: `Seu cadastro está pendente de avaliação` });
-          return;
-        }
+        // if (user.schools.find((e) => !e.approved_at)) {
+        //   toast({ status: `error`, description: `Seu cadastro está pendente de avaliação` });
+        //   return;
+        // }
 
         cookieManager.setToken(access_token, keepLogged ? 15 : 1);
         api.defaults.headers.authorization = `Bearer ${access_token}`;
