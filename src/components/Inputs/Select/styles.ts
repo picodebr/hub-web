@@ -51,6 +51,8 @@ export const StyledSelect = {
     color: 'var(--secondary-color)',
     borderRadius: '0.35rem ',
     paddingLeft: '0.5rem',
+    paddingBottom: '0.25em' /* Adiciona um pequeno espaço extra na base */,
+    lineHeight: 'normal' /* Força o html2canvas a respeitar a altura total da fonte */,
   }),
 
   multiValueLabel: (provided: any) => ({
