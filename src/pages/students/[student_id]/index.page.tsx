@@ -382,17 +382,11 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
       </Grid>
 
       {student.hub_forms && student.hub_forms.length > 0 && (
-        <StudentEvaluationChart
-          showLegend={false}
-          forms={student.hub_forms}
-          bgCard={bgCard}
-          borderColor={borderColor}
-          enableDevMode={devModeEnabled}
-        />
+        <StudentEvaluationChart forms={student.hub_forms} bgCard={bgCard} borderColor={borderColor} enableDevMode={devModeEnabled} />
       )}
 
       {(!student.hub_forms || student.hub_forms.length === 0) && devModeEnabled && (
-        <StudentEvaluationChart showLegend={false} forms={[]} bgCard={bgCard} borderColor={borderColor} enableDevMode={true} />
+        <StudentEvaluationChart forms={[]} bgCard={bgCard} borderColor={borderColor} enableDevMode={true} />
       )}
 
       {/* 3. MODAIS */}

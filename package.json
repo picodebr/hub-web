@@ -46,6 +46,7 @@
     "html2canvas": "^1.4.1",
     "js-cookie": "^3.0.5",
     "jsdom-worker": "^0.3.0",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.8.0",
     "mime": "^4.0.1",
     "moment": "^2.29.4",
