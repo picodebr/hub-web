@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { FaPlus } from 'react-icons/fa';
-import { FiUsers, FiBookOpen, FiArrowUpRight } from 'react-icons/fi';
+import { FiUsers, FiBookOpen, FiArrowUpRight, FiDownload } from 'react-icons/fi'; // Adicionado FiDownload
 import { motion } from 'framer-motion';
-import { Checkbox, Skeleton, Flex, Text, Icon, Box, Button } from '@chakra-ui/react';
+import { Checkbox, Skeleton, Flex, Text, Icon, Box, Button, Heading, Grid, useUpdateEffect } from '@chakra-ui/react'; // Adicionado Heading, Grid
+import html2canvas from 'html2canvas'; // Adicionado para PDF
+import jsPDF from 'jspdf'; // Adicionado para PDF
 
 import { useAsyncCallback, useAuth, useCustomToast, useCustomRouter, useDarkMode } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
 import { IHubClass } from '@/_base/interfaces/class';
-import { addClasses, listAllClasses, listMyClasses, removeClass } from '@/_base/services/class';
+import { addClasses, downloadClassForms, listAllClasses, listMyClasses, removeClass } from '@/_base/services/class';
 import { EmptyPageData } from '@/components/EmptyPageData';
 import { SmallModal } from '@/components/Modal/Small';
 import { AvatarList } from '@/components/AvatarList';
@@ -16,8 +18,18 @@ import { useSelectedSchool } from '@/components/Page/components/Header';
 import { sortGradesByClass } from '@/_base/utils';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
 import { Users } from 'lucide-react';
+import { ClassSkillChart } from './[class_id]/components/ClassSkillChart';
+import { isUuid } from 'uuidv4';
 
 type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
+
+// Interface para as avaliações
+interface IEvaluationRecord {
+  student_id: string | number;
+  category: string;
+  score: number;
+  created_at: string;
+}
 
 // Variáveis de Animação
 const containerVariants = {
@@ -30,22 +42,21 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
 };
 
-// Mapa de cores para a barra lateral baseado na série
 const getColorByGrade = (grade: string): string => {
   const colorMap: { [key: string]: string } = {
-    G3: '#D946EF', // Magenta
-    '6': '#8B5CF6', // Purple
-    '7': '#06B6D4', // Cyan
-    '8': '#10B981', // Emerald
-    '9': '#F59E0B', // Amber
-    'MakersPro Mini': '#EC4899', // Pink
-    'MakersPro Explorers': '#3B82F6', // Blue
-    'MakersPro Creators': '#8B5CF6', // Violet
-    'MakersPro Innovators': '#06B6D4', // Cyan
-    'MakersPro Experts': '#F59E0B', // Amber
-    CulturaTech: '#EF4444', // Red
+    G3: '#D946EF',
+    '6': '#8B5CF6',
+    '7': '#06B6D4',
+    '8': '#10B981',
+    '9': '#F59E0B',
+    'MakersPro Mini': '#EC4899',
+    'MakersPro Explorers': '#3B82F6',
+    'MakersPro Creators': '#8B5CF6',
+    'MakersPro Innovators': '#06B6D4',
+    'MakersPro Experts': '#F59E0B',
+    CulturaTech: '#EF4444',
   };
-  return colorMap[grade] || '#6366F1'; // Indigo como padrão
+  return colorMap[grade] || '#6366F1';
 };
 
 const Classes: React.FC = () => {
@@ -53,6 +64,8 @@ const Classes: React.FC = () => {
   const [allClasses, setAllClasses] = useState<IHubClass[]>([]);
   const [modalOpt, setOpenOpt] = useState<ModalType>({});
   const [selectedClasses, setSelectedClasses] = useState<IHubClass[]>([]);
+  const [fullClassData, setFullClassData] = useState<IHubClass[]>([]);
+  const [isExporting, setIsExporting] = useState(false); // Estado de loading para o PDF
 
   const { school } = useSelectedSchool();
   const { user } = useAuth();
@@ -61,6 +74,17 @@ const Classes: React.FC = () => {
   const { colorMode } = useDarkMode();
 
   const sortedClasses = useMemo(() => sortGradesByClass([...classes.data]), [classes.data]);
+
+  useUpdateEffect(() => {
+    if (!sortedClasses.length || !!sortedClasses.find((c) => !isUuid(c.id))) return;
+    downloadClassForms(sortedClasses.map((c) => c.id))
+      .then((classData) =>
+        setFullClassData(sortedClasses.map((c) => ({ ...c, form_links: classData.filter((d) => d.hub_class_id === c.id) || [] })) || []),
+      )
+      .catch((err) => {
+        console.error('Erro ao baixar os formulários das turmas:', err);
+      });
+  }, [sortedClasses]);
 
   const getClasses = useAsyncCallback(
     async (school_id: string) => {
@@ -118,22 +142,93 @@ const Classes: React.FC = () => {
     router.push(`/classes/${hubClass.id}?_p=${hubClass.display_name}`);
   };
 
-  // Cores dinâmicas
+  // Função para exportar todas as turmas em um único PDF
+  const handleExportAllCharts = useAsyncCallback(async () => {
+    if (fullClassData.length === 0) return;
+    setIsExporting(true);
+
+    try {
+      await document.fonts.ready;
+      let pdf: jsPDF | null = null;
+      const pdfWidth = 210; // Largura base A4 em milímetros
+      let hasAddedPage = false;
+
+      for (let i = 0; i < fullClassData.length; i++) {
+        const hubClass = fullClassData[i];
+        const element = document.getElementById(`pdf-class-export-${hubClass.id}`);
+
+        if (!element) continue;
+
+        // Verifica se a turma possui gráficos para serem exportados
+        const hasEvals = element.getAttribute('data-has-evals') === 'true';
+        if (!hasEvals) continue;
+
+        // Pequeno atraso para assegurar que gráficos/animações (se existirem) estejam no DOM
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+
+        // Calcula a altura da página para esta turma específica baseada no conteúdo gerado
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        if (!pdf) {
+          // Inicializa o PDF com o tamanho exato da primeira turma
+          pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'mm',
+            format: [pdfWidth, pdfHeight],
+          });
+        } else {
+          // Adiciona nova página com a altura proporcional ao conteúdo atual
+          pdf.addPage([pdfWidth, pdfHeight], 'p');
+        }
+
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        hasAddedPage = true;
+      }
+
+      if (pdf && hasAddedPage) {
+        pdf.save(`Historico_Avaliacoes_${school?.display_name || 'Turmas'}.pdf`);
+        toast({ status: 'success', description: 'Relatórios gerados com sucesso!' });
+      } else {
+        toast({ status: 'warning', description: 'Nenhuma avaliação encontrada nas turmas atuais.' });
+      }
+    } catch (err) {
+      console.error('Erro ao gerar PDF de todas as turmas:', err);
+      toast({ status: 'error', description: 'Erro ao gerar o PDF.' });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [fullClassData, school]);
+
   const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" w="100%" h="100%">
+    <Flex direction="column" w="100%" h="100%" position="relative">
       <Flex direction="column" w="100%" maxW="7xl" mx="auto" px="2rem" gap="2rem">
-        {/* Header com Call to Action */}
         <InternalPageHeader
           title="Turmas"
           description="Gerencie suas turmas e alunos"
           icon={<Users className="w-6 h-6 text-primary" />}
-          buttons={[{ label: `Adicionar Turma`, leftIcon: <FaPlus />, onClick: () => setOpenOpt({ class_code: true }) }]}
+          buttons={[
+            // NOVO BOTÃO DE EXPORTAÇÃO
+            {
+              label: isExporting ? `Gerando PDF...` : `Exportar Avaliações`,
+              leftIcon: <FiDownload />,
+              onClick: handleExportAllCharts,
+              isLoading: isExporting,
+            },
+            { label: `Adicionar Turma`, leftIcon: <FaPlus />, onClick: () => setOpenOpt({ class_code: true }) },
+          ]}
         />
 
-        {/* Grid de Turmas */}
         {!classes.data.length && !classes._isLoading ? (
           <EmptyPageData />
         ) : (
@@ -152,7 +247,6 @@ const Classes: React.FC = () => {
                   'MakersPro Experts',
                   'CulturaTech',
                 ].includes(hubClass.grade);
-
                 const sidebarColor = getColorByGrade(hubClass.grade);
 
                 return (
@@ -173,7 +267,6 @@ const Classes: React.FC = () => {
                         overflow="hidden"
                         _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
                       >
-                        {/* Topo: Ícone + Código */}
                         <Flex justify="space-between" align="flex-start" pl="0.875rem" pr="0.875rem" pt="1.125rem" pb="0.75rem">
                           <Flex
                             bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'}
@@ -184,15 +277,12 @@ const Classes: React.FC = () => {
                           >
                             <Icon as={FiUsers} boxSize="0.875rem" />
                           </Flex>
-
                           {showBadge && (
                             <Text fontSize="14px" fontWeight="700" color={colorMode === 'light' ? 'gray.400' : 'gray.500'}>
                               #{hubClass.code}
                             </Text>
                           )}
                         </Flex>
-
-                        {/* Seção com Barra Lateral: Nome + Alunos + Seta */}
                         <Flex
                           direction="column"
                           pl="1rem"
@@ -205,12 +295,9 @@ const Classes: React.FC = () => {
                           _hover={{ borderLeftWidth: '6px' }}
                           gap="1rem"
                         >
-                          {/* Nome da Turma */}
                           <Text fontWeight="700" fontSize="14px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1} lineHeight="1.2">
                             {hubClass.display_name}
                           </Text>
-
-                          {/* Alunos + Seta */}
                           <Flex align="center" justify="space-between">
                             <Text fontSize="11px" fontWeight="600" color="gray.500">
                               {hubClass.students?.length || 0} Alunos
@@ -227,7 +314,6 @@ const Classes: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Modal: Adicionar Turmas */}
         <SmallModal
           title={`Turmas da Escola ${school?.display_name || ''}`}
           show={!!modalOpt.class_code}
@@ -239,12 +325,11 @@ const Classes: React.FC = () => {
           topIcon="ray"
           disableOkButton={!selectedClasses.length}
         >
+          {/* Restante do conteúdo do Modal permanece igual */}
           <Flex direction="column" gap="1rem">
             <Text fontSize="14px" color="gray.500">
               Selecione as turmas nas quais você leciona para adicioná-las ao seu painel.
             </Text>
-
-            {/* Cabeçalho de Seleção (Selecionar Todas) */}
             <Flex
               align="center"
               justify="space-between"
@@ -270,8 +355,6 @@ const Classes: React.FC = () => {
                 }}
               />
             </Flex>
-
-            {/* Lista Scrollável de Turmas */}
             <Flex
               direction="column"
               gap="0.5rem"
@@ -282,7 +365,6 @@ const Classes: React.FC = () => {
             >
               {sortGradesByClass(allClasses).map((hubClass) => {
                 const isAvail = classIsAvailable(hubClass);
-
                 return (
                   <Flex
                     key={hubClass.id}
@@ -320,7 +402,6 @@ const Classes: React.FC = () => {
           </Flex>
         </SmallModal>
 
-        {/* Modal: Remover Turma */}
         <SmallModal
           title="Remover turma"
           show={!!modalOpt.confirm_remove}
@@ -337,6 +418,89 @@ const Classes: React.FC = () => {
           </Flex>
         </SmallModal>
       </Flex>
+
+      {/* 
+        CONTÊINER OCULTO PARA EXPORTAÇÃO DO PDF
+        Os dados são renderizados fixos com 1024px de largura para simular um Desktop.
+      */}
+      <Box position="absolute" top="-9999px" left="-9999px" width="1024px" zIndex="-1" opacity={0} pointerEvents="none">
+        {fullClassData.map((hubClass) => {
+          // Lógica espelhada do componente Exam.tsx para pegar as avaliações
+          const allEvaluations: IEvaluationRecord[] =
+            hubClass?.form_links?.reduce((acc: any, form_link: any) => {
+              const exams: IEvaluationRecord[] = [];
+              form_link.student_relations?.forEach((studentRel: any) => {
+                studentRel.questions?.forEach((q: any) => {
+                  exams.push({
+                    category: form_link.form.questions.find((e: any) => e.id === q.question_id)?.title || 'Habilidade Desconhecida',
+                    score: q.score,
+                    student_id: studentRel.hub_user_id,
+                    created_at: form_link.finished_at || new Date().toISOString(),
+                  });
+                });
+              });
+              acc.push(...exams);
+              return acc;
+            }, [] as IEvaluationRecord[]) || [];
+
+          const uniqueSkills = Array.from(new Set(allEvaluations.map((e) => e.category))).filter(Boolean);
+
+          return (
+            <Box
+              key={`export-${hubClass.id}`}
+              id={`pdf-class-export-${hubClass.id}`}
+              data-has-evals={uniqueSkills.length > 0 ? 'true' : 'false'}
+              p={8}
+              bg="#ffffff"
+              style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" }}
+            >
+              <Heading size="lg" color="#1A202C" pb={4}>
+                {hubClass.display_name} - Histórico de Avaliações
+              </Heading>
+
+              <Box bg="#F8FAFC" p={3} borderRadius="md" border="1px solid #E2E8F0" mb={6}>
+                <Text fontSize="xs" fontWeight="bold" color="#64748B" textTransform="uppercase" mb={1}>
+                  Alunos Selecionados na Visualização:
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="#1E293B">
+                  *Todos alunos da turma
+                </Text>
+              </Box>
+
+              {uniqueSkills.length > 0 && (
+                <Grid templateColumns="repeat(3, 1fr)" gap={6} width="100%">
+                  {uniqueSkills.map((skillName) => {
+                    const skillEvals = allEvaluations.filter((e) => e.category === skillName);
+                    const dailyMap = new Map<string, { sum: number; count: number }>();
+
+                    skillEvals.forEach((ev) => {
+                      const exactDay = new Date(ev.created_at).toLocaleDateString('pt-BR');
+                      const current = dailyMap.get(exactDay) || { sum: 0, count: 0 };
+                      dailyMap.set(exactDay, {
+                        sum: current.sum + Number(ev.score || 0),
+                        count: current.count + 1,
+                      });
+                    });
+
+                    const chartData = Array.from(dailyMap.entries())
+                      .map(([date, { sum, count }]) => ({
+                        date,
+                        média: count > 0 ? Number((sum / count).toFixed(2)) : 0,
+                      }))
+                      .sort((a, b) => {
+                        const [dA, mA, yA] = a.date.split('/').map(Number);
+                        const [dB, mB, yB] = b.date.split('/').map(Number);
+                        return new Date(yA, mA - 1, dA).getTime() - new Date(yB, mB - 1, dB).getTime();
+                      });
+
+                    return <ClassSkillChart key={skillName} skillName={skillName} data={chartData} />;
+                  })}
+                </Grid>
+              )}
+            </Box>
+          );
+        })}
+      </Box>
     </Flex>
   );
 };
