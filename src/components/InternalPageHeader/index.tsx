@@ -11,6 +11,7 @@ interface IButtonProps {
   leftIcon?: React.ReactElement;
   rightIcon?: React.ReactElement;
   isLoading?: boolean;
+  loadingText?: string;
 }
 
 interface IProps {
@@ -65,6 +66,7 @@ export const InternalPageHeader: React.FC<IProps> = ({ title, actions, buttons, 
             leftIcon={btn.leftIcon}
             rightIcon={btn.rightIcon}
             onClick={btn.onClick}
+            loadingText={btn.loadingText}
             isLoading={btn.isLoading}
           />
         ))}

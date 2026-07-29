@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { FaPlus } from 'react-icons/fa';
-import { FiUsers, FiBookOpen, FiArrowUpRight, FiDownload } from 'react-icons/fi'; // Adicionado FiDownload
+import { FiUsers, FiArrowUpRight, FiDownload } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { Checkbox, Skeleton, Flex, Text, Icon, Box, Button, Heading, Grid, useUpdateEffect } from '@chakra-ui/react'; // Adicionado Heading, Grid
-import html2canvas from 'html2canvas'; // Adicionado para PDF
-import jsPDF from 'jspdf'; // Adicionado para PDF
+import { Checkbox, Skeleton, Flex, Text, Icon, Box, Heading, Grid, useUpdateEffect } from '@chakra-ui/react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 import { useAsyncCallback, useAuth, useCustomToast, useCustomRouter, useDarkMode } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
@@ -13,7 +13,6 @@ import { IHubClass } from '@/_base/interfaces/class';
 import { addClasses, downloadClassForms, listAllClasses, listMyClasses, removeClass } from '@/_base/services/class';
 import { EmptyPageData } from '@/components/EmptyPageData';
 import { SmallModal } from '@/components/Modal/Small';
-import { AvatarList } from '@/components/AvatarList';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { sortGradesByClass } from '@/_base/utils';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
@@ -23,7 +22,6 @@ import { isUuid } from 'uuidv4';
 
 type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
 
-// Interface para as avaliações
 interface IEvaluationRecord {
   student_id: string | number;
   category: string;
@@ -31,7 +29,6 @@ interface IEvaluationRecord {
   created_at: string;
 }
 
-// Variáveis de Animação
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08 } },
@@ -65,7 +62,11 @@ const Classes: React.FC = () => {
   const [modalOpt, setOpenOpt] = useState<ModalType>({});
   const [selectedClasses, setSelectedClasses] = useState<IHubClass[]>([]);
   const [fullClassData, setFullClassData] = useState<IHubClass[]>([]);
-  const [isExporting, setIsExporting] = useState(false); // Estado de loading para o PDF
+
+  // Estados de controle para o PDF
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState({ current: 0, total: 0 });
+  const [exportingClassId, setExportingClassId] = useState<string | null>(null);
 
   const { school } = useSelectedSchool();
   const { user } = useAuth();
@@ -146,50 +147,50 @@ const Classes: React.FC = () => {
     router.push(`/classes/${hubClass.id}?_p=${hubClass.display_name}`);
   };
 
-  // Função para exportar todas as turmas em um único PDF
   const handleExportAllCharts = useAsyncCallback(async () => {
     if (fullClassData.length === 0) return;
+
     setIsExporting(true);
+    setExportProgress({ current: 0, total: fullClassData.length });
 
     try {
       await document.fonts.ready;
       let pdf: jsPDF | null = null;
-      const pdfWidth = 210; // Largura base A4 em milímetros
+      const pdfWidth = 210;
       let hasAddedPage = false;
 
       for (let i = 0; i < fullClassData.length; i++) {
         const hubClass = fullClassData[i];
-        const element = document.getElementById(`pdf-class-export-${hubClass.id}`);
 
+        // Atualiza a UI do botão e injeta SOMENTE esta turma no DOM oculto
+        setExportProgress({ current: i + 1, total: fullClassData.length });
+        setExportingClassId(hubClass.id);
+
+        // PAUSA OBRIGATÓRIA (1s)
+        // Isso dá tempo para o React montar a turma, os gráficos carregarem
+        // as animações, e o navegador limpar o lixo de memória da rodada anterior.
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const element = document.getElementById(`pdf-class-export-${hubClass.id}`);
         if (!element) continue;
 
-        // Verifica se a turma possui gráficos para serem exportados
         const hasEvals = element.getAttribute('data-has-evals') === 'true';
         if (!hasEvals) continue;
 
-        // Pequeno atraso para assegurar que gráficos/animações (se existirem) estejam no DOM
-        await new Promise((resolve) => setTimeout(resolve, 50));
-
+        // Tira o Print (com escala reduzida de 2 para 1.5 para salvar RAM, mantendo alta qualidade)
         const canvas = await html2canvas(element, {
-          scale: 2,
+          scale: 1.5,
           useCORS: true,
           backgroundColor: '#ffffff',
+          logging: false, // Desliga os logs internos do html2canvas para ganhar ms
         });
 
         const imgData = canvas.toDataURL('image/png');
-
-        // Calcula a altura da página para esta turma específica baseada no conteúdo gerado
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
         if (!pdf) {
-          // Inicializa o PDF com o tamanho exato da primeira turma
-          pdf = new jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: [pdfWidth, pdfHeight],
-          });
+          pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: [pdfWidth, pdfHeight] });
         } else {
-          // Adiciona nova página com a altura proporcional ao conteúdo atual
           pdf.addPage([pdfWidth, pdfHeight], 'p');
         }
 
@@ -207,7 +208,10 @@ const Classes: React.FC = () => {
       console.error('Erro ao gerar PDF de todas as turmas:', err);
       toast({ status: 'error', description: 'Erro ao gerar o PDF.' });
     } finally {
+      // 4. Limpa e reseta tudo
       setIsExporting(false);
+      setExportProgress({ current: 0, total: 0 });
+      setExportingClassId(null);
     }
   }, [fullClassData, school]);
 
@@ -222,12 +226,12 @@ const Classes: React.FC = () => {
           description="Gerencie suas turmas e alunos"
           icon={<Users className="w-6 h-6 text-primary" />}
           buttons={[
-            // NOVO BOTÃO DE EXPORTAÇÃO
             {
-              label: isExporting ? `Gerando PDF...` : `Exportar Avaliações`,
+              label: 'Exportar Avaliações',
               leftIcon: <FiDownload />,
               onClick: handleExportAllCharts,
               isLoading: isExporting,
+              loadingText: `Gerando PDF (${exportProgress.current}/${exportProgress.total})`,
             },
             { label: `Adicionar Turma`, leftIcon: <FaPlus />, onClick: () => setOpenOpt({ class_code: true }) },
           ]}
@@ -329,7 +333,6 @@ const Classes: React.FC = () => {
           topIcon="ray"
           disableOkButton={!selectedClasses.length}
         >
-          {/* Restante do conteúdo do Modal permanece igual */}
           <Flex direction="column" gap="1rem">
             <Text fontSize="14px" color="gray.500">
               Selecione as turmas nas quais você leciona para adicioná-las ao seu painel.
@@ -423,87 +426,85 @@ const Classes: React.FC = () => {
         </SmallModal>
       </Flex>
 
-      {/* 
-        CONTÊINER OCULTO PARA EXPORTAÇÃO DO PDF
-        Os dados são renderizados fixos com 1024px de largura para simular um Desktop.
-      */}
+      {/* CONTÊINER OCULTO  */}
       <Box position="absolute" top="-9999px" left="-9999px" width="1024px" zIndex="-1" opacity={0} pointerEvents="none">
-        {fullClassData.map((hubClass) => {
-          // Lógica espelhada do componente Exam.tsx para pegar as avaliações
-          const allEvaluations: IEvaluationRecord[] =
-            hubClass?.form_links?.reduce((acc: any, form_link: any) => {
-              const exams: IEvaluationRecord[] = [];
-              form_link.student_relations?.forEach((studentRel: any) => {
-                studentRel.questions?.forEach((q: any) => {
-                  exams.push({
-                    category: form_link.form.questions.find((e: any) => e.id === q.question_id)?.title || 'Habilidade Desconhecida',
-                    score: q.score,
-                    student_id: studentRel.hub_user_id,
-                    created_at: form_link.finished_at || new Date().toISOString(),
+        {fullClassData
+          .filter((hubClass) => hubClass.id === exportingClassId) // MÁGICA AQUI: Apenas 1 turma fica montada no DOM por vez!
+          .map((hubClass) => {
+            const allEvaluations: IEvaluationRecord[] =
+              hubClass?.form_links?.reduce((acc: any, form_link: any) => {
+                const exams: IEvaluationRecord[] = [];
+                form_link.student_relations?.forEach((studentRel: any) => {
+                  studentRel.questions?.forEach((q: any) => {
+                    exams.push({
+                      category: form_link.form.questions.find((e: any) => e.id === q.question_id)?.title || 'Habilidade Desconhecida',
+                      score: q.score,
+                      student_id: studentRel.hub_user_id,
+                      created_at: form_link.finished_at || new Date().toISOString(),
+                    });
                   });
                 });
-              });
-              acc.push(...exams);
-              return acc;
-            }, [] as IEvaluationRecord[]) || [];
+                acc.push(...exams);
+                return acc;
+              }, [] as IEvaluationRecord[]) || [];
 
-          const uniqueSkills = Array.from(new Set(allEvaluations.map((e) => e.category))).filter(Boolean);
+            const uniqueSkills = Array.from(new Set(allEvaluations.map((e) => e.category))).filter(Boolean);
 
-          return (
-            <Box
-              key={`export-${hubClass.id}`}
-              id={`pdf-class-export-${hubClass.id}`}
-              data-has-evals={uniqueSkills.length > 0 ? 'true' : 'false'}
-              p={8}
-              bg="#ffffff"
-              style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" }}
-            >
-              <Heading size="lg" color="#1A202C" pb={4}>
-                {hubClass.display_name} - Histórico de Avaliações
-              </Heading>
+            return (
+              <Box
+                key={`export-${hubClass.id}`}
+                id={`pdf-class-export-${hubClass.id}`}
+                data-has-evals={uniqueSkills.length > 0 ? 'true' : 'false'}
+                p={8}
+                bg="#ffffff"
+                style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" }}
+              >
+                <Heading size="lg" color="#1A202C" pb={4}>
+                  {hubClass.display_name} - Histórico de Avaliações
+                </Heading>
 
-              <Box bg="#F8FAFC" p={3} borderRadius="md" border="1px solid #E2E8F0" mb={6}>
-                <Text fontSize="xs" fontWeight="bold" color="#64748B" textTransform="uppercase" mb={1}>
-                  Alunos Selecionados na Visualização:
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="#1E293B">
-                  *Todos alunos da turma
-                </Text>
+                <Box bg="#F8FAFC" p={3} borderRadius="md" border="1px solid #E2E8F0" mb={6}>
+                  <Text fontSize="xs" fontWeight="bold" color="#64748B" textTransform="uppercase" mb={1}>
+                    Alunos Selecionados na Visualização:
+                  </Text>
+                  <Text fontSize="sm" fontWeight="600" color="#1E293B">
+                    *Todos alunos da turma
+                  </Text>
+                </Box>
+
+                {uniqueSkills.length > 0 && (
+                  <Grid templateColumns="repeat(3, 1fr)" gap={6} width="100%">
+                    {uniqueSkills.map((skillName) => {
+                      const skillEvals = allEvaluations.filter((e) => e.category === skillName);
+                      const dailyMap = new Map<string, { sum: number; count: number }>();
+
+                      skillEvals.forEach((ev) => {
+                        const exactDay = new Date(ev.created_at).toLocaleDateString('pt-BR');
+                        const current = dailyMap.get(exactDay) || { sum: 0, count: 0 };
+                        dailyMap.set(exactDay, {
+                          sum: current.sum + Number(ev.score || 0),
+                          count: current.count + 1,
+                        });
+                      });
+
+                      const chartData = Array.from(dailyMap.entries())
+                        .map(([date, { sum, count }]) => ({
+                          date,
+                          média: count > 0 ? Number((sum / count).toFixed(2)) : 0,
+                        }))
+                        .sort((a, b) => {
+                          const [dA, mA, yA] = a.date.split('/').map(Number);
+                          const [dB, mB, yB] = b.date.split('/').map(Number);
+                          return new Date(yA, mA - 1, dA).getTime() - new Date(yB, mB - 1, dB).getTime();
+                        });
+
+                      return <ClassSkillChart key={skillName} skillName={skillName} data={chartData} />;
+                    })}
+                  </Grid>
+                )}
               </Box>
-
-              {uniqueSkills.length > 0 && (
-                <Grid templateColumns="repeat(3, 1fr)" gap={6} width="100%">
-                  {uniqueSkills.map((skillName) => {
-                    const skillEvals = allEvaluations.filter((e) => e.category === skillName);
-                    const dailyMap = new Map<string, { sum: number; count: number }>();
-
-                    skillEvals.forEach((ev) => {
-                      const exactDay = new Date(ev.created_at).toLocaleDateString('pt-BR');
-                      const current = dailyMap.get(exactDay) || { sum: 0, count: 0 };
-                      dailyMap.set(exactDay, {
-                        sum: current.sum + Number(ev.score || 0),
-                        count: current.count + 1,
-                      });
-                    });
-
-                    const chartData = Array.from(dailyMap.entries())
-                      .map(([date, { sum, count }]) => ({
-                        date,
-                        média: count > 0 ? Number((sum / count).toFixed(2)) : 0,
-                      }))
-                      .sort((a, b) => {
-                        const [dA, mA, yA] = a.date.split('/').map(Number);
-                        const [dB, mB, yB] = b.date.split('/').map(Number);
-                        return new Date(yA, mA - 1, dA).getTime() - new Date(yB, mB - 1, dB).getTime();
-                      });
-
-                    return <ClassSkillChart key={skillName} skillName={skillName} data={chartData} />;
-                  })}
-                </Grid>
-              )}
-            </Box>
-          );
-        })}
+            );
+          })}
       </Box>
     </Flex>
   );

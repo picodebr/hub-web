@@ -16,11 +16,6 @@ import {
   Icon,
   Divider,
   useToast,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionIcon,
-  AccordionPanel,
   Heading,
 } from '@chakra-ui/react';
 import { FaGraduationCap, FaUsers } from 'react-icons/fa';
@@ -204,45 +199,46 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
       try {
         await document.fonts.ready;
 
-        const canvas: HTMLCanvasElement = await new Promise((resolve, reject) => {
-          setTimeout(() => {
-            if (!pdfExportRef.current) return reject(null);
+        // Pausa para a UI respirar e atualizar o botão de loading
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => setTimeout(resolve, 150));
+        });
 
-            html2canvas(pdfExportRef.current, {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: '#ffffff',
-              // Mágica educacional: Intercepta o clone virtual antes de desenhar a foto
-              onclone: (clonedDoc) => {
-                // 1. Esconde botões e filtros
-                clonedDoc.querySelectorAll('[data-pdf-ignore="true"]').forEach((el) => {
-                  if (el instanceof HTMLElement) el.style.display = 'none';
-                });
-                // 2. Revela o cabeçalho formatado
-                const header = clonedDoc.querySelector('[data-pdf-header="true"]');
-                if (header instanceof HTMLElement) header.style.display = 'block';
-              },
-            })
-              .then((canvas) => {
-                return resolve(canvas);
-              })
-              .catch((err) => {
-                return reject(err);
-              });
-          }, 0);
+        const canvas = await html2canvas(pdfExportRef.current, {
+          scale: 1.5, // Reduzido de 2 para 1.5 para mais velocidade e menos RAM
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false, // Otimização de performance
+          onclone: (clonedDoc) => {
+            clonedDoc.querySelectorAll('[data-pdf-ignore="true"]').forEach((el) => {
+              if (el instanceof HTMLElement) el.style.display = 'none';
+            });
+            const header = clonedDoc.querySelector('[data-pdf-header="true"]');
+            if (header instanceof HTMLElement) header.style.display = 'block';
+          },
         });
 
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
+
+        // Definição da altura dinâmica
+        const pdfWidth = 210; // mm (equivalente à largura A4)
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        const pdf = new jsPDF({
+          orientation: 'p',
+          unit: 'mm',
+          format: [pdfWidth, pdfHeight],
+        });
 
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
         const safeClassName = hub_class?.display_name ? hub_class.display_name.replace(/\s+/g, '_') : 'Turma';
         pdf.save(`Historico_Avaliacoes_${safeClassName}.pdf`);
+
+        toast({ title: 'Sucesso', description: 'Relatório gerado com sucesso!', status: 'success', duration: 3000 });
       } catch (err) {
         console.error('Erro ao gerar PDF:', err);
+        toast({ title: 'Erro', description: 'Ocorreu um erro ao gerar o PDF.', status: 'error', duration: 3000 });
       }
     },
     [],
@@ -532,9 +528,8 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
             </motion.div>
           ) : (
             <Box width="100%">
-              {/* Contêiner do PDF injetando a stack tipográfica moderna (Sem Arial!) */}
+              {/* Contêiner do PDF injetando a stack tipográfica */}
               <Box ref={pdfExportRef} p={4} bg="transparent" style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" }}>
-                {/* [NOVO] CABEÇALHO SECRETO DO PDF (Revelado apenas dentro do motor do html2canvas) */}
                 <Box data-pdf-header="true" display="none" mb={6}>
                   <Heading size="lg" color="#1A202C" pb={4} fontFamily="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif">
                     {hub_class?.display_name || 'Histórico de Avaliações'}
@@ -610,6 +605,7 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
                     colorScheme="blue"
                     size="sm"
                     isLoading={isLoading}
+                    loadingText="Exportando..."
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
