@@ -79,7 +79,11 @@ const Classes: React.FC = () => {
     if (!sortedClasses.length || !!sortedClasses.find((c) => !isUuid(c.id))) return;
     downloadClassForms(sortedClasses.map((c) => c.id))
       .then((classData) =>
-        setFullClassData(sortedClasses.map((c) => ({ ...c, form_links: classData.filter((d) => d.hub_class_id === c.id) || [] })) || []),
+        setFullClassData(
+          sortedClasses
+            .map((c) => ({ ...c, form_links: classData.filter((d) => d.hub_class_id === c.id) || [] }))
+            .filter((e) => e.form_links.length) || [],
+        ),
       )
       .catch((err) => {
         console.error('Erro ao baixar os formulários das turmas:', err);
