@@ -166,9 +166,7 @@ const Classes: React.FC = () => {
         setExportProgress({ current: i + 1, total: fullClassData.length });
         setExportingClassId(hubClass.id);
 
-        // PAUSA OBRIGATÓRIA (1s)
-        // Isso dá tempo para o React montar a turma, os gráficos carregarem
-        // as animações, e o navegador limpar o lixo de memória da rodada anterior.
+        // PAUSA OBRIGATÓRIA (1s) para o React montar e os gráficos renderizarem
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         const element = document.getElementById(`pdf-class-export-${hubClass.id}`);
@@ -177,24 +175,32 @@ const Classes: React.FC = () => {
         const hasEvals = element.getAttribute('data-has-evals') === 'true';
         if (!hasEvals) continue;
 
-        // Tira o Print (com escala reduzida de 2 para 1.5 para salvar RAM, mantendo alta qualidade)
+        // OTIMIZAÇÃO 1: Redução de scale para 1.2
         const canvas = await html2canvas(element, {
-          scale: 1.5,
+          scale: 1.2,
           useCORS: true,
           backgroundColor: '#ffffff',
-          logging: false, // Desliga os logs internos do html2canvas para ganhar ms
+          logging: false,
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        // OTIMIZAÇÃO 2: Alteração de PNG para JPEG com 80% de qualidade
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
         if (!pdf) {
-          pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: [pdfWidth, pdfHeight] });
+          // OTIMIZAÇÃO 3: 'compress: true' compacta a estrutura interna do PDF
+          pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'mm',
+            format: [pdfWidth, pdfHeight],
+            compress: true,
+          });
         } else {
           pdf.addPage([pdfWidth, pdfHeight], 'p');
         }
 
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        // OTIMIZAÇÃO 4: A flag 'FAST' instrui o jsPDF a aplicar compressão leve ao inserir a imagem
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         hasAddedPage = true;
       }
 
@@ -208,7 +214,7 @@ const Classes: React.FC = () => {
       console.error('Erro ao gerar PDF de todas as turmas:', err);
       toast({ status: 'error', description: 'Erro ao gerar o PDF.' });
     } finally {
-      // 4. Limpa e reseta tudo
+      // Limpa e reseta tudo
       setIsExporting(false);
       setExportProgress({ current: 0, total: 0 });
       setExportingClassId(null);
