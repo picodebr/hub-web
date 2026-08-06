@@ -160,13 +160,36 @@ const Classes: React.FC = () => {
       let hasAddedPage = false;
 
       for (let i = 0; i < fullClassData.length; i++) {
+        // SOLUÇÃO 1: Pausa o loop automaticamente se o usuário trocar de aba (Evita PDF em branco)
+        while (document.hidden) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+
         const hubClass = fullClassData[i];
 
         setExportProgress({ current: i + 1, total: fullClassData.length });
         setExportingClassId(hubClass.id);
 
-        // Aguardamos 1 segundo para a montagem completa dos gráficos na DOM
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // DOM Polling (Esperar o React realmente pintar os gráficos antes do Canvas)
+        await new Promise<void>((resolve) => {
+          let attempts = 0;
+          const checkDOM = () => {
+            attempts++;
+            const el = document.getElementById(`pdf-class-export-${hubClass.id}`);
+
+            // Se o elemento existe na tela, damos um tempo extra para as bibliotecas de gráficos finalizarem os traços
+            if (el) {
+              setTimeout(resolve, 800);
+            } else if (attempts > 50) {
+              // Timeout de segurança (5 segundos) para não prender o usuário infinitamente
+              resolve();
+            } else {
+              // Tenta procurar a turma novamente em 100ms
+              setTimeout(checkDOM, 100);
+            }
+          };
+          checkDOM();
+        });
 
         const element = document.getElementById(`pdf-class-export-${hubClass.id}`);
         if (!element) continue;
@@ -174,17 +197,17 @@ const Classes: React.FC = () => {
         const hasEvals = element.getAttribute('data-has-evals') === 'true';
         if (!hasEvals) continue;
 
-        // OTIMIZAÇÕES E CORREÇÕES PARA SAFARI/OPERA
+        // Micro-pausas (Yields) para evitar travamento da Main Thread (Aviso de "Wait")
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
         const canvas = await html2canvas(element, {
           scale: 1.2,
           useCORS: true,
           backgroundColor: '#ffffff',
           logging: false,
-          // FIX: Força a captura a partir do topo absoluto, ignorando o scroll do usuário
           scrollY: 0,
           scrollX: 0,
           onclone: (clonedDoc) => {
-            // FIX: Remove a máscara invisível (clip-path) apenas na cópia que virará imagem
             const clonedContainer = clonedDoc.getElementById(`pdf-class-export-${hubClass.id}`);
             if (clonedContainer) {
               clonedContainer.style.clipPath = 'none';
@@ -192,8 +215,14 @@ const Classes: React.FC = () => {
           },
         });
 
+        // Yield antes da compressão pesada
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
         const imgData = canvas.toDataURL('image/jpeg', 0.8);
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        // Yield antes da injeção no JS PDF
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         if (!pdf) {
           pdf = new jsPDF({
@@ -208,6 +237,10 @@ const Classes: React.FC = () => {
 
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         hasAddedPage = true;
+
+        // Limpeza Forçada de Memória (Memory Leak fix)
+        canvas.width = 0;
+        canvas.height = 0;
       }
 
       if (pdf && hasAddedPage) {
@@ -242,7 +275,7 @@ const Classes: React.FC = () => {
               leftIcon: <FiDownload />,
               onClick: handleExportAllCharts,
               isLoading: isExporting,
-              loadingText: `Gerando PDF (${exportProgress.current}/${exportProgress.total})`,
+              loadingText: `Gerando relatório (${exportProgress.current}/${exportProgress.total})`,
             },
             { label: `Adicionar Turma`, leftIcon: <FaPlus />, onClick: () => setOpenOpt({ class_code: true }) },
           ]}
