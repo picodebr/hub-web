@@ -162,11 +162,10 @@ const Classes: React.FC = () => {
       for (let i = 0; i < fullClassData.length; i++) {
         const hubClass = fullClassData[i];
 
-        // Atualiza a UI do botão e injeta SOMENTE esta turma no DOM oculto
         setExportProgress({ current: i + 1, total: fullClassData.length });
         setExportingClassId(hubClass.id);
 
-        // PAUSA OBRIGATÓRIA (1s) para o React montar e os gráficos renderizarem
+        // Aguardamos 1 segundo para a montagem completa dos gráficos na DOM
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         const element = document.getElementById(`pdf-class-export-${hubClass.id}`);
@@ -175,20 +174,28 @@ const Classes: React.FC = () => {
         const hasEvals = element.getAttribute('data-has-evals') === 'true';
         if (!hasEvals) continue;
 
-        // OTIMIZAÇÃO 1: Redução de scale para 1.2
+        // OTIMIZAÇÕES E CORREÇÕES PARA SAFARI/OPERA
         const canvas = await html2canvas(element, {
           scale: 1.2,
           useCORS: true,
           backgroundColor: '#ffffff',
           logging: false,
+          // FIX: Força a captura a partir do topo absoluto, ignorando o scroll do usuário
+          scrollY: 0,
+          scrollX: 0,
+          onclone: (clonedDoc) => {
+            // FIX: Remove a máscara invisível (clip-path) apenas na cópia que virará imagem
+            const clonedContainer = clonedDoc.getElementById(`pdf-class-export-${hubClass.id}`);
+            if (clonedContainer) {
+              clonedContainer.style.clipPath = 'none';
+            }
+          },
         });
 
-        // OTIMIZAÇÃO 2: Alteração de PNG para JPEG com 80% de qualidade
         const imgData = canvas.toDataURL('image/jpeg', 0.8);
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
         if (!pdf) {
-          // OTIMIZAÇÃO 3: 'compress: true' compacta a estrutura interna do PDF
           pdf = new jsPDF({
             orientation: 'p',
             unit: 'mm',
@@ -199,7 +206,6 @@ const Classes: React.FC = () => {
           pdf.addPage([pdfWidth, pdfHeight], 'p');
         }
 
-        // OTIMIZAÇÃO 4: A flag 'FAST' instrui o jsPDF a aplicar compressão leve ao inserir a imagem
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         hasAddedPage = true;
       }
@@ -214,7 +220,6 @@ const Classes: React.FC = () => {
       console.error('Erro ao gerar PDF de todas as turmas:', err);
       toast({ status: 'error', description: 'Erro ao gerar o PDF.' });
     } finally {
-      // Limpa e reseta tudo
       setIsExporting(false);
       setExportProgress({ current: 0, total: 0 });
       setExportingClassId(null);
@@ -432,10 +437,26 @@ const Classes: React.FC = () => {
         </SmallModal>
       </Flex>
 
-      {/* CONTÊINER OCULTO  */}
-      <Box position="absolute" top="-9999px" left="-9999px" width="1024px" zIndex="-1" opacity={0} pointerEvents="none">
+      {/* CONTÊINER OCULTO OTIMIZADO PARA WEBKIT (Safari/Opera) */}
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        width="1024px"
+        zIndex="-1"
+        pointerEvents="none"
+        // FIX 1: clipPath substitui o opacity=0 e coordenadas negativas. Oculta perfeitamente sem descartar a renderização da GPU.
+        style={{ clipPath: 'inset(100%)' }}
+        // FIX 2: Força todos os elementos filhos a renderizarem estáticos instantaneamente (sem animações CSS ou Recharts).
+        css={{
+          '& *': {
+            animation: 'none !important',
+            transition: 'none !important',
+          },
+        }}
+      >
         {fullClassData
-          .filter((hubClass) => hubClass.id === exportingClassId) // MÁGICA AQUI: Apenas 1 turma fica montada no DOM por vez!
+          .filter((hubClass) => hubClass.id === exportingClassId)
           .map((hubClass) => {
             const allEvaluations: IEvaluationRecord[] =
               hubClass?.form_links?.reduce((acc: any, form_link: any) => {
@@ -462,7 +483,7 @@ const Classes: React.FC = () => {
                 id={`pdf-class-export-${hubClass.id}`}
                 data-has-evals={uniqueSkills.length > 0 ? 'true' : 'false'}
                 p={8}
-                bg="#ffffff"
+                bg="#ffffff" // Fundo branco rígido vital para JPEG
                 style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" }}
               >
                 <Heading size="lg" color="#1A202C" pb={4}>
@@ -504,6 +525,7 @@ const Classes: React.FC = () => {
                           return new Date(yA, mA - 1, dA).getTime() - new Date(yB, mB - 1, dB).getTime();
                         });
 
+                      // Ao desligarmos as animações globalmente, ClassSkillChart montará 100% pronto.
                       return <ClassSkillChart key={skillName} skillName={skillName} data={chartData} />;
                     })}
                   </Grid>
