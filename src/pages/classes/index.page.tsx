@@ -3,9 +3,7 @@ import { GetServerSideProps } from 'next';
 import { FaPlus } from 'react-icons/fa';
 import { FiUsers, FiArrowUpRight, FiDownload } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { Checkbox, Skeleton, Flex, Text, Icon, Box, Heading, Grid, useUpdateEffect } from '@chakra-ui/react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { Checkbox, Skeleton, Flex, Text, Icon } from '@chakra-ui/react';
 
 import { useAsyncCallback, useAuth, useCustomToast, useCustomRouter, useDarkMode } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
@@ -17,17 +15,8 @@ import { useSelectedSchool } from '@/components/Page/components/Header';
 import { sortGradesByClass } from '@/_base/utils';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
 import { Users } from 'lucide-react';
-import { ClassSkillChart } from './[class_id]/components/ClassSkillChart';
-import { isUuid } from 'uuidv4';
 
 type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
-
-interface IEvaluationRecord {
-  student_id: string | number;
-  category: string;
-  score: number;
-  created_at: string;
-}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -61,12 +50,8 @@ const Classes: React.FC = () => {
   const [allClasses, setAllClasses] = useState<IHubClass[]>([]);
   const [modalOpt, setOpenOpt] = useState<ModalType>({});
   const [selectedClasses, setSelectedClasses] = useState<IHubClass[]>([]);
-  const [fullClassData, setFullClassData] = useState<IHubClass[]>([]);
 
-  // Estados de controle para o PDF
   const [isExporting, setIsExporting] = useState(false);
-  const [exportProgress, setExportProgress] = useState({ current: 0, total: 0 });
-  const [exportingClassId, setExportingClassId] = useState<string | null>(null);
 
   const { school } = useSelectedSchool();
   const { user } = useAuth();
@@ -75,21 +60,6 @@ const Classes: React.FC = () => {
   const { colorMode } = useDarkMode();
 
   const sortedClasses = useMemo(() => sortGradesByClass([...classes.data]), [classes.data]);
-
-  useUpdateEffect(() => {
-    if (!sortedClasses.length || !!sortedClasses.find((c) => !isUuid(c.id))) return;
-    downloadClassForms(sortedClasses.map((c) => c.id))
-      .then((classData) =>
-        setFullClassData(
-          sortedClasses
-            .map((c) => ({ ...c, form_links: classData.filter((d) => d.hub_class_id === c.id) || [] }))
-            .filter((e) => e.form_links.length) || [],
-        ),
-      )
-      .catch((err) => {
-        console.error('Erro ao baixar os formulários das turmas:', err);
-      });
-  }, [sortedClasses]);
 
   const getClasses = useAsyncCallback(
     async (school_id: string) => {
@@ -148,116 +118,34 @@ const Classes: React.FC = () => {
   };
 
   const handleExportAllCharts = useAsyncCallback(async () => {
-    if (fullClassData.length === 0) return;
-
+    if (!sortedClasses.length) return;
     setIsExporting(true);
-    setExportProgress({ current: 0, total: fullClassData.length });
 
     try {
-      await document.fonts.ready;
-      let pdf: jsPDF | null = null;
-      const pdfWidth = 210;
-      let hasAddedPage = false;
+      const classIds = sortedClasses.map((c) => c.id);
 
-      for (let i = 0; i < fullClassData.length; i++) {
-        // SOLUÇÃO 1: Pausa o loop automaticamente se o usuário trocar de aba (Evita PDF em branco)
-        while (document.hidden) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
+      // Supondo que sua API esteja configurada com o axios (ex: api.post)
+      const response = await downloadClassForms(classIds);
 
-        const hubClass = fullClassData[i];
+      if (!response) return;
 
-        setExportProgress({ current: i + 1, total: fullClassData.length });
-        setExportingClassId(hubClass.id);
+      // Cria um link temporário para forçar o download no navegador
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Historico_Avaliacoes_${school?.display_name || 'Turmas'}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
 
-        // DOM Polling (Esperar o React realmente pintar os gráficos antes do Canvas)
-        await new Promise<void>((resolve) => {
-          let attempts = 0;
-          const checkDOM = () => {
-            attempts++;
-            const el = document.getElementById(`pdf-class-export-${hubClass.id}`);
-
-            // Se o elemento existe na tela, damos um tempo extra para as bibliotecas de gráficos finalizarem os traços
-            if (el) {
-              setTimeout(resolve, 800);
-            } else if (attempts > 50) {
-              // Timeout de segurança (5 segundos) para não prender o usuário infinitamente
-              resolve();
-            } else {
-              // Tenta procurar a turma novamente em 100ms
-              setTimeout(checkDOM, 100);
-            }
-          };
-          checkDOM();
-        });
-
-        const element = document.getElementById(`pdf-class-export-${hubClass.id}`);
-        if (!element) continue;
-
-        const hasEvals = element.getAttribute('data-has-evals') === 'true';
-        if (!hasEvals) continue;
-
-        // Micro-pausas (Yields) para evitar travamento da Main Thread (Aviso de "Wait")
-        await new Promise((resolve) => setTimeout(resolve, 50));
-
-        const canvas = await html2canvas(element, {
-          scale: 1.2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          scrollY: 0,
-          scrollX: 0,
-          onclone: (clonedDoc) => {
-            const clonedContainer = clonedDoc.getElementById(`pdf-class-export-${hubClass.id}`);
-            if (clonedContainer) {
-              clonedContainer.style.clipPath = 'none';
-            }
-          },
-        });
-
-        // Yield antes da compressão pesada
-        await new Promise((resolve) => setTimeout(resolve, 50));
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.8);
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-        // Yield antes da injeção no JS PDF
-        await new Promise((resolve) => setTimeout(resolve, 50));
-
-        if (!pdf) {
-          pdf = new jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: [pdfWidth, pdfHeight],
-            compress: true,
-          });
-        } else {
-          pdf.addPage([pdfWidth, pdfHeight], 'p');
-        }
-
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-        hasAddedPage = true;
-
-        // Limpeza Forçada de Memória (Memory Leak fix)
-        canvas.width = 0;
-        canvas.height = 0;
-      }
-
-      if (pdf && hasAddedPage) {
-        pdf.save(`Historico_Avaliacoes_${school?.display_name || 'Turmas'}.pdf`);
-        toast({ status: 'success', description: 'Relatórios gerados com sucesso!' });
-      } else {
-        toast({ status: 'warning', description: 'Nenhuma avaliação encontrada nas turmas atuais.' });
-      }
+      toast({ status: 'success', description: 'Relatórios gerados com sucesso!' });
     } catch (err) {
-      console.error('Erro ao gerar PDF de todas as turmas:', err);
-      toast({ status: 'error', description: 'Erro ao gerar o PDF.' });
+      console.error('Erro ao gerar PDF via API:', err);
+      toast({ status: 'error', description: 'Erro ao gerar o PDF. Tente novamente.' });
     } finally {
       setIsExporting(false);
-      setExportProgress({ current: 0, total: 0 });
-      setExportingClassId(null);
     }
-  }, [fullClassData, school]);
+  }, [sortedClasses, school]);
 
   const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
@@ -275,7 +163,7 @@ const Classes: React.FC = () => {
               leftIcon: <FiDownload />,
               onClick: handleExportAllCharts,
               isLoading: isExporting,
-              loadingText: `Gerando relatório (${exportProgress.current}/${exportProgress.total})`,
+              loadingText: `Gerando relatório...`,
             },
             { label: `Adicionar Turma`, leftIcon: <FaPlus />, onClick: () => setOpenOpt({ class_code: true }) },
           ]}
@@ -469,104 +357,6 @@ const Classes: React.FC = () => {
           </Flex>
         </SmallModal>
       </Flex>
-
-      {/* CONTÊINER OCULTO OTIMIZADO PARA WEBKIT (Safari/Opera) */}
-      <Box
-        position="absolute"
-        top="0"
-        left="0"
-        width="1024px"
-        zIndex="-1"
-        pointerEvents="none"
-        // FIX 1: clipPath substitui o opacity=0 e coordenadas negativas. Oculta perfeitamente sem descartar a renderização da GPU.
-        style={{ clipPath: 'inset(100%)' }}
-        // FIX 2: Força todos os elementos filhos a renderizarem estáticos instantaneamente (sem animações CSS ou Recharts).
-        css={{
-          '& *': {
-            animation: 'none !important',
-            transition: 'none !important',
-          },
-        }}
-      >
-        {fullClassData
-          .filter((hubClass) => hubClass.id === exportingClassId)
-          .map((hubClass) => {
-            const allEvaluations: IEvaluationRecord[] =
-              hubClass?.form_links?.reduce((acc: any, form_link: any) => {
-                const exams: IEvaluationRecord[] = [];
-                form_link.student_relations?.forEach((studentRel: any) => {
-                  studentRel.questions?.forEach((q: any) => {
-                    exams.push({
-                      category: form_link.form.questions.find((e: any) => e.id === q.question_id)?.title || 'Habilidade Desconhecida',
-                      score: q.score,
-                      student_id: studentRel.hub_user_id,
-                      created_at: form_link.finished_at || new Date().toISOString(),
-                    });
-                  });
-                });
-                acc.push(...exams);
-                return acc;
-              }, [] as IEvaluationRecord[]) || [];
-
-            const uniqueSkills = Array.from(new Set(allEvaluations.map((e) => e.category))).filter(Boolean);
-
-            return (
-              <Box
-                key={`export-${hubClass.id}`}
-                id={`pdf-class-export-${hubClass.id}`}
-                data-has-evals={uniqueSkills.length > 0 ? 'true' : 'false'}
-                p={8}
-                bg="#ffffff" // Fundo branco rígido vital para JPEG
-                style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" }}
-              >
-                <Heading size="lg" color="#1A202C" pb={4}>
-                  {hubClass.display_name} - Histórico de Avaliações
-                </Heading>
-
-                <Box bg="#F8FAFC" p={3} borderRadius="md" border="1px solid #E2E8F0" mb={6}>
-                  <Text fontSize="xs" fontWeight="bold" color="#64748B" textTransform="uppercase" mb={1}>
-                    Alunos Selecionados na Visualização:
-                  </Text>
-                  <Text fontSize="sm" fontWeight="600" color="#1E293B">
-                    *Todos alunos da turma
-                  </Text>
-                </Box>
-
-                {uniqueSkills.length > 0 && (
-                  <Grid templateColumns="repeat(3, 1fr)" gap={6} width="100%">
-                    {uniqueSkills.map((skillName) => {
-                      const skillEvals = allEvaluations.filter((e) => e.category === skillName);
-                      const dailyMap = new Map<string, { sum: number; count: number }>();
-
-                      skillEvals.forEach((ev) => {
-                        const exactDay = new Date(ev.created_at).toLocaleDateString('pt-BR');
-                        const current = dailyMap.get(exactDay) || { sum: 0, count: 0 };
-                        dailyMap.set(exactDay, {
-                          sum: current.sum + Number(ev.score || 0),
-                          count: current.count + 1,
-                        });
-                      });
-
-                      const chartData = Array.from(dailyMap.entries())
-                        .map(([date, { sum, count }]) => ({
-                          date,
-                          média: count > 0 ? Number((sum / count).toFixed(2)) : 0,
-                        }))
-                        .sort((a, b) => {
-                          const [dA, mA, yA] = a.date.split('/').map(Number);
-                          const [dB, mB, yB] = b.date.split('/').map(Number);
-                          return new Date(yA, mA - 1, dA).getTime() - new Date(yB, mB - 1, dB).getTime();
-                        });
-
-                      // Ao desligarmos as animações globalmente, ClassSkillChart montará 100% pronto.
-                      return <ClassSkillChart key={skillName} skillName={skillName} data={chartData} />;
-                    })}
-                  </Grid>
-                )}
-              </Box>
-            );
-          })}
-      </Box>
     </Flex>
   );
 };

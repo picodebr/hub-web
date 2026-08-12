@@ -1,4 +1,5 @@
 import { IHubUser } from '@/_base/interfaces/user';
+import { Router } from 'next/router';
 
 export interface IPageProps {
   user?: IHubUser;
@@ -13,4 +14,5 @@ export interface IPageProps {
   stopTour: () => void;
   setUser: (user: IHubUser) => void;
   fullScreen?: boolean;
+  router?: Router;
 }

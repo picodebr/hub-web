@@ -19,12 +19,11 @@ export default function ExportPdfPage() {
   if (!fullClassData.length) return null;
 
   return (
-    <Box p={8} bg="#ffffff" style={{ fontFamily: "'Inter', sans-serif" }} minH="100vh">
-      {/* Sinalizador para o Puppeteer saber que pode gerar o PDF */}
+    <Box p={4} bg="#ffffff" style={{ fontFamily: "'Inter', sans-serif" }} minH="100vh">
       {isReady && <div id="pdf-ready" style={{ display: 'none' }} />}
 
-      {fullClassData.map((hubClass) => {
-        // Toda a sua lógica de extração de avaliações se mantém idêntica
+      {/* 1. Adicionado o 'index' no map */}
+      {fullClassData.map((hubClass, index) => {
         const allEvaluations =
           hubClass?.form_links?.reduce((acc: any, form_link: any) => {
             const exams: any[] = [];
@@ -41,17 +40,23 @@ export default function ExportPdfPage() {
             acc.push(...exams);
             return acc;
           }, []) || [];
-
         const uniqueSkills = Array.from(new Set(allEvaluations.map((e: any) => e.category))).filter(Boolean);
 
         return (
-          <Box key={`export-${hubClass.id}`} mb={10}>
-            <Heading size="lg" color="#1A202C" pb={4}>
+          <Box
+            key={`export-${hubClass.id}`}
+            sx={{
+              pageBreakAfter: index === fullClassData.length - 1 ? 'auto' : 'always',
+              breakAfter: index === fullClassData.length - 1 ? 'auto' : 'page',
+            }}
+          >
+            <Heading size="md" color="#1A202C" pb={4}>
               {hubClass.display_name} - Histórico de Avaliações
             </Heading>
 
             {uniqueSkills.length > 0 && (
-              <Grid templateColumns="repeat(3, 1fr)" gap={6} width="100%">
+              // 1. Grid fixado em 3 colunas e gap reduzido para 4
+              <Grid templateColumns="repeat(3, 1fr)" gap={4} width="100%">
                 {uniqueSkills.map((skillName: any) => {
                   const skillEvals = allEvaluations.filter((e: any) => e.category === skillName);
                   const dailyMap = new Map<string, { sum: number; count: number }>();
@@ -76,7 +81,7 @@ export default function ExportPdfPage() {
                       return new Date(yA, mA - 1, dA).getTime() - new Date(yB, mB - 1, dB).getTime();
                     });
 
-                  return <ClassSkillChart key={skillName} skillName={skillName} data={chartData} />;
+                  return <ClassSkillChart skillName={skillName} data={chartData} />;
                 })}
               </Grid>
             )}

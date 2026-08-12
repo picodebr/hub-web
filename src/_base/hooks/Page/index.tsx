@@ -8,10 +8,14 @@ import { useAuth } from '../Auth';
 import { Tour } from 'antd';
 import { useHubTour } from '../HubTour';
 
+const nakedPages = [`/export-pdf/class-forms`];
+
 const PageContext = createContext({});
 export const usePageContext = () => useContext(PageContext);
 
 export const Page: React.FC<PropsWithChildren<IPageProps>> = ({ children, pageTitle, user: _user, ...rest }) => {
+  if (nakedPages.includes(rest.router?.asPath.split('?')[0] || '')) return <>{children}</>;
+
   const { user, setUser } = useAuth();
   const { isOpen, steps, stopTour, navbar } = useHubTour();
 
