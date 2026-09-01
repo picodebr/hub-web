@@ -449,7 +449,7 @@ const CodeThumbnail = ({ lines, variant = 'card' }: CodeThumbnailProps) => {
   const visibleLines = useMemo(() => lines.slice(0, variant === 'large' ? 10 : 7), [lines, variant]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+    <div className="relative w-full h-full overflow-hidden rounded-2xl border border-border/40 bg-linear-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
       {/* Editor top bar */}
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border/40 bg-background/50 backdrop-blur-sm">
         <span className="w-2 h-2 rounded-full bg-red-400/80" />

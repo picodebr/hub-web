@@ -272,8 +272,8 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
             className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 shadow-md
               ${canEdit && targetRewards.length > 0
                 ? colorMode === 'light'
-                  ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-slate-900 hover:from-amber-600 hover:to-amber-700 hover:shadow-lg active:shadow-md'
-                  : 'bg-gradient-to-br from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 hover:shadow-lg active:shadow-md'
+                  ? 'bg-linear-to-br from-amber-500 to-amber-600 text-slate-900 hover:from-amber-600 hover:to-amber-700 hover:shadow-lg active:shadow-md'
+                  : 'bg-linear-to-br from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 hover:shadow-lg active:shadow-md'
                 : 'bg-muted-foreground/20 text-muted-foreground cursor-not-allowed opacity-50'
               }`}
           >
@@ -390,7 +390,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                 key={student.id}
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex justify-between items-center p-4 bg-gradient-to-br from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/15 rounded-2xl border border-accent/20 transition-all duration-200 cursor-pointer group active:scale-95"
+                className="flex justify-between items-center p-4 bg-linear-to-br from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/15 rounded-2xl border border-accent/20 transition-all duration-200 cursor-pointer group active:scale-95"
                 onClick={() => toggleMissingStudent(student.id)}
                 style={{ userSelect: 'none' }}
               >
@@ -420,7 +420,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                 key={student.id}
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex justify-between items-center p-4 bg-gradient-to-br from-accent/20 to-accent/5 rounded-2xl border border-accent/20 transition-all duration-200"
+                className="flex justify-between items-center p-4 bg-linear-to-br from-accent/20 to-accent/5 rounded-2xl border border-accent/20 transition-all duration-200"
               >
                 <span className="text-sm font-medium text-foreground">{formatShortName(student.name, true)}</span>
                 <div className="flex items-center gap-2">
@@ -442,7 +442,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
       {/* Modal 3: Resumo Cashback */}
       <SmallModal title="Resumo Cashback" show={modalStep === 'students_rewarded'} onConfirm={onConfirmActivity} onCancel={() => setModalStep('taxed_students')} okText="Concluir" size="md">
         <div className="flex flex-col gap-5">
-          <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-2xl border border-blue-500/20">
+          <div className="p-4 bg-linear-to-br from-blue-500/10 to-blue-500/5 rounded-2xl border border-blue-500/20">
             <p className="text-sm font-bold" style={{ color: '#001a4d', backgroundColor: 'transparent' }}>✓ Revise os valores abaixo e clique em "Concluir" para distribuir as moedas.</p>
           </div>
           <div className="flex flex-col gap-3 max-h-96 overflow-y-auto pr-2">
@@ -455,7 +455,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                   key={student.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex justify-between items-center p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 rounded-2xl border border-emerald-500/20 hover:from-emerald-500/15 hover:to-emerald-500/10 transition-all duration-200"
+                  className="flex justify-between items-center p-4 bg-linear-to-br from-emerald-500/10 to-emerald-500/5 rounded-2xl border border-emerald-500/20 hover:from-emerald-500/15 hover:to-emerald-500/10 transition-all duration-200"
                 >
                   <div className="flex flex-col gap-1">
                     <span className="text-sm font-semibold text-foreground">{formatShortName(student.name, true)}</span>
@@ -497,7 +497,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
         size="md"
       >
         <div className="flex flex-col gap-5">
-          <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-2xl border border-blue-500/20">
+          <div className="p-4 bg-linear-to-br from-blue-500/10 to-blue-500/5 rounded-2xl border border-blue-500/20">
             <p className="text-sm font-medium text-foreground">
               ✓ Selecione os alunos que apresentaram justificativa para a falta na atividade{' '}
               <span className="font-bold">"{retroactiveTargetStep?.title}"</span> e conceda as moedas retroativamente.
@@ -518,7 +518,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                   key={student.id}
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex justify-between items-center p-4 bg-gradient-to-br from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/15 rounded-2xl border border-accent/20 transition-all duration-200 cursor-pointer group active:scale-95"
+                  className="flex justify-between items-center p-4 bg-linear-to-br from-accent/20 to-accent/5 hover:from-accent/30 hover:to-accent/15 rounded-2xl border border-accent/20 transition-all duration-200 cursor-pointer group active:scale-95"
                   onClick={() => toggleRetroactiveStudent(student.id)}
                   style={{ userSelect: 'none' }}
                 >
@@ -577,7 +577,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
         size="lg"
       >
         <div className="flex flex-col gap-5">
-          <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-2xl border border-blue-500/20">
+          <div className="p-4 bg-linear-to-br from-blue-500/10 to-blue-500/5 rounded-2xl border border-blue-500/20">
             <p className="text-sm font-medium text-foreground">
               ✓ Você está editando a distribuição de cashback da atividade <span className="font-bold">"{editingActivity?.title}"</span>. Ajuste os ausentes e descontos conforme necessário.
             </p>
@@ -593,7 +593,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                     key={`missing-${student.id}`}
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex justify-between items-center p-3 bg-gradient-to-br from-accent/10 to-accent/5 hover:from-accent/20 hover:to-accent/10 rounded-xl border border-accent/10 transition-all duration-200 cursor-pointer group"
+                    className="flex justify-between items-center p-3 bg-linear-to-br from-accent/10 to-accent/5 hover:from-accent/20 hover:to-accent/10 rounded-xl border border-accent/10 transition-all duration-200 cursor-pointer group"
                     onClick={() => toggleEditingMissingStudent(student.id)}
                     style={{ userSelect: 'none' }}
                   >
@@ -621,7 +621,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                     key={`tax-${student.id}`}
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex justify-between items-center p-3 bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl border border-accent/10 transition-all duration-200"
+                    className="flex justify-between items-center p-3 bg-linear-to-br from-accent/10 to-accent/5 rounded-xl border border-accent/10 transition-all duration-200"
                   >
                     <span className="text-sm font-medium text-foreground">{formatShortName(student.name, true)}</span>
                     <div className="flex items-center gap-2">
