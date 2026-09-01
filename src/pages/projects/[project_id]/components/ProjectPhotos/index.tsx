@@ -1,24 +1,84 @@
-import React, { Dispatch, SetStateAction, useRef, useState } from 'react';
-import { ImagePlus, Plus, X, ChevronDown } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ImagePlus, Plus, X, ChevronDown, Trash2, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IProject } from '@/_base/interfaces/project';
 
 interface IProps {
   project: IProject;
   onChangeFiles: (data: File[]) => void;
+  onRemoveFile: (file: File) => void;
+  onRemoveAttachment: (url: string) => void;
   canEdit: boolean;
 }
 
-export const ProjectPhotos: React.FC<IProps> = ({ project, onChangeFiles, canEdit }) => {
+interface ILocalPreview {
+  url: string;
+  file: File;
+}
+
+interface IPhotoItem {
+  url: string;
+  isLocal: boolean;
+  file?: File;
+}
+
+export const ProjectPhotos: React.FC<IProps> = ({ project, onChangeFiles, onRemoveFile, onRemoveAttachment, canEdit }) => {
   const attachments = project.metadata?.attachments || [];
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [localPreviews, setLocalPreviews] = useState<ILocalPreview[]>([]);
+  const localPreviewsRef = useRef<ILocalPreview[]>([]);
+  localPreviewsRef.current = localPreviews;
+
+  const photos: IPhotoItem[] = [
+    ...attachments.map((url) => ({ url, isLocal: false })),
+    ...localPreviews.map((p) => ({ url: p.url, isLocal: true, file: p.file })),
+  ];
 
   const handleAddPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > 0) onChangeFiles(files);
+    if (files.length > 0) {
+      const newPreviews = files.map((file) => ({ url: URL.createObjectURL(file), file }));
+      setLocalPreviews((prev) => [...prev, ...newPreviews]);
+      onChangeFiles(files);
+    }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const handleRemovePhoto = (idx: number, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const item = photos[idx];
+    if (!item) return;
+
+    if (item.isLocal && item.file) {
+      URL.revokeObjectURL(item.url);
+      setLocalPreviews((prev) => prev.filter((p) => p.url !== item.url));
+      onRemoveFile(item.file);
+    } else {
+      onRemoveAttachment(item.url);
+    }
+
+    if (lightboxIdx === idx) setLightboxIdx(null);
+  };
+
+  const attachmentsCountRef = useRef(attachments.length);
+
+  useEffect(() => {
+    // Once the project is saved, the uploaded files come back as real
+    // attachment URLs, so the local blob previews are now redundant.
+    if (attachments.length > attachmentsCountRef.current) {
+      localPreviews.forEach((p) => URL.revokeObjectURL(p.url));
+      setLocalPreviews([]);
+    }
+    attachmentsCountRef.current = attachments.length;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attachments.length]);
+
+  useEffect(() => {
+    return () => {
+      localPreviewsRef.current.forEach((p) => URL.revokeObjectURL(p.url));
+    };
+  }, []);
 
   return (
     <>
@@ -30,7 +90,7 @@ export const ProjectPhotos: React.FC<IProps> = ({ project, onChangeFiles, canEdi
             </div>
             Fotos do Projeto
           </div>
-          
+
           {canEdit && (
             <>
               <button
@@ -45,16 +105,32 @@ export const ProjectPhotos: React.FC<IProps> = ({ project, onChangeFiles, canEdi
           )}
         </div>
 
-        {attachments.length > 0 ? (
+        {canEdit && localPreviews.length > 0 && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-medium text-amber-700 dark:text-amber-400">
+            <Info className="w-3.5 h-3.5 shrink-0" />
+            Não esqueça de clicar em "Salvar" no topo da página para manter as novas fotos no projeto.
+          </div>
+        )}
+
+        {photos.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {attachments.map((url, idx) => (
+            {photos.map((photo, idx) => (
               <div
-                key={idx}
+                key={photo.url}
                 className="relative group aspect-square rounded-2xl overflow-hidden border border-border/40 bg-accent/30 cursor-zoom-in"
                 onClick={() => setLightboxIdx(idx)}
               >
-                <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                <img src={photo.url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                {canEdit && (
+                  <button
+                    onClick={(e) => handleRemovePhoto(idx, e)}
+                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-background/80 border border-border/50 text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-red-500/90 hover:text-white hover:border-red-500/90 transition-all"
+                    title="Excluir foto"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             ))}
             {canEdit && (
@@ -82,12 +158,12 @@ export const ProjectPhotos: React.FC<IProps> = ({ project, onChangeFiles, canEdi
 
       {/* Lightbox Integrado com Framer Motion */}
       <AnimatePresence>
-        {lightboxIdx !== null && attachments[lightboxIdx] && (
+        {lightboxIdx !== null && photos[lightboxIdx] && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex items-center justify-center p-6"
+            className="fixed inset-0 z-100 bg-background/95 backdrop-blur-md flex items-center justify-center p-6"
             onClick={() => setLightboxIdx(null)}
           >
             <button
@@ -96,17 +172,27 @@ export const ProjectPhotos: React.FC<IProps> = ({ project, onChangeFiles, canEdi
             >
               <X className="w-5 h-5 text-foreground" />
             </button>
-            
-            {attachments.length > 1 && (
+
+            {canEdit && (
+              <button
+                onClick={(e) => handleRemovePhoto(lightboxIdx, e)}
+                className="absolute top-6 right-20 p-2.5 rounded-xl bg-background/80 border border-border/50 text-foreground hover:bg-red-500/90 hover:text-white hover:border-red-500/90 transition-colors z-10"
+                title="Excluir foto"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
+
+            {photos.length > 1 && (
               <>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setLightboxIdx((lightboxIdx - 1 + attachments.length) % attachments.length); }}
+                  onClick={(e) => { e.stopPropagation(); setLightboxIdx((lightboxIdx - 1 + photos.length) % photos.length); }}
                   className="absolute left-6 p-3 rounded-xl bg-background/80 border border-border/50 hover:bg-accent transition-colors z-10"
                 >
                   <ChevronDown className="w-5 h-5 text-foreground rotate-90" />
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setLightboxIdx((lightboxIdx + 1) % attachments.length); }}
+                  onClick={(e) => { e.stopPropagation(); setLightboxIdx((lightboxIdx + 1) % photos.length); }}
                   className="absolute right-6 p-3 rounded-xl bg-background/80 border border-border/50 hover:bg-accent transition-colors z-10"
                 >
                   <ChevronDown className="w-5 h-5 text-foreground -rotate-90" />
@@ -114,20 +200,20 @@ export const ProjectPhotos: React.FC<IProps> = ({ project, onChangeFiles, canEdi
               </>
             )}
 
-            <motion.img
-              key={attachments[lightboxIdx]}
+            <motion.div
+              key={photos[lightboxIdx].url}
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ duration: 0.3, type: "spring", bounce: 0.3 }}
-              src={attachments[lightboxIdx]}
-              alt={`Foto ampla ${lightboxIdx + 1}`}
               onClick={(e) => e.stopPropagation()}
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
-            />
-            
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-background/80 border border-border/50 text-sm font-semibold text-foreground">
-              {lightboxIdx + 1} / {attachments.length}
-            </div>
+              className="w-[90vw] h-[80vh] max-w-4xl rounded-2xl shadow-2xl overflow-hidden"
+            >
+              <img
+                src={photos[lightboxIdx].url}
+                alt={`Foto ampla ${lightboxIdx + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
