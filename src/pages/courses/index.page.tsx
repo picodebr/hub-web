@@ -130,7 +130,7 @@ const Courses: React.FC = () => {
                   className="group relative rounded-2xl hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col h-fit p-4"
                 >
                   {/* Gradiente Superior com Imagem */}
-                  <div className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}>
+                  <div className={`h-32 bg-linear-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}>
                     {course.thumbnail && (
                       <Box
                         backgroundImage={`url(${course.thumbnail})`}
