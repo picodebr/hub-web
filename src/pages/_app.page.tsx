@@ -35,11 +35,13 @@ import { ThemeProvider } from 'styled-components';
 import { themes } from '@/styles/themes';
 import { CombinedProviders } from '@/_base/context/CombinedProviders';
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps, router }: AppProps) {
   const token = cookieManager.getToken();
   api.defaults.headers.authorization = `Bearer ${token}`;
 
   const { setLoadingConfig } = useLoading();
+
+  pageProps.router = router;
 
   return (
     <ThemeProvider theme={themes.light}>

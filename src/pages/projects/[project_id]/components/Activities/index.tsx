@@ -108,7 +108,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
           const finalCashback = baseCashback * (1 - taxPercentage / 100);
 
           const newReward = {
-            reward_value: `${finalCashback.toFixed(0)}`,
+            reward_value: `${formatCoins(finalCashback)}`,
             tax_value: `${taxPercentage}`,
             activity_title: reward.title || '',
             is_missing: false,
@@ -221,7 +221,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
         const finalCashback = baseCashback * (1 - taxPercentage / 100);
 
         const newReward = {
-          reward_value: `${finalCashback.toFixed(0)}`,
+          reward_value: `${formatCoins(finalCashback)}`,
           tax_value: `${taxPercentage}`,
           activity_title: editingActivity.title || '',
           is_missing: false,
@@ -464,7 +464,7 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
                     )}
                   </div>
                   <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                    +{finalCashback.toFixed(0)}
+                    +{formatCoins(finalCashback)}
                     <Coins className="w-5 h-5" />
                   </span>
                 </motion.div>
@@ -475,11 +475,11 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
             <div className="text-right">
               <span className="text-xs text-muted-foreground">Total a distribuir: </span>
               <span className="text-lg font-bold text-amber-500 flex items-center justify-end gap-2">
-                +{project.hub_class?.students?.filter((s) => (!stepIsFinished(project, targetRewards[0]) || studentIsMissing(project, s, targetRewards[0])) && !missingStudents.includes(s.id)).reduce((acc, student) => {
+                +{formatCoins(project.hub_class?.students?.filter((s) => (!stepIsFinished(project, targetRewards[0]) || studentIsMissing(project, s, targetRewards[0])) && !missingStudents.includes(s.id)).reduce((acc, student) => {
                   const baseCashback = sumCashbacks(targetRewards);
                   const taxPercentage = Number(taxedStudents[student.id] || 0);
                   return acc + baseCashback * (1 - taxPercentage / 100);
-                }, 0).toFixed(0)}
+                }, 0) || 0)}
                 <Coins className="w-5 h-5" />
               </span>
             </div>
@@ -668,6 +668,11 @@ export const Activities: React.FC<IProps> = ({ project, canEdit, handleSave }) =
 };
 
 // Funções auxiliares (Preservadas)
+
+// Formata moedas preservando até duas casas decimais quando necessário (ex: 1.6, 0.4)
+// e removendo casas decimais desnecessárias (ex: 2, não 2.00).
+const formatCoins = (value: number): string => `${Math.round((Number(value) || 0) * 100) / 100}`;
+
 const getActivityColor = (project: IProject, parent: string): string | undefined =>
   project.project?.metadata?.steps?.find((e) => e.parent === parent)?.color;
 
