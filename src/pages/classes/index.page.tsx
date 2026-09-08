@@ -1,17 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { FaPlus } from 'react-icons/fa';
-import { FiUsers, FiBookOpen, FiArrowUpRight } from 'react-icons/fi';
+import { FiUsers, FiArrowUpRight, FiDownload } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { Checkbox, Skeleton, Flex, Text, Icon, Box, Button } from '@chakra-ui/react';
+import { Checkbox, Skeleton, Flex, Text, Icon } from '@chakra-ui/react';
 
 import { useAsyncCallback, useAuth, useCustomToast, useCustomRouter, useDarkMode } from '@/_base/hooks';
 import { PageDataType } from '@/_base/interfaces/shared/IPageData';
 import { IHubClass } from '@/_base/interfaces/class';
-import { addClasses, listAllClasses, listMyClasses, removeClass } from '@/_base/services/class';
+import { addClasses, downloadClassForms, listAllClasses, listMyClasses, removeClass } from '@/_base/services/class';
 import { EmptyPageData } from '@/components/EmptyPageData';
 import { SmallModal } from '@/components/Modal/Small';
-import { AvatarList } from '@/components/AvatarList';
 import { useSelectedSchool } from '@/components/Page/components/Header';
 import { sortGradesByClass } from '@/_base/utils';
 import { InternalPageHeader } from '@/components/InternalPageHeader';
@@ -19,7 +18,6 @@ import { Users } from 'lucide-react';
 
 type ModalType = { class_code?: boolean; confirm_remove?: boolean; classCodeToRemove?: string };
 
-// Variáveis de Animação
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08 } },
@@ -30,22 +28,21 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
 };
 
-// Mapa de cores para a barra lateral baseado na série
 const getColorByGrade = (grade: string): string => {
   const colorMap: { [key: string]: string } = {
-    G3: '#D946EF', // Magenta
-    '6': '#8B5CF6', // Purple
-    '7': '#06B6D4', // Cyan
-    '8': '#10B981', // Emerald
-    '9': '#F59E0B', // Amber
-    'MakersPro Mini': '#EC4899', // Pink
-    'MakersPro Explorers': '#3B82F6', // Blue
-    'MakersPro Creators': '#8B5CF6', // Violet
-    'MakersPro Innovators': '#06B6D4', // Cyan
-    'MakersPro Experts': '#F59E0B', // Amber
-    CulturaTech: '#EF4444', // Red
+    G3: '#D946EF',
+    '6': '#8B5CF6',
+    '7': '#06B6D4',
+    '8': '#10B981',
+    '9': '#F59E0B',
+    'MakersPro Mini': '#EC4899',
+    'MakersPro Explorers': '#3B82F6',
+    'MakersPro Creators': '#8B5CF6',
+    'MakersPro Innovators': '#06B6D4',
+    'MakersPro Experts': '#F59E0B',
+    CulturaTech: '#EF4444',
   };
-  return colorMap[grade] || '#6366F1'; // Indigo como padrão
+  return colorMap[grade] || '#6366F1';
 };
 
 const Classes: React.FC = () => {
@@ -53,6 +50,8 @@ const Classes: React.FC = () => {
   const [allClasses, setAllClasses] = useState<IHubClass[]>([]);
   const [modalOpt, setOpenOpt] = useState<ModalType>({});
   const [selectedClasses, setSelectedClasses] = useState<IHubClass[]>([]);
+
+  const [isExporting, setIsExporting] = useState(false);
 
   const { school } = useSelectedSchool();
   const { user } = useAuth();
@@ -118,22 +117,58 @@ const Classes: React.FC = () => {
     router.push(`/classes/${hubClass.id}?_p=${hubClass.display_name}`);
   };
 
-  // Cores dinâmicas
+  const handleExportAllCharts = useAsyncCallback(async () => {
+    if (!sortedClasses.length) return;
+    setIsExporting(true);
+
+    try {
+      const classIds = sortedClasses.map((c) => c.id);
+
+      // Supondo que sua API esteja configurada com o axios (ex: api.post)
+      const response = await downloadClassForms(classIds);
+
+      if (!response) return;
+
+      // Cria um link temporário para forçar o download no navegador
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Historico_Avaliacoes_${school?.display_name || 'Turmas'}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+
+      toast({ status: 'success', description: 'Relatórios gerados com sucesso!' });
+    } catch (err) {
+      console.error('Erro ao gerar PDF via API:', err);
+      toast({ status: 'error', description: 'Erro ao gerar o PDF. Tente novamente.' });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [sortedClasses, school]);
+
   const bgCard = colorMode === 'light' ? 'white' : 'gray.800';
   const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   return (
-    <Flex direction="column" w="100%" h="100%">
+    <Flex direction="column" w="100%" h="100%" position="relative">
       <Flex direction="column" w="100%" maxW="7xl" mx="auto" px="2rem" gap="2rem">
-        {/* Header com Call to Action */}
         <InternalPageHeader
           title="Turmas"
           description="Gerencie suas turmas e alunos"
           icon={<Users className="w-6 h-6 text-primary" />}
-          buttons={[{ label: `Adicionar Turma`, leftIcon: <FaPlus />, onClick: () => setOpenOpt({ class_code: true }) }]}
+          buttons={[
+            {
+              label: 'Exportar Avaliações',
+              leftIcon: <FiDownload />,
+              onClick: handleExportAllCharts,
+              isLoading: isExporting,
+              loadingText: `Gerando relatório...`,
+            },
+            { label: `Adicionar Turma`, leftIcon: <FaPlus />, onClick: () => setOpenOpt({ class_code: true }) },
+          ]}
         />
 
-        {/* Grid de Turmas */}
         {!classes.data.length && !classes._isLoading ? (
           <EmptyPageData />
         ) : (
@@ -152,7 +187,6 @@ const Classes: React.FC = () => {
                   'MakersPro Experts',
                   'CulturaTech',
                 ].includes(hubClass.grade);
-
                 const sidebarColor = getColorByGrade(hubClass.grade);
 
                 return (
@@ -173,7 +207,6 @@ const Classes: React.FC = () => {
                         overflow="hidden"
                         _hover={{ transform: 'translateY(-4px)', boxShadow: 'lg', borderColor: 'primary.300' }}
                       >
-                        {/* Topo: Ícone + Código */}
                         <Flex justify="space-between" align="flex-start" pl="0.875rem" pr="0.875rem" pt="1.125rem" pb="0.75rem">
                           <Flex
                             bg={colorMode === 'light' ? 'primary.50' : 'whiteAlpha.100'}
@@ -184,15 +217,12 @@ const Classes: React.FC = () => {
                           >
                             <Icon as={FiUsers} boxSize="0.875rem" />
                           </Flex>
-
                           {showBadge && (
                             <Text fontSize="14px" fontWeight="700" color={colorMode === 'light' ? 'gray.400' : 'gray.500'}>
                               #{hubClass.code}
                             </Text>
                           )}
                         </Flex>
-
-                        {/* Seção com Barra Lateral: Nome + Alunos + Seta */}
                         <Flex
                           direction="column"
                           pl="1rem"
@@ -205,12 +235,9 @@ const Classes: React.FC = () => {
                           _hover={{ borderLeftWidth: '6px' }}
                           gap="1rem"
                         >
-                          {/* Nome da Turma */}
                           <Text fontWeight="700" fontSize="14px" color={colorMode === 'dark' ? 'white' : 'gray.800'} noOfLines={1} lineHeight="1.2">
                             {hubClass.display_name}
                           </Text>
-
-                          {/* Alunos + Seta */}
                           <Flex align="center" justify="space-between">
                             <Text fontSize="11px" fontWeight="600" color="gray.500">
                               {hubClass.students?.length || 0} Alunos
@@ -227,7 +254,6 @@ const Classes: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Modal: Adicionar Turmas */}
         <SmallModal
           title={`Turmas da Escola ${school?.display_name || ''}`}
           show={!!modalOpt.class_code}
@@ -243,8 +269,6 @@ const Classes: React.FC = () => {
             <Text fontSize="14px" color="gray.500">
               Selecione as turmas nas quais você leciona para adicioná-las ao seu painel.
             </Text>
-
-            {/* Cabeçalho de Seleção (Selecionar Todas) */}
             <Flex
               align="center"
               justify="space-between"
@@ -270,8 +294,6 @@ const Classes: React.FC = () => {
                 }}
               />
             </Flex>
-
-            {/* Lista Scrollável de Turmas */}
             <Flex
               direction="column"
               gap="0.5rem"
@@ -282,7 +304,6 @@ const Classes: React.FC = () => {
             >
               {sortGradesByClass(allClasses).map((hubClass) => {
                 const isAvail = classIsAvailable(hubClass);
-
                 return (
                   <Flex
                     key={hubClass.id}
@@ -320,7 +341,6 @@ const Classes: React.FC = () => {
           </Flex>
         </SmallModal>
 
-        {/* Modal: Remover Turma */}
         <SmallModal
           title="Remover turma"
           show={!!modalOpt.confirm_remove}

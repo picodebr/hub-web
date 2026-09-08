@@ -172,7 +172,17 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
 
         <motion.div {...anim(3)}><Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} /></motion.div>
         <motion.div {...anim(4)}><Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} /></motion.div>
-        <motion.div {...anim(5)} className="lg:col-span-2"><ProjectPhotos project={project} onChangeFiles={(e) => setFiles((prev) => [...prev, ...e])} canEdit={canEdit} /></motion.div>
+        <motion.div {...anim(5)} className="lg:col-span-2">
+          <ProjectPhotos
+            project={project}
+            onChangeFiles={(e) => setFiles((prev) => [...prev, ...e])}
+            onRemoveFile={(file) => setFiles((prev) => prev.filter((f) => f !== file))}
+            onRemoveAttachment={(url) =>
+              setProject((p) => ({ ...p, metadata: { ...p.metadata, attachments: (p.metadata?.attachments || []).filter((a) => a !== url) } }))
+            }
+            canEdit={canEdit}
+          />
+        </motion.div>
       </div>
     </motion.div>
   );

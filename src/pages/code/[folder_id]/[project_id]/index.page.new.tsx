@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CodePreview from './components/CodePreview';
 import { useCodeExecution } from '@/_base/hooks/Code/useCodeExecution';
 import { getCodeProject } from '@/_base/services/codeProject';
@@ -92,6 +92,19 @@ const NewCode: React.FC<IProps> = ({ project }) => {
       console.warn('Bloqueio de orientação não suportado ou negado pelo navegador:', error);
     }
   };
+
+  const postMessage = useMemo(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const webview = (window as any).ReactNativeWebView;
+    return webview?.postMessage.bind(webview);
+  }, []);
+
+  useEffect(() => {
+    postMessage && postMessage(JSON.stringify({ orientation: 'landscape' }));
+
+    return () => postMessage && postMessage(JSON.stringify({ orientation: 'portrait' }));
+  }, [postMessage]);
 
   return (
     <>

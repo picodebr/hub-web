@@ -1,14 +1,4 @@
 /**
- * Componente Navbar - A barra de navegação principal da aplicação.
- *
- * Este componente gerencia:
- * 1. Interface de conexão USB/Serial.
- * 2. Operações de arquivo (Salvar e Abrir projeto).
- * 3. Alternância entre os modos "Palco" (Simulação) e "Upload" (Hardware).
- * 4. Acionamento do processo de compilação e envio de código.
- */
-
-/**
  * Barra de navegação principal com controles de projeto (Salvar, Abrir, Conectar).
  */
 'use client';
@@ -58,6 +48,9 @@ export default function CodeNavbar({ project }: IProps) {
   const [isUploadingLocal, setIsUploadingLocal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Estado para detectar React Native
+  const [isReactNative, setIsReactNative] = useState(false);
+
   // Helpers de Estado Visual
   const isConnecting = false; // Simplified, or can be tracked inside FirmwareContext if needed
   // Define se o botão deve estar "ativo" (Verde)
@@ -66,11 +59,17 @@ export default function CodeNavbar({ project }: IProps) {
   // Referência para o input de arquivo oculto
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Detectar React Native no mount
+  useEffect(() => {
+    const webview = (window as any).ReactNativeWebView;
+    setIsReactNative(!!webview);
+  }, []);
+
   // Adapter to decouple SerializationService from React Contexts
   const contextAdapter: IProjectContextUI = {
     projectId: project?.id, // Could be added to a State if needed
     projectName: project?.name,
-    isUploadMode: isUploadMode,
+    isUploadMode: !!uiContext.uploadModeBlocks,
     uploadModeBlocks: uiContext.uploadModeBlocks,
     uploadCode: uiContext.uploadCode,
     setIsUploadMode: setIsUploadMode,
@@ -147,6 +146,38 @@ export default function CodeNavbar({ project }: IProps) {
     await uploadSketch();
   };
 
+  /**
+   * Trata o clique no botão de conectar
+   */
+  const handleConnectClick = async () => {
+    if (isReactNative) {
+      // Em React Native, o adaptador já envia postMessage
+      // Apenas precisamos chamar connectSerial normalmente
+      try {
+        await connectSerial();
+      } catch (err) {
+        console.error('[Navbar] Erro ao conectar em React Native:', err);
+        toast({
+          title: 'Erro ao conectar',
+          description: 'Não foi possível conectar à porta serial. Verifique se o dispositivo está conectado.',
+          status: 'error',
+        });
+      }
+    } else {
+      // Em web, comportamento normal
+      try {
+        await connectSerial();
+      } catch (err) {
+        console.error('[Navbar] Erro ao conectar:', err);
+        toast({
+          title: 'Erro ao conectar',
+          description: 'Não foi possível selecionar a porta serial.',
+          status: 'error',
+        });
+      }
+    }
+  };
+
   return (
     <>
       <nav
@@ -171,9 +202,9 @@ export default function CodeNavbar({ project }: IProps) {
               {/* Botão de Conectar/Desconectar USB */}
               <button
                 className="btn btn-sm  d-flex align-items-center gap-2"
-                onClick={isSerialConnected ? disconnectSerial : () => connectSerial()}
+                onClick={isSerialConnected ? disconnectSerial : handleConnectClick}
                 disabled={false}
-                title={isSerialConnected ? 'Clique para desconectar' : 'Clique para conectar'}
+                title={isSerialConnected ? 'Clique para desconectar' : isReactNative ? 'Conectar via React Native' : 'Clique para conectar'}
                 style={{
                   backgroundColor: isActive ? '#22c55e' : '#f1f5f9',
                   color: isActive ? '#fff' : '#64748b',
@@ -234,7 +265,16 @@ export default function CodeNavbar({ project }: IProps) {
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".piboard,.json" onChange={handleFileChange} />
             </div>
 
-            <Flex flex="1" align="center" justify="center" position="absolute" left="50%" transform="translateX(-50%)" pointerEvents="none">
+            <Flex
+              flex="1"
+              align="center"
+              justify="center"
+              position="absolute"
+              left="50%"
+              transform="translateX(-50%)"
+              pointerEvents="none"
+              display={{ base: `none`, md: `flex` }}
+            >
               {/* Nome do Projeto Centralizado */}
               <Flex
                 bg={colorMode === 'light' ? 'primary.50' : 'primary.900'}

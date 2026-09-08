@@ -68,10 +68,12 @@ const Course: React.FC<IProps> = ({ courseId }) => {
         setUserCertificates(userCerts);
         setCourse(targetCourse);
         setModules(
-          results.map((r) => ({
-            ...r,
-            finished_lessons: activity.metadata?.find((m) => m.entity_id === r.id)?.lessons.filter((l) => !!l.finished_at)?.length || 0,
-          })),
+          results
+            .map((r) => ({
+              ...r,
+              finished_lessons: activity.metadata?.find((m) => m.entity_id === r.id)?.lessons.filter((l) => !!l.finished_at)?.length || 0,
+            }))
+            .sort((a, b) => (a?.position || 1) - (b?.position || 1)),
         );
       } catch {
         toast({ status: `error`, description: `Não foi possível listar os módulos disponíveis no momento` });
@@ -247,7 +249,7 @@ const Course: React.FC<IProps> = ({ courseId }) => {
                   className={`group relative rounded-2xl hover:shadow-lg transition-all duration-300 ${mod.is_available ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'} border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col h-fit p-4`}
                 >
                   {/* Gradiente Superior com Número do Módulo */}
-                  <div className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}>
+                  <div className={`h-32 bg-linear-to-br ${gradient} relative overflow-hidden shrink-0 rounded-xl`}>
                     {/* Padrão decorativo de linhas */}
                     <div
                       className="absolute inset-0 opacity-20"

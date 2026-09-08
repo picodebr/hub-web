@@ -207,7 +207,18 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
       {/* 2. CONTEÚDO EM GRID (Fim dos Accordions) */}
       <Grid templateColumns={{ base: '1fr', lg: 'repeat(3, 1fr)' }} gap="1.5rem" maxH="400px">
         {/* Coluna 1: Grupos */}
-        <Flex direction="column" bg={bgCard} borderRadius="2xl" border="1px solid" borderColor={borderColor} boxShadow="sm" p="1.5rem">
+        <Flex
+          direction="column"
+          bg={bgCard}
+          overflow="hidden"
+          borderRadius="2xl"
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+          h="100%"
+          p="1.5rem"
+          gap="1.5rem"
+        >
           <Flex align="center" gap="0.5rem" mb="1.5rem">
             <Icon as={FiUsers} fontSize="20px" color="primary.500" />
             <Text fontSize="18px" fontWeight="700" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
@@ -215,7 +226,7 @@ const StudentPage: React.FC<IProps> = ({ student: _student }) => {
             </Text>
           </Flex>
 
-          <Flex direction="column" gap="0.75rem">
+          <Flex direction="column" gap="0.75rem" overflow="hidden auto">
             {student.groups.length > 0 ? (
               student.groups.map((group) => (
                 <Link key={group.id} href={`/groups/${group.id}`} target="_blank" _hover={{ textDecoration: 'none' }}>

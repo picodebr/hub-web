@@ -52,7 +52,7 @@ export const InternalCard: React.FC<IProps> = ({
       {content || (
         <>
           <div
-            className={`h-32 bg-gradient-to-br ${gradient}  relative overflow-hidden shrink-0`}
+            className={`h-32 bg-linear-to-br ${gradient}  relative overflow-hidden shrink-0`}
             style={{ margin: `1rem 1rem 0 1rem`, borderRadius: `1rem` }}
           >
             {!!Icon && <Icon className="absolute -bottom-3 -right-3 w-24 h-24 text-white/20" strokeWidth={1.5} />}
@@ -113,7 +113,7 @@ export const InternalCard: React.FC<IProps> = ({
 
         <div className="flex items-center gap-2 flex-1">
           {showFooterIcon && (
-            <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white shrink-0`}>
+            <div className={`w-6 h-6 rounded-full bg-linear-to-br ${gradient} flex items-center justify-center text-white shrink-0`}>
               {!!Icon && <Icon className="w-3 h-3" />}
             </div>
           )}

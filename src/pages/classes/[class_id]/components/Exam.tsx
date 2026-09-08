@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Avatar,
   Box,
@@ -16,14 +16,10 @@ import {
   Icon,
   Divider,
   useToast,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionIcon,
-  AccordionPanel,
+  Heading,
 } from '@chakra-ui/react';
 import { FaGraduationCap, FaUsers } from 'react-icons/fa';
-import { FiCalendar, FiCheckCircle, FiClock, FiUserCheck, FiCheck } from 'react-icons/fi';
+import { FiCalendar, FiCheckCircle, FiClock, FiUserCheck, FiCheck, FiDownload } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import moment from 'moment';
 
@@ -34,12 +30,25 @@ import { createHubFormClassUser, finishHubFormClass, updateHubFormClassUser } fr
 import { IHubFormClass } from '@/_base/interfaces/form';
 import { useDarkMode } from '@/_base/hooks/useDarkMode';
 import { TabSwitch } from '@/components/TabSwitch';
+import { SelectInput } from '@/components/Inputs/Select';
+import { ClassSkillChart, IDailySkillAverage } from './ClassSkillChart';
+
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { useAsyncCallback } from '@/_base/hooks';
 
 type RatingQuestion = { id: string; label: string; description?: string; value: number };
 type FinishedForms = { student_id: string; questions: RatingQuestion[]; hub_form_class_user_id?: string | null };
 
 interface IProps {
   hub_class: IHubClass | null;
+}
+
+interface IEvaluationRecord {
+  student_id: string | number;
+  category: string;
+  score: number;
+  created_at: string;
 }
 
 const pageViews = ['Avaliar', 'Histórico'];
@@ -53,10 +62,12 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
   const [isFinalizingEval, setIsFinalizingEval] = useState(false);
   const [currentFormLink, setCurrentFormLink] = useState<IHubFormClass | null>(hub_class?.current_form || null);
   const [pageView, setPageView] = useState<PageView>('Avaliar');
+  const [selectedStudentOptions, setSelectedStudentOptions] = useState([{ label: 'TODOS (Média Geral da Turma)', value: 'ALL' }]);
 
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { colorMode } = useDarkMode();
   const toast = useToast();
+  const pdfExportRef = useRef<HTMLDivElement>(null);
 
   const students = hub_class?.students || [];
   const evaluatedCount = finishedForms.length;
@@ -64,7 +75,6 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
 
   const formClassId = currentFormLink?.id;
 
-  // Mapeia as questions do formulário para o formato esperado
   const formQuestions: Omit<RatingQuestion, `value`>[] = useMemo(() => {
     if (!currentFormLink?.form.questions) return [];
     return currentFormLink.form.questions.map((q) => ({
@@ -84,7 +94,6 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
     }
   }, [hub_class?.form_links]);
 
-  // Carrega as avaliações já existentes quando o formulário muda
   useEffect(() => {
     if (!currentFormLink?.id || !currentFormLink?.student_relations || currentFormLink.student_relations.length === 0) {
       return;
@@ -127,17 +136,7 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
 
   const handleSaveEvaluation = useCallback(
     async (questions: RatingQuestion[], onSuccess: () => void) => {
-      if (!targetStudent || !formClassId) {
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível carregado dados da avaliação.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
-
+      if (!targetStudent || !formClassId) return;
       setIsLoading(true);
       try {
         const existingForm = finishedForms.find((f) => f.student_id === targetStudent.id);
@@ -147,22 +146,14 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
         }));
 
         if (existingForm?.hub_form_class_user_id) {
-          // Atualizar avaliação existente
           await updateHubFormClassUser(existingForm.hub_form_class_user_id, questionsData);
           setFinishedForms((prev) =>
             prev.map((f) =>
               f.student_id === targetStudent.id ? { ...f, questions, hub_form_class_user_id: existingForm.hub_form_class_user_id } : f,
             ),
           );
-          toast({
-            title: 'Sucesso',
-            description: `Avaliação de ${targetStudent.name} atualizada com sucesso.`,
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          });
+          toast({ title: 'Sucesso', description: `Avaliação atualizada.`, status: 'success', duration: 3000 });
         } else {
-          // Criar nova avaliação
           await createHubFormClassUser({
             hub_form_class_id: formClassId,
             questions: questionsData,
@@ -171,31 +162,14 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
 
           setFinishedForms((prev) => {
             const exists = prev.find((f) => f.student_id === targetStudent.id);
-            if (exists) {
-              return prev.map((f) => (f.student_id === targetStudent.id ? { ...f, questions, hub_form_class_user_id: null } : f));
-            }
+            if (exists) return prev.map((f) => (f.student_id === targetStudent.id ? { ...f, questions, hub_form_class_user_id: null } : f));
             return [...prev, { student_id: targetStudent.id, questions, hub_form_class_user_id: null }];
           });
-
-          toast({
-            title: 'Sucesso',
-            description: `Avaliação de ${targetStudent.name} criada com sucesso.`,
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          });
+          toast({ title: 'Sucesso', description: `Avaliação criada.`, status: 'success', duration: 3000 });
         }
-
         onSuccess();
       } catch (error) {
-        console.error('Erro ao salvar avaliação:', error);
-        toast({
-          title: 'Erro',
-          description: 'Erro ao salvar a avaliação. Tente novamente.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        toast({ title: 'Erro', description: 'Erro ao salvar.', status: 'error', duration: 3000 });
       } finally {
         setIsLoading(false);
       }
@@ -204,42 +178,73 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
   );
 
   const handleFinishEvaluation = useCallback(async () => {
-    if (!formClassId) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível finalizar a avaliação.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
+    if (!formClassId) return;
     setIsFinalizingEval(true);
     try {
       await finishHubFormClass(formClassId);
       setLastExam({ ...currentFormLink, finished_at: new Date().toISOString() });
       setCurrentFormLink((e) => (e ? { ...e, finished_at: new Date().toISOString() } : null));
-      toast({
-        title: 'Sucesso',
-        description: 'Ciclo de avaliação finalizado com sucesso!',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: 'Sucesso', description: 'Ciclo finalizado!', status: 'success', duration: 3000 });
     } catch (error) {
-      console.error('Erro ao finalizar avaliação:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao finalizar a avaliação. Tente novamente.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: 'Erro', description: 'Erro ao finalizar.', status: 'error', duration: 3000 });
     } finally {
       setIsFinalizingEval(false);
     }
   }, [formClassId, toast, currentFormLink]);
+
+  const handleExportCharts = useAsyncCallback(
+    async () => {
+      if (!pdfExportRef.current) return;
+
+      try {
+        await document.fonts.ready;
+
+        // Pausa para a UI respirar e atualizar o botão de loading
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => setTimeout(resolve, 150));
+        });
+
+        const canvas = await html2canvas(pdfExportRef.current, {
+          scale: 1.5, // Reduzido de 2 para 1.5 para mais velocidade e menos RAM
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false, // Otimização de performance
+          onclone: (clonedDoc) => {
+            clonedDoc.querySelectorAll('[data-pdf-ignore="true"]').forEach((el) => {
+              if (el instanceof HTMLElement) el.style.display = 'none';
+            });
+            const header = clonedDoc.querySelector('[data-pdf-header="true"]');
+            if (header instanceof HTMLElement) header.style.display = 'block';
+          },
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+
+        // Definição da altura dinâmica
+        const pdfWidth = 210; // mm (equivalente à largura A4)
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        const pdf = new jsPDF({
+          orientation: 'p',
+          unit: 'mm',
+          format: [pdfWidth, pdfHeight],
+        });
+
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+        const safeClassName = hub_class?.display_name ? hub_class.display_name.replace(/\s+/g, '_') : 'Turma';
+        pdf.save(`Historico_Avaliacoes_${safeClassName}.pdf`);
+
+        toast({ title: 'Sucesso', description: 'Relatório gerado com sucesso!', status: 'success', duration: 3000 });
+      } catch (err) {
+        console.error('Erro ao gerar PDF:', err);
+        toast({ title: 'Erro', description: 'Ocorreu um erro ao gerar o PDF.', status: 'error', duration: 3000 });
+      }
+    },
+    [],
+    true,
+    () => setIsLoading(false),
+  );
 
   const bgCard = colorMode === 'light' ? 'white' : 'gray800';
   const borderColor = colorMode === 'light' ? 'gray200' : 'gray700';
@@ -249,7 +254,6 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
 
   return (
     <Flex direction="column" w="100%" h="100%" gap="1.5rem" pb="2rem" position="relative">
-      {/* 1. HERO BANNER: Ciclo de Avaliação (DESIGN CLEAN) */}
       <Flex
         justify="space-between"
         align={{ base: 'flex-start', md: 'center' }}
@@ -302,11 +306,9 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
                   {lastExam?.finished_at ? moment(lastExam?.finished_at).format('DD/MM/YYYY') : '-'}
                 </Text>
               </Box>
-
               {currentFormLink?.finished_at && (
                 <Divider orientation="vertical" h="32px" borderColor={borderColor} display={{ base: 'none', md: 'block' }} />
               )}
-
               {currentFormLink?.finished_at && (
                 <Box flex={{ base: 1, md: 'none' }}>
                   <Text fontSize="12px" fontWeight="700" color="primary500" textTransform="uppercase">
@@ -331,7 +333,7 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
           />
         )}
       </Flex>
-      {/* 2. ESTATÍSTICAS DA TURMA */}
+
       {pageView === `Avaliar` && (
         <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap="1rem">
           <StatCard
@@ -343,7 +345,6 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
             textColor={textColor}
           />
           <StatCard icon={FaUsers} label="Total de Alunos" value={students.length} bg={bgCard} border={borderColor} textColor={textColor} />
-
           <Flex
             direction="column"
             justify="center"
@@ -376,7 +377,6 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
         </Grid>
       )}
 
-      {/* 3. BOTÃO FINALIZAR AVALIAÇÃO */}
       {!currentFormLink?.finished_at && evaluatedCount > 0 && pageView === `Avaliar` && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <Button
@@ -425,12 +425,12 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
             </Flex>
           )}
         </Flex>
+
         <Flex direction="column" h="100%">
           {pageView === `Avaliar` ? (
             <motion.div variants={listVariants} initial="hidden" animate="show" style={{ height: `100%`, borderRadius: `16px` }}>
               {students.map((student) => {
                 const isFinished = !!finishedForms.find((f) => f.student_id === student.id);
-
                 return (
                   <motion.div key={student.id} variants={itemVariants}>
                     <Flex
@@ -460,7 +460,6 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
                           </Text>
                         </Flex>
                       </Flex>
-
                       <Flex align="center" gap="1.5rem">
                         <Flex display={{ base: 'none', md: 'flex' }}>
                           {isFinished ? (
@@ -493,7 +492,6 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
                             </Flex>
                           )}
                         </Flex>
-
                         {!currentFormLink?.finished_at &&
                           (isFinished ? (
                             <Button
@@ -529,117 +527,170 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
               })}
             </motion.div>
           ) : (
-            <motion.div variants={listVariants} initial="hidden" animate="show" style={{ height: `100%`, borderRadius: `16px` }}>
-              {hub_class?.form_links
-                .filter((f) => !!f.finished_at)
-                ?.map((formLink) => (
-                  <Accordion allowMultiple w="100%" fontWeight="500" color="gray700">
-                    <AccordionItem border="none">
-                      <h2>
-                        <AccordionButton justifyContent="space-between">
-                          <Box fontSize={{ base: `15px`, xl: '16px' }}>
-                            {'Avaliação do dia ' + moment(formLink.finished_at).format('DD/MM/YYYY [às] HH:mm')}
-                          </Box>
-                          <AccordionIcon />
-                          {/* <IoChevronForward color={colorMode === 'dark' ? '#FCFCFD' : '#101828'} /> */}
-                        </AccordionButton>
-                      </h2>
-                      <AccordionPanel fontWeight="400">
-                        <Grid gap="1.5rem" gridTemplateColumns="repeat(auto-fill, minmax(400px, 1fr))">
-                          {formLink.student_relations.map((studentForm) => {
-                            const student = students.find((st) => st.id === studentForm.hub_user_id);
-                            const questions = studentForm.questions.map((sq) => ({
-                              score: sq.score,
-                              question: formLink.form.questions.find((q) => q.id === sq.question_id)?.title || '',
-                            }));
-                            if (!student) return null;
-                            return (
-                              <motion.div key={studentForm.hub_user_id} variants={itemVariants}>
-                                <Flex
-                                  direction="column"
-                                  h="100%"
-                                  w="100%"
-                                  cursor="pointer"
-                                  bg={bgCard}
-                                  border="1px solid"
-                                  borderColor={borderColor}
-                                  borderRadius="2xl"
-                                  boxShadow="sm"
-                                  overflow="hidden"
-                                >
-                                  <Flex
-                                    h="200px"
-                                    w="100%"
-                                    borderBottom="1px solid"
-                                    borderColor={borderColor}
-                                    position="relative"
-                                    direction="column"
-                                    overflow="hidden auto"
-                                    p="0.25rem 0.5rem"
-                                    gap="0.5rem"
-                                  >
-                                    {questions.map((q, index) => (
-                                      <Flex key={q.question}>
-                                        <Text noOfLines={1} flex="1">
-                                          {q.question}
-                                        </Text>
-                                        <Flex>
-                                          {[1, 2, 3, 4, 5].map((star) => {
-                                            const isActive = star <= q.score;
+            <Box width="100%">
+              {/* Contêiner do PDF injetando a stack tipográfica */}
+              <Box ref={pdfExportRef} p={4} bg="transparent" style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" }}>
+                <Box data-pdf-header="true" display="none" mb={6}>
+                  <Heading size="lg" color="#1A202C" pb={4} fontFamily="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif">
+                    {hub_class?.display_name || 'Histórico de Avaliações'}
+                  </Heading>
 
-                                            return (
-                                              <motion.div key={star} className="focus:outline-none">
-                                                <motion.svg
-                                                  xmlns="http://www.w3.org/2000/svg"
-                                                  fill={isActive ? '#ffd166' : 'none'}
-                                                  stroke={isActive ? '#ffd166' : '#cbd5e1'}
-                                                  strokeWidth="2"
-                                                  strokeLinecap="round"
-                                                  strokeLinejoin="round"
-                                                  className="w-6 h-6"
-                                                  animate={{
-                                                    scale: isActive ? [1, 1.2, 1] : 1,
-                                                  }}
-                                                  transition={{ duration: 0.3 }}
-                                                >
-                                                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                                </motion.svg>
-                                              </motion.div>
-                                            );
-                                          })}
-                                        </Flex>
-                                      </Flex>
-                                    ))}
-                                  </Flex>
+                  <Box bg="#F8FAFC" p={3} borderRadius="md" border="1px solid #E2E8F0" mb={2}>
+                    <Text fontSize="xs" fontWeight="bold" color="#64748B" textTransform="uppercase" mb={1}>
+                      Alunos Selecionados na Visualização:
+                    </Text>
 
-                                  {/* Content Area */}
-                                  <Flex p="0.5rem" flex="1" gap="1rem" align="center">
-                                    <Avatar
-                                      name={formatShortName(student.name || ``)}
-                                      src={student.avatar || ``}
-                                      title={student.name}
-                                      size="sm"
-                                      border="2px solid"
-                                      borderColor="white"
-                                      boxShadow="sm"
-                                    />
-                                    <Text>{student.name}</Text>
-                                  </Flex>
-                                </Flex>
-                              </motion.div>
-                            );
-                          })}
-                        </Grid>
-                      </AccordionPanel>
-                    </AccordionItem>
-                  </Accordion>
-                ))}
-            </motion.div>
+                    {(() => {
+                      const isAllSelected = selectedStudentOptions.some((opt: any) => opt.value === 'ALL');
+
+                      if (isAllSelected) {
+                        return (
+                          <Text fontSize="sm" fontWeight="600" color="#1E293B">
+                            *Todos alunos da turma
+                          </Text>
+                        );
+                      }
+
+                      const names = selectedStudentOptions.map((opt: any) => opt.label);
+
+                      if (names.length > 3) {
+                        return (
+                          <Text fontSize="sm" color="#334155" lineHeight="relaxed">
+                            {names.join(', ')}
+                          </Text>
+                        );
+                      }
+
+                      // Até 6 alunos ficam listados linha a linha
+                      return (
+                        <Flex direction="column" gap={0.5} mt={1}>
+                          {names.map((name) => (
+                            <Text key={name} fontSize="sm" color="#334155">
+                              • {name}
+                            </Text>
+                          ))}
+                        </Flex>
+                      );
+                    })()}
+                  </Box>
+                </Box>
+
+                {/* Controles de Tela (Marcados com data-pdf-ignore para sumirem no print) */}
+                <Flex align="center" justify="space-between" mb={6} data-pdf-ignore="true">
+                  <Box maxWidth="500px" minWidth="500px">
+                    <SelectInput
+                      instanceId={1}
+                      isMulti={true}
+                      placeholder="Selecione os alunos..."
+                      value={selectedStudentOptions}
+                      options={[
+                        { label: 'TODOS (Média Geral da Turma)', value: 'ALL' },
+                        ...(hub_class?.students || []).map((student) => ({
+                          label: student.name,
+                          value: String(student.id),
+                        })),
+                      ]}
+                      onChange={(selected: any) => {
+                        if (Array.isArray(selected) && selected.some((opt: any) => opt.value === 'ALL')) {
+                          setSelectedStudentOptions([{ label: 'TODOS (Média Geral da Turma)', value: 'ALL' }]);
+                        } else {
+                          setSelectedStudentOptions(selected || []);
+                        }
+                      }}
+                    />
+                  </Box>
+
+                  <Button
+                    leftIcon={<FiDownload />}
+                    colorScheme="blue"
+                    size="sm"
+                    isLoading={isLoading}
+                    loadingText="Exportando..."
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setIsLoading(true);
+                      handleExportCharts();
+                    }}
+                  >
+                    Exportar
+                  </Button>
+                </Flex>
+
+                {/* Grade dos Gráficos */}
+                {(() => {
+                  const isAllSelected = selectedStudentOptions.some((opt: any) => opt.value === 'ALL');
+                  const activeStudentIds = new Set(
+                    isAllSelected
+                      ? (hub_class?.students || []).map((s: any) => String(s.id))
+                      : selectedStudentOptions.map((opt: any) => String(opt.value)),
+                  );
+
+                  const allEvaluations: IEvaluationRecord[] =
+                    hub_class?.form_links.reduce((acc, form_link) => {
+                      const exams: IEvaluationRecord[] = [];
+                      form_link.student_relations.forEach((studentRel) => {
+                        studentRel.questions.forEach((q) => {
+                          exams.push({
+                            category: form_link.form.questions.find((e) => e.id === q.question_id)?.title || 'Habilidade Desconhecida',
+                            score: q.score,
+                            student_id: studentRel.hub_user_id,
+                            created_at: form_link.finished_at || new Date().toISOString(),
+                          });
+                        });
+                      });
+                      acc.push(...exams);
+                      return acc;
+                    }, [] as IEvaluationRecord[]) || [];
+
+                  const uniqueSkills = Array.from(new Set(allEvaluations.map((e) => e.category))).filter(Boolean);
+
+                  if (uniqueSkills.length === 0) {
+                    return (
+                      <Text color="gray.500" py={8} textAlign="center">
+                        Nenhuma avaliação registrada até o momento.
+                      </Text>
+                    );
+                  }
+
+                  return (
+                    <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }} gap={6} width="100%">
+                      {uniqueSkills.map((skillName) => {
+                        const skillEvals = allEvaluations.filter((e) => e.category === skillName);
+                        const dailyMap = new Map<string, { sum: number; count: number }>();
+
+                        skillEvals.forEach((ev) => {
+                          if (!activeStudentIds.has(String(ev.student_id))) return;
+                          const exactDay = new Date(ev.created_at).toLocaleDateString('pt-BR');
+                          const current = dailyMap.get(exactDay) || { sum: 0, count: 0 };
+                          dailyMap.set(exactDay, {
+                            sum: current.sum + Number(ev.score || 0),
+                            count: current.count + 1,
+                          });
+                        });
+
+                        const chartData: IDailySkillAverage[] = Array.from(dailyMap.entries())
+                          .map(([date, { sum, count }]) => ({
+                            date,
+                            média: count > 0 ? Number((sum / count).toFixed(2)) : 0,
+                          }))
+                          .sort((a, b) => {
+                            const [dA, mA, yA] = a.date.split('/').map(Number);
+                            const [dB, mB, yB] = b.date.split('/').map(Number);
+                            return new Date(yA, mA - 1, dA).getTime() - new Date(yB, mB - 1, dB).getTime();
+                          });
+
+                        return <ClassSkillChart key={skillName} skillName={skillName} data={chartData} />;
+                      })}
+                    </Grid>
+                  );
+                })()}
+              </Box>
+            </Box>
           )}
         </Flex>
       </Box>
 
-      {/* MODAL DE AVALIAÇÃO */}
       <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered scrollBehavior="inside">
         <ModalOverlay backdropFilter="blur(5px)" />
         <ModalContent bg={bgCard} borderRadius="2xl" overflow="hidden">
@@ -662,8 +713,6 @@ export const Exam: React.FC<IProps> = ({ hub_class }) => {
   );
 };
 
-// --- COMPONENTES AUXILIARES ---
-
 function StatCard({ icon: IconComponent, label, value, bg, border, textColor }: any) {
   return (
     <Flex align="center" gap="1rem" bg={bg} p="1.25rem" borderRadius="xl" border="1px solid" borderColor={border} boxShadow="sm">
@@ -682,40 +731,14 @@ function StatCard({ icon: IconComponent, label, value, bg, border, textColor }: 
   );
 }
 
-// --- FORMULÁRIO DE AVALIAÇÃO ---
-
-function EvaluationForm({
-  student,
-  onClose,
-  onSave,
-  existingData,
-  isLoading = false,
-  formQuestions = [],
-  formTitle,
-  formDescription,
-}: {
-  student: IHubUser;
-  onClose: () => void;
-  onSave: (q: RatingQuestion[], onSuccess: () => void) => Promise<void>;
-  existingData?: RatingQuestion[];
-  isLoading?: boolean;
-  formQuestions?: Array<{ id: string; label: string; description?: string }>;
-  formTitle?: string;
-  formDescription?: string | null;
-}) {
+function EvaluationForm({ student, onClose, onSave, existingData, isLoading = false, formQuestions = [], formTitle, formDescription }: any) {
   const { colorMode } = useDarkMode();
-  const [questions, setQuestions] = useState<RatingQuestion[]>(existingData || formQuestions.map((q) => ({ ...q, value: 0 })));
+  const [questions, setQuestions] = useState<RatingQuestion[]>(existingData || formQuestions.map((q: any) => ({ ...q, value: 0 })));
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleRate = (id: string, value: number) => {
-    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, value } : q)));
-  };
-
+  const handleRate = (id: string, value: number) => setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, value } : q)));
   const allAnswered = questions.every((q) => q.value > 0);
-
-  const handleSubmit = async () => {
-    await onSave(questions, () => setIsSuccess(true));
-  };
+  const handleSubmit = async () => await onSave(questions, () => setIsSuccess(true));
 
   const borderColor = colorMode === 'light' ? 'gray200' : 'gray700';
   const modalBg = colorMode === 'light' ? 'white' : 'gray800';
@@ -732,7 +755,7 @@ function EvaluationForm({
               Avaliação Registrada!
             </Text>
             <Text color="gray500" fontSize="15px" mb="1.5rem">
-              O feedback para <b>{student.name}</b> foi salvo com sucesso. Ele ajudará no desenvolvimento do aluno.
+              O feedback para <b>{student.name}</b> foi salvo com sucesso.
             </Text>
             <Button bg="success500" color="white" _hover={{ bg: 'success600' }} w="100%" size="lg" borderRadius="xl" onClick={onClose}>
               Retornar à Lista
@@ -745,7 +768,6 @@ function EvaluationForm({
 
   return (
     <ModalBody p="0" bg={modalBg}>
-      {/* Cabeçalho do Aluno */}
       <Flex bg={headerBg} p="1.5rem" borderBottom="1px solid" borderColor={borderColor} align="center" gap="1rem">
         <Avatar size="lg" name={student.name} src={student.avatar || ''} border="3px solid white" boxShadow="sm" />
         <Box>
@@ -757,8 +779,6 @@ function EvaluationForm({
           </Text>
         </Box>
       </Flex>
-
-      {/* Lista de Critérios */}
       <Flex direction="column" p="1.5rem" gap="1rem" maxH="50vh" overflowY="auto">
         {formTitle && (
           <Box mb="0.5rem">
@@ -766,19 +786,18 @@ function EvaluationForm({
               {formTitle}
             </Text>
             {formDescription && (
-              <Text fontSize="14px" color="gray500" lineHeight="1.5">
+              <Text fontSize="14px" color="gray500">
                 {formDescription}
               </Text>
             )}
           </Box>
         )}
-
         <Text fontSize="14px" color="gray500" mb="0.5rem">
           Avalie o aluno de 1 a 5 estrelas nos critérios abaixo:
         </Text>
-
         {questions.map((q) => (
           <RatingQuestion
+            key={q.id}
             id={q.id}
             question={q.description || ``}
             title={q.label}
@@ -787,8 +806,6 @@ function EvaluationForm({
           />
         ))}
       </Flex>
-
-      {/* Footer / Ações */}
       <Flex p="1.5rem" borderTop="1px solid" borderColor={borderColor} bg={modalBg}>
         <Button
           w="100%"
@@ -808,16 +825,8 @@ function EvaluationForm({
   );
 }
 
-// Animações da lista
-const listVariants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0 },
-};
+const listVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
+const itemVariants = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
 interface RatingQuestionProps {
   id: string;
