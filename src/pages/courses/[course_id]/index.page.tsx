@@ -68,10 +68,12 @@ const Course: React.FC<IProps> = ({ courseId }) => {
         setUserCertificates(userCerts);
         setCourse(targetCourse);
         setModules(
-          results.map((r) => ({
-            ...r,
-            finished_lessons: activity.metadata?.find((m) => m.entity_id === r.id)?.lessons.filter((l) => !!l.finished_at)?.length || 0,
-          })),
+          results
+            .map((r) => ({
+              ...r,
+              finished_lessons: activity.metadata?.find((m) => m.entity_id === r.id)?.lessons.filter((l) => !!l.finished_at)?.length || 0,
+            }))
+            .sort((a, b) => (a?.position || 1) - (b?.position || 1)),
         );
       } catch {
         toast({ status: `error`, description: `Não foi possível listar os módulos disponíveis no momento` });
