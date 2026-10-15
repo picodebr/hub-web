@@ -136,7 +136,7 @@ const Code: React.FC<IProps> = ({ project: _project = null, isDefaultProject, if
   useEffect(() => {
     postMessage && postMessage(JSON.stringify({ orientation: 'landscape' }));
 
-    return () => postMessage && postMessage(JSON.stringify({ orientation: 'portrait' }));
+    return () => postMessage && postMessage(JSON.stringify({ orientation: 'landscape' }));
   }, [postMessage]);
 
   const waitForString = useCallback(
