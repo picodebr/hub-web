@@ -158,6 +158,11 @@ const Groups: React.FC = () => {
     },
   );
 
+  const classProjects = useMemo<IProject[]>(
+    () => (user?.hub_class_id ? availableProjects.filter((p) => p.class_id === user.hub_class_id) : availableProjects),
+    [availableProjects, user?.hub_class_id],
+  );
+
   const selectedProject = useMemo<IProject | undefined>(
     () => availableProjects.find((p) => p.id === data.hub_project_class_id),
     [data.hub_project_class_id],
@@ -345,11 +350,11 @@ const Groups: React.FC = () => {
           {/* 2. Projeto */}
           <Menu placement="bottom-start">
             <MenuButton as={Button} rightIcon={<IoChevronDownCircleOutline />} border="1px" borderColor="gray300" bg="white" w="100%">
-              {availableProjects.find((e) => data.hub_project_class_id === e.id)?.title || `Selecione o projeto`}
+              {classProjects.find((e) => data.hub_project_class_id === e.id)?.title || `Selecione o projeto`}
             </MenuButton>
             <MenuList borderColor="gray300" zIndex={10} maxH="200px" overflow="auto">
-              {availableProjects.length ? (
-                availableProjects.map((project) => (
+              {classProjects.length ? (
+                classProjects.map((project) => (
                   <MenuItem key={project.id} onClick={() => handleChangeProject(project.id)}>
                     {project.title}
                   </MenuItem>
