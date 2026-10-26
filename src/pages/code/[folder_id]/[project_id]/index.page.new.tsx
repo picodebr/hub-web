@@ -103,7 +103,7 @@ const NewCode: React.FC<IProps> = ({ project }) => {
   useEffect(() => {
     postMessage && postMessage(JSON.stringify({ orientation: 'landscape' }));
 
-    return () => postMessage && postMessage(JSON.stringify({ orientation: 'portrait' }));
+    return () => postMessage && postMessage(JSON.stringify({ orientation: 'landscape' }));
   }, [postMessage]);
 
   return (
