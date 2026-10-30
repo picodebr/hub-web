@@ -348,7 +348,7 @@ export default function MLMonitorModal({ isOpen, onClose, onBack }: MLMonitorMod
               <button
                 className="btn btn-sm btn-outline-primary px-3 rounded-pill fw-bold"
                 onClick={() => setIsModelSelectorOpen(true)}
-                title="Trocar ou escolher um modelo Picode Hub"
+                title="Trocar ou escolher um modelo PiCode-Hub"
               >
                 <i className="bi bi-box-seam me-1"></i> Modelo
               </button>

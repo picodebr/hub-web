@@ -12,13 +12,14 @@ import { useExecutionRunner } from '@/_base/context/ExecutionRunnerContext';
 import { useUI } from '@/_base/context/UIContext';
 import { useProject } from '@/_base/context/ProjectContext';
 import { useFirmware } from '@/_base/context/FirmwareContext';
-import { IProjectContextUI, SerializationService } from '@/_base/services/code';
+import { getProjectService, IProjectContextUI, SerializationService } from '@/_base/services/code';
 import { dimensions } from '@/styles/global';
 import { Logo } from '@/components/Logo';
 import { useCustomRouter, useCustomToast } from '@/_base/hooks';
 import { Button, Flex, Icon, Text, useColorMode } from '@chakra-ui/react';
 import { FiLogOut } from 'react-icons/fi';
 import { ICodeProject } from '@/_base/interfaces/codeProject/IProject';
+import { SmallModal } from '@/components/Modal/Small';
 
 interface IProps {
   project: ICodeProject | null;
@@ -43,6 +44,10 @@ export default function CodeNavbar({ project }: IProps) {
   // Estados locais para modais específicos
   const [showTools, setShowTools] = useState(false);
   const [showMonitor, setShowMonitor] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [pendingExit, setPendingExit] = useState<'back' | 'profile'>('back');
+  const savedRevisionRef = useRef<number>(getProjectService().getStateRevision());
 
   // Estado auxiliar para controle visual do botão de upload
   const [isUploadingLocal, setIsUploadingLocal] = useState(false);
@@ -89,10 +94,23 @@ export default function CodeNavbar({ project }: IProps) {
   useEffect(() => {
     if (!project?.metadata) {
       SerializationService.resetProject(contextAdapter);
+      savedRevisionRef.current = getProjectService().getStateRevision();
       return;
     }
-    SerializationService.loadProject(project.metadata, contextAdapter);
+    SerializationService.loadProject(project.metadata, contextAdapter).finally(() => {
+      savedRevisionRef.current = getProjectService().getStateRevision();
+      setIsDirty(false);
+    });
   }, [project]);
+
+  useEffect(() => {
+    const projectService = getProjectService();
+    const interval = window.setInterval(() => {
+      setIsDirty(projectService.getStateRevision() !== savedRevisionRef.current);
+    }, 300);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   /**
    * Lida com a exportação do projeto atual para um arquivo JSON.
@@ -103,8 +121,12 @@ export default function CodeNavbar({ project }: IProps) {
     try {
       setIsSaving(true);
       const workspace = runnerContext.blocklyWorkspaceRef?.current?.getWorkspace?.();
-      await SerializationService.saveProject(contextAdapter, project, 'meu_projeto.json', workspace || undefined);
+      const saved = await SerializationService.saveProject(contextAdapter, project, 'meu_projeto.json', workspace || undefined);
+      if (!saved) return false;
       toast({ title: 'Projeto salvo com sucesso!', status: 'success' });
+      savedRevisionRef.current = getProjectService().getStateRevision();
+      setIsDirty(false);
+      return true;
     } catch (err) {
       console.error('[Navbar] Erro ao salvar:', err);
       toast({
@@ -112,9 +134,33 @@ export default function CodeNavbar({ project }: IProps) {
         description: 'Não foi possível salvar os dados no servidor.',
         status: 'error',
       });
+      return false;
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const requestExit = (destination: 'back' | 'profile') => {
+    setPendingExit(destination);
+    if (isDirty) {
+      setShowUnsavedModal(true);
+      return;
+    }
+    exitProject(destination);
+  };
+
+  const exitProject = (destination: 'back' | 'profile') => {
+    setShowUnsavedModal(false);
+    if (destination === 'profile') {
+      router.push('/profile');
+    } else {
+      router.back();
+    }
+  };
+
+  const handleSaveAndExit = async () => {
+    const saved = await handleSaveProject();
+    if (saved) exitProject(pendingExit);
   };
 
   /**
@@ -192,14 +238,41 @@ export default function CodeNavbar({ project }: IProps) {
       >
         <div className="container-fluid p-0 d-flex align-items-center justify-content-between">
           {/* Logotipo */}
-          <a className="navbar-brand d-flex align-items-center" href="#" suppressHydrationWarning={true}>
+          <a
+            className="navbar-brand d-flex align-items-center"
+            href="/profile"
+            suppressHydrationWarning={true}
+            onClick={(event) => {
+              event.preventDefault();
+              requestExit('profile');
+            }}
+          >
             <Logo size="md" className="only-desktop" />
           </a>
 
           {/* Conteúdo Central e Botões de Ação */}
           <div className="d-flex align-items-center flex-grow-1 justify-content-between ms-3">
             <div className="d-flex align-items-center gap-2">
-              {/* Botão de Conectar/Desconectar USB */}
+              {/* Botão de voltar */}
+              <button
+                className="btn btn-sm  d-flex align-items-center gap-2 "
+                onClick={() => requestExit('back')}
+                disabled={false}
+                title={'Voltar para a lista de projetos'}
+                style={{
+                  backgroundColor: isActive ? '#22c55e' : '#f1f5f9',
+                  color: isActive ? '#fff' : '#64748b',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  padding: '6px 12px',
+                  opacity: 1,
+                  cursor: 'pointer',
+                }}
+              >
+                <i className={`bi bi-arrow-bar-left`} style={{ fontSize: '14px' }}></i>
+                Voltar
+              </button>
+
               <button
                 className="btn btn-sm  d-flex align-items-center gap-2"
                 onClick={isSerialConnected ? disconnectSerial : handleConnectClick}
@@ -379,26 +452,7 @@ export default function CodeNavbar({ project }: IProps) {
                 </button>
               </div>
 
-              <Button
-                variant="ghost"
-                colorScheme="red"
-                w="2rem"
-                h="2.25rem"
-                justifyContent="center"
-                alignItems="center"
-                gap="0.5rem"
-                fontSize="15px"
-                fontWeight="600"
-                borderRadius="xl"
-                color="error600"
-                _hover={{ bg: 'error50' }}
-                onClick={() => {
-                  router.back();
-                }}
-              >
-                <Icon as={FiLogOut} fontSize="18px" />
-                {/* Sair */}
-              </Button>
+            
             </div>
           </div>
         </div>
@@ -428,6 +482,24 @@ export default function CodeNavbar({ project }: IProps) {
           setShowTools(true);
         }}
       />
+
+      <SmallModal
+        show={showUnsavedModal}
+        title="Salvar Projeto?"
+        topIcon="warning"
+        okText={isSaving ? 'Salvando...' : 'Salvar e sair'}
+        cancelText="Apenas sair"
+        isLoading={isSaving}
+        disableOkButton={isSaving}
+        disableCancelButton={isSaving}
+        onCloseModal={() => setShowUnsavedModal(false)}
+        onCancel={() => exitProject(pendingExit)}
+        onConfirm={handleSaveAndExit}
+      >
+        <Text fontSize="1rem" fontWeight="500" color="gray600">
+          O projeto possui alterações que ainda não foram salvas. Deseja salvá-las antes de sair?
+        </Text>
+      </SmallModal>
     </>
   );
 }
