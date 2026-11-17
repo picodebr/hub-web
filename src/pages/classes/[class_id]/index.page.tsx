@@ -293,56 +293,58 @@ const Class: React.FC<IProps> = ({ classId, pageTitle }) => {
   }, []);
 
   const students: StudentTableType[] =
-    hubClass?.students.map((student) => ({
-      id: student.id,
-      name: (
-        <Flex direction="column" minW="0">
-          <Text fontWeight="600" color={colorMode === 'dark' ? 'white' : 'gray800'} isTruncated>
-            {student.name}
-          </Text>
-          <Text fontSize="13px" color="gray500" isTruncated>
-            @{student.username}
-          </Text>
-        </Flex>
-      ),
-      avatar: (<Avatar name={formatShortName(student.name, true)} title={student.name} src={student.avatar || ``} size="sm" />) as any,
-      groups: (
-        <Flex align="center" gap="0.5rem" wrap="wrap">
-          {student.groups.length > 0 ? (
-            student.groups.map((group) => (
-              <Badge key={group.id} colorScheme="purple" variant="subtle" borderRadius="md" px="2" py="0.5" textTransform="none">
-                {group.display_name}
-              </Badge>
-            ))
-          ) : (
-            <Text color="gray400" fontSize="13px" fontStyle="italic">
-              -
+    [...(hubClass?.students ?? [])]
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }))
+      .map((student) => ({
+        id: student.id,
+        name: (
+          <Flex direction="column" minW="0">
+            <Text fontWeight="600" color={colorMode === 'dark' ? 'white' : 'gray800'} isTruncated>
+              {student.name}
             </Text>
-          )}
-        </Flex>
-      ),
-      coins: (
-        <Flex
-          align="center"
-          gap="0.35rem"
-          bg="warning50"
-          w="10rem"
-          px="0.75rem"
-          py="0.15rem"
-          borderRadius="full"
-          border="1px solid"
-          borderColor="warning200"
-          justify="space-between"
-        >
-          <Text fontSize="14px" fontWeight="700" color="warning700">
-            {formatCoin(student.metadata.coins || 0)}
-          </Text>
-          <Box>
-            <CoinIcon />
-          </Box>
-        </Flex>
-      ),
-    })) || [];
+            <Text fontSize="13px" color="gray500" isTruncated>
+              @{student.username}
+            </Text>
+          </Flex>
+        ),
+        avatar: (<Avatar name={formatShortName(student.name, true)} title={student.name} src={student.avatar || ``} size="sm" />) as any,
+        groups: (
+          <Flex align="center" gap="0.5rem" wrap="wrap">
+            {student.groups.length > 0 ? (
+              student.groups.map((group) => (
+                <Badge key={group.id} colorScheme="purple" variant="subtle" borderRadius="md" px="2" py="0.5" textTransform="none">
+                  {group.display_name}
+                </Badge>
+              ))
+            ) : (
+              <Text color="gray400" fontSize="13px" fontStyle="italic">
+                -
+              </Text>
+            )}
+          </Flex>
+        ),
+        coins: (
+          <Flex
+            align="center"
+            gap="0.35rem"
+            bg="warning50"
+            w="10rem"
+            px="0.75rem"
+            py="0.15rem"
+            borderRadius="full"
+            border="1px solid"
+            borderColor="warning200"
+            justify="space-between"
+          >
+            <Text fontSize="14px" fontWeight="700" color="warning700">
+              {formatCoin(student.metadata.coins || 0)}
+            </Text>
+            <Box>
+              <CoinIcon />
+            </Box>
+          </Flex>
+        ),
+      })) || [];
 
   const handleCloseModal = () => {
     setNewProject(null);
