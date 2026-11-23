@@ -233,7 +233,7 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
                 {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="p-0 border-none shadow-2xl" align="end">
+            <PopoverContent className="p-0 border-none shadow-2xl rounded-xl bg-white" align="end">
               <Calendar
                 mode="single"
                 selected={selectedDate}
