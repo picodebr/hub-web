@@ -233,13 +233,20 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
                 {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="p-0 border-none shadow-2xl" align="end">
+            <PopoverContent className="p-0 border-none shadow-2xl rounded-xl bg-white" align="end">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={(d) => d && setSelectedDate(startOfDay(d))}
                 disabled={(date) => isWeekend(date) || isAfter(startOfDay(date), today)}
                 locale={ptBR}
+                formatters={{
+                  formatWeekdayName: (day) => format(day, 'EEEEE', { locale: ptBR }).toUpperCase(),
+                  formatCaption: (month) => {
+                    const label = format(month, 'LLLL yyyy', { locale: ptBR });
+                    return label.charAt(0).toUpperCase() + label.slice(1);
+                  },
+                }}
                 className="rounded-xl bg-white p-3 text-slate-900"
               />
             </PopoverContent>
