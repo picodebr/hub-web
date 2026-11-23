@@ -240,7 +240,13 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
                 onSelect={(d) => d && setSelectedDate(startOfDay(d))}
                 disabled={(date) => isWeekend(date) || isAfter(startOfDay(date), today)}
                 locale={ptBR}
-                formatters={{ formatWeekdayName: (day) => format(day, 'EEEEE', { locale: ptBR }).toUpperCase() }}
+                formatters={{
+                  formatWeekdayName: (day) => format(day, 'EEEEE', { locale: ptBR }).toUpperCase(),
+                  formatCaption: (month) => {
+                    const label = format(month, 'LLLL yyyy', { locale: ptBR });
+                    return label.charAt(0).toUpperCase() + label.slice(1);
+                  },
+                }}
                 className="rounded-xl bg-white p-3 text-slate-900"
               />
             </PopoverContent>
