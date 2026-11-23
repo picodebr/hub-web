@@ -194,13 +194,13 @@ const CodeProjects: React.FC<IProps> = ({ folderId, isWebView }) => {
         flex="1"
         pt="1rem "
       >
-        {targetFolder?.projects?.map((project, index) => (
+        {targetFolder?.projects?.sort((a,b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())?.map((project, index) => (
           <InternalCard
             key={project.id}
             minH="200px"
             index={index}
             onClick={() =>
-              project.metadata?.metadata && project.metadata?.codeVersion !== '1.0-webview'
+              project.metadata?.metadata && project.metadata?.stage
                 ? router.push(`/code/${folderId}/${project.id}?_p=${project.name}&allow-new-code=true`)
                 : router.push(`/code/${folderId}/${project.id}?_p=${project.name}`)
             }

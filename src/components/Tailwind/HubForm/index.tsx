@@ -23,7 +23,7 @@ export const HubForm: React.FC<IHubFormProps> = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          <p>© 2025 EduQuest - Sistema de Avaliações Online</p>
+          <p>© 2026 PiCode - Sistema de Avaliações Online</p>
           <p className="mt-1">Desenvolvido para proporcionar a melhor experiência educacional</p>
         </motion.footer>
       </div>

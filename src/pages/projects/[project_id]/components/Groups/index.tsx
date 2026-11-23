@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, UserPlus, ChevronRight } from 'lucide-react';
+import { Users, UserPlus, ChevronRight, Trash2 } from 'lucide-react';
 import { IProject } from '@/_base/interfaces/project';
 import { EMPTY_HUB_GROUP_DATA, ICreateHubGroupParams, IHubGroup, createHubGroupSchema } from '@/_base/interfaces/group';
 import { AvatarList } from '@/components/AvatarList';
@@ -53,10 +53,13 @@ interface IProps {
   canEdit: boolean;
   onPendingGroupAction: (group: IHubGroup, accept: boolean) => void;
   handleAddGroup: (data: ICreateHubGroupParams) => void;
+  onRemoveGroup: (group: IHubGroup) => void;
+  canRemoveGroup: boolean;
 }
 
-export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup }) => {
+export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdit, handleAddGroup, onRemoveGroup, canRemoveGroup }) => {
   const [targetGroup, setTargetGroup] = useState<(IHubGroup & { accept: boolean }) | null>(null);
+  const [groupToRemove, setGroupToRemove] = useState<IHubGroup | null>(null);
   const [memberRoles, setMemberRoles] = useState<Record<string, string>>({});
   const [availableStudents, setAvailableStudents] = useState<IHubUser[]>([]);
   const { colorMode } = useDarkMode();
@@ -187,6 +190,20 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
                 <h4 className="text-sm font-semibold text-foreground tracking-tight truncate">{group.display_name}</h4>
                 <AvatarList users={group.students || []} />
               </div>
+              {canRemoveGroup && (
+                <button
+                  type="button"
+                  title="Excluir grupo"
+                  aria-label={`Excluir grupo ${group.display_name}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setGroupToRemove(group);
+                  }}
+                  className="shrink-0 p-1.5 rounded-lg text-muted-foreground/60 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <ChevronRight className="w-4 h-4 shrink-0 text-muted-foreground/40 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-foreground" />
             </div>
           ))}
@@ -202,6 +219,20 @@ export const Groups: React.FC<IProps> = ({ onPendingGroupAction, project, canEdi
       <SmallModal show={!!targetGroup} onConfirm={() => { if(targetGroup) onPendingGroupAction(targetGroup, targetGroup.accept); setTargetGroup(null); }} onCancel={() => setTargetGroup(null)} topIcon={targetGroup?.accept ? 'checked' : 'warning'}>
         <p className="text-sm text-foreground">
           {targetGroup?.accept ? 'Aprovar' : 'Recusar'} o grupo <span className="font-bold">{targetGroup?.display_name}</span>?
+        </p>
+      </SmallModal>
+
+      <SmallModal
+        show={!!groupToRemove}
+        onConfirm={() => {
+          if (groupToRemove) onRemoveGroup(groupToRemove);
+          setGroupToRemove(null);
+        }}
+        onCancel={() => setGroupToRemove(null)}
+        topIcon="warning"
+      >
+        <p className="text-sm text-foreground">
+          Excluir o grupo <span className="font-bold">{groupToRemove?.display_name}</span>? Essa ação não pode ser desfeita.
         </p>
       </SmallModal>
 

@@ -188,9 +188,11 @@ export const SerializationService = {
       // link.click();
       // document.body.removeChild(link);
       // URL.revokeObjectURL(url);
+      return true;
     } catch (e) {
       console.error('Erro ao salvar projeto:', e);
       alert('Erro ao salvar projeto.');
+      return false;
     }
   },
 

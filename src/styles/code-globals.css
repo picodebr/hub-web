@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* 
-   ARQUIVO CSS GLOBAL - PICODE HUB
+   ARQUIVO CSS GLOBAL - PiCode-Hub
    Este arquivo contém apenas a base do Tailwind e estilos globais críticos.
    Os módulos de estilo agora são importados diretamente no Root Layout (layout.tsx)
    para melhorar a performance do HMR (Hot Module Replacement).
