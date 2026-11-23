@@ -240,7 +240,7 @@ export const AttendanceList: React.FC<IProps> = ({ hub_class }) => {
                 onSelect={(d) => d && setSelectedDate(startOfDay(d))}
                 disabled={(date) => isWeekend(date) || isAfter(startOfDay(date), today)}
                 locale={ptBR}
-                className="rounded-xl bg-white p-3"
+                className="rounded-xl bg-white p-3 text-slate-900"
               />
             </PopoverContent>
           </Popover>

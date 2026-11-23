@@ -110,6 +110,13 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
     }
   }, []);
 
+  const handleRemoveGroup = useAsyncCallback(async (group: IHubGroup) => {
+    await removeGroup(group.id);
+    setProject((p) => ({ ...p, groups: p.groups.filter((g) => g.id !== group.id) }));
+    setSavedProject((p) => ({ ...p, groups: p.groups.filter((g) => g.id !== group.id) }));
+    toast({ status: `success`, description: `Grupo excluído` });
+  }, []);
+
   const handleAddGroup = useAsyncCallback(async (data: ICreateHubGroupParams) => {
     const newGroup = await addGroupToProject(data);
     setProject((p) => ({ ...p, groups: [newGroup, ...p.groups] }));
@@ -171,7 +178,7 @@ const ProjectPage: React.FC<IProps> = ({ project: hubProject, bnccSkills }) => {
         )}
 
         <motion.div {...anim(3)}><Annotations project={project} onRemoveAnnotation={handleRemoveAnnotation} onAddAnnotation={handleAddAnnotation} canEdit={canEdit} /></motion.div>
-        <motion.div {...anim(4)}><Groups project={project} onPendingGroupAction={handleManagePendingGroup} canEdit={canEdit} handleAddGroup={handleAddGroup} /></motion.div>
+        <motion.div {...anim(4)}><Groups project={project} onPendingGroupAction={handleManagePendingGroup} onRemoveGroup={handleRemoveGroup} canRemoveGroup={canEdit || user.role === 'master'} canEdit={canEdit} handleAddGroup={handleAddGroup} /></motion.div>
         <motion.div {...anim(5)} className="lg:col-span-2">
           <ProjectPhotos
             project={project}
